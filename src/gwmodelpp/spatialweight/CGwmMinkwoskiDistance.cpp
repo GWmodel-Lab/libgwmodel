@@ -14,7 +14,7 @@ CGwmMinkwoskiDistance::CGwmMinkwoskiDistance(const CGwmMinkwoskiDistance &distan
 
 mat CGwmMinkwoskiDistance::CoordinateRotate(const mat& coords, double theta)
 {
-    int n = coords.n_rows;
+    uword n = coords.n_rows;
     mat rotated_coords(n, 2);
     rotated_coords.col(0) = coords.col(0) * cos(theta) - coords.col(1) * sin(theta);
     rotated_coords.col(1) = coords.col(0) * sin(theta) + coords.col(1) * cos(theta);

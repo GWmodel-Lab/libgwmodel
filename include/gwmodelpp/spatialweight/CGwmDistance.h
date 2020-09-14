@@ -29,7 +29,7 @@ public:
 
     virtual DistanceType type() = 0;
 
-    int total() const;
+    uword total() const;
     void setTotal(int total);
 
 
@@ -44,7 +44,7 @@ protected:
     uword mTotal = 0;
 };
 
-inline int CGwmDistance::total() const
+inline uword CGwmDistance::total() const
 {
     return mTotal;
 }
