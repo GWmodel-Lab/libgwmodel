@@ -1,5 +1,4 @@
 {
-    "cmake.configureOnOpen": true,
     "files.associations": {
         "*.cu": "cpp",
         "*.qs": "javascript",
