@@ -10,8 +10,8 @@ include_directories(
 )
 
 set(SOURCES
-gwmodelpp/CSimpleLayer.cpp
-gwmodelpp/CSpatialAlgorithm.cpp
+gwmodelpp/CGwmSimpleLayer.cpp
+gwmodelpp/CGwmSpatialAlgorithm.cpp
 gwmodel.cpp
 )
 

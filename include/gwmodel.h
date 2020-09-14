@@ -1,11 +1,8 @@
 #ifndef GWMODEL_H
 #define GWMODEL_H
 
-namespace gwmodel
-{
-    class CSpatialAlgorithm;
+class CGwmSpatialAlgorithm;
     
-    extern "C" CSpatialAlgorithm* gwmodel_create_algorithm();
-}
+extern "C" CGwmSpatialAlgorithm* gwmodel_create_algorithm();
 
 #endif  // GWMODEL_H

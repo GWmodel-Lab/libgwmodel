@@ -1,19 +1,17 @@
-#include "CSpatialAlgorithm.h"
+#include "CGwmSpatialAlgorithm.h"
 
-using namespace gwmodel;
-
-CSpatialAlgorithm::CSpatialAlgorithm()
+CGwmSpatialAlgorithm::CGwmSpatialAlgorithm()
 {
 
 }
 
-CSpatialAlgorithm::~CSpatialAlgorithm()
+CGwmSpatialAlgorithm::~CGwmSpatialAlgorithm()
 {
     if (mSourceLayer) delete mSourceLayer;
     if (mResultLayer) delete mResultLayer;
 }
 
-bool CSpatialAlgorithm::isValid()
+bool CGwmSpatialAlgorithm::isValid()
 {
     if (mSourceLayer == nullptr)
         return false;

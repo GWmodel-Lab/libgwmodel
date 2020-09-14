@@ -1,9 +1,7 @@
 #include "gwmodel.h"
-#include "CSpatialAlgorithm.h"
+#include "CGwmSpatialAlgorithm.h"
 
-using namespace gwmodel;
-
-CSpatialAlgorithm* gwmodel_create_algorithm()
+CGwmSpatialAlgorithm* gwmodel_create_algorithm()
 {
     return nullptr;
 }
