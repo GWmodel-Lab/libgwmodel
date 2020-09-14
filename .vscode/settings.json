@@ -2,6 +2,8 @@
     "files.associations": {
         "*.cu": "cpp",
         "*.qs": "javascript",
-        "armadillo": "cpp"
+        "armadillo": "cpp",
+        "xstring": "cpp",
+        "unordered_map": "cpp"
     }
 }
