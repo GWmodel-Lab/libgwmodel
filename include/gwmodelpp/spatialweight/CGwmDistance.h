@@ -8,6 +8,11 @@
 using namespace std;
 using namespace arma;
 
+struct DistanceParameter
+{
+    uword focus;
+};
+
 class CGwmDistance
 {
 public:
@@ -21,38 +26,21 @@ public:
     static unordered_map<DistanceType, string> TypeNameMapper;
 
 public:
-    explicit CGwmDistance(int total) : mTotal(total) {};
-    CGwmDistance(const CGwmDistance& d) { mTotal = d.mTotal; };
+    explicit CGwmDistance() {};
+    CGwmDistance(const CGwmDistance& d) {};
     virtual ~CGwmDistance() {};
 
     virtual CGwmDistance* clone() = 0;
 
     virtual DistanceType type() = 0;
 
-    uword total() const;
-    void setTotal(int total);
-
 
 public:
-    virtual vec distance(int focus) = 0;
-    virtual uword length() const = 0;
+    virtual vec distance(DistanceParameter* parameter) = 0;
 
-    double maxDistance();
-    double minDistance();
-
-protected:
-    uword mTotal = 0;
+    double maxDistance(uword total, DistanceParameter* parameter);
+    double minDistance(uword total, DistanceParameter* parameter);
 };
-
-inline uword CGwmDistance::total() const
-{
-    return mTotal;
-}
-
-inline void CGwmDistance::setTotal(int total)
-{
-    mTotal = total;
-}
 
 
 #endif // CGWMDISTANCE_H

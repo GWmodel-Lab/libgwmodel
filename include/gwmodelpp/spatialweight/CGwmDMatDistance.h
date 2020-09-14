@@ -6,10 +6,19 @@
 
 using namespace std;
 
+struct DMatDistanceParameter : public DistanceParameter
+{
+    int rowSize;
+    string filename;
+};
+
+/**
+ * [NOT AVALIABLE]
+ */
 class CGwmDMatDistance : public CGwmDistance
 {
 public:
-    explicit CGwmDMatDistance(int total, string dmatFile);
+    explicit CGwmDMatDistance(string dmatFile);
     CGwmDMatDistance(const CGwmDMatDistance& distance);
 
     virtual CGwmDistance * clone() override
@@ -23,16 +32,10 @@ public:
     void setDMatFile(const string &dMatFile);
 
 public:
-    virtual vec distance(int focus) override;
-    uword length() const override;
-
-    int rowSize() const;
-    void setRowSize(int rowSize);
+    virtual vec distance(DistanceParameter* parameter) override;
 
 private:
     string mDMatFile;
-
-    int mRowSize = 0;
 };
 
 inline string CGwmDMatDistance::dMatFile() const
@@ -43,21 +46,6 @@ inline string CGwmDMatDistance::dMatFile() const
 inline void CGwmDMatDistance::setDMatFile(const string &dMatFile)
 {
     mDMatFile = dMatFile;
-}
-
-inline uword CGwmDMatDistance::length() const
-{
-    return rowSize();
-}
-
-inline int CGwmDMatDistance::rowSize() const
-{
-    return mRowSize;
-}
-
-inline void CGwmDMatDistance::setRowSize(int rowSize)
-{
-    mRowSize = rowSize;
 }
 
 #endif // CGWMDMATDISTANCE_H

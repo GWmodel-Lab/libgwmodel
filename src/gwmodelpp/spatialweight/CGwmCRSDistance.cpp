@@ -1,5 +1,7 @@
 #include "spatialweight/CGwmCRSDistance.h"
 
+#include <exception>
+
 #define POWDI(x, i) pow(x, i)
 
 double CGwmCRSDistance::SpGcdist(double lon1, double lon2, double lat1, double lat2)
@@ -70,24 +72,29 @@ vec CGwmCRSDistance::SpatialDistance(const rowvec &out_loc, const mat &in_locs)
     return dists;
 }
 
-CGwmCRSDistance::CGwmCRSDistance(int total, bool isGeographic) : CGwmDistance(total)
+CGwmCRSDistance::CGwmCRSDistance(bool isGeographic) : CGwmDistance()
 {
     mGeographic = isGeographic;
+    mCalculator = mGeographic ? &SpatialDistance : &EuclideanDistance;
 }
 
 CGwmCRSDistance::CGwmCRSDistance(const CGwmCRSDistance &distance) : CGwmDistance(distance)
 {
     mGeographic = distance.mGeographic;
-    mDataPoints = distance.mDataPoints;
-    mFocusPoints = distance.mFocusPoints;
 }
 
-vec CGwmCRSDistance::distance(int focus)
+vec CGwmCRSDistance::distance(DistanceParameter* parameter)
 {
-    if (focus < mTotal && mFocusPoints && mDataPoints)
+    _ASSERT(parameter != nullptr);
+    CRSDistanceParameter* p = (CRSDistanceParameter*)parameter;
+    if (p->dataPoints.n_cols == 2 && p->focusPoints.n_cols == 2)
     {
-        return mGeographic ? SpatialDistance(mFocusPoints->row(focus), *mDataPoints) : EuclideanDistance(mFocusPoints->row(focus), *mDataPoints);
+        uword total = p->dataPoints.n_rows;
+        if (p->focus < total)
+        {
+            return mCalculator(p->focusPoints.row(p->focus), p->dataPoints);
+        }
+        else throw std::runtime_error("Target is out of bounds of data points.");
     }
-    else
-        return vec();
+    else throw std::runtime_error("The dimension of data points or focus points is not 2.");
 }

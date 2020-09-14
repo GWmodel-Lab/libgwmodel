@@ -4,6 +4,7 @@
         "*.qs": "javascript",
         "armadillo": "cpp",
         "xstring": "cpp",
-        "unordered_map": "cpp"
+        "unordered_map": "cpp",
+        "random": "cpp"
     }
 }

@@ -1,19 +1,18 @@
 #include "spatialweight/CGwmDMatDistance.h"
 
-CGwmDMatDistance::CGwmDMatDistance(int total, string dmatFile) : CGwmDistance(total)
+CGwmDMatDistance::CGwmDMatDistance(string dmatFile) : CGwmDistance()
 {
     mDMatFile = dmatFile;
-    mRowSize = total;
 }
 
 CGwmDMatDistance::CGwmDMatDistance(const CGwmDMatDistance &distance) : CGwmDistance(distance)
 {
     mDMatFile = distance.mDMatFile;
-    mRowSize = distance.mRowSize;
 }
 
-vec CGwmDMatDistance::distance(int focus)
+vec CGwmDMatDistance::distance(DistanceParameter* parameter)
 {
+    _ASSERT(parameter != nullptr);
     // QFile dmat(mDMatFile);
     // if (focus < mTotal && dmat.open(QFile::QIODevice::ReadOnly))
     // {
@@ -22,5 +21,5 @@ vec CGwmDMatDistance::distance(int focus)
     //     QByteArray values = dmat.read(mRowSize * sizeof (double));
     //     return vec((double*)values.data(), mRowSize);
     // }
-    return vec(mRowSize, fill::zeros);
+    return vec();
 }

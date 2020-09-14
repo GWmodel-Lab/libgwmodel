@@ -12,7 +12,7 @@ public:
     static vec MinkwoskiDistance(const rowvec& out_loc, const mat& in_locs, double p);
 
 public:
-    explicit CGwmMinkwoskiDistance(int total, double p, double theta);
+    explicit CGwmMinkwoskiDistance(double p, double theta);
     CGwmMinkwoskiDistance(const CGwmMinkwoskiDistance& distance);
 
     virtual CGwmDistance * clone() override
@@ -29,7 +29,7 @@ public:
     void setTheta(double theta);
 
 public:
-    virtual vec distance(int focus) override;
+    virtual vec distance(DistanceParameter* parameter) override;
 
 private:
     double mPoly;
