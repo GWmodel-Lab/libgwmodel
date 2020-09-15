@@ -24,6 +24,7 @@ gwmodelpp/CGwmSimpleLayer.cpp
 gwmodelpp/CGwmSpatialAlgorithm.cpp
 gwmodelpp/CGwmSpatialMonoscaleAlgorithm.cpp
 gwmodelpp/CGwmGWRBase.cpp
+gwmodelpp/CGwmGWRBasic.cpp
 
 gwmodel.cpp
 )
