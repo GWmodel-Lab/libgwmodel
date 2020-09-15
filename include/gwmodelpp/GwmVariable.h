@@ -1,0 +1,13 @@
+#ifndef GWMVARIABLE_H
+#define GWMVARIABLE_H
+
+#include <string>
+
+struct GwmVariable
+{
+    int index;
+    bool isNumeric;
+    std::string name;
+};
+
+#endif  // GWMVARIABLE_H

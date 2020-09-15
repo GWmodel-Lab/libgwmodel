@@ -16,8 +16,5 @@ bool CGwmSpatialAlgorithm::isValid()
     if (mSourceLayer == nullptr)
         return false;
     
-    if (mResultLayer == nullptr)
-        return false;
-    
     return true;
 }

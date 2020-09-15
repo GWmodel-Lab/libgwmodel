@@ -5,6 +5,7 @@
         "armadillo": "cpp",
         "xstring": "cpp",
         "unordered_map": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "vector": "cpp"
     }
 }

@@ -22,7 +22,7 @@ public:
 public:
     virtual bool isValid() = 0;
 
-private:
+protected:
     CGwmSimpleLayer* mSourceLayer = nullptr;
     CGwmSimpleLayer* mResultLayer = nullptr;
 };
