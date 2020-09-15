@@ -36,8 +36,9 @@ gwmodelpp/spatialweight/CGwmMinkwoskiDistance.cpp
 gwmodelpp/spatialweight/CGwmSpatialWeight.cpp
 gwmodelpp/spatialweight/CGwmWeight.cpp
 
-gwmodelpp/CGwmSimpleLayer.cpp
 gwmodelpp/CGwmAlgorithm.cpp
+gwmodelpp/CGwmBandwidthSelector.cpp
+gwmodelpp/CGwmSimpleLayer.cpp
 gwmodelpp/CGwmSpatialAlgorithm.cpp
 gwmodelpp/CGwmSpatialMonoscaleAlgorithm.cpp
 gwmodelpp/CGwmGWRBase.cpp

@@ -31,13 +31,27 @@ void CGwmGWRBasic::run()
     _ASSERT(mRegressionDistanceParameter != nullptr);
 
     setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
+    uword nDp = mSourceLayer->featureCount();
+
+    if (!hasPredictLayer() && mIsAutoselectBandwidth)
+    {
+        CGwmBandwidthWeight* bw0 = mSpatialWeight.weight<CGwmBandwidthWeight>();
+        double lower = bw0->adaptive() ? 20 : 0.0;
+        double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance(nDp, mRegressionDistanceParameter);
+        CGwmBandwidthSelector selector(bw0, lower, upper);
+        CGwmBandwidthWeight* bw = selector.optimize(this);
+        if (bw)
+        {
+            mSpatialWeight.setWeight(bw);
+            mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
+        }
+    }
 
     if (mHasHatMatrix)
     {
         mat betasSE, S;
         vec shat, qdiag;
         mBetas = regressionHatmatrix(mX, mY, betasSE, shat, qdiag, S);
-        uword nDp = mSourceLayer->featureCount();
         mDiagnostic = CalcDiagnostic(mX, mY, mBetas, shat);
         double trS = shat(0), trStS = shat(1);
         double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
@@ -154,6 +168,72 @@ mat CGwmGWRBasic::regressionHatmatrixSerial(const mat& x, const vec& y, mat& bet
     return betas.t();
 }
 
+double CGwmGWRBasic::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwidthWeight)
+{
+    uword nDp = mSourceLayer->featureCount();
+    vec shat(2, fill::zeros);
+    double cv = 0.0;
+    for (uword i = 0; i < nDp; i++)
+    {
+        vec d = mSpatialWeight.distance()->distance(mRegressionDistanceParameter);
+        vec w = bandwidthWeight->weight(d);
+        w(i) = 0.0;
+        mat xtw = trans(mX.each_col() % w);
+        mat xtwx = xtw * mX;
+        mat xtwy = xtw * mY;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            vec beta = xtwx_inv * xtwy;
+            double res = mY(i) - det(mX.row(i) * beta);
+            cv += res * res;
+        }
+        catch (...)
+        {
+            return DBL_MAX;
+        }
+    }
+    if (isfinite(cv))
+    {
+        return cv;
+    }
+    else return DBL_MAX;
+}
+
+double CGwmGWRBasic::bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwidthWeight)
+{
+    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    mat betas(nVar, nDp, fill::zeros);
+    vec shat(2, fill::zeros);
+    for (uword i = 0; i < nDp; i++)
+    {
+        vec d = mSpatialWeight.distance()->distance(mRegressionDistanceParameter);
+        vec w = bandwidthWeight->weight(d);
+        mat xtw = trans(mX.each_col() % w);
+        mat xtwx = xtw * mX;
+        mat xtwy = xtw * mY;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            betas.col(i) = xtwx_inv * xtwy;
+            mat ci = xtwx_inv * xtw;
+            mat si = mX.row(i) * ci;
+            shat(0) += si(0, i);
+            shat(1) += det(si * si.t());
+        }
+        catch (std::exception e)
+        {
+            return DBL_MAX;
+        }
+    }
+    double value = CGwmGWRBase::AICc(mX, mY, betas.t(), shat);
+    if (isfinite(value))
+    {
+        return value;
+    }
+    else return DBL_MAX;
+}
+
 void CGwmGWRBasic::createResultLayer(initializer_list<ResultLayerDataItem> items)
 {
     mat layerPoints = hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points();
@@ -198,4 +278,14 @@ void CGwmGWRBasic::createResultLayer(initializer_list<ResultLayerDataItem> items
     }
     
     CGwmSimpleLayer* resultLayer = new CGwmSimpleLayer(layerPoints, layerData, layerFields);
+}
+
+void CGwmGWRBasic::setBandwidthSelectionCriterion(BandwidthSelectionCriterionType type)
+{
+    mBandwidthSelectionCriterion = type;
+    unordered_map<BandwidthSelectionCriterionType, BandwidthSelectionCriterionCalculator> mapper = {
+        make_pair(BandwidthSelectionCriterionType::CV, &CGwmGWRBasic::bandwidthSizeCriterionCVSerial),
+        make_pair(BandwidthSelectionCriterionType::AIC, &CGwmGWRBasic::bandwidthSizeCriterionAICSerial)
+    };
+    mBandwidthSelectionCriterionFunction = mapper[mBandwidthSelectionCriterion];
 }
