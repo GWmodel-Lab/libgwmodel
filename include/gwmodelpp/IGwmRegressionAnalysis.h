@@ -16,7 +16,7 @@ class IGwmRegressionAnalysis
     virtual void setIndependentVariables(const vector<GwmVariable>& variables) = 0;
 
     virtual mat regression(const mat& x, const vec& y) = 0;
-    virtual mat predict(const mat& x) = 0;
+    virtual mat regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S) = 0;
 
     virtual GwmRegressionDiagnostic diagnostic() const = 0;
 };

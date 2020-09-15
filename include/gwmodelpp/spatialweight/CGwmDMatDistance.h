@@ -9,7 +9,8 @@ using namespace std;
 struct DMatDistanceParameter : public DistanceParameter
 {
     int rowSize;
-    string filename;
+
+    DMatDistanceParameter() {}
 };
 
 /**

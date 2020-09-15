@@ -11,6 +11,8 @@ using namespace arma;
 struct DistanceParameter
 {
     uword focus;
+
+    DistanceParameter() {}
 };
 
 class CGwmDistance

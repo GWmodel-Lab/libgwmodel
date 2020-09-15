@@ -4,9 +4,10 @@
 #include <armadillo>
 using namespace arma;
 
+#include "CGwmAlgorithm.h"
 #include "CGwmSimpleLayer.h"
 
-class CGwmSpatialAlgorithm
+class CGwmSpatialAlgorithm : public CGwmAlgorithm
 {
 public:
     CGwmSpatialAlgorithm();

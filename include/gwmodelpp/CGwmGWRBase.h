@@ -7,6 +7,24 @@
 class CGwmGWRBase : public CGwmSpatialMonoscaleAlgorithm, public IGwmRegressionAnalysis
 {
 public:
+    static vec Fitted(const mat& x, const mat& betas)
+    {
+        return sum(betas % x, 1);
+    }
+
+    static double RSS(const mat& x, const mat& y, const mat& betas)
+    {
+        vec r = y - Fitted(x, betas);
+        return sum(r % r);
+    }
+
+    static double AICc(const mat& x, const mat& y, const mat& betas, const vec& shat)
+    {
+        double ss = RSS(x, y, betas), n = x.n_rows;
+        return n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
+    }
+
+public:
     CGwmGWRBase();
     ~CGwmGWRBase();
 
@@ -30,7 +48,7 @@ public:
 
     bool hasPredictLayer();
 
-    virtual void initXY(mat& x, mat& y, const GwmVariable& depVar, const vector<GwmVariable>& indepVars);
+    virtual void setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmVariable& depVar, const vector<GwmVariable>& indepVars);
 
 protected:
     CGwmSimpleLayer* mPredictLayer;

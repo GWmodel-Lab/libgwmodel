@@ -2,7 +2,23 @@ cmake_minimum_required(VERSION 3.1)
 project(libgwmodel)
 
 find_package(Armadillo REQUIRED)
-include_directories(${ARMADILLO_INCLUDE_DIRS})
+if(ARMADILLO_FOUND)
+    add_definitions(-DARMA_USE_LAPACK -DARMA_USE_BLAS -DARMA_DONT_USE_WRAPPER)
+    include_directories(${ARMADILLO_INCLUDE_DIRS})
+
+    find_package(BLAS)
+    if(NOT BLAS_FOUND)
+        message(SEND_ERROR "BLAS Not Found!")
+    endif(NOT BLAS_FOUND)
+    
+    find_package(LAPACK)
+    if(NOT LAPACK_FOUND)
+        message(SEND_ERROR "LAPACK Not Found!")
+    endif(NOT LAPACK_FOUND)
+else(ARMADILLO_FOUND)
+    message(FATAL_ERROR "Armadillo Not Found!")
+endif(ARMADILLO_FOUND)
+
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/include 
@@ -21,6 +37,7 @@ gwmodelpp/spatialweight/CGwmSpatialWeight.cpp
 gwmodelpp/spatialweight/CGwmWeight.cpp
 
 gwmodelpp/CGwmSimpleLayer.cpp
+gwmodelpp/CGwmAlgorithm.cpp
 gwmodelpp/CGwmSpatialAlgorithm.cpp
 gwmodelpp/CGwmSpatialMonoscaleAlgorithm.cpp
 gwmodelpp/CGwmGWRBase.cpp
@@ -30,4 +47,9 @@ gwmodel.cpp
 )
 
 add_library(gwmodel SHARED ${SOURCES})
-target_link_libraries(gwmodel ${ARMADILLO_LIBRARIES})
+
+target_link_libraries(gwmodel
+    ${ARMADILLO_LIBRARIES}
+    ${BLAS_LIBRARIES}
+    ${LAPACK_LIBRARIES}
+)

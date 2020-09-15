@@ -14,9 +14,8 @@ public:
     CGwmSpatialWeight spatialWeight() const;
     void setSpatialWeight(const CGwmSpatialWeight &spatialWeight);
 
-private:
+protected:
     CGwmSpatialWeight mSpatialWeight;
-
 };
 
 inline CGwmSpatialWeight CGwmSpatialMonoscaleAlgorithm::spatialWeight() const

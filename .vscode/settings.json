@@ -6,6 +6,9 @@
         "xstring": "cpp",
         "unordered_map": "cpp",
         "random": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "cmath": "cpp",
+        "system_error": "cpp",
+        "xlocale": "cpp"
     }
 }
