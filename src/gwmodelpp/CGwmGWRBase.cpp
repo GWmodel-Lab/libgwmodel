@@ -1,16 +1,16 @@
-#include "CGwmGeoWeightedRegression.h"
+#include "CGwmGWRBase.h"
 
-CGwmGeoWeightedRegression::CGwmGeoWeightedRegression()
+CGwmGWRBase::CGwmGWRBase()
 {
     
 }
 
-CGwmGeoWeightedRegression::~CGwmGeoWeightedRegression()
+CGwmGWRBase::~CGwmGWRBase()
 {
 
 }
 
-bool CGwmGeoWeightedRegression::isValid()
+bool CGwmGWRBase::isValid()
 {
     if (CGwmSpatialMonoscaleAlgorithm::isValid())
     {
@@ -22,7 +22,7 @@ bool CGwmGeoWeightedRegression::isValid()
     else return false;
 }
 
-void CGwmGeoWeightedRegression::initXY(mat& x, mat& y, const GwmVariable& depVar, const vector<GwmVariable>& indepVars)
+void CGwmGWRBase::initXY(mat& x, mat& y, const GwmVariable& depVar, const vector<GwmVariable>& indepVars)
 {
     uword nDp = mSourceLayer->featureCount(), nVar = indepVars.size() + 1;
     arma::uvec indepVarIndeces(indepVars.size());

@@ -23,7 +23,7 @@ gwmodelpp/spatialweight/CGwmWeight.cpp
 gwmodelpp/CGwmSimpleLayer.cpp
 gwmodelpp/CGwmSpatialAlgorithm.cpp
 gwmodelpp/CGwmSpatialMonoscaleAlgorithm.cpp
-gwmodelpp/CGwmGeoWeightedRegression.cpp
+gwmodelpp/CGwmGWRBase.cpp
 
 gwmodel.cpp
 )

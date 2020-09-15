@@ -1,14 +1,14 @@
-#ifndef CGWMGEOWEIGHTEDREGRESSION_H
-#define CGWMGEOWEIGHTEDREGRESSION_H
+#ifndef CGWMGWRBASE_H
+#define CGWMGWRBASE_H
 
 #include "CGwmSpatialMonoscaleAlgorithm.h"
 #include "IGwmRegressionAnalysis.h"
 
-class CGwmGeoWeightedRegression : public CGwmSpatialMonoscaleAlgorithm, public IGwmRegressionAnalysis
+class CGwmGWRBase : public CGwmSpatialMonoscaleAlgorithm, public IGwmRegressionAnalysis
 {
 public:
-    CGwmGeoWeightedRegression();
-    ~CGwmGeoWeightedRegression();
+    CGwmGWRBase();
+    ~CGwmGWRBase();
 
 public:
     mat betas() const;
@@ -45,44 +45,44 @@ protected:
     GwmRegressionDiagnostic mDiagnostic;
 };
 
-inline CGwmSimpleLayer* CGwmGeoWeightedRegression::predictLayer() const
+inline CGwmSimpleLayer* CGwmGWRBase::predictLayer() const
 {
     return mPredictLayer;
 }
 
-inline void CGwmGeoWeightedRegression::setPredictLayer(CGwmSimpleLayer* layer)
+inline void CGwmGWRBase::setPredictLayer(CGwmSimpleLayer* layer)
 {
     mPredictLayer = layer;
 }
 
-inline GwmVariable CGwmGeoWeightedRegression::dependentVariable() const
+inline GwmVariable CGwmGWRBase::dependentVariable() const
 {
     return mDepVar;
 }
 
-inline void CGwmGeoWeightedRegression::setDependentVariable(const GwmVariable& variable)
+inline void CGwmGWRBase::setDependentVariable(const GwmVariable& variable)
 {
     mDepVar = variable;
 }
 
-inline vector<GwmVariable> CGwmGeoWeightedRegression::independentVariables() const
+inline vector<GwmVariable> CGwmGWRBase::independentVariables() const
 {
     return mIndepVars;
 }
 
-inline void CGwmGeoWeightedRegression::setIndependentVariables(const vector<GwmVariable>& variables)
+inline void CGwmGWRBase::setIndependentVariables(const vector<GwmVariable>& variables)
 {
     mIndepVars = variables;
 }
 
-inline GwmRegressionDiagnostic CGwmGeoWeightedRegression::diagnostic() const
+inline GwmRegressionDiagnostic CGwmGWRBase::diagnostic() const
 {
     return mDiagnostic;
 }
 
-inline bool CGwmGeoWeightedRegression::hasPredictLayer()
+inline bool CGwmGWRBase::hasPredictLayer()
 {
     return mPredictLayer != nullptr;
 }
 
-#endif  // CGWMGEOWEIGHTEDREGRESSION_H
+#endif  // CGWMGWRBASE_H
