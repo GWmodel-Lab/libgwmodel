@@ -1,4 +1,5 @@
 #include "CGwmGWRBasic.h"
+#include "CGwmVariableForwardSelector.h"
 
 GwmRegressionDiagnostic CGwmGWRBasic::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
@@ -29,6 +30,16 @@ void CGwmGWRBasic::run()
 {
     createRegressionDistanceParameter();
     _ASSERT(mRegressionDistanceParameter != nullptr);
+
+    if (!hasPredictLayer() && mIsAutoselectIndepVars)
+    {
+        CGwmVariableForwardSelector selector(mIndepVars, mIndepVarSelectionThreshold);
+        vector<GwmVariable> selectedIndepVars = selector.optimize(this);
+        if (selectedIndepVars.size() > 0)
+        {
+            mIndepVars = selectedIndepVars;
+        }
+    }
 
     setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
     uword nDp = mSourceLayer->featureCount();
@@ -232,6 +243,46 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwi
         return value;
     }
     else return DBL_MAX;
+}
+
+double CGwmGWRBasic::indepVarsSelectionCriterionSerial(const vector<GwmVariable>& indepVars)
+{
+    mat x;
+    vec y;
+    setXY(x, y, mSourceLayer, mDepVar, indepVars);
+    uword nDp = x.n_rows, nVar = x.n_cols;
+    mat betas(nVar, nDp, fill::zeros);
+    vec shat(2, fill::zeros);
+    for (uword i = 0; i < nDp; i++)
+    {
+        vec w(nDp, fill::ones);
+        mat xtw = trans(x.each_col() % w);
+        mat xtwx = xtw * x;
+        mat xtwy = xtw * y;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            betas.col(i) = xtwx_inv * xtwy;
+            mat ci = xtwx_inv * xtw;
+            mat si = x.row(i) * ci;
+            shat(0) += si(0, i);
+            shat(1) += det(si * si.t());
+        }
+        catch (...)
+        {
+            return DBL_MAX;
+        }
+    }
+    double value = CGwmGWRBase::AICc(x, y, betas.t(), shat);
+    string msg = "Model: " + mDepVar.name + " ~ ";
+    for (size_t i = 0; i < indepVars.size() - 1; i++)
+    {
+        msg += indepVars[i].name + " + ";
+    }
+    msg += indepVars.back().name;
+    msg += " (AICc Value: " + to_string(value) + ")";
+    
+    return value;
 }
 
 void CGwmGWRBasic::createResultLayer(initializer_list<ResultLayerDataItem> items)

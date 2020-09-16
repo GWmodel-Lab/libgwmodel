@@ -7,10 +7,11 @@
 #include "CGwmGWRBase.h"
 #include "GwmRegressionDiagnostic.h"
 #include "CGwmBandwidthSelector.h"
+#include "IGwmVarialbeSelectable.h"
 
 using namespace std;
 
-class CGwmGWRBasic : public CGwmGWRBase, public IGwmBandwidthSelectable
+class CGwmGWRBasic : public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmVarialbeSelectable
 {
 public:
     enum BandwidthSelectionCriterionType
@@ -35,6 +36,7 @@ public:
     typedef tuple<string, mat, NameFormat> ResultLayerDataItem;
 
     typedef double (CGwmGWRBasic::*BandwidthSelectionCriterionCalculator)(CGwmBandwidthWeight*);
+    typedef double (CGwmGWRBasic::*IndepVarsSelectCriterionCalculator)(const vector<GwmVariable>&);
 
 private:
     static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
@@ -65,6 +67,11 @@ public:     // Implement IGwmBandwidthSelectable
 
     double bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwidthWeight);
+    
+public:     // Implement IGwmVariableSelectable
+    double getCriterion(const vector<GwmVariable>& variables);
+
+    double indepVarsSelectionCriterionSerial(const vector<GwmVariable>& indepVars);
 
 protected:
     bool isStoreS();
@@ -81,6 +88,11 @@ protected:
 
     DistanceParameter* mRegressionDistanceParameter = nullptr;
     DistanceParameter* mPredictionDistanceParameter = nullptr;
+
+    bool mIsAutoselectIndepVars = false;
+    double mIndepVarSelectionThreshold = 3.0;
+    IndepVarsSelectCriterionCalculator mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionSerial;
+    VariablesCriterionList mIndepVarsSelectionCriterionList;
 
     bool mIsAutoselectBandwidth = false;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::AIC;
@@ -124,6 +136,11 @@ inline CGwmGWRBasic::BandwidthSelectionCriterionType CGwmGWRBasic::bandwidthSele
 inline double CGwmGWRBasic::getCriterion(CGwmBandwidthWeight* weight)
 {
     return (this->*mBandwidthSelectionCriterionFunction)(weight);
+}
+
+inline double CGwmGWRBasic::getCriterion(const vector<GwmVariable>& variables)
+{
+    return (this->*mIndepVarsSelectionCriterionFunction)(variables);
 }
 
 #endif  // CGWMGWRBASIC_H

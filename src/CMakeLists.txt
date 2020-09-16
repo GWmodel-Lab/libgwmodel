@@ -38,6 +38,7 @@ gwmodelpp/spatialweight/CGwmWeight.cpp
 
 gwmodelpp/CGwmAlgorithm.cpp
 gwmodelpp/CGwmBandwidthSelector.cpp
+gwmodelpp/CGwmVariableForwardSelector.cpp
 gwmodelpp/CGwmSimpleLayer.cpp
 gwmodelpp/CGwmSpatialAlgorithm.cpp
 gwmodelpp/CGwmSpatialMonoscaleAlgorithm.cpp
