@@ -1,4 +1,5 @@
 #include "CGwmGWRBasic.h"
+#include "CGwmBandwidthSelector.h"
 #include "CGwmVariableForwardSelector.h"
 
 GwmRegressionDiagnostic CGwmGWRBasic::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)

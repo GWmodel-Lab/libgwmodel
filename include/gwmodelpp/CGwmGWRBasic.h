@@ -6,7 +6,7 @@
 #include <initializer_list>
 #include "CGwmGWRBase.h"
 #include "GwmRegressionDiagnostic.h"
-#include "CGwmBandwidthSelector.h"
+#include "IGwmBandwidthSelectable.h"
 #include "IGwmVarialbeSelectable.h"
 
 using namespace std;

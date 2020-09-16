@@ -9,8 +9,6 @@
 
 using namespace std;
 
-typedef vector<pair<double, double> >  BandwidthCriterionList;
-
 class CGwmBandwidthSelector
 {
 public:
