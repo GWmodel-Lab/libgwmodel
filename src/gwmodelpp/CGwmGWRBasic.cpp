@@ -113,7 +113,7 @@ void CGwmGWRBasic::createRegressionDistanceParameter()
     if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
         mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
     {
-        mRegressionDistanceParameter = new CRSDistanceParameter(mSourceLayer->data(), mSourceLayer->data());
+        mRegressionDistanceParameter = new CRSDistanceParameter(mSourceLayer->points(), mSourceLayer->points());
     }
 }
 
@@ -122,7 +122,7 @@ void CGwmGWRBasic::createPredictionDistanceParameter()
     if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
         mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
     {
-        mRegressionDistanceParameter = new CRSDistanceParameter(mPredictLayer->data(), mSourceLayer->data());
+        mRegressionDistanceParameter = new CRSDistanceParameter(mPredictLayer->points(), mSourceLayer->points());
     }
 }
 
@@ -538,7 +538,7 @@ void CGwmGWRBasic::createResultLayer(initializer_list<ResultLayerDataItem> items
         
     }
     
-    CGwmSimpleLayer* resultLayer = new CGwmSimpleLayer(layerPoints, layerData, layerFields);
+    mResultLayer = new CGwmSimpleLayer(layerPoints, layerData, layerFields);
 }
 
 void CGwmGWRBasic::setBandwidthSelectionCriterion(BandwidthSelectionCriterionType type)

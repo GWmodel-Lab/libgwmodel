@@ -14,7 +14,7 @@
 using namespace std;
 using namespace arma;
 
-TEST_CASE("Check create algorithm")
+TEST_CASE("Basic Flow of BasicGWR")
 {
     mat londonhp100_coord;
     field<std::string> coordHeader(2);

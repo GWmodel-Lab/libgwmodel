@@ -13,7 +13,7 @@ struct GWMODELPP_API DistanceParameter
 {
     uword focus;
 
-    DistanceParameter() {}
+    DistanceParameter(): focus(0) {}
 };
 
 class GWMODELPP_API CGwmDistance

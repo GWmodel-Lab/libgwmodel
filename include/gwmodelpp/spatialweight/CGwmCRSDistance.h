@@ -6,8 +6,8 @@
 
 struct GWMODELPP_API CRSDistanceParameter : public DistanceParameter
 {
-    const mat& focusPoints;
-    const mat& dataPoints;
+    mat focusPoints;
+    mat dataPoints;
 
     CRSDistanceParameter(const mat& fp, const mat& dp) : DistanceParameter()
         , focusPoints(fp)

@@ -52,7 +52,7 @@ public:
     virtual void setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmVariable& depVar, const vector<GwmVariable>& indepVars);
 
 protected:
-    CGwmSimpleLayer* mPredictLayer;
+    CGwmSimpleLayer* mPredictLayer = nullptr;
 
     GwmVariable mDepVar;
     vector<GwmVariable> mIndepVars;
