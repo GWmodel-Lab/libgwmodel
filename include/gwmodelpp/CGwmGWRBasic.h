@@ -54,6 +54,9 @@ public:
     BandwidthSelectionCriterionType bandwidthSelectionCriterion() const;
     void setBandwidthSelectionCriterion(BandwidthSelectionCriterionType type);
 
+    bool hasHatMatrix() const;
+    void setHasHatMatrix(const bool has);
+
 public:     // Implement CGwmAlgorithm
     void run() override;
 
@@ -185,6 +188,16 @@ inline ParallelType CGwmGWRBasic::parallelType() const
 inline void CGwmGWRBasic::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
+}
+
+inline bool CGwmGWRBasic::hasHatMatrix() const
+{
+    return mHasHatMatrix;
+}
+
+inline void CGwmGWRBasic::setHasHatMatrix(const bool has)
+{
+    mHasHatMatrix = has;
 }
 
 #endif  // CGWMGWRBASIC_H
