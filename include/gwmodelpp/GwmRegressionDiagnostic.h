@@ -1,7 +1,8 @@
 #ifndef GWMREGRESSIONDIAGNOSTIC_H
 #define GWMREGRESSIONDIAGNOSTIC_H
+#include "gwmodelpp.h"
 
-struct GwmRegressionDiagnostic
+struct GWMODELPP_API GwmRegressionDiagnostic
 {
     double RSS;
     double AIC;

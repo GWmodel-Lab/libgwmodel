@@ -1,7 +1,9 @@
 #ifndef CGWMALGORITHM_H
 #define CGWMALGORITHM_H
 
-class CGwmAlgorithm
+#include "gwmodelpp.h"
+
+class GWMODELPP_API CGwmAlgorithm
 {
 public:
     CGwmAlgorithm();

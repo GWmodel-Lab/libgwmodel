@@ -3,11 +3,12 @@
 
 #include <unordered_map>
 #include <string>
+#include "gwmodelpp.h"
 #include "spatialweight/CGwmWeight.h"
 
 using namespace std;
 
-class CGwmBandwidthWeight : public CGwmWeight
+class GWMODELPP_API CGwmBandwidthWeight : public CGwmWeight
 {
 public:
     enum KernelFunctionType

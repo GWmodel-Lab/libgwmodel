@@ -1,9 +1,10 @@
 #ifndef CGWMMINKWOSKIDISTANCE_H
 #define CGWMMINKWOSKIDISTANCE_H
 
+#include "gwmodelpp.h"
 #include "spatialweight/CGwmCRSDistance.h"
 
-class CGwmMinkwoskiDistance : public CGwmCRSDistance
+class GWMODELPP_API CGwmMinkwoskiDistance : public CGwmCRSDistance
 {
 public:
     static mat CoordinateRotate(const mat& coords, double theta);

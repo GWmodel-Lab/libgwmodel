@@ -4,12 +4,13 @@
 #include <map>
 #include <vector>
 #include <utility>
+#include "gwmodelpp.h"
 #include "IGwmBandwidthSelectable.h"
 #include "spatialweight/CGwmBandwidthWeight.h"
 
 using namespace std;
 
-class CGwmBandwidthSelector
+class GWMODELPP_API CGwmBandwidthSelector
 {
 public:
     CGwmBandwidthSelector();

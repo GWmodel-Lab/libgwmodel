@@ -2,8 +2,9 @@
 #define IGWMBANDWIDTHSELECTABLE_H
 
 #include "spatialweight/CGwmBandwidthWeight.h"
+#include "gwmodelpp.h"
 
-struct IGwmBandwidthSelectable
+struct GWMODELPP_API IGwmBandwidthSelectable
 {
     virtual double getCriterion(CGwmBandwidthWeight* weight) = 0;
 };

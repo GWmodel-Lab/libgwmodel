@@ -4,10 +4,11 @@
 #include <vector>
 #include <string>
 #include <armadillo>
+#include "gwmodelpp.h"
 using namespace std;
 using namespace arma;
 
-class CGwmSimpleLayer
+class GWMODELPP_API CGwmSimpleLayer
 {
 public:
     CGwmSimpleLayer(const mat& points, const mat& data, const vector<string>& fields);

@@ -38,9 +38,8 @@ include_directories(
 
 add_definitions(-DM_PI=3.14159265358979323846 -DM_PI_2=1.57079632679489661923 -DDOUBLE_EPS=1e-8)
 if(MSVC)
-    add_definitions(-DCREATDLL_EXPORTS)
+    add_definitions(-DCREATEDLL_EXPORTS)
 endif(MSVC)
-
 
 set(SOURCES_CXX
     gwmodelpp/spatialweight/CGwmBandwidthWeight.cpp
@@ -65,11 +64,37 @@ set(SOURCES_C
     gwmodel.cpp
 )
 
+set(HEADERS_CXX
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/spatialweight/CGwmBandwidthWeight.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/spatialweight/CGwmCRSDistance.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/spatialweight/CGwmDistance.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/spatialweight/CGwmDMatDistance.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/spatialweight/CGwmSpatialWeight.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/spatialweight/CGwmWeight.h
+
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmAlgorithm.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmBandwidthSelector.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmVariableForwardSelector.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmSimpleLayer.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmSpatialAlgorithm.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWRBase.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWRBasic.h
+
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/gwmodelpp.h
+)
+
 set(HEADERS_C
     ${CMAKE_SOURCE_DIR}/include/gwmodel.h
 )
 
-add_library(gwmodel SHARED ${SOURCES_CXX} ${SOURCES_C} ${HEADERS_C})
+if(NOT BUILD_CXX_LIBRARY)
+    add_library(gwmodel SHARED ${SOURCES_CXX} ${SOURCES_C} ${HEADERS_CXX} ${HEADERS_C})
+else(NOT BUILD_CXX_LIBRARY)
+    add_definitions(-DCREATECPP_EXPORTS)
+    add_library(gwmodel SHARED ${SOURCES_CXX} ${HEADERS_CXX})
+endif(NOT BUILD_CXX_LIBRARY)
 
 target_link_libraries(gwmodel
     ${ARMADILLO_LIBRARIES}

@@ -1,16 +1,15 @@
 #ifndef CGWMSPATIALWEIGHT_H
 #define CGWMSPATIALWEIGHT_H
 
+#include "gwmodelpp.h"
 #include "spatialweight/CGwmWeight.h"
 #include "spatialweight/CGwmDistance.h"
-
 #include "spatialweight/CGwmBandwidthWeight.h"
-
 #include "spatialweight/CGwmCRSDistance.h"
 #include "spatialweight/CGwmMinkwoskiDistance.h"
 #include "spatialweight/CGwmDMatDistance.h"
 
-class CGwmSpatialWeight
+class GWMODELPP_API CGwmSpatialWeight
 {
 public:
     CGwmSpatialWeight();

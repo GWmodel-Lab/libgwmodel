@@ -1,10 +1,11 @@
 #ifndef CGWMGWRBASE_H
 #define CGWMGWRBASE_H
 
+#include "gwmodelpp.h"
 #include "CGwmSpatialMonoscaleAlgorithm.h"
 #include "IGwmRegressionAnalysis.h"
 
-class CGwmGWRBase : public CGwmSpatialMonoscaleAlgorithm, public IGwmRegressionAnalysis
+class GWMODELPP_API CGwmGWRBase : public CGwmSpatialMonoscaleAlgorithm, public IGwmRegressionAnalysis
 {
 public:
     static vec Fitted(const mat& x, const mat& betas)

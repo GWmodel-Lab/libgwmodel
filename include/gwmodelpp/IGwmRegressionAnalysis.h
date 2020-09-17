@@ -2,12 +2,13 @@
 #define IGWMREGRESSIONANALYSIS_H
 
 #include <vector>
+#include "gwmodelpp.h"
 #include "GwmVariable.h"
 #include "GwmRegressionDiagnostic.h"
 
 using namespace std;
 
-struct IGwmRegressionAnalysis
+struct GWMODELPP_API IGwmRegressionAnalysis
 {
     virtual GwmVariable dependentVariable() const = 0;
     virtual void setDependentVariable(const GwmVariable& variable) = 0;

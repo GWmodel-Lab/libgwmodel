@@ -2,11 +2,12 @@
 #define CGWMVARIABLEFORWARDSELECTOR_H
 
 #include <utility>
+#include "gwmodelpp.h"
 #include "IGwmVarialbeSelectable.h"
 
 using namespace std;
 
-class CGwmVariableForwardSelector
+class GWMODELPP_API CGwmVariableForwardSelector
 {
 public:
     CGwmVariableForwardSelector();

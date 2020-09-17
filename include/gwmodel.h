@@ -2,7 +2,7 @@
 #define GWMODEL_H
 
 #ifdef WIN32
-#ifdef CREATDLL_EXPORTS
+#ifdef CREATEDLL_EXPORTS
 #define GWMODEL_API __declspec(dllexport)
 #else
 #define GWMODEL_API __declspec(dllimport)

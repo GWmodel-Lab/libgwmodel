@@ -2,12 +2,13 @@
 #define CGWMSPATIALALGORITHM_H
 
 #include <armadillo>
-using namespace arma;
-
+#include "gwmodelpp.h"
 #include "CGwmAlgorithm.h"
 #include "CGwmSimpleLayer.h"
 
-class CGwmSpatialAlgorithm : public CGwmAlgorithm
+using namespace arma;
+
+class GWMODELPP_API CGwmSpatialAlgorithm : public CGwmAlgorithm
 {
 public:
     CGwmSpatialAlgorithm();

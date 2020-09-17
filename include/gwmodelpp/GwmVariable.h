@@ -2,8 +2,9 @@
 #define GWMVARIABLE_H
 
 #include <string>
+#include "gwmodelpp.h"
 
-struct GwmVariable
+struct GWMODELPP_API GwmVariable
 {
     int index;
     bool isNumeric;
