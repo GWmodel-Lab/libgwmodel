@@ -1,9 +1,10 @@
-#include <iostream>
+#define CATCH_CONFIG_MAIN
 
-using namespace std;
+#include <catch.hpp>
+#include "gwmodel.h"
 
-int main(int argc, char const *argv[])
+TEST_CASE("Check create algorithm")
 {
-    cout << "Test BasicGWR" << endl;
-    return 0;
+    CGwmSpatialAlgorithm* algorithm = gwmodel_create_algorithm();
+    REQUIRE(algorithm == nullptr);
 }

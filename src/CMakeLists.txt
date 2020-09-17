@@ -37,6 +37,10 @@ include_directories(
 )
 
 add_definitions(-DM_PI=3.14159265358979323846 -DM_PI_2=1.57079632679489661923 -DDOUBLE_EPS=1e-8)
+if(MSVC)
+    add_definitions(-DCREATDLL_EXPORTS)
+endif(MSVC)
+
 
 set(SOURCES_CXX
     gwmodelpp/spatialweight/CGwmBandwidthWeight.cpp
@@ -61,7 +65,11 @@ set(SOURCES_C
     gwmodel.cpp
 )
 
-add_library(gwmodel SHARED ${SOURCES_CXX} ${SOURCES_C})
+set(HEADERS_C
+    ${CMAKE_SOURCE_DIR}/include/gwmodel.h
+)
+
+add_library(gwmodel SHARED ${SOURCES_CXX} ${SOURCES_C} ${HEADERS_C})
 
 target_link_libraries(gwmodel
     ${ARMADILLO_LIBRARIES}

@@ -7,8 +7,8 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/src)
 
 enable_testing()
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/test/BasicGWR)
+add_subdirectory(${CMAKE_SOURCE_DIR}/test)
 add_test(
     NAME testBasicGWR 
-    COMMAND $<TARGET_FILE:testBasicGWR>
+    COMMAND $<TARGET_FILE:testBasicGWR> --success
 )
