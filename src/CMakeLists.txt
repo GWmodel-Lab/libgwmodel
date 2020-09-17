@@ -39,24 +39,24 @@ include_directories(
 add_definitions(-DM_PI=3.14159265358979323846 -DM_PI_2=1.57079632679489661923 -DDOUBLE_EPS=1e-8)
 
 set(SOURCES
-gwmodelpp/spatialweight/CGwmBandwidthWeight.cpp
-gwmodelpp/spatialweight/CGwmCRSDistance.cpp
-gwmodelpp/spatialweight/CGwmDistance.cpp
-gwmodelpp/spatialweight/CGwmDMatDistance.cpp
-gwmodelpp/spatialweight/CGwmMinkwoskiDistance.cpp
-gwmodelpp/spatialweight/CGwmSpatialWeight.cpp
-gwmodelpp/spatialweight/CGwmWeight.cpp
+    gwmodelpp/spatialweight/CGwmBandwidthWeight.cpp
+    gwmodelpp/spatialweight/CGwmCRSDistance.cpp
+    gwmodelpp/spatialweight/CGwmDistance.cpp
+    gwmodelpp/spatialweight/CGwmDMatDistance.cpp
+    gwmodelpp/spatialweight/CGwmMinkwoskiDistance.cpp
+    gwmodelpp/spatialweight/CGwmSpatialWeight.cpp
+    gwmodelpp/spatialweight/CGwmWeight.cpp
 
-gwmodelpp/CGwmAlgorithm.cpp
-gwmodelpp/CGwmBandwidthSelector.cpp
-gwmodelpp/CGwmVariableForwardSelector.cpp
-gwmodelpp/CGwmSimpleLayer.cpp
-gwmodelpp/CGwmSpatialAlgorithm.cpp
-gwmodelpp/CGwmSpatialMonoscaleAlgorithm.cpp
-gwmodelpp/CGwmGWRBase.cpp
-gwmodelpp/CGwmGWRBasic.cpp
+    gwmodelpp/CGwmAlgorithm.cpp
+    gwmodelpp/CGwmBandwidthSelector.cpp
+    gwmodelpp/CGwmVariableForwardSelector.cpp
+    gwmodelpp/CGwmSimpleLayer.cpp
+    gwmodelpp/CGwmSpatialAlgorithm.cpp
+    gwmodelpp/CGwmSpatialMonoscaleAlgorithm.cpp
+    gwmodelpp/CGwmGWRBase.cpp
+    gwmodelpp/CGwmGWRBasic.cpp
 
-gwmodel.cpp
+    gwmodel.cpp
 )
 
 add_library(gwmodel SHARED ${SOURCES})
