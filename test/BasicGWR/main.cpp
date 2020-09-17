@@ -2,6 +2,7 @@
 #include <catch.hpp>
 
 #include <vector>
+#include <string>
 #include <armadillo>
 #include "gwmodelpp/CGwmSimpleLayer.h"
 #include "gwmodelpp/CGwmGWRBasic.h"
@@ -19,7 +20,7 @@ TEST_CASE("Check create algorithm")
     field<std::string> coordHeader(2);
     coordHeader(0) = "x";
     coordHeader(1) = "y";
-    REQUIRE(londonhp100_coord.load(arma::csv_name("../data/londonhp100coords.csv", coordHeader)));
+    REQUIRE(londonhp100_coord.load(arma::csv_name(string(SAMPLE_DATA_DIR) + "/londonhp100coords.csv", coordHeader)));
 
     mat londonhp100_data;
     field<std::string> dataHeader(4);
@@ -27,7 +28,7 @@ TEST_CASE("Check create algorithm")
     dataHeader(1) = "FLOORSZ";
     dataHeader(2) = "UNEMPLOY";
     dataHeader(3) = "PROF";
-    REQUIRE(londonhp100_data.load(arma::csv_name("../data/londonhp100data.csv", dataHeader)));
+    REQUIRE(londonhp100_data.load(arma::csv_name(string(SAMPLE_DATA_DIR) + "/londonhp100data.csv", dataHeader)));
 
     vector<string> londonhp100_fields = 
     {
@@ -35,12 +36,14 @@ TEST_CASE("Check create algorithm")
     };
 
     CGwmSimpleLayer* londonhp = new CGwmSimpleLayer(londonhp100_coord, londonhp100_data, londonhp100_fields);
+    REQUIRE(londonhp->points().n_rows);
+    REQUIRE(londonhp->data().n_rows);
+    REQUIRE(londonhp->fields().size());
+    REQUIRE(londonhp->featureCount());
 
     CGwmCRSDistance distance(false);
     CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
-    CGwmSpatialWeight spatial;
-    spatial.setDistance(distance);
-    spatial.setWeight(bandwidth);
+    CGwmSpatialWeight spatial(&bandwidth, &distance);
 
     GwmVariable purchase = {0, true, "PURCHASE"};
     GwmVariable floorsz = {1, true, "FLOORSZ"};
@@ -49,11 +52,11 @@ TEST_CASE("Check create algorithm")
     vector<GwmVariable> indepVars = { floorsz, unemploy, prof };
 
     CGwmGWRBasic algorithm;
-    algorithm.setSourceLayer(londonhp);
-    algorithm.setDependentVariable(purchase);
-    algorithm.setIndependentVariables(indepVars);
-    algorithm.setSpatialWeight(spatial);
-    algorithm.setHasHatMatrix(true);
+    REQUIRE_NOTHROW(algorithm.setSourceLayer(londonhp));
+    REQUIRE_NOTHROW(algorithm.setDependentVariable(purchase));
+    REQUIRE_NOTHROW(algorithm.setIndependentVariables(indepVars));
+    REQUIRE_NOTHROW(algorithm.setSpatialWeight(spatial));
+    REQUIRE_NOTHROW(algorithm.setHasHatMatrix(true));
 
     REQUIRE_NOTHROW(algorithm.run());
 }
