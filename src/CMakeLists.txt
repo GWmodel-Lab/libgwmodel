@@ -38,6 +38,7 @@ include_directories(
 
 add_definitions(-DM_PI=3.14159265358979323846 -DM_PI_2=1.57079632679489661923 -DDOUBLE_EPS=1e-8)
 if(MSVC)
+    message(STATUS "Define __declspec(dllexport) in MSVC")
     add_definitions(-DCREATEDLL_EXPORTS)
 endif(MSVC)
 
@@ -92,6 +93,7 @@ set(HEADERS_C
 if(NOT BUILD_CXX_LIBRARY)
     add_library(gwmodel SHARED ${SOURCES_CXX} ${SOURCES_C} ${HEADERS_CXX} ${HEADERS_C})
 else(NOT BUILD_CXX_LIBRARY)
+    message(STATUS "Building a C++ library")
     add_definitions(-DCREATECPP_EXPORTS)
     add_library(gwmodel SHARED ${SOURCES_CXX} ${HEADERS_CXX})
 endif(NOT BUILD_CXX_LIBRARY)
