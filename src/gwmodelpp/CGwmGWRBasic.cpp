@@ -12,7 +12,7 @@ GwmRegressionDiagnostic CGwmGWRBasic::CalcDiagnostic(const mat& x, const vec& y,
 {
     vec r = y - sum(betas % x, 1);
     double rss = sum(r % r);
-    double n = x.n_rows;
+    double n = (double)x.n_rows;
     double AIC = n * log(rss / n) + n * log(2 * datum::pi) + n + shat(0);
     double AICc = n * log(rss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
     double edf = n - 2 * shat(0) + shat(1);

@@ -20,7 +20,7 @@ public:
 
     static double AICc(const mat& x, const mat& y, const mat& betas, const vec& shat)
     {
-        double ss = RSS(x, y, betas), n = x.n_rows;
+        double ss = RSS(x, y, betas), n = (double)x.n_rows;
         return n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
     }
 
