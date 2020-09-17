@@ -91,11 +91,11 @@ set(HEADERS_C
 )
 
 if(NOT BUILD_CXX_LIBRARY)
-    add_library(gwmodel SHARED ${SOURCES_CXX} ${SOURCES_C} ${HEADERS_CXX} ${HEADERS_C})
+    add_library(gwmodel STATIC ${SOURCES_CXX} ${SOURCES_C} ${HEADERS_CXX} ${HEADERS_C})
 else(NOT BUILD_CXX_LIBRARY)
     message(STATUS "Building a C++ library")
     add_definitions(-DCREATECPP_EXPORTS)
-    add_library(gwmodel SHARED ${SOURCES_CXX} ${HEADERS_CXX})
+    add_library(gwmodel STATIC ${SOURCES_CXX} ${HEADERS_CXX})
 endif(NOT BUILD_CXX_LIBRARY)
 
 target_link_libraries(gwmodel
