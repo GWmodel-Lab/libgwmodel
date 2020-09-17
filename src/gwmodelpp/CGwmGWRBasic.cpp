@@ -2,6 +2,12 @@
 #include "CGwmBandwidthSelector.h"
 #include "CGwmVariableForwardSelector.h"
 
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif
+
+using namespace arma;
+
 GwmRegressionDiagnostic CGwmGWRBasic::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
     vec r = y - sum(betas % x, 1);
@@ -180,6 +186,75 @@ mat CGwmGWRBasic::regressionHatmatrixSerial(const mat& x, const vec& y, mat& bet
     return betas.t();
 }
 
+#ifdef ENABLE_OPENMP
+mat CGwmGWRBasic::regressionOmp(const mat& x, const vec& y)
+{
+    uword nRp = mPredictLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    mat betas(nVar, nRp, arma::fill::zeros);
+    int current = 0;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; (uword)i < nRp; i++)
+    {
+        vec w = mSpatialWeight.weightVector(mPredictionDistanceParameter);
+        mat xtw = trans(x.each_col() % w);
+        mat xtwx = xtw * x;
+        mat xtwy = xtw * y;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            betas.col(i) = xtwx_inv * xtwy;
+        }
+        catch (exception e)
+        {
+            throw e;
+        }
+    }
+    return betas.t();
+}
+
+mat CGwmGWRBasic::regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
+{
+    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    mat betas(nVar, nDp, fill::zeros);
+    betasSE = mat(nVar, nDp, fill::zeros);
+    S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
+    mat shat_all(2, mOmpThreadNum, fill::zeros);
+    mat qDiag_all(nDp, mOmpThreadNum, fill::zeros);
+    int current = 0;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; (uword)i < nDp; i++)
+    {
+        int thread = omp_get_thread_num();
+        vec w = mSpatialWeight.weightVector(mRegressionDistanceParameter);
+        mat xtw = trans(x.each_col() % w);
+        mat xtwx = xtw * x;
+        mat xtwy = xtw * y;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            betas.col(i) = xtwx_inv * xtwy;
+            mat ci = xtwx_inv * xtw;
+            betasSE.col(i) = sum(ci % ci, 1);
+            mat si = x.row(i) * ci;
+            shat_all(0, thread) += si(0, i);
+            shat_all(1, thread) += det(si * si.t());
+            vec p = - si.t();
+            p(i) += 1.0;
+            qDiag_all.col(thread) += p % p;
+            S.row(isStoreS() ? i : 0) = si;
+        }
+        catch (std::exception e)
+        {
+            throw e;
+        }
+    }
+    shat = sum(shat_all, 1);
+    qDiag = sum(qDiag_all, 1);
+    betasSE = betasSE.t();
+    return betas.t();
+}
+#endif
+
 double CGwmGWRBasic::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwidthWeight)
 {
     uword nDp = mSourceLayer->featureCount();
@@ -246,6 +321,95 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwi
     else return DBL_MAX;
 }
 
+#ifdef ENABLE_OPENMP
+double CGwmGWRBasic::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthWeight)
+{
+    uword nDp = mSourceLayer->featureCount();
+    vec shat(2, fill::zeros);
+    vec cv_all(mOmpThreadNum, fill::zeros);
+    bool flag = true;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; (uword)i < nDp; i++)
+    {
+        if (flag)
+        {
+            int thread = omp_get_thread_num();
+            vec d = mSpatialWeight.distance()->distance(mRegressionDistanceParameter);
+            vec w = bandwidthWeight->weight(d);
+            w(i) = 0.0;
+            mat xtw = trans(mX.each_col() % w);
+            mat xtwx = xtw * mX;
+            mat xtwy = xtw * mY;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                vec beta = xtwx_inv * xtwy;
+                double res = mY(i) - det(mX.row(i) * beta);
+                if (isfinite(res))
+                    cv_all(thread) += res * res;
+                else
+                    flag = false;
+            }
+            catch (...)
+            {
+                flag = false;
+            }
+        }
+    }
+    if (flag)
+    {
+        double cv = sum(cv_all);
+        return cv;
+    }
+    else return DBL_MAX;
+}
+
+double CGwmGWRBasic::bandwidthSizeCriterionAICOmp(CGwmBandwidthWeight* bandwidthWeight)
+{
+    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    mat betas(nVar, nDp, fill::zeros);
+    mat shat_all(2, mOmpThreadNum, fill::zeros);
+    bool flag = true;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; (uword)i < nDp; i++)
+    {
+        if (flag)
+        {
+            int thread = omp_get_thread_num();
+            vec d = mSpatialWeight.distance()->distance(mRegressionDistanceParameter);
+            vec w = bandwidthWeight->weight(d);
+            mat xtw = trans(mX.each_col() % w);
+            mat xtwx = xtw * mX;
+            mat xtwy = xtw * mY;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                mat ci = xtwx_inv * xtw;
+                mat si = mX.row(i) * ci;
+                shat_all(0, thread) += si(0, i);
+                shat_all(1, thread) += det(si * si.t());
+            }
+            catch (std::exception e)
+            {
+                flag = false;
+            }
+        }
+    }
+    if (flag)
+    {
+        vec shat = sum(shat_all, 1);
+        double value = CGwmGWRBase::AICc(mX, mY, betas.t(), shat);
+        if (isfinite(value))
+        {
+            return value;
+        }
+        else return DBL_MAX;
+    }
+    else return DBL_MAX;
+}
+#endif
+
 double CGwmGWRBasic::indepVarsSelectionCriterionSerial(const vector<GwmVariable>& indepVars)
 {
     mat x;
@@ -285,6 +449,51 @@ double CGwmGWRBasic::indepVarsSelectionCriterionSerial(const vector<GwmVariable>
     
     return value;
 }
+
+#ifdef ENABLE_OPENMP
+double CGwmGWRBasic::indepVarsSelectionCriterionOmp(const vector<GwmVariable>& indepVars)
+{
+    mat x;
+    vec y;
+    setXY(x, y, mSourceLayer, mDepVar, indepVars);
+    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    mat betas(nVar, nDp, fill::zeros);
+    mat shat(2, mOmpThreadNum, fill::zeros);
+    int flag = true;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; (uword)i < nDp; i++)
+    {
+        if (flag)
+        {
+            int thread = omp_get_thread_num();
+            vec w(nDp, fill::ones);
+            mat xtw = trans(x.each_col() % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                mat ci = xtwx_inv * xtw;
+                mat si = x.row(i) * ci;
+                shat(0, thread) += si(0, i);
+                shat(1, thread) += det(si * si.t());
+            }
+            catch (...)
+            {
+                flag = false;
+            }
+        }
+    }
+    if (flag)
+    {
+        double value = CGwmGWRBase::AICc(x, y, betas.t(), sum(shat, 1));
+        
+        return value;
+    }
+    else return DBL_MAX;
+}
+#endif
 
 void CGwmGWRBasic::createResultLayer(initializer_list<ResultLayerDataItem> items)
 {
@@ -340,4 +549,30 @@ void CGwmGWRBasic::setBandwidthSelectionCriterion(BandwidthSelectionCriterionTyp
         make_pair(BandwidthSelectionCriterionType::AIC, &CGwmGWRBasic::bandwidthSizeCriterionAICSerial)
     };
     mBandwidthSelectionCriterionFunction = mapper[mBandwidthSelectionCriterion];
+}
+
+void CGwmGWRBasic::setParallelType(const ParallelType& type)
+{
+    if (type & parallelAbility())
+    {
+        mParallelType = type;
+        switch (type) {
+        case ParallelType::SerialOnly:
+            mPredictFunction = &CGwmGWRBasic::regressionSerial;
+            mRegressionHatmatrixFunction = &CGwmGWRBasic::regressionHatmatrixSerial;
+            mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionSerial;
+            break;
+        case ParallelType::OpenMP:
+            mPredictFunction = &CGwmGWRBasic::regressionOmp;
+            mRegressionHatmatrixFunction = &CGwmGWRBasic::regressionHatmatrixOmp;
+            mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionOmp;
+            break;
+        default:
+            mPredictFunction = &CGwmGWRBasic::regressionSerial;
+            mRegressionHatmatrixFunction = &CGwmGWRBasic::regressionHatmatrixSerial;
+            mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionSerial;
+            break;
+        }
+    }
+    setBandwidthSelectionCriterion(mBandwidthSelectionCriterion);
 }
