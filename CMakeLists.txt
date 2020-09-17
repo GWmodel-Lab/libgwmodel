@@ -4,3 +4,11 @@ project(gwmodel)
 set(CMAKE_CXX_STARDARD 11)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src)
+
+enable_testing()
+
+add_subdirectory(${CMAKE_SOURCE_DIR}/test/BasicGWR)
+add_test(
+    NAME testBasicGWR 
+    COMMAND $<TARGET_FILE:testBasicGWR>
+)

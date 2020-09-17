@@ -38,7 +38,7 @@ include_directories(
 
 add_definitions(-DM_PI=3.14159265358979323846 -DM_PI_2=1.57079632679489661923 -DDOUBLE_EPS=1e-8)
 
-set(SOURCES
+set(SOURCES_CXX
     gwmodelpp/spatialweight/CGwmBandwidthWeight.cpp
     gwmodelpp/spatialweight/CGwmCRSDistance.cpp
     gwmodelpp/spatialweight/CGwmDistance.cpp
@@ -55,11 +55,13 @@ set(SOURCES
     gwmodelpp/CGwmSpatialMonoscaleAlgorithm.cpp
     gwmodelpp/CGwmGWRBase.cpp
     gwmodelpp/CGwmGWRBasic.cpp
+)
 
+set(SOURCES_C
     gwmodel.cpp
 )
 
-add_library(gwmodel SHARED ${SOURCES})
+add_library(gwmodel SHARED ${SOURCES_CXX} ${SOURCES_C})
 
 target_link_libraries(gwmodel
     ${ARMADILLO_LIBRARIES}
