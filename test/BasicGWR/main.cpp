@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_MAIN
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #include <vector>
 #include <string>
@@ -57,6 +57,11 @@ TEST_CASE("Basic Flow of BasicGWR")
     REQUIRE_NOTHROW(algorithm.setIndependentVariables(indepVars));
     REQUIRE_NOTHROW(algorithm.setSpatialWeight(spatial));
     REQUIRE_NOTHROW(algorithm.setHasHatMatrix(true));
-
     REQUIRE_NOTHROW(algorithm.run());
+
+    GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    REQUIRE(abs(diagnostic.AIC - 2436.60445730413) < 1e-8);
+    REQUIRE(abs(diagnostic.AICc - 2448.27206524754) < 1e-8);
+    REQUIRE(abs(diagnostic.RSquare - 0.708010632044736) < 1e-8);
+    REQUIRE(abs(diagnostic.RSquareAdjust - 0.674975341723766) < 1e-8);
 }
