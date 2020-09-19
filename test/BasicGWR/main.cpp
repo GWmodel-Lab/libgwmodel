@@ -15,7 +15,7 @@
 using namespace std;
 using namespace arma;
 
-TEST_CASE("Basic Flow of BasicGWR")
+TEST_CASE("BasicGWR: basic flow")
 {
     mat londonhp100_coord, londonhp100_data;
     vector<string> londonhp100_fields;
@@ -55,7 +55,7 @@ TEST_CASE("Basic Flow of BasicGWR")
     REQUIRE(abs(diagnostic.RSquareAdjust - 0.674975341723766) < 1e-8);
 }
 
-TEST_CASE("Adaptive bandwidth autoselection of BasicGWR with CV")
+TEST_CASE("BasicGWR: adaptive bandwidth autoselection of with CV")
 {
     mat londonhp100_coord, londonhp100_data;
     vector<string> londonhp100_fields;
