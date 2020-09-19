@@ -45,6 +45,7 @@ void CGwmGWRBasic::run()
         if (selectedIndepVars.size() > 0)
         {
             mIndepVars = selectedIndepVars;
+            mIndepVarsSelectionCriterionList = selector.indepVarsCriterion();
         }
     }
 
