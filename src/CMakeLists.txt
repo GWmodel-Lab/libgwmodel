@@ -82,8 +82,6 @@ set(HEADERS_CXX
     ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h
     ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWRBase.h
     ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWRBasic.h
-
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/gwmodelpp.h
 )
 
 set(HEADERS_C

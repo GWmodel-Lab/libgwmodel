@@ -1,11 +1,10 @@
 #ifndef CGWMSPATIALMONOSCALEALGORITHM_H
 #define CGWMSPATIALMONOSCALEALGORITHM_H
 
-#include "gwmodelpp.h"
 #include "CGwmSpatialAlgorithm.h"
 #include "spatialweight/CGwmSpatialWeight.h"
 
-class GWMODELPP_API CGwmSpatialMonoscaleAlgorithm : public CGwmSpatialAlgorithm
+class CGwmSpatialMonoscaleAlgorithm : public CGwmSpatialAlgorithm
 {
 public:
     CGwmSpatialMonoscaleAlgorithm();

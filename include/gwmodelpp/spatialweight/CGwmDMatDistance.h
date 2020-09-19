@@ -2,12 +2,11 @@
 #define CGWMDMATDISTANCE_H
 
 #include <string>
-#include "gwmodelpp.h"
 #include "spatialweight/CGwmDistance.h"
 
 using namespace std;
 
-struct GWMODELPP_API DMatDistanceParameter : public DistanceParameter
+struct DMatDistanceParameter : public DistanceParameter
 {
     int rowSize;
 
@@ -17,7 +16,7 @@ struct GWMODELPP_API DMatDistanceParameter : public DistanceParameter
 /**
  * [NOT AVALIABLE]
  */
-class GWMODELPP_API CGwmDMatDistance : public CGwmDistance
+class CGwmDMatDistance : public CGwmDistance
 {
 public:
     explicit CGwmDMatDistance(string dmatFile);

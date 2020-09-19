@@ -1,6 +1,5 @@
 #ifndef IGWMPARALLELIZABLE_H
 #define IGWMPARALLELIZABLE_H
-#include "gwmodelpp.h"
 
 enum ParallelType
 {
@@ -9,19 +8,19 @@ enum ParallelType
     CUDA = 1 << 2
 };
 
-struct GWMODELPP_API IGwmParallelizable
+struct IGwmParallelizable
 {
     virtual int parallelAbility() const = 0;
     virtual ParallelType parallelType() const = 0;
     virtual void setParallelType(const ParallelType& type) = 0;
 };
 
-struct GWMODELPP_API IGwmOpenmpParallelizable : public IGwmParallelizable
+struct IGwmOpenmpParallelizable : public IGwmParallelizable
 {
     virtual void setOmpThreadNum(const int threadNum) = 0;
 };
 
-struct GWMODELPP_API IGwmCudaParallelizable : public IGwmParallelizable
+struct IGwmCudaParallelizable : public IGwmParallelizable
 {
     virtual void setGPUId(const int gpuId) = 0;
     virtual void setGroupSize(const double size) = 0;

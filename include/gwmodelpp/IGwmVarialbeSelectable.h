@@ -2,12 +2,11 @@
 #define IGWMVARIALBESELECTABLE_H
 
 #include <vector>
-#include "gwmodelpp.h"
 #include "GwmVariable.h"
 
 using namespace std;
 
-struct GWMODELPP_API IGwmVarialbeSelectable
+struct IGwmVarialbeSelectable
 {
     virtual double getCriterion(const vector<GwmVariable>& variables) = 0;
 };

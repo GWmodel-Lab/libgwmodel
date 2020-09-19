@@ -4,12 +4,11 @@
 #include <unordered_map>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp.h"
 
 using namespace std;
 using namespace arma;
 
-class GWMODELPP_API CGwmWeight
+class CGwmWeight
 {
 public:
     enum WeightType

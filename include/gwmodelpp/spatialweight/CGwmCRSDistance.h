@@ -1,10 +1,9 @@
 #ifndef CGWMCRSDISTANCE_H
 #define CGWMCRSDISTANCE_H
 
-#include "gwmodelpp.h"
 #include "spatialweight/CGwmDistance.h"
 
-struct GWMODELPP_API CRSDistanceParameter : public DistanceParameter
+struct CRSDistanceParameter : public DistanceParameter
 {
     mat focusPoints;
     mat dataPoints;
@@ -16,7 +15,7 @@ struct GWMODELPP_API CRSDistanceParameter : public DistanceParameter
     }
 };
 
-class GWMODELPP_API CGwmCRSDistance : public CGwmDistance
+class CGwmCRSDistance : public CGwmDistance
 {
 public:
     static vec SpatialDistance(const rowvec& out_loc, const mat& in_locs);

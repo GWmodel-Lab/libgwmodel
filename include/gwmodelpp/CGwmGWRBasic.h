@@ -4,7 +4,6 @@
 #include <utility>
 #include <string>
 #include <initializer_list>
-#include "gwmodelpp.h"
 #include "CGwmGWRBase.h"
 #include "GwmRegressionDiagnostic.h"
 #include "IGwmBandwidthSelectable.h"
@@ -13,7 +12,7 @@
 
 using namespace std;
 
-class GWMODELPP_API CGwmGWRBasic : public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmVarialbeSelectable, public IGwmOpenmpParallelizable
+class CGwmGWRBasic : public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmVarialbeSelectable, public IGwmOpenmpParallelizable
 {
 public:
     enum BandwidthSelectionCriterionType

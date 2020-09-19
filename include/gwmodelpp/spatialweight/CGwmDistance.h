@@ -4,12 +4,11 @@
 #include <unordered_map>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp.h"
 
 using namespace std;
 using namespace arma;
 
-struct GWMODELPP_API DistanceParameter
+struct DistanceParameter
 {
     uword focus;
 
@@ -22,7 +21,7 @@ struct GWMODELPP_API DistanceParameter
     }
 };
 
-class GWMODELPP_API CGwmDistance
+class CGwmDistance
 {
 public:
     enum DistanceType
