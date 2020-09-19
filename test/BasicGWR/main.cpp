@@ -54,3 +54,44 @@ TEST_CASE("Basic Flow of BasicGWR")
     REQUIRE(abs(diagnostic.RSquare - 0.708010632044736) < 1e-8);
     REQUIRE(abs(diagnostic.RSquareAdjust - 0.674975341723766) < 1e-8);
 }
+
+TEST_CASE("Adaptive bandwidth autoselection of BasicGWR with CV")
+{
+    mat londonhp100_coord, londonhp100_data;
+    vector<string> londonhp100_fields;
+    if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
+    {
+        FAIL("Cannot load londonhp100 data.");
+    }
+
+    CGwmSimpleLayer* londonhp = new CGwmSimpleLayer(londonhp100_coord, londonhp100_data, londonhp100_fields);
+    REQUIRE(londonhp->points().n_rows);
+    REQUIRE(londonhp->data().n_rows);
+    REQUIRE(londonhp->fields().size());
+    REQUIRE(londonhp->featureCount());
+
+    CGwmCRSDistance distance(false);
+    CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Gaussian);
+    CGwmSpatialWeight spatial(&bandwidth, &distance);
+
+    GwmVariable purchase = {0, true, "PURCHASE"};
+    GwmVariable floorsz = {1, true, "FLOORSZ"};
+    GwmVariable unemploy = {2, true, "UNEMPLOY"};
+    GwmVariable prof = {3, true, "PROF"};
+    vector<GwmVariable> indepVars = { floorsz, unemploy, prof };
+
+    CGwmGWRBasic algorithm;
+    algorithm.setSourceLayer(londonhp);
+    algorithm.setDependentVariable(purchase);
+    algorithm.setIndependentVariables(indepVars);
+    algorithm.setSpatialWeight(spatial);
+    algorithm.setHasHatMatrix(true);
+
+    algorithm.setIsAutoselectBandwidth(true);
+    algorithm.setBandwidthSelectionCriterion(CGwmGWRBasic::BandwidthSelectionCriterionType::CV);
+    
+    REQUIRE_NOTHROW(algorithm.run());
+
+    int bw = algorithm.spatialWeight().weight<CGwmBandwidthWeight>()->bandwidth();
+    REQUIRE(bw == 67);
+}

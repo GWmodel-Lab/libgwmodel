@@ -21,6 +21,8 @@ CGwmSpatialWeight::~CGwmSpatialWeight()
 {
     if (mWeight) delete mWeight;
     if (mDistance) delete mDistance;
+    mWeight = nullptr;
+    mDistance = nullptr;
 }
 
 CGwmSpatialWeight &CGwmSpatialWeight::operator=(const CGwmSpatialWeight &&spatialWeight)
