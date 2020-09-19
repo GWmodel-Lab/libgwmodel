@@ -34,10 +34,10 @@ TEST_CASE("BasicGWR: basic flow")
     CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
-    GwmVariable purchase = {0, true, "PURCHASE"};
-    GwmVariable floorsz = {1, true, "FLOORSZ"};
-    GwmVariable unemploy = {2, true, "UNEMPLOY"};
-    GwmVariable prof = {3, true, "PROF"};
+    GwmVariable purchase(0, true, "PURCHASE");
+    GwmVariable floorsz(1, true, "FLOORSZ");
+    GwmVariable unemploy(2, true, "UNEMPLOY");
+    GwmVariable prof(3, true, "PROF");
     vector<GwmVariable> indepVars = { floorsz, unemploy, prof };
 
     CGwmGWRBasic algorithm;
@@ -74,10 +74,10 @@ TEST_CASE("BasicGWR: adaptive bandwidth autoselection of with CV")
     CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Gaussian);
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
-    GwmVariable purchase = {0, true, "PURCHASE"};
-    GwmVariable floorsz = {1, true, "FLOORSZ"};
-    GwmVariable unemploy = {2, true, "UNEMPLOY"};
-    GwmVariable prof = {3, true, "PROF"};
+    GwmVariable purchase(0, true, "PURCHASE");
+    GwmVariable floorsz(1, true, "FLOORSZ");
+    GwmVariable unemploy(2, true, "UNEMPLOY");
+    GwmVariable prof(3, true, "PROF");
     vector<GwmVariable> indepVars = { floorsz, unemploy, prof };
 
     CGwmGWRBasic algorithm;
