@@ -19,6 +19,12 @@ struct DistanceParameter
         this->focus = focus;
         return this;
     }
+
+    DistanceParameter* on(uword focus)
+    {
+        this->focus = focus;
+        return this;
+    }
 };
 
 class CGwmDistance
