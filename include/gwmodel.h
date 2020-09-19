@@ -1,12 +1,16 @@
 #ifndef GWMODEL_H
 #define GWMODEL_H
 
+#ifdef CREATE_SHARED_LIB
 #ifdef WIN32
-#ifdef CREATEDLL_EXPORTS
+#ifdef CREATE_DLL_EXPORTS
 #define GWMODEL_API __declspec(dllexport)
 #else
 #define GWMODEL_API __declspec(dllimport)
 #endif 
+#else
+#define GWMODEL_API  
+#endif
 #else
 #define GWMODEL_API  
 #endif
