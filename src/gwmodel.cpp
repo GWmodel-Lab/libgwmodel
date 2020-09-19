@@ -35,14 +35,16 @@ CGwmSpatialWeight* gwmodel_create_spatial_weight(CGwmDistance* distance, CGwmWei
     return new CGwmSpatialWeight(weight, distance);
 }
 
-CGwmSimpleLayer* gwmodel_create_simple_layer(MatInterface pointsInterface, MatInterface dataInterface, StringListInterface fieldsInterface)
+CGwmSimpleLayer* gwmodel_create_simple_layer(GwmMatInterface pointsInterface, GwmMatInterface dataInterface, GwmStringListInterface fieldsInterface)
 {
     mat points(pointsInterface.data, pointsInterface.rows, pointsInterface.cols);
     mat data(dataInterface.data, dataInterface.rows, dataInterface.cols);
-    vector<string> fields(fieldsInterface.size);
+    vector<string> fields;
     for (size_t i = 0; i < fieldsInterface.size; i++)
     {
-        fields.push_back(string(fieldsInterface.items[i]));
+        GwmStringInterface* s = fieldsInterface.items + i;
+        printf("%s", s->str);
+        fields.push_back(string(s->str));
     }
     return new CGwmSimpleLayer(points, data, fields);
 }
@@ -83,34 +85,35 @@ void gwmodel_delete_gwr_algorithm(CGwmGWRBasic* instance)
     delete instance;
 }
 
-void gwmodel_set_source_layer(CGwmSpatialAlgorithm* algorithm, CGwmSimpleLayer* layer)
+void gwmodel_set_gwr_source_layer(CGwmGWRBasic* algorithm, CGwmSimpleLayer* layer)
 {
     algorithm->setSourceLayer(layer);
 }
 
-void gwmodel_set_predict_layer(CGwmGWRBase* algorithm, CGwmSimpleLayer* layer)
+void gwmodel_set_gwr_predict_layer(CGwmGWRBasic* algorithm, CGwmSimpleLayer* layer)
 {
     algorithm->setPredictLayer(layer);
 }
 
-void gwmodel_set_dependent_variable(IGwmRegressionAnalysis* regression, GwmVariable* depVar)
+void gwmodel_set_gwr_dependent_variable(CGwmGWRBasic* regression, GwmVariableInterface depVar)
 {
-    regression->setDependentVariable(*depVar);
+    regression->setDependentVariable(GwmVariable(depVar.index, depVar.isNumeric, depVar.name));
 }
 
-void gwmodel_set_independent_variable(IGwmRegressionAnalysis* regression, VariableListInterface* indepVarList)
+void gwmodel_set_gwr_independent_variable(CGwmGWRBasic* regression, GwmVariableListInterface indepVarList)
 {
     vector<GwmVariable> indepVars;
-    for (size_t i = 0; i < indepVarList->size; i++)
+    for (size_t i = 0; i < indepVarList.size; i++)
     {
-        GwmVariable* v = indepVarList->items[i];
-        _ASSERT(v);
-        indepVars.push_back(*v);
+        GwmVariableInterface* vi = indepVarList.items + i;
+        _ASSERT(vi);
+        GwmVariable v(vi->index, vi->isNumeric, vi->name);
+        indepVars.push_back(v);
     }
     regression->setIndependentVariables(indepVars);
 }
 
-void gwmodel_set_spatial_weight(CGwmSpatialMonoscaleAlgorithm* algorithm, CGwmSpatialWeight* spatial)
+void gwmodel_set_gwr_spatial_weight(CGwmGWRBasic* algorithm, CGwmSpatialWeight* spatial)
 {
     algorithm->setSpatialWeight(*spatial);
 }
@@ -130,12 +133,12 @@ void gwmodel_set_gwr_options(CGwmGWRBasic* algorithm, bool hasHatMatrix)
     algorithm->setHasHatMatrix(hasHatMatrix);
 }
 
-void gwmodel_run_algorithm(CGwmAlgorithm* algorithm)
+void gwmodel_run_gwr(CGwmGWRBasic* algorithm)
 {
     algorithm->run();
 }
 
-void gwmodel_get_simple_layer_points(CGwmSimpleLayer* layer, MatInterface* pointsInterface)
+void gwmodel_get_simple_layer_points(CGwmSimpleLayer* layer, GwmMatInterface* pointsInterface)
 {
     mat points = layer->points();
     pointsInterface->rows = points.n_rows;
@@ -144,7 +147,7 @@ void gwmodel_get_simple_layer_points(CGwmSimpleLayer* layer, MatInterface* point
     memcpy(pointsInterface->data, points.memptr(), points.n_elem * sizeof(double));
 }
 
-void gwmodel_get_simple_layer_data(CGwmSimpleLayer* layer, MatInterface* dataInterface)
+void gwmodel_get_simple_layer_data(CGwmSimpleLayer* layer, GwmMatInterface* dataInterface)
 {
     mat data = layer->data();
     dataInterface->rows = data.n_rows;
@@ -153,30 +156,31 @@ void gwmodel_get_simple_layer_data(CGwmSimpleLayer* layer, MatInterface* dataInt
     memcpy(dataInterface->data, data.memptr(), data.n_elem * sizeof(double));
 }
 
-void gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer, StringListInterface* fieldsInterface)
+void gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer, GwmStringListInterface* fieldsInterface)
 {
     vector<string> fields = layer->fields();
     fieldsInterface->size = fields.size();
-    fieldsInterface->items = new char*[fieldsInterface->size];
+    fieldsInterface->items = new GwmStringInterface[fieldsInterface->size];
     for (size_t i = 0; i < fieldsInterface->size; i++)
     {
         string f = fields[i];
-        fieldsInterface->items[i] = new char[f.size() + 1];
-        strcpy(fieldsInterface->items[i], f.data());
+        GwmStringInterface* s = fieldsInterface->items + i;
+        s->str = new char[f.size() + 1];
+        strcpy((char*)s->str, f.data());
     }
 }
 
-GwmRegressionDiagnostic gwmodel_get_regression_diagnostic(IGwmRegressionAnalysis* regression)
+GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGWRBasic* gwr)
 {
-    return regression->diagnostic();
+    return gwr->diagnostic();
 }
 
-void gwmodel_get_result_layer(CGwmSpatialAlgorithm* regression, CGwmSimpleLayer** resultLayer)
+void gwmodel_get_gwr_result_layer(CGwmGWRBasic* gwr, CGwmSimpleLayer** resultLayer)
 {
-    *resultLayer = regression->resultLayer();
+    *resultLayer = gwr->resultLayer();
 }
 
-void gwmodel_get_gwr_coefficients(CGwmGWRBase* gwr, MatInterface* coefficientsInterface)
+void gwmodel_get_gwr_coefficients(CGwmGWRBasic* gwr, GwmMatInterface* coefficientsInterface)
 {
     mat betas = gwr->betas();
     coefficientsInterface->rows = betas.n_rows;

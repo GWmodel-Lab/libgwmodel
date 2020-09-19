@@ -61,29 +61,41 @@ class CGwmSpatialMonoscaleAlgorithm;
 class CGwmGWRBase;
 class CGwmGWRBasic;
 
-struct MatInterface
+struct GwmMatInterface
 {
     unsigned long long rows;
     unsigned long long cols;
     double* data;
 };
 
-struct StringListInterface
+struct GwmStringInterface
 {
-    char** items;
-    size_t size;
+    const char* str;
 };
 
-struct VariableListInterface
+struct GwmStringListInterface
 {
-    GwmVariable** items;
     size_t size;
+    GwmStringInterface* items;
+};
+
+struct GwmVariableInterface
+{
+    int index;
+    bool isNumeric;
+    const char* name;
+};
+
+struct GwmVariableListInterface
+{
+    size_t size;
+    GwmVariableInterface* items;
 };
 
 extern "C" GWMODEL_API CGwmDistance* gwmodel_create_crs_distance(bool isGeogrphical);
 extern "C" GWMODEL_API CGwmWeight* gwmodel_create_bandwidth_weight(double size, bool isAdaptive, KernelFunctionType type);
 extern "C" GWMODEL_API CGwmSpatialWeight* gwmodel_create_spatial_weight(CGwmDistance* distance, CGwmWeight* weight);
-extern "C" GWMODEL_API CGwmSimpleLayer* gwmodel_create_simple_layer(MatInterface pointsInterface, MatInterface dataInterface, StringListInterface fieldsInterface);
+extern "C" GWMODEL_API CGwmSimpleLayer* gwmodel_create_simple_layer(GwmMatInterface pointsInterface, GwmMatInterface dataInterface, GwmStringListInterface fieldsInterface);
 extern "C" GWMODEL_API CGwmSpatialAlgorithm* gwmodel_create_algorithm();
 extern "C" GWMODEL_API CGwmGWRBasic* gwmodel_create_gwr_algorithm();
 
@@ -94,23 +106,23 @@ extern "C" GWMODEL_API void gwmodel_delete_simple_layer(CGwmSimpleLayer* instanc
 extern "C" GWMODEL_API void gwmodel_delete_algorithm(CGwmSpatialAlgorithm* instance);
 extern "C" GWMODEL_API void gwmodel_delete_gwr_algorithm(CGwmGWRBasic* instance);
 
-extern "C" GWMODEL_API void gwmodel_set_source_layer(CGwmSpatialAlgorithm* algorithm, CGwmSimpleLayer* layer);
-extern "C" GWMODEL_API void gwmodel_set_spatial_weight(CGwmSpatialMonoscaleAlgorithm* algorithm, CGwmSpatialWeight* spatial);
-extern "C" GWMODEL_API void gwmodel_set_dependent_variable(IGwmRegressionAnalysis* regression, GwmVariable* depVar);
-extern "C" GWMODEL_API void gwmodel_set_independent_variable(IGwmRegressionAnalysis* regression, VariableListInterface* indepVarList);
-extern "C" GWMODEL_API void gwmodel_set_predict_layer(CGwmGWRBase* algorithm, CGwmSimpleLayer* layer);
+extern "C" GWMODEL_API void gwmodel_set_gwr_source_layer(CGwmGWRBasic* algorithm, CGwmSimpleLayer* layer);
+extern "C" GWMODEL_API void gwmodel_set_gwr_spatial_weight(CGwmGWRBasic* algorithm, CGwmSpatialWeight* spatial);
+extern "C" GWMODEL_API void gwmodel_set_gwr_dependent_variable(CGwmGWRBasic* regression, GwmVariableInterface depVar);
+extern "C" GWMODEL_API void gwmodel_set_gwr_independent_variable(CGwmGWRBasic* regression, GwmVariableListInterface indepVarList);
+extern "C" GWMODEL_API void gwmodel_set_gwr_predict_layer(CGwmGWRBasic* algorithm, CGwmSimpleLayer* layer);
 extern "C" GWMODEL_API void gwmodel_set_gwr_bandwidth_autoselection(CGwmGWRBasic* algorithm, BandwidthSelectionCriterionType criterion);
 extern "C" GWMODEL_API void gwmodel_set_gwr_indep_vars_autoselection(CGwmGWRBasic* algorithm, double threshold);
 extern "C" GWMODEL_API void gwmodel_set_gwr_options(CGwmGWRBasic* algorithm, bool hasHatMatrix);
 
-extern "C" GWMODEL_API void gwmodel_run_algorithm(CGwmAlgorithm* algorithm);
+extern "C" GWMODEL_API void gwmodel_run_gwr(CGwmGWRBasic* algorithm);
 
-extern "C" GWMODEL_API void gwmodel_get_simple_layer_points(CGwmSimpleLayer* layer, MatInterface* pointsInterface);
-extern "C" GWMODEL_API void gwmodel_get_simple_layer_data(CGwmSimpleLayer* layer, MatInterface* dataInterface);
-extern "C" GWMODEL_API void gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer, StringListInterface* fieldsInterface);
-extern "C" GWMODEL_API GwmRegressionDiagnostic gwmodel_get_regression_diagnostic(IGwmRegressionAnalysis* regression);
-extern "C" GWMODEL_API void gwmodel_get_result_layer(CGwmSpatialAlgorithm* regression, CGwmSimpleLayer** resultLayer);
-extern "C" GWMODEL_API void gwmodel_get_gwr_coefficients(CGwmGWRBase* gwr, MatInterface* coefficientsInterface);
+extern "C" GWMODEL_API void gwmodel_get_simple_layer_points(CGwmSimpleLayer* layer, GwmMatInterface* pointsInterface);
+extern "C" GWMODEL_API void gwmodel_get_simple_layer_data(CGwmSimpleLayer* layer, GwmMatInterface* dataInterface);
+extern "C" GWMODEL_API void gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer, GwmStringListInterface* fieldsInterface);
+extern "C" GWMODEL_API GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGWRBasic* gwr);
+extern "C" GWMODEL_API void gwmodel_get_gwr_result_layer(CGwmGWRBasic* gwr, CGwmSimpleLayer** resultLayer);
+extern "C" GWMODEL_API void gwmodel_get_gwr_coefficients(CGwmGWRBasic* gwr, GwmMatInterface* coefficientsInterface);
 
 #endif
 
