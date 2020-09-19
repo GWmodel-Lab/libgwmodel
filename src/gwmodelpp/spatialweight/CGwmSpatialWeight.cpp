@@ -7,8 +7,8 @@ CGwmSpatialWeight::CGwmSpatialWeight()
 
 CGwmSpatialWeight::CGwmSpatialWeight(CGwmWeight *weight, CGwmDistance *distance)
 {
-    mWeight = weight;
-    mDistance = distance;
+    mWeight = weight->clone();
+    mDistance = distance->clone();
 }
 
 CGwmSpatialWeight::CGwmSpatialWeight(const CGwmSpatialWeight &spatialWeight)
@@ -21,6 +21,8 @@ CGwmSpatialWeight::~CGwmSpatialWeight()
 {
     if (mWeight) delete mWeight;
     if (mDistance) delete mDistance;
+    mWeight = nullptr;
+    mDistance = nullptr;
 }
 
 CGwmSpatialWeight &CGwmSpatialWeight::operator=(const CGwmSpatialWeight &&spatialWeight)

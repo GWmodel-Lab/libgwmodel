@@ -53,13 +53,25 @@ public:
     BandwidthSelectionCriterionType bandwidthSelectionCriterion() const;
     void setBandwidthSelectionCriterion(BandwidthSelectionCriterionType type);
 
+    bool isAutoselectIndepVars() const;
+    void setIsAutoselectIndepVars(bool isAutoSelect);
+
+    double indepVarSelectionThreshold() const;
+    void setIndepVarSelectionThreshold(double threshold);
+    
+    VariablesCriterionList indepVarsSelectionCriterionList() const;
+    BandwidthCriterionList bandwidthSelectionCriterionList() const;
+
+    bool hasHatMatrix() const;
+    void setHasHatMatrix(const bool has);
+
 public:     // Implement CGwmAlgorithm
     void run() override;
 
 public:     // Implement IGwmRegressionAnalysis
     mat regression(const mat& x, const vec& y) override;
     mat regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S) override;
-
+private:
     mat regressionSerial(const mat& x, const vec& y);
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
     
@@ -70,7 +82,7 @@ public:     // Implement IGwmRegressionAnalysis
 
 public:     // Implement IGwmBandwidthSelectable
     double getCriterion(CGwmBandwidthWeight* weight);
-
+private:
     double bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwidthWeight);
 #ifdef ENABLE_OPENMP
@@ -80,7 +92,7 @@ public:     // Implement IGwmBandwidthSelectable
 
 public:     // Implement IGwmVariableSelectable
     double getCriterion(const vector<GwmVariable>& variables);
-
+private:
     double indepVarsSelectionCriterionSerial(const vector<GwmVariable>& indepVars);
 #ifdef ENABLE_OPENMP
     double indepVarsSelectionCriterionOmp(const vector<GwmVariable>& indepVars);
@@ -152,9 +164,39 @@ inline void CGwmGWRBasic::setIsAutoselectBandwidth(bool isAutoSelect)
     mIsAutoselectBandwidth = isAutoSelect;
 }
 
+inline bool CGwmGWRBasic::isAutoselectIndepVars() const
+{
+    return mIsAutoselectIndepVars;
+}
+
+inline void CGwmGWRBasic::setIsAutoselectIndepVars(bool isAutoSelect)
+{
+    mIsAutoselectIndepVars = isAutoSelect;
+}
+
+inline double CGwmGWRBasic::indepVarSelectionThreshold() const
+{
+    return mIndepVarSelectionThreshold;
+}
+
+inline void CGwmGWRBasic::setIndepVarSelectionThreshold(double threshold)
+{
+    mIndepVarSelectionThreshold = threshold;
+}
+
 inline CGwmGWRBasic::BandwidthSelectionCriterionType CGwmGWRBasic::bandwidthSelectionCriterion() const
 {
     return mBandwidthSelectionCriterion;
+}
+    
+inline VariablesCriterionList CGwmGWRBasic::indepVarsSelectionCriterionList() const
+{
+    return mIndepVarsSelectionCriterionList;
+}
+
+inline BandwidthCriterionList CGwmGWRBasic::bandwidthSelectionCriterionList() const
+{
+    return mBandwidthSelectionCriterionList;
 }
 
 inline double CGwmGWRBasic::getCriterion(CGwmBandwidthWeight* weight)
@@ -184,6 +226,16 @@ inline ParallelType CGwmGWRBasic::parallelType() const
 inline void CGwmGWRBasic::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
+}
+
+inline bool CGwmGWRBasic::hasHatMatrix() const
+{
+    return mHasHatMatrix;
+}
+
+inline void CGwmGWRBasic::setHasHatMatrix(const bool has)
+{
+    mHasHatMatrix = has;
 }
 
 #endif  // CGWMGWRBASIC_H

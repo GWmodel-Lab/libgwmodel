@@ -28,7 +28,7 @@ void CGwmGWRBase::setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmV
     arma::uvec indepVarIndeces(indepVars.size());
     for (size_t i = 0; i < indepVars.size(); i++)
     {
-        _ASSERT(indepVars[i].index < x.n_cols);
+        _ASSERT(indepVars[i].index < layer->data().n_cols);
         indepVarIndeces(i) = indepVars[i].index;
     }
     x = join_rows(mat(nDp, 1, arma::fill::ones), layer->data().cols(indepVarIndeces));
