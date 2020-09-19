@@ -88,6 +88,8 @@ set(HEADERS_C
     ${CMAKE_SOURCE_DIR}/include/gwmodel.h
 )
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${gwmodel_BINARY_DIR}/output)
+
 if(NOT BUILD_SHARED_LIBS)
     add_library(gwmodel STATIC ${SOURCES_CXX} ${SOURCES_C} ${HEADERS_CXX} ${HEADERS_C})
 else(NOT BUILD_SHARED_LIBS)
