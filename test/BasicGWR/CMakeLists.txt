@@ -22,5 +22,5 @@ else(ARMADILLO_FOUND)
     message(FATAL_ERROR "Armadillo Not Found!")
 endif(ARMADILLO_FOUND)
 
-add_executable(testBasicGWR main.cpp)
+add_executable(testBasicGWR main.cpp ${SAMPL_LONDONHP100})
 target_link_libraries(testBasicGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2)

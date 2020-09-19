@@ -10,30 +10,19 @@
 #include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
 #include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
 #include "gwmodelpp/GwmVariable.h"
+#include "londonhp100.h"
 
 using namespace std;
 using namespace arma;
 
 TEST_CASE("Basic Flow of BasicGWR")
 {
-    mat londonhp100_coord;
-    field<std::string> coordHeader(2);
-    coordHeader(0) = "x";
-    coordHeader(1) = "y";
-    REQUIRE(londonhp100_coord.load(arma::csv_name(string(SAMPLE_DATA_DIR) + "/londonhp100coords.csv", coordHeader)));
-
-    mat londonhp100_data;
-    field<std::string> dataHeader(4);
-    dataHeader(0) = "PURCHASE";
-    dataHeader(1) = "FLOORSZ";
-    dataHeader(2) = "UNEMPLOY";
-    dataHeader(3) = "PROF";
-    REQUIRE(londonhp100_data.load(arma::csv_name(string(SAMPLE_DATA_DIR) + "/londonhp100data.csv", dataHeader)));
-
-    vector<string> londonhp100_fields = 
+    mat londonhp100_coord, londonhp100_data;
+    vector<string> londonhp100_fields;
+    if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
     {
-        "PURCHASE", "FLOORSZ", "UNEMPLOY", "PROF"
-    };
+        FAIL("Cannot load londonhp100 data.");
+    }
 
     CGwmSimpleLayer* londonhp = new CGwmSimpleLayer(londonhp100_coord, londonhp100_data, londonhp100_fields);
     REQUIRE(londonhp->points().n_rows);
