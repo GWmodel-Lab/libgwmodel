@@ -39,7 +39,7 @@ include_directories(
 add_definitions(-DM_PI=3.14159265358979323846 -DM_PI_2=1.57079632679489661923 -DDOUBLE_EPS=1e-8)
 if(BUILD_SHARED_LIBRARY AND MSVC)
     message(STATUS "Define __declspec(dllexport) in MSVC")
-    add_definitions(-DCREATE_SHARED_LIB -DCREATE_DLL_EXPORTS)
+    add_definitions(-DGWMODEL_SHARED_LIB -DCREATE_DLL_EXPORTS)
 endif(BUILD_SHARED_LIBRARY AND MSVC)
 
 set(SOURCES_CXX

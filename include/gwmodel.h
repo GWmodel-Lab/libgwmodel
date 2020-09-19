@@ -1,16 +1,33 @@
 #ifndef GWMODEL_H
 #define GWMODEL_H
 
-#ifdef CREATE_SHARED_LIB
+#ifndef GWMODEL_SHARED_LIB
+
+#include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
+#include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
+#include "gwmodelpp/spatialweight/CGwmDistance.h"
+#include "gwmodelpp/spatialweight/CGwmDMatDistance.h"
+#include "gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h"
+#include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
+#include "gwmodelpp/spatialweight/CGwmWeight.h"
+
+#include "gwmodelpp/CGwmAlgorithm.h"
+#include "gwmodelpp/CGwmBandwidthSelector.h"
+#include "gwmodelpp/CGwmVariableForwardSelector.h"
+#include "gwmodelpp/CGwmSimpleLayer.h"
+#include "gwmodelpp/CGwmSpatialAlgorithm.h"
+#include "gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h"
+#include "gwmodelpp/CGwmGWRBase.h"
+#include "gwmodelpp/CGwmGWRBasic.h"
+
+#else   // GWMODEL_SHARED_LIB
+
 #ifdef WIN32
 #ifdef CREATE_DLL_EXPORTS
 #define GWMODEL_API __declspec(dllexport)
 #else
 #define GWMODEL_API __declspec(dllimport)
 #endif 
-#else
-#define GWMODEL_API  
-#endif
 #else
 #define GWMODEL_API  
 #endif
@@ -94,5 +111,7 @@ extern "C" GWMODEL_API void gwmodel_get_simple_layer_fields(CGwmSimpleLayer* lay
 extern "C" GWMODEL_API GwmRegressionDiagnostic gwmodel_get_regression_diagnostic(IGwmRegressionAnalysis* regression);
 extern "C" GWMODEL_API void gwmodel_get_result_layer(CGwmSpatialAlgorithm* regression, CGwmSimpleLayer** resultLayer);
 extern "C" GWMODEL_API void gwmodel_get_gwr_coefficients(CGwmGWRBase* gwr, MatInterface* coefficientsInterface);
+
+#endif
 
 #endif  // GWMODEL_H
