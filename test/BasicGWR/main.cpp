@@ -41,11 +41,11 @@ TEST_CASE("Basic Flow of BasicGWR")
     vector<GwmVariable> indepVars = { floorsz, unemploy, prof };
 
     CGwmGWRBasic algorithm;
-    REQUIRE_NOTHROW(algorithm.setSourceLayer(londonhp));
-    REQUIRE_NOTHROW(algorithm.setDependentVariable(purchase));
-    REQUIRE_NOTHROW(algorithm.setIndependentVariables(indepVars));
-    REQUIRE_NOTHROW(algorithm.setSpatialWeight(spatial));
-    REQUIRE_NOTHROW(algorithm.setHasHatMatrix(true));
+    algorithm.setSourceLayer(londonhp);
+    algorithm.setDependentVariable(purchase);
+    algorithm.setIndependentVariables(indepVars);
+    algorithm.setSpatialWeight(spatial);
+    algorithm.setHasHatMatrix(true);
     REQUIRE_NOTHROW(algorithm.run());
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
