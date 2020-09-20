@@ -91,7 +91,7 @@ set(HEADERS_C
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${gwmodel_BINARY_DIR}/bin)
 
 if(NOT BUILD_SHARED_LIBS)
-    add_library(gwmodel STATIC ${SOURCES_CXX} ${SOURCES_C} ${HEADERS_CXX} ${HEADERS_C})
+    add_library(gwmodel STATIC ${SOURCES_CXX} ${HEADERS_CXX} ${HEADERS_C})
 else(NOT BUILD_SHARED_LIBS)
     add_definitions(-DCREATECPP_EXPORTS)
     add_library(gwmodel SHARED ${SOURCES_CXX} ${SOURCES_C} ${HEADERS_C})
