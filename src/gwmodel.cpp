@@ -120,11 +120,13 @@ void gwmodel_set_gwr_spatial_weight(CGwmGWRBasic* algorithm, CGwmSpatialWeight* 
 
 void gwmodel_set_gwr_bandwidth_autoselection(CGwmGWRBasic* algorithm, BandwidthSelectionCriterionType criterion)
 {
+    algorithm->setIsAutoselectBandwidth(true);
     algorithm->setBandwidthSelectionCriterion((CGwmGWRBasic::BandwidthSelectionCriterionType)criterion);
 }
 
 void gwmodel_set_gwr_indep_vars_autoselection(CGwmGWRBasic* algorithm, double threshold)
 {
+    algorithm->setIsAutoselectIndepVars(true);
     algorithm->setIndepVarSelectionThreshold(threshold);
 }
 
@@ -170,9 +172,10 @@ void gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer, GwmStringListInterf
     }
 }
 
-GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGWRBasic* gwr)
+void gwmodel_get_gwr_spatial_weight(CGwmGWRBasic* gwr, CGwmDistance** distance, CGwmWeight** weight)
 {
-    return gwr->diagnostic();
+    *distance = gwr->spatialWeight().distance()->clone();
+    *weight = gwr->spatialWeight().weight()->clone();
 }
 
 void gwmodel_get_gwr_result_layer(CGwmGWRBasic* gwr, CGwmSimpleLayer** resultLayer)
@@ -187,4 +190,20 @@ void gwmodel_get_gwr_coefficients(CGwmGWRBasic* gwr, GwmMatInterface* coefficien
     coefficientsInterface->cols = betas.n_cols;
     coefficientsInterface->data = new double[betas.n_elem];
     memcpy(coefficientsInterface->data, betas.memptr(), betas.n_elem * sizeof(double));
+}
+
+GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGWRBasic* gwr)
+{
+    return gwr->diagnostic();
+}
+
+bool gwmodel_as_bandwidth_weight(CGwmWeight* weight, GwmBandwidthKernelInterface* bandwidth)
+{
+    CGwmBandwidthWeight* bw = dynamic_cast<CGwmBandwidthWeight*>(weight);
+    if (bw)
+    {
+        *bandwidth = { bw->bandwidth(), bw->adaptive(), (KernelFunctionType)bw->kernel() };
+        return true;
+    }
+    else return false;
 }
