@@ -31,7 +31,7 @@ endif(BUILD_SHARED_LIBS)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${gwmodel_BINARY_DIR}/output)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${gwmodel_BINARY_DIR}/bin)
 
 set(SAMPLE_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/data)
 add_definitions(-DSAMPLE_DATA_DIR="${SAMPLE_DATA_DIR}")
