@@ -3,10 +3,10 @@ project(gwmodel)
 
 set(CMAKE_CXX_STARDARD 11)
 
-option(BUILD_SHARED_LIBRARY "Weather to build a shared library" OFF) 
-if(BUILD_SHARED_LIBRARY)
-    message(WARNING "The library can only be used by C-style interfaces.")
-endif(BUILD_SHARED_LIBRARY)
+option(BUILD_SHARED_LIBS "Weather to build a shared library" OFF) 
+if(BUILD_SHARED_LIBS)
+    message(STATUS "The library can only be used by C-style interfaces.")
+endif(BUILD_SHARED_LIBS)
 
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src)

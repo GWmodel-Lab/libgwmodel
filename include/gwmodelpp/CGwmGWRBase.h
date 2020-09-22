@@ -63,6 +63,11 @@ protected:
     GwmRegressionDiagnostic mDiagnostic;
 };
 
+inline mat CGwmGWRBase::betas() const
+{
+    return mBetas;
+}
+
 inline CGwmSimpleLayer* CGwmGWRBase::predictLayer() const
 {
     return mPredictLayer;

@@ -37,10 +37,10 @@ include_directories(
 )
 
 add_definitions(-DM_PI=3.14159265358979323846 -DM_PI_2=1.57079632679489661923 -DDOUBLE_EPS=1e-8)
-if(BUILD_SHARED_LIBRARY AND MSVC)
+if(BUILD_SHARED_LIBS AND MSVC)
     message(STATUS "Define __declspec(dllexport) in MSVC")
-    add_definitions(-DCREATE_SHARED_LIB -DCREATE_DLL_EXPORTS)
-endif(BUILD_SHARED_LIBRARY AND MSVC)
+    add_definitions(-DGWMODEL_SHARED_LIB -DCREATE_DLL_EXPORTS)
+endif(BUILD_SHARED_LIBS AND MSVC)
 
 set(SOURCES_CXX
     gwmodelpp/spatialweight/CGwmBandwidthWeight.cpp
@@ -88,12 +88,14 @@ set(HEADERS_C
     ${CMAKE_SOURCE_DIR}/include/gwmodel.h
 )
 
-if(NOT BUILD_SHARED_LIBRARY)
-    add_library(gwmodel STATIC ${SOURCES_CXX} ${SOURCES_C} ${HEADERS_CXX} ${HEADERS_C})
-else(NOT BUILD_SHARED_LIBRARY)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${gwmodel_BINARY_DIR}/bin)
+
+if(NOT BUILD_SHARED_LIBS)
+    add_library(gwmodel STATIC ${SOURCES_CXX} ${HEADERS_CXX} ${HEADERS_C})
+else(NOT BUILD_SHARED_LIBS)
     add_definitions(-DCREATECPP_EXPORTS)
     add_library(gwmodel SHARED ${SOURCES_CXX} ${SOURCES_C} ${HEADERS_C})
-endif(NOT BUILD_SHARED_LIBRARY)
+endif(NOT BUILD_SHARED_LIBS)
 
 target_link_libraries(gwmodel
     ${ARMADILLO_LIBRARIES}

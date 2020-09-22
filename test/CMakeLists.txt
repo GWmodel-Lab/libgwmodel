@@ -24,15 +24,17 @@ else(ARMADILLO_FOUND)
     message(FATAL_ERROR "Armadillo Not Found!")
 endif(ARMADILLO_FOUND)
 
+if(BUILD_SHARED_LIBS)
+    add_definitions(-DGWMODEL_SHARED_LIB)
+endif(BUILD_SHARED_LIBS)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${gwmodel_BINARY_DIR}/test)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${gwmodel_BINARY_DIR}/bin)
 
 set(SAMPLE_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/data)
 add_definitions(-DSAMPLE_DATA_DIR="${SAMPLE_DATA_DIR}")
-
 set(SAMPL_LONDONHP100 ${CMAKE_CURRENT_SOURCE_DIR}/data/londonhp100.cpp)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/test/BasicGWR)
