@@ -192,24 +192,24 @@ TEST_CASE("BasicGWR: indepdent variable autoselection with AIC")
     REQUIRE(strcmp(criterionList.items[1].variables.items[0].name, "PROF") == 0);
 
     REQUIRE_THAT(variables2indices(criterionList.items[2].variables), Catch::Equals(vector<int>({ 1 })));
-    REQUIRE_THAT(criterionList.items[2].criterion, Catch::WithinAbs(2468.93236280013, 1e-8));
     REQUIRE(strcmp(criterionList.items[2].variables.items[0].name, "FLOORSZ") == 0);
+    REQUIRE_THAT(criterionList.items[2].criterion, Catch::WithinAbs(2468.93236280013, 1e-8));
 
     REQUIRE_THAT(variables2indices(criterionList.items[3].variables), Catch::Equals(vector<int>({ 1, 3 })));
-    REQUIRE_THAT(criterionList.items[3].criterion, Catch::WithinAbs(2452.86447942033, 1e-8));
     REQUIRE(strcmp(criterionList.items[3].variables.items[0].name, "FLOORSZ") == 0);
     REQUIRE(strcmp(criterionList.items[3].variables.items[1].name, "PROF") == 0);
+    REQUIRE_THAT(criterionList.items[3].criterion, Catch::WithinAbs(2452.86447942033, 1e-8));
 
     REQUIRE_THAT(variables2indices(criterionList.items[4].variables), Catch::Equals(vector<int>({ 1, 2 })));
-    REQUIRE_THAT(criterionList.items[4].criterion, Catch::WithinAbs(2450.59642666509, 1e-8));
     REQUIRE(strcmp(criterionList.items[4].variables.items[0].name, "FLOORSZ") == 0);
     REQUIRE(strcmp(criterionList.items[4].variables.items[1].name, "UNEMPLOY") == 0);
+    REQUIRE_THAT(criterionList.items[4].criterion, Catch::WithinAbs(2450.59642666509, 1e-8));
 
     REQUIRE_THAT(variables2indices(criterionList.items[5].variables), Catch::Equals(vector<int>({ 1, 2, 3 })));
-    REQUIRE_THAT(criterionList.items[5].criterion, Catch::WithinAbs(2452.80388934625, 1e-8));
     REQUIRE(strcmp(criterionList.items[5].variables.items[0].name, "FLOORSZ") == 0);
     REQUIRE(strcmp(criterionList.items[5].variables.items[1].name, "UNEMPLOY") == 0);
     REQUIRE(strcmp(criterionList.items[5].variables.items[2].name, "PROF") == 0);
+    REQUIRE_THAT(criterionList.items[5].criterion, Catch::WithinAbs(2452.80388934625, 1e-8));
 
     REQUIRE_NOTHROW(gwmodel_delete_gwr_algorithm(algorithm));
     REQUIRE_NOTHROW(gwmodel_delete_string_list(&londonhp100_field_interface));
