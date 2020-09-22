@@ -15,6 +15,57 @@
 using namespace std;
 using namespace arma;
 
+void gwmodel_delete_mat(GwmMatInterface* interface)
+{
+    if (interface->data) delete[] interface->data;
+    interface->data = nullptr;
+}
+
+void gwmodel_delete_string(GwmStringInterface* interface)
+{
+    if (interface->str) delete[] interface->str;
+    interface->str = nullptr;
+}
+
+void gwmodel_delete_string_list(GwmStringListInterface* interface)
+{
+    for (size_t i = 0; i < interface->size; i++)
+    {
+        gwmodel_delete_string(interface->items + i);
+    }
+}
+
+void gwmodel_delete_variable(GwmVariableInterface* interface)
+{
+    if (interface->name) delete[] interface->name;
+    interface->name = nullptr;
+}
+
+void gwmodel_delete_variable_list(GwmVariableListInterface* interface)
+{
+    if (interface->items) delete[] interface->items;
+    interface->items = nullptr;
+}
+
+void gwmodel_delete_bandwidth_criterion_list(GwmBandwidthCriterionListInterface* interface)
+{
+    if (interface->items) delete[] interface->items;
+    interface->items = nullptr; 
+}
+
+void gwmodel_delete_variable_criterion_pair(GwmVariablesCriterionPairInterface* interface)
+{
+    gwmodel_delete_variable_list(&interface->variables);
+}
+
+void gwmodel_delete_variable_criterion_list(GwmVariablesCriterionListInterface* interface)
+{
+    for (size_t i = 0; i < interface->size; i++)
+    {
+        gwmodel_delete_variable_criterion_pair(interface->items + i);
+    }
+}
+
 CGwmSpatialAlgorithm* gwmodel_create_algorithm()
 {
     return nullptr;

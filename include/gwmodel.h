@@ -63,34 +63,44 @@ class CGwmGWRBasic;
 
 struct GwmMatInterface
 {
-    unsigned long long rows;
-    unsigned long long cols;
-    double* data;
+    unsigned long long rows = 0;
+    unsigned long long cols = 0;
+    double* data = nullptr;
 };
+
+extern "C" GWMODEL_API void gwmodel_delete_mat(GwmMatInterface* interface);
 
 struct GwmStringInterface
 {
-    const char* str;
+    const char* str = "";
 };
+
+extern "C" GWMODEL_API void gwmodel_delete_string(GwmStringInterface* interface);
 
 struct GwmStringListInterface
 {
-    size_t size;
-    GwmStringInterface* items;
+    size_t size = 0;
+    GwmStringInterface* items = nullptr;
 };
+
+extern "C" GWMODEL_API void gwmodel_delete_string_list(GwmStringListInterface* interface);
 
 struct GwmVariableInterface
 {
     int index;
     bool isNumeric;
-    const char* name;
+    const char* name = nullptr;
 };
+
+extern "C" GWMODEL_API void gwmodel_delete_variable(GwmVariableInterface* interface);
 
 struct GwmVariableListInterface
 {
-    size_t size;
-    GwmVariableInterface* items;
+    size_t size = 0;
+    GwmVariableInterface* items = nullptr;
 };
+
+extern "C" GWMODEL_API void gwmodel_delete_variable_list(GwmVariableListInterface* interface);
 
 struct GwmBandwidthKernelInterface
 {
@@ -107,9 +117,11 @@ struct GwmBandwidthCriterionPairInterface
 
 struct GwmBandwidthCriterionListInterface
 {
-    size_t size;
-    GwmBandwidthCriterionPairInterface* items;
+    size_t size = 0;
+    GwmBandwidthCriterionPairInterface* items = nullptr;
 };
+
+extern "C" GWMODEL_API void gwmodel_delete_bandwidth_criterion_list(GwmBandwidthCriterionListInterface* interface);
 
 struct GwmVariablesCriterionPairInterface
 {
@@ -117,11 +129,15 @@ struct GwmVariablesCriterionPairInterface
     double criterion;
 };
 
+extern "C" GWMODEL_API void gwmodel_delete_variable_criterion_pair(GwmVariablesCriterionPairInterface* interface);
+
 struct GwmVariablesCriterionListInterface
 {
-    size_t size;
-    GwmVariablesCriterionPairInterface* items;
+    size_t size = 0;
+    GwmVariablesCriterionPairInterface* items = nullptr;
 };
+
+extern "C" GWMODEL_API void gwmodel_delete_variable_criterion_list(GwmVariablesCriterionListInterface* interface);
 
 extern "C" GWMODEL_API CGwmDistance* gwmodel_create_crs_distance(bool isGeogrphical);
 extern "C" GWMODEL_API CGwmWeight* gwmodel_create_bandwidth_weight(double size, bool isAdaptive, KernelFunctionType type);

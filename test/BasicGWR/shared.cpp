@@ -62,6 +62,10 @@ TEST_CASE("BasicGWR: basic flow")
     REQUIRE(abs(diagnostic.AICc - 2448.27206524754) < 1e-8);
     REQUIRE(abs(diagnostic.RSquare - 0.708010632044736) < 1e-8);
     REQUIRE(abs(diagnostic.RSquareAdjust - 0.674975341723766) < 1e-8);
+
+    REQUIRE_NOTHROW(gwmodel_delete_gwr_algorithm(algorithm));
+    REQUIRE_NOTHROW(gwmodel_delete_string_list(&londonhp100_field_interface));
+    REQUIRE_NOTHROW(gwmodel_delete_variable_list(&indepVars));
 }
 
 TEST_CASE("BasicGWR: adaptive bandwidth autoselection of with CV")
@@ -124,6 +128,11 @@ TEST_CASE("BasicGWR: adaptive bandwidth autoselection of with CV")
     {
         FAIL("Cannot regard a CGwmWeight instance as a CGwmBandwidthWeight instance!");
     }
+
+    REQUIRE_NOTHROW(gwmodel_delete_gwr_algorithm(algorithm));
+    REQUIRE_NOTHROW(gwmodel_delete_string_list(&londonhp100_field_interface));
+    REQUIRE_NOTHROW(gwmodel_delete_variable_list(&indepVars));
+    REQUIRE_NOTHROW(gwmodel_delete_spatial_weight(spatial_new));
 }
 
 vector<int> variables2indices(const GwmVariableListInterface& variables)
@@ -198,4 +207,8 @@ TEST_CASE("BasicGWR: indepdent variable autoselection with AIC")
     REQUIRE_THAT(criterionList.items[4].criterion, Catch::WithinAbs(2450.59642666509, 1e-8));
     REQUIRE_THAT(variables2indices(criterionList.items[5].variables), Catch::Equals(vector<int>({ 1, 2, 3 })));
     REQUIRE_THAT(criterionList.items[5].criterion, Catch::WithinAbs(2452.80388934625, 1e-8));
+
+    REQUIRE_NOTHROW(gwmodel_delete_gwr_algorithm(algorithm));
+    REQUIRE_NOTHROW(gwmodel_delete_string_list(&londonhp100_field_interface));
+    REQUIRE_NOTHROW(gwmodel_delete_variable_list(&indepVars));
 }
