@@ -18,3 +18,7 @@ add_test(
     NAME testBasicGWR 
     COMMAND $<TARGET_FILE:testBasicGWR> --success
 )
+add_test(
+    NAME testGWSS 
+    COMMAND $<TARGET_FILE:testGWSS> --success
+)

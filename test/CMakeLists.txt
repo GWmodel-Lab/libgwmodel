@@ -38,3 +38,4 @@ add_definitions(-DSAMPLE_DATA_DIR="${SAMPLE_DATA_DIR}")
 set(SAMPL_LONDONHP100 ${CMAKE_CURRENT_SOURCE_DIR}/data/londonhp100.cpp)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/test/BasicGWR)
+add_subdirectory(${CMAKE_SOURCE_DIR}/test/GWSS)
