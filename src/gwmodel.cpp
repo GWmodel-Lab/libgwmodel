@@ -197,6 +197,29 @@ GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGWRBasic* gwr)
     return gwr->diagnostic();
 }
 
+void gwmodel_get_gwr_indep_var_criterions(CGwmGWRBasic* gwr, GwmVariablesCriterionListInterface* interface)
+{
+    VariablesCriterionList criterions = gwr->indepVarsSelectionCriterionList();
+    interface->size = criterions.size();
+    interface->items = new GwmVariablesCriterionPairInterface[interface->size];
+    for (size_t i = 0; i < interface->size; i++)
+    {
+        GwmVariablesCriterionPairInterface* item = interface->items + i;
+        item->criterion = criterions[i].second;
+        vector<GwmVariable> varList = criterions[i].first;
+        item->variables.size = varList.size();
+        item->variables.items = new GwmVariableInterface[item->variables.size];
+        for (size_t v = 0; v < item->variables.size; v++)
+        {
+            GwmVariableInterface* vi = item->variables.items + v;
+            vi->index = varList[v].index;
+            vi->isNumeric = varList[v].isNumeric;
+            vi->name = new char[varList[v].name.size() + 1];
+            strcpy((char*)vi->name, varList[v].name.data());
+        }
+    }
+}
+
 bool gwmodel_as_bandwidth_weight(CGwmWeight* weight, GwmBandwidthKernelInterface* bandwidth)
 {
     CGwmBandwidthWeight* bw = dynamic_cast<CGwmBandwidthWeight*>(weight);

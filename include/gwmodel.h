@@ -99,6 +99,30 @@ struct GwmBandwidthKernelInterface
     KernelFunctionType type;
 };
 
+struct GwmBandwidthCriterionPairInterface
+{
+    double bandwidth;
+    double criterion;
+};
+
+struct GwmBandwidthCriterionListInterface
+{
+    size_t size;
+    GwmBandwidthCriterionPairInterface* items;
+};
+
+struct GwmVariablesCriterionPairInterface
+{
+    GwmVariableListInterface variables;
+    double criterion;
+};
+
+struct GwmVariablesCriterionListInterface
+{
+    size_t size;
+    GwmVariablesCriterionPairInterface* items;
+};
+
 extern "C" GWMODEL_API CGwmDistance* gwmodel_create_crs_distance(bool isGeogrphical);
 extern "C" GWMODEL_API CGwmWeight* gwmodel_create_bandwidth_weight(double size, bool isAdaptive, KernelFunctionType type);
 extern "C" GWMODEL_API CGwmSpatialWeight* gwmodel_create_spatial_weight(CGwmDistance* distance, CGwmWeight* weight);
@@ -130,6 +154,7 @@ extern "C" GWMODEL_API void gwmodel_get_simple_layer_fields(CGwmSimpleLayer* lay
 extern "C" GWMODEL_API void gwmodel_get_gwr_spatial_weight(CGwmGWRBasic* gwr, CGwmDistance** distance, CGwmWeight** weight);
 extern "C" GWMODEL_API void gwmodel_get_gwr_result_layer(CGwmGWRBasic* gwr, CGwmSimpleLayer** resultLayer);
 extern "C" GWMODEL_API void gwmodel_get_gwr_coefficients(CGwmGWRBasic* gwr, GwmMatInterface* coefficientsInterface);
+extern "C" GWMODEL_API void gwmodel_get_gwr_indep_var_criterions(CGwmGWRBasic* gwr, GwmVariablesCriterionListInterface* interface);
 extern "C" GWMODEL_API GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGWRBasic* gwr);
 
 extern "C" GWMODEL_API bool gwmodel_as_bandwidth_weight(CGwmWeight* weight, GwmBandwidthKernelInterface* bandwidth);
