@@ -59,6 +59,7 @@ set(SOURCES_CXX
     gwmodelpp/CGwmSpatialMonoscaleAlgorithm.cpp
     gwmodelpp/CGwmGWRBase.cpp
     gwmodelpp/CGwmGWRBasic.cpp
+    gwmodelpp/CGwmGWSS.cpp
 )
 
 set(SOURCES_C
@@ -82,6 +83,7 @@ set(HEADERS_CXX
     ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h
     ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWRBase.h
     ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWRBasic.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWSS.h
 )
 
 set(HEADERS_C
