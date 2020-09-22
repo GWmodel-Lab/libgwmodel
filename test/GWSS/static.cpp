@@ -108,3 +108,48 @@ TEST_CASE("GWSS: basic flow")
     mat localscorr_q = quantile(algorithm.localSCorr(), p, 0);
     REQUIRE(approx_equal(localscorr_q, localscorr_q0, "absdiff", 1e-1));
 }
+
+TEST_CASE("GWSS: correlation with first variable only")
+{
+    mat londonhp100_coord, londonhp100_data;
+    vector<string> londonhp100_fields;
+    if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
+    {
+        FAIL("Cannot load londonhp100 data.");
+    }
+
+    CGwmSimpleLayer* londonhp = new CGwmSimpleLayer(londonhp100_coord, londonhp100_data, londonhp100_fields);
+    REQUIRE(londonhp->points().n_rows);
+    REQUIRE(londonhp->data().n_rows);
+    REQUIRE(londonhp->fields().size());
+    REQUIRE(londonhp->featureCount());
+
+    CGwmCRSDistance distance(false);
+    CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
+    CGwmSpatialWeight spatial(&bandwidth, &distance);
+
+    GwmVariable purchase(0, true, "PURCHASE");
+    GwmVariable floorsz(1, true, "FLOORSZ");
+    GwmVariable unemploy(2, true, "UNEMPLOY");
+    GwmVariable prof(3, true, "PROF");
+    vector<GwmVariable> variables = { purchase, floorsz, unemploy, prof };
+
+    CGwmGWSS algorithm;
+    algorithm.setSourceLayer(londonhp);
+    algorithm.setVariables(variables);
+    algorithm.setSpatialWeight(spatial);
+    algorithm.setIsCorrWithFirstOnly(true);
+    REQUIRE_NOTHROW(algorithm.run());
+
+    vec p = {0.0, 0.25, 0.5, 0.75, 1.0};
+
+    mat localcorr_q0 = {
+        {0.748948486801849,-0.320600183598632,0.203011140141453},
+        {0.762547101624896,-0.297490396583388,0.246560726908457},
+        {0.78483823103956,-0.254451851221453,0.282830629241902},
+        {0.809708575169509,-0.240880285636795,0.324300091997221},
+        {0.838005736892351,-0.201907496636598,0.35265748682446}
+    };
+    mat localcorr_q = quantile(algorithm.localCorr(), p, 0);
+    REQUIRE(approx_equal(localcorr_q, localcorr_q0, "absdiff", 1e-8));
+}
