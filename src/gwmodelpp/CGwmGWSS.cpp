@@ -52,23 +52,35 @@ CGwmGWSS::~CGwmGWSS()
 
 }
 
+bool CGwmGWSS::isValid()
+{
+    if (CGwmSpatialMonoscaleAlgorithm::isValid())
+    {
+        if (mVariables.size() < 1)
+            return false;
+
+        return true;
+    }
+    else return false;
+}
+
 void CGwmGWSS::run()
 {
     createDistanceParameter();
     setXY(mX, mSourceLayer, mVariables);
     (this->*mSummaryFunction)();
     vector<ResultLayerDataItem> resultLayerData = {
-        make_tuple(string("LM"), mLocalMean, NameFormat::PrefixVarNamePair),
-        make_tuple(string("LSD"), mStandardDev, NameFormat::PrefixVarNamePair),
-        make_tuple(string("LVar"), mLVar, NameFormat::PrefixVarNamePair),
-        make_tuple(string("LSke"), mLocalSkewness, NameFormat::PrefixVarNamePair),
-        make_tuple(string("LCV"), mLCV, NameFormat::PrefixVarNamePair)
+        make_tuple(string("LM"), mLocalMean, NameFormat::PrefixVarName),
+        make_tuple(string("LSD"), mStandardDev, NameFormat::PrefixVarName),
+        make_tuple(string("LVar"), mLVar, NameFormat::PrefixVarName),
+        make_tuple(string("LSke"), mLocalSkewness, NameFormat::PrefixVarName),
+        make_tuple(string("LCV"), mLCV, NameFormat::PrefixVarName)
     };
     if (mQuantile)
     {
-        resultLayerData.push_back(make_tuple(string("Median"), mLocalMedian, NameFormat::PrefixVarNamePair));
-        resultLayerData.push_back(make_tuple(string("IQR"), mIQR, NameFormat::PrefixVarNamePair));
-        resultLayerData.push_back(make_tuple(string("QI"), mQI, NameFormat::PrefixVarNamePair));
+        resultLayerData.push_back(make_tuple(string("Median"), mLocalMedian, NameFormat::PrefixVarName));
+        resultLayerData.push_back(make_tuple(string("IQR"), mIQR, NameFormat::PrefixVarName));
+        resultLayerData.push_back(make_tuple(string("QI"), mQI, NameFormat::PrefixVarName));
     }
     if (mVariables.size() > 1)
     {
@@ -121,7 +133,7 @@ void CGwmGWSS::createDistanceParameter()
 void CGwmGWSS::summarySerial()
 {
     mat rankX = mX;
-    rankX.each_col([&](vec x) { x = rank(x); });
+    rankX.each_col([&](vec& x) { x = rank(x); });
     uword nVar = mX.n_cols, nRp = mSourceLayer->featureCount();
     uword corrSize = mIsCorrWithFirstOnly ? 1 : nVar - 1;
     for (uword i = 0; i < nRp; i++)
@@ -171,7 +183,7 @@ void CGwmGWSS::summarySerial()
 void CGwmGWSS::summaryOmp()
 {
     mat rankX = mX;
-    rankX.each_col([&](vec x) { x = rank(x); });
+    rankX.each_col([&](vec& x) { x = rank(x); });
     uword nVar = mX.n_cols, nRp = mSourceLayer->featureCount();
     uword corrSize = mIsCorrWithFirstOnly ? 1 : nVar - 1;
 #pragma omp parallel for num_threads(mOmpThreadNum)

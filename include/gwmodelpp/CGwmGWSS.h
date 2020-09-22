@@ -24,7 +24,7 @@ public:
     {
         vec n = linspace(0.0, (double)x.n_rows - 1, x.n_rows);
         vec res = n(sort_index(x));
-        return n(sort_index(res));
+        return n(sort_index(res)) + 1.0;
     }
 
     enum NameFormat
@@ -52,19 +52,19 @@ public:
     bool isCorrWithFirstOnly() const;
     void setIsCorrWithFirstOnly(bool corrWithFirstOnly);
 
-    mat localmean() const { return mLocalMean; }
-    mat standarddev() const { return mStandardDev; }
-    mat localskewness() const { return mLocalSkewness; }
-    mat lcv() const { return mLCV; }
-    mat lvar() const { return mLVar; }
+    mat localMean() const { return mLocalMean; }
+    mat localSDev() const { return mStandardDev; }
+    mat localSkewness() const { return mLocalSkewness; }
+    mat localCV() const { return mLCV; }
+    mat localVar() const { return mLVar; }
 
-    mat localmedian() const { return mLocalMedian; }
+    mat localMedian() const { return mLocalMedian; }
     mat iqr() const { return mIQR; }
     mat qi() const { return mQI; }
 
-    mat covmat() const { return mCovmat; }
-    mat corrmat() const { return mCorrmat; }
-    mat scorrmat() const { return mSCorrmat; }
+    mat localCov() const { return mCovmat; }
+    mat localCorr() const { return mCorrmat; }
+    mat localSCorr() const { return mSCorrmat; }
 
 public:     // GwmAlgorithm interface;
     void run() override;
@@ -138,6 +138,16 @@ inline bool CGwmGWSS::isCorrWithFirstOnly() const
 inline void CGwmGWSS::setIsCorrWithFirstOnly(bool corrWithFirstOnly)
 {
     mIsCorrWithFirstOnly = corrWithFirstOnly;
+}
+
+inline vector<GwmVariable> CGwmGWSS::variables() const
+{
+    return mVariables;
+}
+
+inline void CGwmGWSS::setVariables(const vector<GwmVariable>& variables)
+{
+    mVariables = variables;
 }
 
 inline int CGwmGWSS::parallelAbility() const
