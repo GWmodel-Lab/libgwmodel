@@ -70,29 +70,22 @@ struct GwmMatInterface
 
 extern "C" GWMODEL_API void gwmodel_delete_mat(GwmMatInterface* interface);
 
-struct GwmStringInterface
-{
-    const char* str = "";
-};
+typedef char GwmNameInterface[256];
 
-extern "C" GWMODEL_API void gwmodel_delete_string(GwmStringInterface* interface);
-
-struct GwmStringListInterface
+struct GwmNameListInterface
 {
     size_t size = 0;
-    GwmStringInterface* items = nullptr;
+    GwmNameInterface* items = nullptr;
 };
 
-extern "C" GWMODEL_API void gwmodel_delete_string_list(GwmStringListInterface* interface);
+extern "C" GWMODEL_API void gwmodel_delete_string_list(GwmNameListInterface* interface);
 
 struct GwmVariableInterface
 {
     int index;
     bool isNumeric;
-    const char* name = nullptr;
+    GwmNameInterface name = "";
 };
-
-extern "C" GWMODEL_API void gwmodel_delete_variable(GwmVariableInterface* interface);
 
 struct GwmVariableListInterface
 {
@@ -142,7 +135,7 @@ extern "C" GWMODEL_API void gwmodel_delete_variable_criterion_list(GwmVariablesC
 extern "C" GWMODEL_API CGwmDistance* gwmodel_create_crs_distance(bool isGeogrphical);
 extern "C" GWMODEL_API CGwmWeight* gwmodel_create_bandwidth_weight(double size, bool isAdaptive, KernelFunctionType type);
 extern "C" GWMODEL_API CGwmSpatialWeight* gwmodel_create_spatial_weight(CGwmDistance* distance, CGwmWeight* weight);
-extern "C" GWMODEL_API CGwmSimpleLayer* gwmodel_create_simple_layer(GwmMatInterface pointsInterface, GwmMatInterface dataInterface, GwmStringListInterface fieldsInterface);
+extern "C" GWMODEL_API CGwmSimpleLayer* gwmodel_create_simple_layer(GwmMatInterface pointsInterface, GwmMatInterface dataInterface, GwmNameListInterface fieldsInterface);
 extern "C" GWMODEL_API CGwmSpatialAlgorithm* gwmodel_create_algorithm();
 extern "C" GWMODEL_API CGwmGWRBasic* gwmodel_create_gwr_algorithm();
 
@@ -166,7 +159,7 @@ extern "C" GWMODEL_API void gwmodel_run_gwr(CGwmGWRBasic* algorithm);
 
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_simple_layer_points(CGwmSimpleLayer* layer);
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_simple_layer_data(CGwmSimpleLayer* layer);
-extern "C" GWMODEL_API GwmStringListInterface gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer);
+extern "C" GWMODEL_API GwmNameListInterface gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer);
 extern "C" GWMODEL_API CGwmSpatialWeight* gwmodel_get_gwr_spatial_weight(CGwmGWRBasic* gwr);
 extern "C" GWMODEL_API CGwmSimpleLayer* gwmodel_get_gwr_result_layer(CGwmGWRBasic* gwr);
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwr_coefficients(CGwmGWRBasic* gwr);

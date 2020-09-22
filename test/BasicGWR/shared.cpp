@@ -21,17 +21,13 @@ TEST_CASE("BasicGWR: basic flow")
 
     GwmMatInterface londonhp100_coord_interface = { londonhp100_coord.n_rows, londonhp100_coord.n_cols, londonhp100_coord.memptr() };
     GwmMatInterface londonhp100_data_interface = { londonhp100_data.n_rows, londonhp100_data.n_cols, londonhp100_data.memptr() };
-    GwmStringListInterface londonhp100_field_interface;
+    GwmNameListInterface londonhp100_field_interface;
     londonhp100_field_interface.size = londonhp100_fields.size();
-    londonhp100_field_interface.items = new GwmStringInterface[londonhp100_field_interface.size];
+    londonhp100_field_interface.items = new GwmNameInterface[londonhp100_field_interface.size];
     for (int i = 0; i < londonhp100_fields.size(); i++)
     {
-        GwmStringInterface* s = londonhp100_field_interface.items + i;
-        s->str = new char[londonhp100_fields[i].size() + 1];
-        strcpy((char*)s->str, londonhp100_fields[i].data());
+        strcpy(londonhp100_field_interface.items[i], londonhp100_fields[i].data());
     }
-
-    
     CGwmSimpleLayer* londonhp = gwmodel_create_simple_layer(londonhp100_coord_interface, londonhp100_data_interface, londonhp100_field_interface);
 
     CGwmDistance* distance = gwmodel_create_crs_distance(false);
@@ -79,17 +75,13 @@ TEST_CASE("BasicGWR: adaptive bandwidth autoselection of with CV")
 
     GwmMatInterface londonhp100_coord_interface = { londonhp100_coord.n_rows, londonhp100_coord.n_cols, londonhp100_coord.memptr() };
     GwmMatInterface londonhp100_data_interface = { londonhp100_data.n_rows, londonhp100_data.n_cols, londonhp100_data.memptr() };
-    GwmStringListInterface londonhp100_field_interface;
+    GwmNameListInterface londonhp100_field_interface;
     londonhp100_field_interface.size = londonhp100_fields.size();
-    londonhp100_field_interface.items = new GwmStringInterface[londonhp100_field_interface.size];
+    londonhp100_field_interface.items = new GwmNameInterface[londonhp100_field_interface.size];
     for (int i = 0; i < londonhp100_fields.size(); i++)
     {
-        GwmStringInterface* s = londonhp100_field_interface.items + i;
-        s->str = new char[londonhp100_fields[i].size() + 1];
-        strcpy((char*)s->str, londonhp100_fields[i].data());
+        strcpy(londonhp100_field_interface.items[i], londonhp100_fields[i].data());
     }
-
-    
     CGwmSimpleLayer* londonhp = gwmodel_create_simple_layer(londonhp100_coord_interface, londonhp100_data_interface, londonhp100_field_interface);
 
     CGwmDistance* distance = gwmodel_create_crs_distance(false);
@@ -156,17 +148,13 @@ TEST_CASE("BasicGWR: indepdent variable autoselection with AIC")
 
     GwmMatInterface londonhp100_coord_interface = { londonhp100_coord.n_rows, londonhp100_coord.n_cols, londonhp100_coord.memptr() };
     GwmMatInterface londonhp100_data_interface = { londonhp100_data.n_rows, londonhp100_data.n_cols, londonhp100_data.memptr() };
-    GwmStringListInterface londonhp100_field_interface;
+    GwmNameListInterface londonhp100_field_interface;
     londonhp100_field_interface.size = londonhp100_fields.size();
-    londonhp100_field_interface.items = new GwmStringInterface[londonhp100_field_interface.size];
+    londonhp100_field_interface.items = new GwmNameInterface[londonhp100_field_interface.size];
     for (int i = 0; i < londonhp100_fields.size(); i++)
     {
-        GwmStringInterface* s = londonhp100_field_interface.items + i;
-        s->str = new char[londonhp100_fields[i].size() + 1];
-        strcpy((char*)s->str, londonhp100_fields[i].data());
+        strcpy(londonhp100_field_interface.items[i], londonhp100_fields[i].data());
     }
-
-    
     CGwmSimpleLayer* londonhp = gwmodel_create_simple_layer(londonhp100_coord_interface, londonhp100_data_interface, londonhp100_field_interface);
 
     CGwmDistance* distance = gwmodel_create_crs_distance(false);
@@ -196,17 +184,32 @@ TEST_CASE("BasicGWR: indepdent variable autoselection with AIC")
     GwmVariablesCriterionListInterface criterionList = gwmodel_get_gwr_indep_var_criterions(algorithm);
     
     REQUIRE_THAT(variables2indices(criterionList.items[0].variables), Catch::Equals(vector<int>({ 2 })));
+    REQUIRE(strcmp(criterionList.items[0].variables.items[0].name, "UNEMPLOY") == 0);
     REQUIRE_THAT(criterionList.items[0].criterion, Catch::WithinAbs(2551.61359020599, 1e-8));
+    
     REQUIRE_THAT(variables2indices(criterionList.items[1].variables), Catch::Equals(vector<int>({ 3 })));
     REQUIRE_THAT(criterionList.items[1].criterion, Catch::WithinAbs(2551.30032201349, 1e-8));
+    REQUIRE(strcmp(criterionList.items[1].variables.items[0].name, "PROF") == 0);
+
     REQUIRE_THAT(variables2indices(criterionList.items[2].variables), Catch::Equals(vector<int>({ 1 })));
     REQUIRE_THAT(criterionList.items[2].criterion, Catch::WithinAbs(2468.93236280013, 1e-8));
+    REQUIRE(strcmp(criterionList.items[2].variables.items[0].name, "FLOORSZ") == 0);
+
     REQUIRE_THAT(variables2indices(criterionList.items[3].variables), Catch::Equals(vector<int>({ 1, 3 })));
     REQUIRE_THAT(criterionList.items[3].criterion, Catch::WithinAbs(2452.86447942033, 1e-8));
+    REQUIRE(strcmp(criterionList.items[3].variables.items[0].name, "FLOORSZ") == 0);
+    REQUIRE(strcmp(criterionList.items[3].variables.items[1].name, "PROF") == 0);
+
     REQUIRE_THAT(variables2indices(criterionList.items[4].variables), Catch::Equals(vector<int>({ 1, 2 })));
     REQUIRE_THAT(criterionList.items[4].criterion, Catch::WithinAbs(2450.59642666509, 1e-8));
+    REQUIRE(strcmp(criterionList.items[4].variables.items[0].name, "FLOORSZ") == 0);
+    REQUIRE(strcmp(criterionList.items[4].variables.items[1].name, "UNEMPLOY") == 0);
+
     REQUIRE_THAT(variables2indices(criterionList.items[5].variables), Catch::Equals(vector<int>({ 1, 2, 3 })));
     REQUIRE_THAT(criterionList.items[5].criterion, Catch::WithinAbs(2452.80388934625, 1e-8));
+    REQUIRE(strcmp(criterionList.items[5].variables.items[0].name, "FLOORSZ") == 0);
+    REQUIRE(strcmp(criterionList.items[5].variables.items[1].name, "UNEMPLOY") == 0);
+    REQUIRE(strcmp(criterionList.items[5].variables.items[2].name, "PROF") == 0);
 
     REQUIRE_NOTHROW(gwmodel_delete_gwr_algorithm(algorithm));
     REQUIRE_NOTHROW(gwmodel_delete_string_list(&londonhp100_field_interface));

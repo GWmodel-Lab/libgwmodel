@@ -21,24 +21,11 @@ void gwmodel_delete_mat(GwmMatInterface* interface)
     interface->data = nullptr;
 }
 
-void gwmodel_delete_string(GwmStringInterface* interface)
+void gwmodel_delete_string_list(GwmNameListInterface* interface)
 {
-    if (interface->str) delete[] interface->str;
-    interface->str = nullptr;
-}
-
-void gwmodel_delete_string_list(GwmStringListInterface* interface)
-{
-    for (size_t i = 0; i < interface->size; i++)
-    {
-        gwmodel_delete_string(interface->items + i);
-    }
-}
-
-void gwmodel_delete_variable(GwmVariableInterface* interface)
-{
-    if (interface->name) delete[] interface->name;
-    interface->name = nullptr;
+    if (interface->items) delete[] interface->items;
+    interface->items = nullptr;
+    interface->size = 0;
 }
 
 void gwmodel_delete_variable_list(GwmVariableListInterface* interface)
@@ -86,16 +73,14 @@ CGwmSpatialWeight* gwmodel_create_spatial_weight(CGwmDistance* distance, CGwmWei
     return new CGwmSpatialWeight(weight, distance);
 }
 
-CGwmSimpleLayer* gwmodel_create_simple_layer(GwmMatInterface pointsInterface, GwmMatInterface dataInterface, GwmStringListInterface fieldsInterface)
+CGwmSimpleLayer* gwmodel_create_simple_layer(GwmMatInterface pointsInterface, GwmMatInterface dataInterface, GwmNameListInterface fieldsInterface)
 {
     mat points(pointsInterface.data, pointsInterface.rows, pointsInterface.cols);
     mat data(dataInterface.data, dataInterface.rows, dataInterface.cols);
     vector<string> fields;
     for (size_t i = 0; i < fieldsInterface.size; i++)
     {
-        GwmStringInterface* s = fieldsInterface.items + i;
-        printf("%s", s->str);
-        fields.push_back(string(s->str));
+        fields.push_back(string(fieldsInterface.items[i]));
     }
     return new CGwmSimpleLayer(points, data, fields);
 }
@@ -213,18 +198,16 @@ GwmMatInterface gwmodel_get_simple_layer_data(CGwmSimpleLayer* layer)
     return dataInterface;
 }
 
-GwmStringListInterface gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer)
+GwmNameListInterface gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer)
 {
     vector<string> fields = layer->fields();
-    GwmStringListInterface fieldsInterface;
+    GwmNameListInterface fieldsInterface;
     fieldsInterface.size = fields.size();
-    fieldsInterface.items = new GwmStringInterface[fieldsInterface.size];
+    fieldsInterface.items = new GwmNameInterface[fieldsInterface.size];
     for (size_t i = 0; i < fieldsInterface.size; i++)
     {
         string f = fields[i];
-        GwmStringInterface* s = fieldsInterface.items + i;
-        s->str = new char[f.size() + 1];
-        strcpy((char*)s->str, f.data());
+        strcpy(fieldsInterface.items[i], f.data());
     }
     return fieldsInterface;
 }
@@ -273,8 +256,7 @@ GwmVariablesCriterionListInterface gwmodel_get_gwr_indep_var_criterions(CGwmGWRB
             GwmVariableInterface* vi = item->variables.items + v;
             vi->index = varList[v].index;
             vi->isNumeric = varList[v].isNumeric;
-            vi->name = new char[varList[v].name.size() + 1];
-            strcpy((char*)vi->name, varList[v].name.data());
+            strcpy(vi->name, varList[v].name.data());
         }
     }
     return interface;
