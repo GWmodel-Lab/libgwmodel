@@ -140,56 +140,63 @@ void gwmodel_run_gwr(CGwmGWRBasic* algorithm)
     algorithm->run();
 }
 
-void gwmodel_get_simple_layer_points(CGwmSimpleLayer* layer, GwmMatInterface* pointsInterface)
+GwmMatInterface gwmodel_get_simple_layer_points(CGwmSimpleLayer* layer)
 {
     mat points = layer->points();
-    pointsInterface->rows = points.n_rows;
-    pointsInterface->cols = points.n_cols;
-    pointsInterface->data = new double[points.n_elem];
-    memcpy(pointsInterface->data, points.memptr(), points.n_elem * sizeof(double));
+    GwmMatInterface pointsInterface;
+    pointsInterface.rows = points.n_rows;
+    pointsInterface.cols = points.n_cols;
+    pointsInterface.data = new double[points.n_elem];
+    memcpy(pointsInterface.data, points.memptr(), points.n_elem * sizeof(double));
+    return pointsInterface;
 }
 
-void gwmodel_get_simple_layer_data(CGwmSimpleLayer* layer, GwmMatInterface* dataInterface)
+GwmMatInterface gwmodel_get_simple_layer_data(CGwmSimpleLayer* layer)
 {
     mat data = layer->data();
-    dataInterface->rows = data.n_rows;
-    dataInterface->cols = data.n_cols;
-    dataInterface->data = new double[data.n_elem];
-    memcpy(dataInterface->data, data.memptr(), data.n_elem * sizeof(double));
+    GwmMatInterface dataInterface;
+    dataInterface.rows = data.n_rows;
+    dataInterface.cols = data.n_cols;
+    dataInterface.data = new double[data.n_elem];
+    memcpy(dataInterface.data, data.memptr(), data.n_elem * sizeof(double));
+    return dataInterface;
 }
 
-void gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer, GwmStringListInterface* fieldsInterface)
+GwmStringListInterface gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer)
 {
     vector<string> fields = layer->fields();
-    fieldsInterface->size = fields.size();
-    fieldsInterface->items = new GwmStringInterface[fieldsInterface->size];
-    for (size_t i = 0; i < fieldsInterface->size; i++)
+    GwmStringListInterface fieldsInterface;
+    fieldsInterface.size = fields.size();
+    fieldsInterface.items = new GwmStringInterface[fieldsInterface.size];
+    for (size_t i = 0; i < fieldsInterface.size; i++)
     {
         string f = fields[i];
-        GwmStringInterface* s = fieldsInterface->items + i;
+        GwmStringInterface* s = fieldsInterface.items + i;
         s->str = new char[f.size() + 1];
         strcpy((char*)s->str, f.data());
     }
+    return fieldsInterface;
 }
 
-void gwmodel_get_gwr_spatial_weight(CGwmGWRBasic* gwr, CGwmDistance** distance, CGwmWeight** weight)
+CGwmSpatialWeight* gwmodel_get_gwr_spatial_weight(CGwmGWRBasic* gwr)
 {
-    *distance = gwr->spatialWeight().distance()->clone();
-    *weight = gwr->spatialWeight().weight()->clone();
+    return new CGwmSpatialWeight(gwr->spatialWeight());
 }
 
-void gwmodel_get_gwr_result_layer(CGwmGWRBasic* gwr, CGwmSimpleLayer** resultLayer)
+CGwmSimpleLayer* gwmodel_get_gwr_result_layer(CGwmGWRBasic* gwr)
 {
-    *resultLayer = gwr->resultLayer();
+    return gwr->resultLayer();
 }
 
-void gwmodel_get_gwr_coefficients(CGwmGWRBasic* gwr, GwmMatInterface* coefficientsInterface)
+GwmMatInterface gwmodel_get_gwr_coefficients(CGwmGWRBasic* gwr)
 {
     mat betas = gwr->betas();
-    coefficientsInterface->rows = betas.n_rows;
-    coefficientsInterface->cols = betas.n_cols;
-    coefficientsInterface->data = new double[betas.n_elem];
-    memcpy(coefficientsInterface->data, betas.memptr(), betas.n_elem * sizeof(double));
+    GwmMatInterface coefficientsInterface;
+    coefficientsInterface.rows = betas.n_rows;
+    coefficientsInterface.cols = betas.n_cols;
+    coefficientsInterface.data = new double[betas.n_elem];
+    memcpy(coefficientsInterface.data, betas.memptr(), betas.n_elem * sizeof(double));
+    return coefficientsInterface;
 }
 
 GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGWRBasic* gwr)
@@ -197,14 +204,15 @@ GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGWRBasic* gwr)
     return gwr->diagnostic();
 }
 
-void gwmodel_get_gwr_indep_var_criterions(CGwmGWRBasic* gwr, GwmVariablesCriterionListInterface* interface)
+GwmVariablesCriterionListInterface gwmodel_get_gwr_indep_var_criterions(CGwmGWRBasic* gwr)
 {
     VariablesCriterionList criterions = gwr->indepVarsSelectionCriterionList();
-    interface->size = criterions.size();
-    interface->items = new GwmVariablesCriterionPairInterface[interface->size];
-    for (size_t i = 0; i < interface->size; i++)
+    GwmVariablesCriterionListInterface interface;
+    interface.size = criterions.size();
+    interface.items = new GwmVariablesCriterionPairInterface[interface.size];
+    for (size_t i = 0; i < interface.size; i++)
     {
-        GwmVariablesCriterionPairInterface* item = interface->items + i;
+        GwmVariablesCriterionPairInterface* item = interface.items + i;
         item->criterion = criterions[i].second;
         vector<GwmVariable> varList = criterions[i].first;
         item->variables.size = varList.size();
@@ -218,11 +226,23 @@ void gwmodel_get_gwr_indep_var_criterions(CGwmGWRBasic* gwr, GwmVariablesCriteri
             strcpy((char*)vi->name, varList[v].name.data());
         }
     }
+    return interface;
 }
 
 bool gwmodel_as_bandwidth_weight(CGwmWeight* weight, GwmBandwidthKernelInterface* bandwidth)
 {
     CGwmBandwidthWeight* bw = dynamic_cast<CGwmBandwidthWeight*>(weight);
+    if (bw)
+    {
+        *bandwidth = { bw->bandwidth(), bw->adaptive(), (KernelFunctionType)bw->kernel() };
+        return true;
+    }
+    else return false;
+}
+
+bool gwmodel_get_spatial_bandwidth_weight(CGwmSpatialWeight* spatial, GwmBandwidthKernelInterface* bandwidth)
+{
+    CGwmBandwidthWeight* bw = dynamic_cast<CGwmBandwidthWeight*>(spatial->weight());
     if (bw)
     {
         *bandwidth = { bw->bandwidth(), bw->adaptive(), (KernelFunctionType)bw->kernel() };

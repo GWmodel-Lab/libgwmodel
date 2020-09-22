@@ -148,15 +148,16 @@ extern "C" GWMODEL_API void gwmodel_set_gwr_options(CGwmGWRBasic* algorithm, boo
 
 extern "C" GWMODEL_API void gwmodel_run_gwr(CGwmGWRBasic* algorithm);
 
-extern "C" GWMODEL_API void gwmodel_get_simple_layer_points(CGwmSimpleLayer* layer, GwmMatInterface* pointsInterface);
-extern "C" GWMODEL_API void gwmodel_get_simple_layer_data(CGwmSimpleLayer* layer, GwmMatInterface* dataInterface);
-extern "C" GWMODEL_API void gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer, GwmStringListInterface* fieldsInterface);
-extern "C" GWMODEL_API void gwmodel_get_gwr_spatial_weight(CGwmGWRBasic* gwr, CGwmDistance** distance, CGwmWeight** weight);
-extern "C" GWMODEL_API void gwmodel_get_gwr_result_layer(CGwmGWRBasic* gwr, CGwmSimpleLayer** resultLayer);
-extern "C" GWMODEL_API void gwmodel_get_gwr_coefficients(CGwmGWRBasic* gwr, GwmMatInterface* coefficientsInterface);
-extern "C" GWMODEL_API void gwmodel_get_gwr_indep_var_criterions(CGwmGWRBasic* gwr, GwmVariablesCriterionListInterface* interface);
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_simple_layer_points(CGwmSimpleLayer* layer);
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_simple_layer_data(CGwmSimpleLayer* layer);
+extern "C" GWMODEL_API GwmStringListInterface gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer);
+extern "C" GWMODEL_API CGwmSpatialWeight* gwmodel_get_gwr_spatial_weight(CGwmGWRBasic* gwr);
+extern "C" GWMODEL_API CGwmSimpleLayer* gwmodel_get_gwr_result_layer(CGwmGWRBasic* gwr);
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwr_coefficients(CGwmGWRBasic* gwr);
+extern "C" GWMODEL_API GwmVariablesCriterionListInterface gwmodel_get_gwr_indep_var_criterions(CGwmGWRBasic* gwr);
 extern "C" GWMODEL_API GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGWRBasic* gwr);
 
+extern "C" GWMODEL_API bool gwmodel_get_spatial_bandwidth_weight(CGwmSpatialWeight* spatial, GwmBandwidthKernelInterface* bandwidth);
 extern "C" GWMODEL_API bool gwmodel_as_bandwidth_weight(CGwmWeight* weight, GwmBandwidthKernelInterface* bandwidth);
 
 #endif

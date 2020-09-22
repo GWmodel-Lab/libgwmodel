@@ -112,12 +112,11 @@ TEST_CASE("BasicGWR: adaptive bandwidth autoselection of with CV")
     gwmodel_set_gwr_bandwidth_autoselection(algorithm, BandwidthSelectionCriterionType::CV);
     REQUIRE_NOTHROW(gwmodel_run_gwr(algorithm));
 
-    CGwmDistance* distance_new;
-    CGwmWeight* weight_new;
-    gwmodel_get_gwr_spatial_weight(algorithm, &distance_new, &weight_new);
+
+    CGwmSpatialWeight* spatial_new = gwmodel_get_gwr_spatial_weight(algorithm);
 
     GwmBandwidthKernelInterface bw_new_interf;
-    if (gwmodel_as_bandwidth_weight(weight_new, &bw_new_interf))
+    if (gwmodel_get_spatial_bandwidth_weight(spatial_new, &bw_new_interf))
     {
         REQUIRE(bw_new_interf.size == 67);
     }
@@ -185,8 +184,7 @@ TEST_CASE("BasicGWR: indepdent variable autoselection with AIC")
     gwmodel_set_gwr_indep_vars_autoselection(algorithm, 3.0);
     REQUIRE_NOTHROW(gwmodel_run_gwr(algorithm));
 
-    GwmVariablesCriterionListInterface criterionList;
-    gwmodel_get_gwr_indep_var_criterions(algorithm, &criterionList);
+    GwmVariablesCriterionListInterface criterionList = gwmodel_get_gwr_indep_var_criterions(algorithm);
     
     REQUIRE_THAT(variables2indices(criterionList.items[0].variables), Catch::Equals(vector<int>({ 2 })));
     REQUIRE_THAT(criterionList.items[0].criterion, Catch::WithinAbs(2551.61359020599, 1e-8));
