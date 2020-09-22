@@ -214,4 +214,5 @@ TEST_CASE("BasicGWR: indepdent variable autoselection with AIC")
     REQUIRE_NOTHROW(gwmodel_delete_gwr_algorithm(algorithm));
     REQUIRE_NOTHROW(gwmodel_delete_string_list(&londonhp100_field_interface));
     REQUIRE_NOTHROW(gwmodel_delete_variable_list(&indepVars));
+    REQUIRE_NOTHROW(gwmodel_delete_variable_criterion_list(&criterionList));
 }

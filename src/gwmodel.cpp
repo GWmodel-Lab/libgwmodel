@@ -47,10 +47,16 @@ void gwmodel_delete_variable_criterion_pair(GwmVariablesCriterionPairInterface* 
 
 void gwmodel_delete_variable_criterion_list(GwmVariablesCriterionListInterface* interface)
 {
+    if (interface->items)
+    {
     for (size_t i = 0; i < interface->size; i++)
     {
         gwmodel_delete_variable_criterion_pair(interface->items + i);
     }
+        delete[] interface->items;
+        interface->items = nullptr;
+    }
+    interface->size = 0;
 }
 
 CGwmSpatialAlgorithm* gwmodel_create_algorithm()
