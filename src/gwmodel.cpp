@@ -19,6 +19,8 @@ void gwmodel_delete_mat(GwmMatInterface* interface)
 {
     if (interface->data) delete[] interface->data;
     interface->data = nullptr;
+    interface->cols = 0;
+    interface->rows = 0;
 }
 
 void gwmodel_delete_string_list(GwmNameListInterface* interface)
@@ -32,27 +34,30 @@ void gwmodel_delete_variable_list(GwmVariableListInterface* interface)
 {
     if (interface->items) delete[] interface->items;
     interface->items = nullptr;
+    interface->size = 0;
 }
 
 void gwmodel_delete_bandwidth_criterion_list(GwmBandwidthCriterionListInterface* interface)
 {
     if (interface->items) delete[] interface->items;
     interface->items = nullptr; 
+    interface->size = 0;
 }
 
 void gwmodel_delete_variable_criterion_pair(GwmVariablesCriterionPairInterface* interface)
 {
     gwmodel_delete_variable_list(&interface->variables);
+    interface->criterion = 0.0;
 }
 
 void gwmodel_delete_variable_criterion_list(GwmVariablesCriterionListInterface* interface)
 {
     if (interface->items)
     {
-    for (size_t i = 0; i < interface->size; i++)
-    {
-        gwmodel_delete_variable_criterion_pair(interface->items + i);
-    }
+        for (size_t i = 0; i < interface->size; i++)
+        {
+            gwmodel_delete_variable_criterion_pair(interface->items + i);
+        }
         delete[] interface->items;
         interface->items = nullptr;
     }
