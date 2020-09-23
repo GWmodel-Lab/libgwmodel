@@ -244,24 +244,12 @@ void gwmodel_run_gwss(CGwmGWSS* algorithm)
 
 GwmMatInterface gwmodel_get_simple_layer_points(CGwmSimpleLayer* layer)
 {
-    mat points = layer->points();
-    GwmMatInterface pointsInterface;
-    pointsInterface.rows = points.n_rows;
-    pointsInterface.cols = points.n_cols;
-    pointsInterface.data = new double[points.n_elem];
-    memcpy(pointsInterface.data, points.memptr(), points.n_elem * sizeof(double));
-    return pointsInterface;
+    return mat2interface(layer->points());
 }
 
 GwmMatInterface gwmodel_get_simple_layer_data(CGwmSimpleLayer* layer)
 {
-    mat data = layer->data();
-    GwmMatInterface dataInterface;
-    dataInterface.rows = data.n_rows;
-    dataInterface.cols = data.n_cols;
-    dataInterface.data = new double[data.n_elem];
-    memcpy(dataInterface.data, data.memptr(), data.n_elem * sizeof(double));
-    return dataInterface;
+    return mat2interface(layer->data());
 }
 
 GwmNameListInterface gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer)
@@ -290,13 +278,7 @@ CGwmSimpleLayer* gwmodel_get_gwr_result_layer(CGwmGWRBasic* gwr)
 
 GwmMatInterface gwmodel_get_gwr_coefficients(CGwmGWRBasic* gwr)
 {
-    mat betas = gwr->betas();
-    GwmMatInterface coefficientsInterface;
-    coefficientsInterface.rows = betas.n_rows;
-    coefficientsInterface.cols = betas.n_cols;
-    coefficientsInterface.data = new double[betas.n_elem];
-    memcpy(coefficientsInterface.data, betas.memptr(), betas.n_elem * sizeof(double));
-    return coefficientsInterface;
+    return mat2interface(gwr->betas());
 }
 
 GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGWRBasic* gwr)
