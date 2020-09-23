@@ -60,6 +60,7 @@ class CGwmSpatialAlgorithm;
 class CGwmSpatialMonoscaleAlgorithm;
 class CGwmGWRBase;
 class CGwmGWRBasic;
+class CGwmGWSS;
 
 struct GwmMatInterface
 {
@@ -138,6 +139,7 @@ extern "C" GWMODEL_API CGwmSpatialWeight* gwmodel_create_spatial_weight(CGwmDist
 extern "C" GWMODEL_API CGwmSimpleLayer* gwmodel_create_simple_layer(GwmMatInterface pointsInterface, GwmMatInterface dataInterface, GwmNameListInterface fieldsInterface);
 extern "C" GWMODEL_API CGwmSpatialAlgorithm* gwmodel_create_algorithm();
 extern "C" GWMODEL_API CGwmGWRBasic* gwmodel_create_gwr_algorithm();
+extern "C" GWMODEL_API CGwmGWSS* gwmodel_create_gwss_algorithm();
 
 extern "C" GWMODEL_API void gwmodel_delete_crs_distance(CGwmDistance* instance);
 extern "C" GWMODEL_API void gwmodel_delete_bandwidth_weight(CGwmWeight* instance);
@@ -145,6 +147,7 @@ extern "C" GWMODEL_API void gwmodel_delete_spatial_weight(CGwmSpatialWeight* ins
 extern "C" GWMODEL_API void gwmodel_delete_simple_layer(CGwmSimpleLayer* instance);
 extern "C" GWMODEL_API void gwmodel_delete_algorithm(CGwmSpatialAlgorithm* instance);
 extern "C" GWMODEL_API void gwmodel_delete_gwr_algorithm(CGwmGWRBasic* instance);
+extern "C" GWMODEL_API void gwmodel_delete_gwss_algorithm(CGwmGWSS* instance);
 
 extern "C" GWMODEL_API void gwmodel_set_gwr_source_layer(CGwmGWRBasic* algorithm, CGwmSimpleLayer* layer);
 extern "C" GWMODEL_API void gwmodel_set_gwr_spatial_weight(CGwmGWRBasic* algorithm, CGwmSpatialWeight* spatial);
@@ -155,7 +158,13 @@ extern "C" GWMODEL_API void gwmodel_set_gwr_bandwidth_autoselection(CGwmGWRBasic
 extern "C" GWMODEL_API void gwmodel_set_gwr_indep_vars_autoselection(CGwmGWRBasic* algorithm, double threshold);
 extern "C" GWMODEL_API void gwmodel_set_gwr_options(CGwmGWRBasic* algorithm, bool hasHatMatrix);
 
+extern "C" GWMODEL_API void gwmodel_set_gwss_source_layer(CGwmGWSS* algorithm, CGwmSimpleLayer* layer);
+extern "C" GWMODEL_API void gwmodel_set_gwss_spatial_weight(CGwmGWSS* algorithm, CGwmSpatialWeight* spatial);
+extern "C" GWMODEL_API void gwmodel_set_gwss_variables(CGwmGWSS* algorithm, GwmVariableListInterface varList);
+extern "C" GWMODEL_API void gwmodel_set_gwss_options(CGwmGWSS* algorithm, bool quantile, bool corrWithFirstOnly);
+
 extern "C" GWMODEL_API void gwmodel_run_gwr(CGwmGWRBasic* algorithm);
+extern "C" GWMODEL_API void gwmodel_run_gwss(CGwmGWSS* algorithm);
 
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_simple_layer_points(CGwmSimpleLayer* layer);
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_simple_layer_data(CGwmSimpleLayer* layer);
@@ -165,6 +174,18 @@ extern "C" GWMODEL_API CGwmSimpleLayer* gwmodel_get_gwr_result_layer(CGwmGWRBasi
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwr_coefficients(CGwmGWRBasic* gwr);
 extern "C" GWMODEL_API GwmVariablesCriterionListInterface gwmodel_get_gwr_indep_var_criterions(CGwmGWRBasic* gwr);
 extern "C" GWMODEL_API GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGWRBasic* gwr);
+extern "C" GWMODEL_API CGwmSimpleLayer* gwmodel_get_gwss_result_layer(CGwmGWRBasic* gwss);
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_mean(CGwmGWSS* gwss);
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_sdev(CGwmGWSS* gwss);
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_var(CGwmGWSS* gwss);
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_skew(CGwmGWSS* gwss);
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_cv(CGwmGWSS* gwss);
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_cov(CGwmGWSS* gwss);
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_corr(CGwmGWSS* gwss);
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_spearman_rho(CGwmGWSS* gwss);
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_median(CGwmGWSS* gwss);
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_iqr(CGwmGWSS* gwss);
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_qi(CGwmGWSS* gwss);
 
 extern "C" GWMODEL_API bool gwmodel_get_spatial_bandwidth_weight(CGwmSpatialWeight* spatial, GwmBandwidthKernelInterface* bandwidth);
 extern "C" GWMODEL_API bool gwmodel_as_bandwidth_weight(CGwmWeight* weight, GwmBandwidthKernelInterface* bandwidth);

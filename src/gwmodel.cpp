@@ -11,9 +11,20 @@
 #include "CGwmSpatialMonoscaleAlgorithm.h"
 #include "CGwmGWRBase.h"
 #include "CGwmGWRBasic.h"
+#include "CGwmGWSS.h"
 
 using namespace std;
 using namespace arma;
+
+GwmMatInterface mat2interface(const mat& armamat)
+{
+    GwmMatInterface interface;
+    interface.cols = armamat.n_cols;
+    interface.rows = armamat.n_rows;
+    interface.data = new double[armamat.n_elem];
+    memcpy(interface.data, armamat.memptr(), armamat.n_elem * sizeof(double));
+    return interface;
+}
 
 void gwmodel_delete_mat(GwmMatInterface* interface)
 {
@@ -102,6 +113,11 @@ CGwmGWRBasic* gwmodel_create_gwr_algorithm()
     return algorithm;
 }
 
+CGwmGWSS* gwmodel_create_gwss_algorithm()
+{
+    return new CGwmGWSS();
+}
+
 void gwmodel_delete_crs_distance(CGwmDistance* instance)
 {
     delete instance;
@@ -128,6 +144,11 @@ void gwmodel_delete_algorithm(CGwmSpatialAlgorithm* instance)
 }
 
 void gwmodel_delete_gwr_algorithm(CGwmGWRBasic* instance)
+{
+    delete instance;
+}
+
+void gwmodel_delete_gwss_algorithm(CGwmGWSS* instance)
 {
     delete instance;
 }
@@ -182,31 +203,53 @@ void gwmodel_set_gwr_options(CGwmGWRBasic* algorithm, bool hasHatMatrix)
     algorithm->setHasHatMatrix(hasHatMatrix);
 }
 
+void gwmodel_set_gwss_source_layer(CGwmGWSS* algorithm, CGwmSimpleLayer* layer)
+{
+    algorithm->setSourceLayer(layer);
+}
+
+void gwmodel_set_gwss_spatial_weight(CGwmGWSS* algorithm, CGwmSpatialWeight* spatial)
+{
+    algorithm->setSpatialWeight(*spatial);
+}
+
+void gwmodel_set_gwss_variables(CGwmGWSS* algorithm, GwmVariableListInterface varList)
+{
+    vector<GwmVariable> vars;
+    for (size_t i = 0; i < varList.size; i++)
+    {
+        GwmVariableInterface* vi = varList.items + i;
+        _ASSERT(vi);
+        GwmVariable v(vi->index, vi->isNumeric, vi->name);
+        vars.push_back(v);
+    }
+    algorithm->setVariables(vars);
+}
+
+void gwmodel_set_gwss_options(CGwmGWSS* algorithm, bool quantile, bool corrWithFirstOnly)
+{
+    algorithm->setQuantile(quantile);
+    algorithm->setIsCorrWithFirstOnly(corrWithFirstOnly);
+}
+
 void gwmodel_run_gwr(CGwmGWRBasic* algorithm)
+{
+    algorithm->run();
+}
+
+void gwmodel_run_gwss(CGwmGWSS* algorithm)
 {
     algorithm->run();
 }
 
 GwmMatInterface gwmodel_get_simple_layer_points(CGwmSimpleLayer* layer)
 {
-    mat points = layer->points();
-    GwmMatInterface pointsInterface;
-    pointsInterface.rows = points.n_rows;
-    pointsInterface.cols = points.n_cols;
-    pointsInterface.data = new double[points.n_elem];
-    memcpy(pointsInterface.data, points.memptr(), points.n_elem * sizeof(double));
-    return pointsInterface;
+    return mat2interface(layer->points());
 }
 
 GwmMatInterface gwmodel_get_simple_layer_data(CGwmSimpleLayer* layer)
 {
-    mat data = layer->data();
-    GwmMatInterface dataInterface;
-    dataInterface.rows = data.n_rows;
-    dataInterface.cols = data.n_cols;
-    dataInterface.data = new double[data.n_elem];
-    memcpy(dataInterface.data, data.memptr(), data.n_elem * sizeof(double));
-    return dataInterface;
+    return mat2interface(layer->data());
 }
 
 GwmNameListInterface gwmodel_get_simple_layer_fields(CGwmSimpleLayer* layer)
@@ -235,13 +278,7 @@ CGwmSimpleLayer* gwmodel_get_gwr_result_layer(CGwmGWRBasic* gwr)
 
 GwmMatInterface gwmodel_get_gwr_coefficients(CGwmGWRBasic* gwr)
 {
-    mat betas = gwr->betas();
-    GwmMatInterface coefficientsInterface;
-    coefficientsInterface.rows = betas.n_rows;
-    coefficientsInterface.cols = betas.n_cols;
-    coefficientsInterface.data = new double[betas.n_elem];
-    memcpy(coefficientsInterface.data, betas.memptr(), betas.n_elem * sizeof(double));
-    return coefficientsInterface;
+    return mat2interface(gwr->betas());
 }
 
 GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGWRBasic* gwr)
@@ -271,6 +308,66 @@ GwmVariablesCriterionListInterface gwmodel_get_gwr_indep_var_criterions(CGwmGWRB
         }
     }
     return interface;
+}
+
+CGwmSimpleLayer* gwmodel_get_gwss_result_layer(CGwmGWRBasic* gwss)
+{
+    return gwss->resultLayer();
+}
+
+GwmMatInterface gwmodel_get_gwss_local_mean(CGwmGWSS* gwss)
+{
+    return mat2interface(gwss->localMean());
+}
+
+GwmMatInterface gwmodel_get_gwss_local_sdev(CGwmGWSS* gwss)
+{
+    return mat2interface(gwss->localSDev());
+}
+
+GwmMatInterface gwmodel_get_gwss_local_var(CGwmGWSS* gwss)
+{
+    return mat2interface(gwss->localVar());
+}
+
+GwmMatInterface gwmodel_get_gwss_local_skew(CGwmGWSS* gwss)
+{
+    return mat2interface(gwss->localSkewness());
+}
+
+GwmMatInterface gwmodel_get_gwss_local_cv(CGwmGWSS* gwss)
+{
+    return mat2interface(gwss->localCV());
+}
+
+GwmMatInterface gwmodel_get_gwss_local_cov(CGwmGWSS* gwss)
+{
+    return mat2interface(gwss->localCov());
+}
+
+GwmMatInterface gwmodel_get_gwss_local_corr(CGwmGWSS* gwss)
+{
+    return mat2interface(gwss->localCorr());
+}
+
+GwmMatInterface gwmodel_get_gwss_local_spearman_rho(CGwmGWSS* gwss)
+{
+    return mat2interface(gwss->localSCorr());
+}
+
+GwmMatInterface gwmodel_get_gwss_local_median(CGwmGWSS* gwss)
+{
+    return mat2interface(gwss->localMedian());
+}
+
+GwmMatInterface gwmodel_get_gwss_local_iqr(CGwmGWSS* gwss)
+{
+    return mat2interface(gwss->iqr());
+}
+
+GwmMatInterface gwmodel_get_gwss_local_qi(CGwmGWSS* gwss)
+{
+    return mat2interface(gwss->qi());
 }
 
 bool gwmodel_as_bandwidth_weight(CGwmWeight* weight, GwmBandwidthKernelInterface* bandwidth)
