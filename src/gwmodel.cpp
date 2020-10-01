@@ -203,6 +203,12 @@ void gwmodel_set_gwr_options(CGwmGWRBasic* algorithm, bool hasHatMatrix)
     algorithm->setHasHatMatrix(hasHatMatrix);
 }
 
+void gwmodel_set_gwr_openmp(CGwmGWRBasic* algorithm, int threads)
+{
+    algorithm->setParallelType(ParallelType::OpenMP);
+    algorithm->setOmpThreadNum(threads);
+}
+
 void gwmodel_set_gwss_source_layer(CGwmGWSS* algorithm, CGwmSimpleLayer* layer)
 {
     algorithm->setSourceLayer(layer);
@@ -230,6 +236,12 @@ void gwmodel_set_gwss_options(CGwmGWSS* algorithm, bool quantile, bool corrWithF
 {
     algorithm->setQuantile(quantile);
     algorithm->setIsCorrWithFirstOnly(corrWithFirstOnly);
+}
+
+void gwmodel_set_gwss_openmp(CGwmGWSS* algorithm, int threads)
+{
+    algorithm->setParallelType(ParallelType::OpenMP);
+    algorithm->setOmpThreadNum(threads);
 }
 
 void gwmodel_run_gwr(CGwmGWRBasic* algorithm)

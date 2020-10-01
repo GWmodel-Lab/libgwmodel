@@ -157,11 +157,13 @@ extern "C" GWMODEL_API void gwmodel_set_gwr_predict_layer(CGwmGWRBasic* algorith
 extern "C" GWMODEL_API void gwmodel_set_gwr_bandwidth_autoselection(CGwmGWRBasic* algorithm, BandwidthSelectionCriterionType criterion);
 extern "C" GWMODEL_API void gwmodel_set_gwr_indep_vars_autoselection(CGwmGWRBasic* algorithm, double threshold);
 extern "C" GWMODEL_API void gwmodel_set_gwr_options(CGwmGWRBasic* algorithm, bool hasHatMatrix);
+extern "C" GWMODEL_API void gwmodel_set_gwr_openmp(CGwmGWRBasic* algorithm, int threads);
 
 extern "C" GWMODEL_API void gwmodel_set_gwss_source_layer(CGwmGWSS* algorithm, CGwmSimpleLayer* layer);
 extern "C" GWMODEL_API void gwmodel_set_gwss_spatial_weight(CGwmGWSS* algorithm, CGwmSpatialWeight* spatial);
 extern "C" GWMODEL_API void gwmodel_set_gwss_variables(CGwmGWSS* algorithm, GwmVariableListInterface varList);
 extern "C" GWMODEL_API void gwmodel_set_gwss_options(CGwmGWSS* algorithm, bool quantile, bool corrWithFirstOnly);
+extern "C" GWMODEL_API void gwmodel_set_gwss_openmp(CGwmGWSS* algorithm, int threads);
 
 extern "C" GWMODEL_API void gwmodel_run_gwr(CGwmGWRBasic* algorithm);
 extern "C" GWMODEL_API void gwmodel_run_gwss(CGwmGWSS* algorithm);
