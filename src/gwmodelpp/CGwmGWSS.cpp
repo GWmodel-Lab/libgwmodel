@@ -155,9 +155,8 @@ void CGwmGWSS::summarySerial()
         }
         mat centerized = mX.each_row() - mLocalMean.row(i);
         mLVar.row(i) = Wi.t() * (centerized % centerized);
-        mStandardDev = sqrt(mLVar);
+        mStandardDev.row(i) = sqrt(mLVar.row(i));
         mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
-        mLCV = mStandardDev / mLocalMean;
         if (nVar >= 2)
         {
             uword tag = 0;
@@ -177,6 +176,7 @@ void CGwmGWSS::summarySerial()
             }
         }
     }
+    mLCV = mStandardDev / mLocalMean;
 }
 
 #ifdef ENABLE_OPENMP
@@ -206,9 +206,8 @@ void CGwmGWSS::summaryOmp()
         }
         mat centerized = mX.each_row() - mLocalMean.row(i);
         mLVar.row(i) = Wi.t() * (centerized % centerized);
-        mStandardDev = sqrt(mLVar);
+        mStandardDev.row(i) = sqrt(mLVar.row(i));
         mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
-        mLCV = mStandardDev / mLocalMean;
         if (nVar >= 2)
         {
             uword tag = 0;
@@ -228,6 +227,7 @@ void CGwmGWSS::summaryOmp()
             }
         }
     }
+    mLCV = mStandardDev / mLocalMean;
 }
 #endif
 
