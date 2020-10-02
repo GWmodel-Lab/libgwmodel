@@ -22,3 +22,7 @@ add_test(
     NAME testGWSS 
     COMMAND $<TARGET_FILE:testGWSS> --success
 )
+add_test(
+    NAME testMultithread 
+    COMMAND $<TARGET_FILE:testMultithread> --success
+)

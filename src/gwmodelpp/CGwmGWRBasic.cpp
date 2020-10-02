@@ -457,7 +457,7 @@ double CGwmGWRBasic::indepVarsSelectionCriterionOmp(const vector<GwmVariable>& i
     mat x;
     vec y;
     setXY(x, y, mSourceLayer, mDepVar, indepVars);
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = mSourceLayer->featureCount(), nVar = indepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
     mat shat(2, mOmpThreadNum, fill::zeros);
     int flag = true;
