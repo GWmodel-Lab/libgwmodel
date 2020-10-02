@@ -8,6 +8,9 @@ if(BUILD_SHARED_LIBS)
     message(STATUS "The library can only be used by C-style interfaces.")
 endif(BUILD_SHARED_LIBS)
 
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif(MSVC)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src)
 
