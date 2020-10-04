@@ -10,11 +10,9 @@ struct DMatDistanceParameter : public DistanceParameter
 {
     int rowSize;
 
-    DMatDistanceParameter(int size) : rowSize(size) {}
-    
-    virtual DistanceParameter* clone() override
+    DMatDistanceParameter(int size, uword rows) : rowSize(size) 
     {
-        return new DMatDistanceParameter(this->rowSize);
+        total = rows;
     }
 };
 
@@ -38,7 +36,7 @@ public:
     void setDMatFile(const string &dMatFile);
 
 public:
-    virtual vec distance(DistanceParameter* parameter) override;
+    virtual vec distance(DistanceParameter* parameter, uword focus) override;
 
 private:
     string mDMatFile;

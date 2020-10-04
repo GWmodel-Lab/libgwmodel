@@ -10,23 +10,9 @@ using namespace arma;
 
 struct DistanceParameter
 {
-    uword focus;
+    uword total;
 
-    DistanceParameter(): focus(0) {}
-
-    DistanceParameter* operator()(uword focus)
-    {
-        this->focus = focus;
-        return this;
-    }
-
-    DistanceParameter* on(uword focus)
-    {
-        this->focus = focus;
-        return this;
-    }
-
-    virtual DistanceParameter* clone() = 0;
+    DistanceParameter(): total(0) {}
 };
 
 class CGwmDistance
@@ -52,7 +38,7 @@ public:
 
 
 public:
-    virtual vec distance(DistanceParameter* parameter) = 0;
+    virtual vec distance(DistanceParameter* parameter, uword focus) = 0;
 
     double maxDistance(uword total, DistanceParameter* parameter);
     double minDistance(uword total, DistanceParameter* parameter);

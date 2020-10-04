@@ -10,7 +10,7 @@ CGwmDMatDistance::CGwmDMatDistance(const CGwmDMatDistance &distance) : CGwmDista
     mDMatFile = distance.mDMatFile;
 }
 
-vec CGwmDMatDistance::distance(DistanceParameter* parameter)
+vec CGwmDMatDistance::distance(DistanceParameter* parameter, uword focus)
 {
     _ASSERT(parameter != nullptr);
     // QFile dmat(mDMatFile);

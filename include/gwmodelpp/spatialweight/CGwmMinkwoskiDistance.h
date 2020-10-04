@@ -29,7 +29,7 @@ public:
     void setTheta(double theta);
 
 public:
-    virtual vec distance(DistanceParameter* parameter) override;
+    virtual vec distance(DistanceParameter* parameter, uword focus) override;
 
 private:
     double mPoly;
