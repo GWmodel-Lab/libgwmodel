@@ -39,3 +39,4 @@ set(SAMPL_LONDONHP100 ${CMAKE_CURRENT_SOURCE_DIR}/data/londonhp100.cpp)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/test/BasicGWR)
 add_subdirectory(${CMAKE_SOURCE_DIR}/test/GWSS)
+add_subdirectory(${CMAKE_SOURCE_DIR}/test/Multithread)

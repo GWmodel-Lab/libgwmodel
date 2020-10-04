@@ -13,6 +13,11 @@ struct CRSDistanceParameter : public DistanceParameter
         , dataPoints(dp)
     {
     }
+
+    virtual DistanceParameter* clone() override
+    {
+        return new CRSDistanceParameter(this->focusPoints, this->dataPoints);
+    }
 };
 
 class CGwmCRSDistance : public CGwmDistance
