@@ -1,0 +1,34 @@
+#include "spatialweight/CGwmDistance.h"
+
+unordered_map<CGwmDistance::DistanceType, string> CGwmDistance::TypeNameMapper =
+{
+    std::make_pair(CGwmDistance::DistanceType::CRSDistance, "CRSDistance"),
+    std::make_pair(CGwmDistance::DistanceType::MinkwoskiDistance, "MinkwoskiDistance"),
+    std::make_pair(CGwmDistance::DistanceType::DMatDistance, "DMatDistance")
+};
+
+double CGwmDistance::maxDistance(uword total, DistanceParameter* parameter)
+{
+    _ASSERT(parameter != nullptr);
+    double maxD = 0.0;
+    for (uword i = 0; i < total; i++)
+    {
+        parameter->focus = i;
+        double d = max(distance(parameter));
+        maxD = d > maxD ? d : maxD;
+    }
+    return maxD;
+}
+
+double CGwmDistance::minDistance(uword total, DistanceParameter* parameter)
+{
+    _ASSERT(parameter != nullptr);
+    double minD = DBL_MAX;
+    for (uword i = 0; i < total; i++)
+    {
+        parameter->focus = i;
+        double d = min(distance(parameter));
+        minD = d < minD ? d : minD;
+    }
+    return minD;
+}
