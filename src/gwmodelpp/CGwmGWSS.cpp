@@ -186,10 +186,16 @@ void CGwmGWSS::summaryOmp()
     rankX.each_col([&](vec& x) { x = rank(x); });
     uword nVar = mX.n_cols, nRp = mSourceLayer->featureCount();
     uword corrSize = mIsCorrWithFirstOnly ? 1 : nVar - 1;
+    DistanceParameter** parameter_bak = new DistanceParameter*[mOmpThreadNum];
+    for (size_t i = 0; i < mOmpThreadNum; i++)
+    {
+        parameter_bak[i] = mDistanceParameter->clone();
+    }
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nRp; i++)
     {
-        vec w = mSpatialWeight.weightVector(mDistanceParameter->on(i));
+        int thread = omp_get_thread_num();
+        vec w = mSpatialWeight.weightVector(parameter_bak[thread]->on(i));
         double sumw = sum(w);
         vec Wi = w / sumw;
         mLocalMean.row(i) = trans(Wi) * mX;
@@ -228,6 +234,12 @@ void CGwmGWSS::summaryOmp()
         }
     }
     mLCV = mStandardDev / mLocalMean;
+    for (size_t i = 0; i < mOmpThreadNum; i++)
+    {
+        delete parameter_bak[i];
+    }
+    delete[] parameter_bak;
+    
 }
 #endif
 

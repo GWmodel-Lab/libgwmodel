@@ -25,6 +25,8 @@ struct DistanceParameter
         this->focus = focus;
         return this;
     }
+
+    virtual DistanceParameter* clone() = 0;
 };
 
 class CGwmDistance

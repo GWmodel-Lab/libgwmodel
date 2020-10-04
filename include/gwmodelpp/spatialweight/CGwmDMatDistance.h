@@ -10,7 +10,12 @@ struct DMatDistanceParameter : public DistanceParameter
 {
     int rowSize;
 
-    DMatDistanceParameter() {}
+    DMatDistanceParameter(int size) : rowSize(size) {}
+    
+    virtual DistanceParameter* clone() override
+    {
+        return new DMatDistanceParameter(this->rowSize);
+    }
 };
 
 /**
