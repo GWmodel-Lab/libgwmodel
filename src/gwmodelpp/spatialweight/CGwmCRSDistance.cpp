@@ -83,16 +83,15 @@ CGwmCRSDistance::CGwmCRSDistance(const CGwmCRSDistance &distance) : CGwmDistance
     mGeographic = distance.mGeographic;
 }
 
-vec CGwmCRSDistance::distance(DistanceParameter* parameter)
+vec CGwmCRSDistance::distance(DistanceParameter* parameter, uword focus)
 {
     _ASSERT(parameter != nullptr);
     CRSDistanceParameter* p = (CRSDistanceParameter*)parameter;
     if (p->dataPoints.n_cols == 2 && p->focusPoints.n_cols == 2)
     {
-        uword total = p->dataPoints.n_rows;
-        if (p->focus < total)
+        if (focus < p->total)
         {
-            return mCalculator(p->focusPoints.row(p->focus), p->dataPoints);
+            return mCalculator(p->focusPoints.row(focus), p->dataPoints);
         }
         else throw std::runtime_error("Target is out of bounds of data points.");
     }

@@ -84,7 +84,7 @@ void CGwmGWRBasic::run()
         vec localR2 = vec(nDp, fill::zeros);
         for (uword i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeight.weightVector(mRegressionDistanceParameter->on(i));
+            vec w = mSpatialWeight.weightVector(mRegressionDistanceParameter, i);
             double tss = sum(dybar2 % w);
             double rss = sum(dyhat2 % w);
             localR2(i) = (tss - rss) / tss;
@@ -133,7 +133,7 @@ mat CGwmGWRBasic::regressionSerial(const mat& x, const vec& y)
     mat betas(nVar, nRp, fill::zeros);
     for (uword i = 0; i < nRp; i++)
     {
-        vec w = mSpatialWeight.weightVector(mPredictionDistanceParameter->on(i));
+        vec w = mSpatialWeight.weightVector(mPredictionDistanceParameter, i);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -160,7 +160,7 @@ mat CGwmGWRBasic::regressionHatmatrixSerial(const mat& x, const vec& y, mat& bet
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec w = mSpatialWeight.weightVector(mRegressionDistanceParameter->on(i));
+        vec w = mSpatialWeight.weightVector(mRegressionDistanceParameter, i);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -193,16 +193,11 @@ mat CGwmGWRBasic::regressionOmp(const mat& x, const vec& y)
     uword nRp = mPredictLayer->featureCount(), nVar = mIndepVars.size() + 1;
     mat betas(nVar, nRp, arma::fill::zeros);
     int current = 0;
-    DistanceParameter** parameter_bak = new DistanceParameter*[mOmpThreadNum];
-    for (size_t i = 0; i < mOmpThreadNum; i++)
-    {
-        parameter_bak[i] = mPredictionDistanceParameter->clone();
-    }
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nRp; i++)
     {
         int thread = omp_get_thread_num();
-        vec w = mSpatialWeight.weightVector(parameter_bak[thread]->on(i));
+        vec w = mSpatialWeight.weightVector(mPredictionDistanceParameter, i);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -216,11 +211,6 @@ mat CGwmGWRBasic::regressionOmp(const mat& x, const vec& y)
             throw e;
         }
     }
-    for (size_t i = 0; i < mOmpThreadNum; i++)
-    {
-        delete parameter_bak[i];
-    }
-    delete[] parameter_bak;
     return betas.t();
 }
 
@@ -233,16 +223,11 @@ mat CGwmGWRBasic::regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasS
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     mat qDiag_all(nDp, mOmpThreadNum, fill::zeros);
     int current = 0;
-    DistanceParameter** parameter_bak = new DistanceParameter*[mOmpThreadNum];
-    for (size_t i = 0; i < mOmpThreadNum; i++)
-    {
-        parameter_bak[i] = mRegressionDistanceParameter->clone();
-    }
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
         int thread = omp_get_thread_num();
-        vec w = mSpatialWeight.weightVector(parameter_bak[thread]->on(i));
+        vec w = mSpatialWeight.weightVector(mRegressionDistanceParameter, i);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -265,11 +250,6 @@ mat CGwmGWRBasic::regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasS
             throw e;
         }
     }
-    for (size_t i = 0; i < mOmpThreadNum; i++)
-    {
-        delete parameter_bak[i];
-    }
-    delete[] parameter_bak;
     shat = sum(shat_all, 1);
     qDiag = sum(qDiag_all, 1);
     betasSE = betasSE.t();
@@ -284,7 +264,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwid
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mSpatialWeight.distance()->distance(mRegressionDistanceParameter->on(i));
+        vec d = mSpatialWeight.distance()->distance(mRegressionDistanceParameter, i);
         vec w = bandwidthWeight->weight(d);
         w(i) = 0.0;
         mat xtw = trans(mX.each_col() % w);
@@ -316,7 +296,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwi
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mSpatialWeight.distance()->distance(mRegressionDistanceParameter->on(i));
+        vec d = mSpatialWeight.distance()->distance(mRegressionDistanceParameter, i);
         vec w = bandwidthWeight->weight(d);
         mat xtw = trans(mX.each_col() % w);
         mat xtwx = xtw * mX;
@@ -350,18 +330,13 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthW
     vec shat(2, fill::zeros);
     vec cv_all(mOmpThreadNum, fill::zeros);
     bool flag = true;
-    DistanceParameter** parameter_bak = new DistanceParameter*[mOmpThreadNum];
-    for (size_t i = 0; i < mOmpThreadNum; i++)
-    {
-        parameter_bak[i] = mRegressionDistanceParameter->clone();
-    }
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec d = mSpatialWeight.distance()->distance(parameter_bak[thread]->on(i));
+            vec d = mSpatialWeight.distance()->distance(mRegressionDistanceParameter, i);
             vec w = bandwidthWeight->weight(d);
             w(i) = 0.0;
             mat xtw = trans(mX.each_col() % w);
@@ -383,11 +358,6 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthW
             }
         }
     }
-    for (size_t i = 0; i < mOmpThreadNum; i++)
-    {
-        delete parameter_bak[i];
-    }
-    delete[] parameter_bak;
     if (flag)
     {
         double cv = sum(cv_all);
@@ -402,18 +372,13 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICOmp(CGwmBandwidthWeight* bandwidth
     mat betas(nVar, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
-    DistanceParameter** parameter_bak = new DistanceParameter*[mOmpThreadNum];
-    for (size_t i = 0; i < mOmpThreadNum; i++)
-    {
-        parameter_bak[i] = mRegressionDistanceParameter->clone();
-    }
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec d = mSpatialWeight.distance()->distance(parameter_bak[thread]->on(i));
+            vec d = mSpatialWeight.distance()->distance(mRegressionDistanceParameter, i);
             vec w = bandwidthWeight->weight(d);
             mat xtw = trans(mX.each_col() % w);
             mat xtwx = xtw * mX;
@@ -433,11 +398,6 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICOmp(CGwmBandwidthWeight* bandwidth
             }
         }
     }
-    for (size_t i = 0; i < mOmpThreadNum; i++)
-    {
-        delete parameter_bak[i];
-    }
-    delete[] parameter_bak;
     if (flag)
     {
         vec shat = sum(shat_all, 1);

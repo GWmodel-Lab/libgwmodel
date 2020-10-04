@@ -13,8 +13,7 @@ double CGwmDistance::maxDistance(uword total, DistanceParameter* parameter)
     double maxD = 0.0;
     for (uword i = 0; i < total; i++)
     {
-        parameter->focus = i;
-        double d = max(distance(parameter));
+        double d = max(distance(parameter, i));
         maxD = d > maxD ? d : maxD;
     }
     return maxD;
@@ -26,8 +25,7 @@ double CGwmDistance::minDistance(uword total, DistanceParameter* parameter)
     double minD = DBL_MAX;
     for (uword i = 0; i < total; i++)
     {
-        parameter->focus = i;
-        double d = min(distance(parameter));
+        double d = min(distance(parameter, i));
         minD = d < minD ? d : minD;
     }
     return minD;

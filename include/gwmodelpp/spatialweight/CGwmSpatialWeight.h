@@ -39,7 +39,7 @@ public:
     CGwmSpatialWeight& operator=(const CGwmSpatialWeight&& spatialWeight);
 
 public:
-    virtual vec weightVector(DistanceParameter* parameter);
+    virtual vec weightVector(DistanceParameter* parameter, uword focus);
     virtual bool isValid();
 
 private:
@@ -117,9 +117,9 @@ inline void CGwmSpatialWeight::setDistance(CGwmDistance&& distance)
     mDistance = distance.clone();
 }
 
-inline vec CGwmSpatialWeight::weightVector(DistanceParameter* parameter)
+inline vec CGwmSpatialWeight::weightVector(DistanceParameter* parameter, uword focus)
 {
-    return mWeight->weight(mDistance->distance(parameter));
+    return mWeight->weight(mDistance->distance(parameter, focus));
 }
 
 #endif // CGWMSPATIALWEIGHT_H

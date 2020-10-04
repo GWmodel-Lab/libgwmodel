@@ -12,11 +12,7 @@ struct CRSDistanceParameter : public DistanceParameter
         , focusPoints(fp)
         , dataPoints(dp)
     {
-    }
-
-    virtual DistanceParameter* clone() override
-    {
-        return new CRSDistanceParameter(this->focusPoints, this->dataPoints);
+        total = fp.n_rows;
     }
 };
 
@@ -45,7 +41,7 @@ public:
     void setGeographic(bool geographic);
 
 public:
-    virtual vec distance(DistanceParameter* parameter) override;
+    virtual vec distance(DistanceParameter* parameter, uword focus) override;
 
 protected:
     bool mGeographic = false;
