@@ -610,8 +610,8 @@ extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_cv(CGwmGWSS* gwss)
  * The number of rows is the same as number of features. 
  * If corrWithFirstOnly is set true, the number of columns is the (number of fields) - 1;
  * if not, the number of columns is the (((number of fields) - 1) * (number of fields)) / 2.
- * For variables v1, v2, v3, ... , vi, vk (i = k - 1), the fields are arranged as: 
- * cov(v1,v2), cov(v1,v3), ... , cov(v1,vk), cov(v2,v3), ... , cov(v2,vk), ... , cov(vi,vk)
+ * For variables \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$, the fields are arranged as: 
+ * \f$cov(v_1,v_2), cov(v_1,v_3), ... , cov(v_1,v_k), cov(v_2,v_3), ... , cov(v_2,v_k), ... , cov(v_{k-1},vk)\f$
  */
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_cov(CGwmGWSS* gwss);
 
@@ -623,8 +623,8 @@ extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_cov(CGwmGWSS* gwss
  * The number of rows is the same as number of features. 
  * If corrWithFirstOnly is set true, the number of columns is the (number of fields) - 1;
  * if not, the number of columns is the (((number of fields) - 1) * (number of fields)) / 2.
- * For variables v1, v2, v3, ... , vi, vk (i = k - 1), the fields are arranged as: 
- * corr(v1,v2), corr(v1,v3), ... , corr(v1,vk), corr(v2,v3), ... , corr(v2,vk), ... , corr(vi,vk)
+ * For variables \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$, the fields are arranged as: 
+ * \f$corr(v_1,v_2), corr(v_1,v_3), ... , corr(v_1,v_k), corr(v_2,v_3), ... , corr(v_2,v_k), ... , corr(v_{k-1},vk)\f$
  */
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_corr(CGwmGWSS* gwss);
 
@@ -636,8 +636,8 @@ extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_corr(CGwmGWSS* gws
  * The number of rows is the same as number of features. 
  * If corrWithFirstOnly is set true, the number of columns is the (number of fields) - 1;
  * if not, the number of columns is the (((number of fields) - 1) * (number of fields)) / 2.
- * For variables v1, v2, v3, ... , vi, vk (i = k - 1), the fields are arranged as: 
- * corr(v1,v2), corr(v1,v3), ... , corr(v1,vk), corr(v2,v3), ... , corr(v2,vk), ... , corr(vi,vk)
+ * For variables \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$, the fields are arranged as: 
+ * \f$corr(v_1,v_2), corr(v_1,v_3), ... , corr(v_1,v_k), corr(v_2,v_3), ... , corr(v_2,v_k), ... , corr(v_{k-1},vk)\f$
  */
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_spearman_rho(CGwmGWSS* gwss);
 
