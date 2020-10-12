@@ -8,23 +8,61 @@
 using namespace std;
 using namespace arma;
 
+/**
+ * @brief Abstract base class for calculating weight from distance.
+ * It defines some interface commonly used in spatial algorithms:
+ * 
+ * - Clone this object.
+ * - Calculate distance vector for a focus point.
+ * - Get maximum distance among all points.
+ * - Get minimum distance among all points.
+ * 
+ * Pointer of this type can be put to these classes:
+ * 
+ * - CGwmBandwidthWeight
+ * 
+ */
 class CGwmWeight
 {
 public:
+
+    /**
+     * @brief Type of weight.
+     */
     enum WeightType
     {
-        BandwidthWeight
+        BandwidthWeight //!< Bandwidth weight
     };
 
     static unordered_map<WeightType, string> TypeNameMapper;
 
 public:
+
+    /**
+     * @brief Construct a new CGwmWeight object.
+     */
     CGwmWeight() {}
+
+    /**
+     * @brief Destroy the CGwmWeight object.
+     */
     virtual ~CGwmWeight() {}
 
+    /**
+     * @brief Clone this object.
+     * 
+     * @return Newly created pointer.
+     */
     virtual CGwmWeight* clone() = 0;
 
 public:
+
+    /**
+     * @brief Calculate weight vector from a distance vector. 
+     * 
+     * @param dist According distance vector.
+     * @return Weight vector.
+     */
     virtual vec weight(vec dist) = 0;
 };
 
