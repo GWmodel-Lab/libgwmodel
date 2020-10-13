@@ -1,4 +1,4 @@
-#include "spatialweight/CGwmDMatDistance.h"
+#include "gwmodelpp/spatialweight/CGwmDMatDistance.h"
 
 CGwmDMatDistance::CGwmDMatDistance(string dmatFile) : CGwmDistance()
 {

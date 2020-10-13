@@ -1,5 +1,5 @@
-#include "spatialweight/CGwmBandwidthWeight.h"
-#include "spatialweight/CGwmWeight.h"
+#include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
+#include "gwmodelpp/spatialweight/CGwmWeight.h"
 
 unordered_map<CGwmBandwidthWeight::KernelFunctionType, string> CGwmBandwidthWeight::KernelFunctionTypeNameMapper = {
     std::make_pair(CGwmBandwidthWeight::KernelFunctionType::Boxcar, "Boxcar"),

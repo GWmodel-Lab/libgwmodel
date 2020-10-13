@@ -3,7 +3,7 @@
 
 #include <unordered_map>
 #include <string>
-#include "spatialweight/CGwmWeight.h"
+#include "gwmodelpp/spatialweight/CGwmWeight.h"
 
 using namespace std;
 

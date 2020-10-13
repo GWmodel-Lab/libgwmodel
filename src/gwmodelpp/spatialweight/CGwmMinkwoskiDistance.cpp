@@ -1,4 +1,4 @@
-#include "spatialweight/CGwmMinkwoskiDistance.h"
+#include "gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h"
 
 CGwmMinkwoskiDistance::CGwmMinkwoskiDistance(double p, double theta) : CGwmCRSDistance(false)
 {

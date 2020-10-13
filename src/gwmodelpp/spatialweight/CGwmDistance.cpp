@@ -1,4 +1,4 @@
-#include "spatialweight/CGwmDistance.h"
+#include "gwmodelpp/spatialweight/CGwmDistance.h"
 
 unordered_map<CGwmDistance::DistanceType, string> CGwmDistance::TypeNameMapper =
 {

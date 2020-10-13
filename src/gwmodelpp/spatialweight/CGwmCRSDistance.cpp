@@ -1,4 +1,4 @@
-#include "spatialweight/CGwmCRSDistance.h"
+#include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
 
 #include <exception>
 
