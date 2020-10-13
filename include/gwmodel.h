@@ -32,6 +32,8 @@
 #define GWMODEL_API  
 #endif
 
+#include <cstddef>
+
 #include "gwmodelpp/GwmRegressionDiagnostic.h"
 
 enum KernelFunctionType
@@ -66,7 +68,7 @@ struct GwmMatInterface
 {
     unsigned long long rows = 0;
     unsigned long long cols = 0;
-    double* data = nullptr;
+    const double* data = nullptr;
 };
 
 extern "C" GWMODEL_API void gwmodel_delete_mat(GwmMatInterface* interface);

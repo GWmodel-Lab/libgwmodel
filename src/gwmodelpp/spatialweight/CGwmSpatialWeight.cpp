@@ -1,4 +1,4 @@
-#include "spatialweight/CGwmSpatialWeight.h"
+#include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
 
 CGwmSpatialWeight::CGwmSpatialWeight()
 {

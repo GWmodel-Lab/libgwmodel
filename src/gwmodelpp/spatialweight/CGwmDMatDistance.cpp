@@ -1,4 +1,5 @@
-#include "spatialweight/CGwmDMatDistance.h"
+#include "gwmodelpp/spatialweight/CGwmDMatDistance.h"
+#include <assert.h>
 
 CGwmDMatDistance::CGwmDMatDistance(string dmatFile) : CGwmDistance()
 {
@@ -12,7 +13,7 @@ CGwmDMatDistance::CGwmDMatDistance(const CGwmDMatDistance &distance) : CGwmDista
 
 vec CGwmDMatDistance::distance(DistanceParameter* parameter, uword focus)
 {
-    _ASSERT(parameter != nullptr);
+    assert(parameter != nullptr);
     // QFile dmat(mDMatFile);
     // if (focus < mTotal && dmat.open(QFile::QIODevice::ReadOnly))
     // {

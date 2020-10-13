@@ -1,4 +1,5 @@
-#include "spatialweight/CGwmDistance.h"
+#include "gwmodelpp/spatialweight/CGwmDistance.h"
+#include <assert.h>
 
 unordered_map<CGwmDistance::DistanceType, string> CGwmDistance::TypeNameMapper =
 {
@@ -9,7 +10,7 @@ unordered_map<CGwmDistance::DistanceType, string> CGwmDistance::TypeNameMapper =
 
 double CGwmDistance::maxDistance(uword total, DistanceParameter* parameter)
 {
-    _ASSERT(parameter != nullptr);
+    assert(parameter != nullptr);
     double maxD = 0.0;
     for (uword i = 0; i < total; i++)
     {
@@ -21,7 +22,7 @@ double CGwmDistance::maxDistance(uword total, DistanceParameter* parameter)
 
 double CGwmDistance::minDistance(uword total, DistanceParameter* parameter)
 {
-    _ASSERT(parameter != nullptr);
+    assert(parameter != nullptr);
     double minD = DBL_MAX;
     for (uword i = 0; i < total; i++)
     {

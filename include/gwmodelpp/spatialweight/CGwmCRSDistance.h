@@ -1,7 +1,7 @@
 #ifndef CGWMCRSDISTANCE_H
 #define CGWMCRSDISTANCE_H
 
-#include "spatialweight/CGwmDistance.h"
+#include "gwmodelpp/spatialweight/CGwmDistance.h"
 
 struct CRSDistanceParameter : public DistanceParameter
 {

@@ -1,4 +1,5 @@
 #include "CGwmGWSS.h"
+#include <assert.h>
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
@@ -97,7 +98,7 @@ void CGwmGWSS::setXY(mat& x, const CGwmSimpleLayer* layer, const vector<GwmVaria
     arma::uvec varIndeces(nVar);
     for (size_t i = 0; i < nVar; i++)
     {
-        _ASSERT(variables[i].index < layer->data().n_cols);
+        assert(variables[i].index < layer->data().n_cols);
         varIndeces(i) = variables[i].index;
     }
     x = layer->data().cols(varIndeces);
