@@ -1,4 +1,5 @@
 #include "gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h"
+#include <assert.h>
 
 CGwmMinkwoskiDistance::CGwmMinkwoskiDistance(double p, double theta) : CGwmCRSDistance(false)
 {
@@ -23,7 +24,7 @@ mat CGwmMinkwoskiDistance::CoordinateRotate(const mat& coords, double theta)
 
 vec CGwmMinkwoskiDistance::distance(DistanceParameter* parameter, uword focus)
 {
-    _ASSERT(parameter != nullptr);
+    assert(parameter != nullptr);
     if (mGeographic) return CGwmCRSDistance::distance(parameter, focus);
     else
     {

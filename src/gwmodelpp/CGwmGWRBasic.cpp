@@ -1,6 +1,7 @@
 #include "CGwmGWRBasic.h"
 #include "CGwmBandwidthSelector.h"
 #include "CGwmVariableForwardSelector.h"
+#include <assert.h>
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
@@ -36,7 +37,7 @@ CGwmGWRBasic::~CGwmGWRBasic()
 void CGwmGWRBasic::run()
 {
     createRegressionDistanceParameter();
-    _ASSERT(mRegressionDistanceParameter != nullptr);
+    assert(mRegressionDistanceParameter != nullptr);
 
     if (!hasPredictLayer() && mIsAutoselectIndepVars)
     {

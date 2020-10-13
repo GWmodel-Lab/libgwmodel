@@ -1,5 +1,6 @@
 #include "gwmodel.h"
 
+#include <assert.h>
 #include <vector>
 #include <armadillo>
 #include "GwmVariable.h"
@@ -174,7 +175,7 @@ void gwmodel_set_gwr_independent_variable(CGwmGWRBasic* regression, GwmVariableL
     for (size_t i = 0; i < indepVarList.size; i++)
     {
         GwmVariableInterface* vi = indepVarList.items + i;
-        _ASSERT(vi);
+        assert(vi);
         GwmVariable v(vi->index, vi->isNumeric, vi->name);
         indepVars.push_back(v);
     }
@@ -225,7 +226,7 @@ void gwmodel_set_gwss_variables(CGwmGWSS* algorithm, GwmVariableListInterface va
     for (size_t i = 0; i < varList.size; i++)
     {
         GwmVariableInterface* vi = varList.items + i;
-        _ASSERT(vi);
+        assert(vi);
         GwmVariable v(vi->index, vi->isNumeric, vi->name);
         vars.push_back(v);
     }

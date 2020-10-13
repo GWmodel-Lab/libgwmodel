@@ -1,4 +1,5 @@
 #include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
+#include <assert.h>
 
 #include <exception>
 
@@ -85,7 +86,7 @@ CGwmCRSDistance::CGwmCRSDistance(const CGwmCRSDistance &distance) : CGwmDistance
 
 vec CGwmCRSDistance::distance(DistanceParameter* parameter, uword focus)
 {
-    _ASSERT(parameter != nullptr);
+    assert(parameter != nullptr);
     CRSDistanceParameter* p = (CRSDistanceParameter*)parameter;
     if (p->dataPoints.n_cols == 2 && p->focusPoints.n_cols == 2)
     {
