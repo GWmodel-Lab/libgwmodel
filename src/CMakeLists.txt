@@ -111,7 +111,6 @@ target_link_libraries(gwmodel
 
 if(OpenMP_FOUND)
     target_link_libraries(gwmodel
-        PRIVATE
         ${OpenMP_C_LIBRARIES}
         ${OpenMP_CXX_LIBRARIES}
     )
