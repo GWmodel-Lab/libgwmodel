@@ -37,6 +37,10 @@ include_directories(
 )
 
 add_definitions(-DM_PI=3.14159265358979323846 -DM_PI_2=1.57079632679489661923 -DDOUBLE_EPS=1e-8)
+if(NOT MSVC)
+    add_definitions(-DDBL_MAX=__DBL_MAX__)    
+endif(NOT MSVC)
+
 if(BUILD_SHARED_LIBS AND MSVC)
     message(STATUS "Define __declspec(dllexport) in MSVC")
     add_definitions(-DGWMODEL_SHARED_LIB -DCREATE_DLL_EXPORTS)
