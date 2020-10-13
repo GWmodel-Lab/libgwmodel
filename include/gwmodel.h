@@ -32,6 +32,8 @@
 #define GWMODEL_API  
 #endif
 
+#include <cstddef>
+
 #include "gwmodelpp/GwmRegressionDiagnostic.h"
 
 enum KernelFunctionType
