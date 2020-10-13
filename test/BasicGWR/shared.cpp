@@ -19,8 +19,14 @@ TEST_CASE("BasicGWR: basic flow")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    GwmMatInterface londonhp100_coord_interface = { londonhp100_coord.n_rows, londonhp100_coord.n_cols, londonhp100_coord.memptr() };
-    GwmMatInterface londonhp100_data_interface = { londonhp100_data.n_rows, londonhp100_data.n_cols, londonhp100_data.memptr() };
+    GwmMatInterface londonhp100_coord_interface; 
+    londonhp100_coord_interface.rows = londonhp100_coord.n_rows;
+    londonhp100_coord_interface.cols = londonhp100_coord.n_cols;
+    londonhp100_coord_interface.data = londonhp100_coord.mem;
+    GwmMatInterface londonhp100_data_interface;
+    londonhp100_data_interface.rows = londonhp100_data.n_rows;
+    londonhp100_data_interface.cols = londonhp100_data.n_cols;
+    londonhp100_data_interface.data = londonhp100_data.mem;
     GwmNameListInterface londonhp100_field_interface;
     londonhp100_field_interface.size = londonhp100_fields.size();
     londonhp100_field_interface.items = new GwmNameInterface[londonhp100_field_interface.size];
@@ -34,10 +40,22 @@ TEST_CASE("BasicGWR: basic flow")
     CGwmWeight* bandwidth = gwmodel_create_bandwidth_weight(36, true, KernelFunctionType::Gaussian);
     CGwmSpatialWeight* spatial = gwmodel_create_spatial_weight(distance, bandwidth);
 
-    GwmVariableInterface purchase = { 0, true, "PURCHASE" };
-    GwmVariableInterface floorsz = { 1, true, "FLOORSZ" };
-    GwmVariableInterface unemploy = { 2, true, "UNEMPLOY" };
-    GwmVariableInterface prof = { 3, true, "PROF" };
+    GwmVariableInterface purchase;
+    purchase.index = 0;
+    purchase.isNumeric = true;
+    strcpy(purchase.name, "PURCHASE");
+    GwmVariableInterface floorsz;
+    floorsz.index = 1;
+    floorsz.isNumeric = true;
+    strcpy(floorsz.name, "FLOORSZ");
+    GwmVariableInterface unemploy;
+    unemploy.index = 2;
+    unemploy.isNumeric = true;
+    strcpy(unemploy.name, "UNEMPLOY");
+    GwmVariableInterface prof;
+    prof.index = 3;
+    prof.isNumeric = true;
+    strcpy(prof.name, "PROF");
     GwmVariableListInterface indepVars;
     indepVars.size = 3;
     indepVars.items = new GwmVariableInterface[indepVars.size];
@@ -73,8 +91,14 @@ TEST_CASE("BasicGWR: adaptive bandwidth autoselection of with CV")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    GwmMatInterface londonhp100_coord_interface = { londonhp100_coord.n_rows, londonhp100_coord.n_cols, londonhp100_coord.memptr() };
-    GwmMatInterface londonhp100_data_interface = { londonhp100_data.n_rows, londonhp100_data.n_cols, londonhp100_data.memptr() };
+    GwmMatInterface londonhp100_coord_interface; 
+    londonhp100_coord_interface.rows = londonhp100_coord.n_rows;
+    londonhp100_coord_interface.cols = londonhp100_coord.n_cols;
+    londonhp100_coord_interface.data = londonhp100_coord.mem;
+    GwmMatInterface londonhp100_data_interface;
+    londonhp100_data_interface.rows = londonhp100_data.n_rows;
+    londonhp100_data_interface.cols = londonhp100_data.n_cols;
+    londonhp100_data_interface.data = londonhp100_data.mem;
     GwmNameListInterface londonhp100_field_interface;
     londonhp100_field_interface.size = londonhp100_fields.size();
     londonhp100_field_interface.items = new GwmNameInterface[londonhp100_field_interface.size];
@@ -88,10 +112,22 @@ TEST_CASE("BasicGWR: adaptive bandwidth autoselection of with CV")
     CGwmWeight* bandwidth = gwmodel_create_bandwidth_weight(36, true, KernelFunctionType::Gaussian);
     CGwmSpatialWeight* spatial = gwmodel_create_spatial_weight(distance, bandwidth);
 
-    GwmVariableInterface purchase = { 0, true, "PURCHASE" };
-    GwmVariableInterface floorsz = { 1, true, "FLOORSZ" };
-    GwmVariableInterface unemploy = { 2, true, "UNEMPLOY" };
-    GwmVariableInterface prof = { 3, true, "PROF" };
+    GwmVariableInterface purchase;
+    purchase.index = 0;
+    purchase.isNumeric = true;
+    strcpy(purchase.name, "PURCHASE");
+    GwmVariableInterface floorsz;
+    floorsz.index = 1;
+    floorsz.isNumeric = true;
+    strcpy(floorsz.name, "FLOORSZ");
+    GwmVariableInterface unemploy;
+    unemploy.index = 2;
+    unemploy.isNumeric = true;
+    strcpy(unemploy.name, "UNEMPLOY");
+    GwmVariableInterface prof;
+    prof.index = 3;
+    prof.isNumeric = true;
+    strcpy(prof.name, "PROF");
     GwmVariableListInterface indepVars;
     indepVars.size = 3;
     indepVars.items = new GwmVariableInterface[indepVars.size];
@@ -146,8 +182,14 @@ TEST_CASE("BasicGWR: indepdent variable autoselection with AIC")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    GwmMatInterface londonhp100_coord_interface = { londonhp100_coord.n_rows, londonhp100_coord.n_cols, londonhp100_coord.memptr() };
-    GwmMatInterface londonhp100_data_interface = { londonhp100_data.n_rows, londonhp100_data.n_cols, londonhp100_data.memptr() };
+    GwmMatInterface londonhp100_coord_interface; 
+    londonhp100_coord_interface.rows = londonhp100_coord.n_rows;
+    londonhp100_coord_interface.cols = londonhp100_coord.n_cols;
+    londonhp100_coord_interface.data = londonhp100_coord.mem;
+    GwmMatInterface londonhp100_data_interface;
+    londonhp100_data_interface.rows = londonhp100_data.n_rows;
+    londonhp100_data_interface.cols = londonhp100_data.n_cols;
+    londonhp100_data_interface.data = londonhp100_data.mem;
     GwmNameListInterface londonhp100_field_interface;
     londonhp100_field_interface.size = londonhp100_fields.size();
     londonhp100_field_interface.items = new GwmNameInterface[londonhp100_field_interface.size];
@@ -161,10 +203,22 @@ TEST_CASE("BasicGWR: indepdent variable autoselection with AIC")
     CGwmWeight* bandwidth = gwmodel_create_bandwidth_weight(36, true, KernelFunctionType::Gaussian);
     CGwmSpatialWeight* spatial = gwmodel_create_spatial_weight(distance, bandwidth);
 
-    GwmVariableInterface purchase = { 0, true, "PURCHASE" };
-    GwmVariableInterface floorsz = { 1, true, "FLOORSZ" };
-    GwmVariableInterface unemploy = { 2, true, "UNEMPLOY" };
-    GwmVariableInterface prof = { 3, true, "PROF" };
+    GwmVariableInterface purchase;
+    purchase.index = 0;
+    purchase.isNumeric = true;
+    strcpy(purchase.name, "PURCHASE");
+    GwmVariableInterface floorsz;
+    floorsz.index = 1;
+    floorsz.isNumeric = true;
+    strcpy(floorsz.name, "FLOORSZ");
+    GwmVariableInterface unemploy;
+    unemploy.index = 2;
+    unemploy.isNumeric = true;
+    strcpy(unemploy.name, "UNEMPLOY");
+    GwmVariableInterface prof;
+    prof.index = 3;
+    prof.isNumeric = true;
+    strcpy(prof.name, "PROF");
     GwmVariableListInterface indepVars;
     indepVars.size = 3;
     indepVars.items = new GwmVariableInterface[indepVars.size];

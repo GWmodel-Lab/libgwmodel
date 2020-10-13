@@ -23,7 +23,7 @@ GwmMatInterface mat2interface(const mat& armamat)
     interface.cols = armamat.n_cols;
     interface.rows = armamat.n_rows;
     interface.data = new double[armamat.n_elem];
-    memcpy(interface.data, armamat.memptr(), armamat.n_elem * sizeof(double));
+    memcpy((void*)interface.data, armamat.memptr(), armamat.n_elem * sizeof(double));
     return interface;
 }
 
