@@ -51,8 +51,6 @@ enum BandwidthSelectionCriterionType
     CV
 };
 
-struct GwmVariable;
-struct IGwmRegressionAnalysis;
 class CGwmDistance;
 class CGwmWeight;
 class CGwmSpatialWeight;
@@ -64,7 +62,7 @@ class CGwmGWRBase;
 class CGwmGWRBasic;
 class CGwmGWSS;
 
-struct GwmMatInterface
+extern "C" struct GwmMatInterface
 {
     unsigned long long rows = 0;
     unsigned long long cols = 0;
@@ -75,7 +73,7 @@ extern "C" GWMODEL_API void gwmodel_delete_mat(GwmMatInterface* interface);
 
 typedef char GwmNameInterface[256];
 
-struct GwmNameListInterface
+extern "C" struct GwmNameListInterface
 {
     size_t size = 0;
     GwmNameInterface* items = nullptr;
@@ -83,14 +81,14 @@ struct GwmNameListInterface
 
 extern "C" GWMODEL_API void gwmodel_delete_string_list(GwmNameListInterface* interface);
 
-struct GwmVariableInterface
+extern "C" struct GwmVariableInterface
 {
     int index;
     bool isNumeric;
     GwmNameInterface name = "";
 };
 
-struct GwmVariableListInterface
+extern "C" struct GwmVariableListInterface
 {
     size_t size = 0;
     GwmVariableInterface* items = nullptr;
@@ -98,20 +96,20 @@ struct GwmVariableListInterface
 
 extern "C" GWMODEL_API void gwmodel_delete_variable_list(GwmVariableListInterface* interface);
 
-struct GwmBandwidthKernelInterface
+extern "C" struct GwmBandwidthKernelInterface
 {
     double size;
     bool isAdaptive;
     KernelFunctionType type;
 };
 
-struct GwmBandwidthCriterionPairInterface
+extern "C" struct GwmBandwidthCriterionPairInterface
 {
     double bandwidth;
     double criterion;
 };
 
-struct GwmBandwidthCriterionListInterface
+extern "C" struct GwmBandwidthCriterionListInterface
 {
     size_t size = 0;
     GwmBandwidthCriterionPairInterface* items = nullptr;
@@ -119,7 +117,7 @@ struct GwmBandwidthCriterionListInterface
 
 extern "C" GWMODEL_API void gwmodel_delete_bandwidth_criterion_list(GwmBandwidthCriterionListInterface* interface);
 
-struct GwmVariablesCriterionPairInterface
+extern "C" struct GwmVariablesCriterionPairInterface
 {
     GwmVariableListInterface variables;
     double criterion;
