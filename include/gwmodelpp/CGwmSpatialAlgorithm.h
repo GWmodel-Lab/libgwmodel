@@ -46,7 +46,11 @@ public:
     CGwmSimpleLayer* sourceLayer() const;
 
     /**
-     * @brief Set the CGwmSpatialAlgorithm::mSourceLayer object
+     * @brief Set the CGwmSpatialAlgorithm::mSourceLayer object.
+     * 
+     * Use gwmodel_set_gwr_source_layer() to set this property to CGwmGWRBasic in shared build.
+     * 
+     * Use gwmodel_set_gwss_source_layer() to set this property to CGwmGWSS in shared build.
      * 
      * @param layer Pointer to source layer.
      */
@@ -54,6 +58,10 @@ public:
     
     /**
      * @brief Get the CGwmSpatialAlgorithm::mResultLayer object .
+     * 
+     * Use gwmodel_get_gwr_result_layer() to get this property from CGwmGWRBasic in shared build.
+     * 
+     * Use gwmodel_get_gwss_result_layer() to get this property from CGwmGWSS in shared build.
      * 
      * @return CGwmSpatialAlgorithm::mResultLayer.
      */

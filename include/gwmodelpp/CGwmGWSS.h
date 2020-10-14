@@ -112,11 +112,15 @@ public:
     
     /**
      * @brief Construct a new CGwmGWSS object.
+     * 
+     * Use gwmodel_create_gwss_algorithm() to construct an instance in shared build.
      */
     CGwmGWSS();
 
     /**
      * @brief Destroy the CGwmGWSS object.
+     * 
+     * Use gwmodel_create_gwss_algorithm() to destruct an instance in shared build.
      */
     ~CGwmGWSS();
 
@@ -136,7 +140,9 @@ public:
     void setQuantile(bool quantile);
 
     /**
-     * @brief Get the CGwmGWSS::mIsCorrWithFirstOnly object.
+     * @brief Set the CGwmGWSS::mIsCorrWithFirstOnly object.
+     * 
+     * Use gwmodel_set_gwss_options() to set this property in shared build.
      * 
      * @return true if CGwmGWSS::mIsCorrWithFirstOnly is true.
      * @return false if CGwmGWSS::mIsCorrWithFirstOnly is false.
@@ -153,6 +159,8 @@ public:
     /**
      * @brief Get the CGwmGWSS::mLocalMean object. 
      * 
+     * Use gwmodel_get_gwss_local_mean() to get this property in shared build.
+     * 
      * @return Local mean on each sample.
      * The number of rows is the same as number of features. 
      * The number of columns is the same as number of fields, arranged in the same order as CGwmGWSS::mVariables.
@@ -161,6 +169,8 @@ public:
     
     /**
      * @brief Get the CGwmGWSS::mStandardDev object. 
+     * 
+     * Use gwmodel_get_gwss_local_sdev() to get this property in shared build.
      * 
      * @return Local standard deviation on each sample.
      * The number of rows is the same as number of features. 
@@ -171,6 +181,8 @@ public:
     /**
      * @brief Get the CGwmGWSS::mLocalSkewness object. 
      * 
+     * Use gwmodel_get_gwss_local_skew() to get this property in shared build.
+     * 
      * @return Local skewness on each sample.
      * The number of rows is the same as number of features. 
      * The number of columns is the same as number of fields, arranged in the same order as CGwmGWSS::mVariables.
@@ -180,6 +192,8 @@ public:
     /**
      * @brief Get the CGwmGWSS::mLCV object. 
      * 
+     * Use gwmodel_get_gwss_local_cv() to get this property in shared build.
+     * 
      * @return Local coefficients of variation on each sample.
      * The number of rows is the same as number of features. 
      * The number of columns is the same as number of fields, arranged in the same order as CGwmGWSS::mVariables.
@@ -188,6 +202,8 @@ public:
     
     /**
      * @brief Get the CGwmGWSS::mLVar object. 
+     * 
+     * Use gwmodel_get_gwss_local_var() to get this property in shared build.
      * 
      * @return Local variance on each sample.
      * The number of rows is the same as number of features. 
@@ -199,6 +215,8 @@ public:
     /**
      * @brief Get the CGwmGWSS::mLocalMedian object. 
      * 
+     * Use gwmodel_get_gwss_local_median() to get this property in shared build.
+     * 
      * @return Local median on each sample.
      * The number of rows is the same as number of features. 
      * The number of columns is the same as number of fields, arranged in the same order as CGwmGWSS::mVariables.
@@ -207,6 +225,8 @@ public:
     
     /**
      * @brief Get the CGwmGWSS::mIQR object. 
+     * 
+     * Use gwmodel_get_gwss_local_iqr() to get this property in shared build.
      * 
      * @return Local interquartile ranges on each sample.
      * The number of rows is the same as number of features. 
@@ -217,6 +237,8 @@ public:
     /**
      * @brief Get the CGwmGWSS::mQI object. 
      * 
+     * Use gwmodel_get_gwss_local_qi() to get this property in shared build.
+     * 
      * @return Local quantile imbalances and coordinates on each sample.
      * The number of rows is the same as number of features. 
      * The number of columns is the same as number of fields, arranged in the same order as CGwmGWSS::mVariables.
@@ -226,6 +248,8 @@ public:
     
     /**
      * @brief Get the CGwmGWSS::mCovmat object. 
+     * 
+     * Use gwmodel_get_gwss_local_cov() to get this property in shared build.
      * 
      * @return Local coefficients of variation on each sample.
      * The number of rows is the same as number of features. 
@@ -239,6 +263,8 @@ public:
     /**
      * @brief Get the CGwmGWSS::mCorrmat object. 
      * 
+     * Use gwmodel_get_gwss_local_corr() to get this property in shared build.
+     * 
      * @return Local correlations (Pearson's) on each sample.
      * The number of rows is the same as number of features. 
      * If corrWithFirstOnly is set true, the number of columns is the (number of fields) - 1;
@@ -251,6 +277,8 @@ public:
     /**
      * @brief Get the CGwmGWSS::mSCorrmat object. 
      * 
+     * Use gwmodel_get_gwss_local_spearman_rho() to get this property in shared build.
+     * 
      * @return Local correlations (Spearman's) on each sample.
      * The number of rows is the same as number of features. 
      * If corrWithFirstOnly is set true, the number of columns is the (number of fields) - 1;
@@ -261,6 +289,12 @@ public:
     mat localSCorr() const { return mSCorrmat; }
 
 public:     // GwmAlgorithm interface;
+    /**
+     * @brief Run the algorithm.
+     * 
+     * Use gwmodel_run_gwss() to run this algorithm in shared build.
+     * 
+     */
     void run() override;
 
 public:     // GwmSpatialAlgorithm interface
@@ -273,9 +307,25 @@ public:     // IGwmMultivariableAnalysis
 public:     // IGwmParallelizable
     int parallelAbility() const override;
     ParallelType parallelType() const override;
+
+    /**
+     * @brief Set the parallel type of this algorithm.
+     * 
+     * Use gwmodel_set_gwss_openmp() to set parallel type of this algorithm to ParallelType::OpenMP in shared build.
+     * 
+     * @param type Parallel type of this algorithm.
+     */
     void setParallelType(const ParallelType& type) override;
 
 public:     // IGwmOpenmpParallelizable
+
+    /**
+     * @brief Set the thread numbers while paralleling.
+     * 
+     * Use gwmodel_set_gwss_openmp() to set this property in shared build.
+     * 
+     * @param threadNum Number of threads.
+     */
     void setOmpThreadNum(const int threadNum) override;
 
 private:

@@ -42,6 +42,10 @@ public:
     /**
      * @brief Set the spatial weight configuration.
      * 
+     * Use gwmodel_set_gwr_spatial_weight() to set this property to CGwmGWRBasic in shared build.
+     * 
+     * Use gwmodel_set_gwss_spatial_weight() to set this property to CGwmGWSS in shared build.
+     * 
      * @param spatialWeight Reference of spatial weight configuration object.
      */
     void setSpatialWeight(const CGwmSpatialWeight &spatialWeight);

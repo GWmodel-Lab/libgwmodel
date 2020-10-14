@@ -40,6 +40,12 @@ struct IGwmParallelizable
      * @return Parallel type of this algorithm 
      */
     virtual ParallelType parallelType() const = 0;
+
+    /**
+     * @brief Set the parallel type of this algorithm.
+     * 
+     * @param type Parallel type of this algorithm.
+     */
     virtual void setParallelType(const ParallelType& type) = 0;
 };
 
@@ -58,6 +64,11 @@ struct IGwmParallelizable
  */
 struct IGwmOpenmpParallelizable : public IGwmParallelizable
 {
+    /**
+     * @brief Set the thread numbers while paralleling.
+     * 
+     * @param threadNum Number of threads.
+     */
     virtual void setOmpThreadNum(const int threadNum) = 0;
 };
 
