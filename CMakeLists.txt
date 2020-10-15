@@ -29,3 +29,10 @@ add_test(
     NAME testMultithread 
     COMMAND $<TARGET_FILE:testMultithread> --success
 )
+
+install(TARGETS gwmodel
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+)
+install(DIRECTORY include/ DESTINATION include)
