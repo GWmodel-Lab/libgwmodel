@@ -57,3 +57,6 @@ _deps
 
 ### VSCode CMake Build ###
 build/
+
+### Doxygen ###
+docs/
