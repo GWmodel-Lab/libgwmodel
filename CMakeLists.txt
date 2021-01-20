@@ -22,7 +22,6 @@ if(BUILD_SHARED_LIBS)
     endif(WITH_PYTHON)
 endif(BUILD_SHARED_LIBS)
 
-
 enable_testing()
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/test)
