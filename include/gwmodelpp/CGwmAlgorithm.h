@@ -34,6 +34,14 @@ public:
      * @brief Run the algorithm.
      */
     virtual void run() = 0;
+
+    /**
+     * @brief Check whether the algorithm's configuration is valid. 
+     * 
+     * @return true if the algorithm's configuration is valid.
+     * @return false if the algorithm's configuration is invalid.
+     */
+    virtual bool isValid() = 0;
 };
 
 #endif  // CGWMALGORITHM_H
