@@ -1,3 +1,5 @@
+#ifdef GWMODEL_SHARED_LIB
+
 #include "gwmodel.h"
 
 #include <assert.h>
@@ -404,3 +406,5 @@ bool gwmodel_get_spatial_bandwidth_weight(CGwmSpatialWeight* spatial, GwmBandwid
     }
     else return false;
 }
+
+#endif
