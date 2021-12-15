@@ -74,6 +74,14 @@ public:
      */
     void setResultLayer(CGwmSimpleLayer* layer);
 
+    /**
+     * @brief Check whether the algorithm's configuration is valid. 
+     * 
+     * @return true if the algorithm's configuration is valid.
+     * @return false if the algorithm's configuration is invalid.
+     */
+    virtual bool isValid();
+
 protected:
     CGwmSimpleLayer* mSourceLayer = nullptr;    //!< Pointer to source layer.
     CGwmSimpleLayer* mResultLayer = nullptr;    //!< Pointer to result layer.

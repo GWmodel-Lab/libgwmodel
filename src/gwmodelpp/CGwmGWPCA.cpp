@@ -10,7 +10,7 @@ CGwmGWPCA::~CGwmGWPCA()
     
 }
 
-CGwmGWPCA::run()
+void CGwmGWPCA::run()
 {
     createDistanceParameter();
     setX(mX, mSourceLayer, mVariables);
