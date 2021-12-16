@@ -2,7 +2,7 @@
 #define CGWMDMATDISTANCE_H
 
 #include <string>
-#include "gwmodelpp/spatialweight/CGwmDistance.h"
+#include "CGwmDistance.h"
 
 using namespace std;
 

@@ -1,14 +1,14 @@
 #ifndef CGWMSPATIALWEIGHT_H
 #define CGWMSPATIALWEIGHT_H
 
-#include "gwmodelpp/spatialweight/CGwmWeight.h"
-#include "gwmodelpp/spatialweight/CGwmDistance.h"
+#include "CGwmWeight.h"
+#include "CGwmDistance.h"
 
-#include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
+#include "CGwmBandwidthWeight.h"
 
-#include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
-#include "gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h"
-#include "gwmodelpp/spatialweight/CGwmDMatDistance.h"
+#include "CGwmCRSDistance.h"
+#include "CGwmMinkwoskiDistance.h"
+#include "CGwmDMatDistance.h"
 
 /**
  * @brief A combined class of distance and weight. 
