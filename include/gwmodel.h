@@ -730,17 +730,38 @@ extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_qi(CGwmGWSS* gwss)
 /**
  * @brief Get local principle component values.
  * 
- * @param gwpca Pointer to GWPCA algorithm
+ * @param gwpca Pointer to GWPCA algorithm.
  * @return GwmMatInterface Mat struct of local principle component values. 
  * The number of rows is the same as number of features. 
  * The number of columns is the same as number of kept components.
  */
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwpca_local_pv(CGwmGWPCA* gwpca);
 
+/**
+ * @brief Get loadings of CGwmGWPCA.
+ * 
+ * @param gwpca Pointer to GWPCA algorithm.
+ * @param k The index of target principle components.
+ * @return GwmMatInterface Mat struct of loadings.
+ * The number of rows is the same as number of features. 
+ * The number of columns is the same as number of variables.
+ */
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwpca_loadings(CGwmGWPCA* gwpca, int k);
 
+/**
+ * @brief Get standard deviation of CGwmGWPCA.
+ * 
+ * @param gwpca Pointer to GWPCA algorithm.
+ * @return GwmMatInterface Mat struct of standard deviation.
+ * The number of rows is the same as number of features. 
+ * The number of columns is the same as number of variables.
+ */
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwpca_sdev(CGwmGWPCA* gwpca);
 
+/**
+ * @brief [Unsupported] Get scores of CGwmGWPCA.
+ * 
+ */
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwpca_scores(CGwmGWPCA* gwpca, int k);
 
 /**
