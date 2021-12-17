@@ -15,6 +15,7 @@
 #include "CGwmGWRBase.h"
 #include "CGwmGWRBasic.h"
 #include "CGwmGWSS.h"
+#include "CGwmGWPCA.h"
 
 using namespace std;
 using namespace arma;
@@ -121,6 +122,11 @@ CGwmGWSS* gwmodel_create_gwss_algorithm()
     return new CGwmGWSS();
 }
 
+CGwmGWPCA* gwmodel_create_gwpca_algorithm()
+{
+    return new CGwmGWPCA();
+}
+
 void gwmodel_delete_crs_distance(CGwmDistance* instance)
 {
     delete instance;
@@ -152,6 +158,11 @@ void gwmodel_delete_gwr_algorithm(CGwmGWRBasic* instance)
 }
 
 void gwmodel_delete_gwss_algorithm(CGwmGWSS* instance)
+{
+    delete instance;
+}
+
+void gwmodel_delete_gwpca_algorithm(CGwmGWPCA* instance)
 {
     delete instance;
 }
@@ -247,12 +258,45 @@ void gwmodel_set_gwss_openmp(CGwmGWSS* algorithm, int threads)
     algorithm->setOmpThreadNum(threads);
 }
 
+void gwmodel_set_gwpca_source_layer(CGwmGWPCA* algorithm, CGwmSimpleLayer* layer)
+{
+    algorithm->setSourceLayer(layer);
+}
+
+void gwmodel_set_gwpca_variables(CGwmGWPCA* algorithm, GwmVariableListInterface varList)
+{
+    vector<GwmVariable> vars;
+    for (size_t i = 0; i < varList.size; i++)
+    {
+        GwmVariableInterface* vi = varList.items + i;
+        assert(vi);
+        GwmVariable v(vi->index, vi->isNumeric, vi->name);
+        vars.push_back(v);
+    }
+    algorithm->setVariables(vars);
+}
+
+void gwmodel_set_gwpca_spatial_weight(CGwmGWPCA* algorithm, CGwmSpatialWeight* spatial)
+{
+    algorithm->setSpatialWeight(*spatial);
+}
+
+void gwmodel_set_gwpca_options(CGwmGWPCA* algorithm, int k)
+{
+    algorithm->setKeepComponents(k);
+}
+
 void gwmodel_run_gwr(CGwmGWRBasic* algorithm)
 {
     algorithm->run();
 }
 
 void gwmodel_run_gwss(CGwmGWSS* algorithm)
+{
+    algorithm->run();
+}
+
+void gwmodel_run_gwpca(CGwmGWPCA* algorithm)
 {
     algorithm->run();
 }
@@ -383,6 +427,26 @@ GwmMatInterface gwmodel_get_gwss_local_iqr(CGwmGWSS* gwss)
 GwmMatInterface gwmodel_get_gwss_local_qi(CGwmGWSS* gwss)
 {
     return mat2interface(gwss->qi());
+}
+
+GwmMatInterface gwmodel_get_gwpca_local_pv(CGwmGWPCA* gwpca)
+{
+    return mat2interface(gwpca->localPV());
+}
+
+GwmMatInterface gwmodel_get_gwpca_loadings(CGwmGWPCA* gwpca, int k)
+{
+    return mat2interface(gwpca->loadings().slice(k));
+}
+
+GwmMatInterface gwmodel_get_gwpca_sdev(CGwmGWPCA* gwpca)
+{
+    return mat2interface(gwpca->sdev());
+}
+
+GwmMatInterface gwmodel_get_gwpca_scores(CGwmGWPCA* gwpca, int k)
+{
+    return mat2interface(gwpca->scores().slice(k));
 }
 
 bool gwmodel_as_bandwidth_weight(CGwmWeight* weight, GwmBandwidthKernelInterface* bandwidth)

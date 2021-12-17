@@ -41,6 +41,7 @@ TEST_CASE("GWPCA: basic flow")
     algorithm.setSourceLayer(londonhp);
     algorithm.setVariables(variables);
     algorithm.setSpatialWeight(spatial);
+    algorithm.setKeepComponents(2);
     REQUIRE_NOTHROW(algorithm.run());
 
     vec p = {0.0, 0.25, 0.5, 0.75, 1.0};

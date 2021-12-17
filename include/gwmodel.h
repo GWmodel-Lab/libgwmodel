@@ -83,6 +83,7 @@ class CGwmSpatialMonoscaleAlgorithm;
 class CGwmGWRBase;
 class CGwmGWRBasic;
 class CGwmGWSS;
+class CGwmGWPCA;
 
 
 /**
@@ -294,6 +295,14 @@ extern "C" GWMODEL_API CGwmGWRBasic* gwmodel_create_gwr_algorithm();
  */
 extern "C" GWMODEL_API CGwmGWSS* gwmodel_create_gwss_algorithm();
 
+/**
+ * @brief A function to create a CGwmGWPCA instance. This function create only a initialized instance, and is usually inexecutable. 
+ * Users need to set some properties of it.
+ * 
+ * @return CGwmGWPCA* A pointer to the CGwmGWPCA instance created by this function.
+ */
+extern "C" GWMODEL_API CGwmGWPCA* gwmodel_create_gwpca_algorithm();
+
 
 /**
  * @brief A function to delete CGwmDistance instance.
@@ -343,6 +352,13 @@ extern "C" GWMODEL_API void gwmodel_delete_gwr_algorithm(CGwmGWRBasic* instance)
  * @param instance Pointer to the CGwmGWSS instance.
  */
 extern "C" GWMODEL_API void gwmodel_delete_gwss_algorithm(CGwmGWSS* instance);
+
+/**
+ * @brief A function to delete CGwmGWPCA instance.
+ * 
+ * @param instance Pointer to the CGwmGWPCA instance.
+ */
+extern "C" GWMODEL_API void gwmodel_delete_gwpca_algorithm(CGwmGWPCA* instance);
 
 /**
  * @brief Set data source layer for CGwmGWRBasic algorithm.
@@ -462,6 +478,38 @@ extern "C" GWMODEL_API void gwmodel_set_gwss_options(CGwmGWSS* algorithm, bool q
 extern "C" GWMODEL_API void gwmodel_set_gwss_openmp(CGwmGWSS* algorithm, int threads);
 
 /**
+ * @brief Set data source layer for CGwmGWPCA algorithm.
+ * 
+ * @param algorithm Pointer returned from gwmodel_create_gwpca_algorithm().
+ * @param layer Pointer to data source layer returned from gwmodel_create_simple_layer().
+ */
+extern "C" GWMODEL_API void gwmodel_set_gwpca_source_layer(CGwmGWPCA* algorithm, CGwmSimpleLayer* layer);
+
+/**
+ * @brief Set variable list for CGwmGWPCA algorithm.
+ * 
+ * @param regression Pointer returned from gwmodel_create_gwpca_algorithm().
+ * @param indepVarList Independent variable list.
+ */
+extern "C" GWMODEL_API void gwmodel_set_gwpca_variables(CGwmGWPCA* algorithm, GwmVariableListInterface varList);
+
+/**
+ * @brief Set spatial weight configuration for CGwmGWPCA algorithm.
+ * 
+ * @param algorithm Pointer returned from gwmodel_create_gwpca_algorithm().
+ * @param spatial Pointer returned from gwmodel_create_spatial_weight().
+ */
+extern "C" GWMODEL_API void gwmodel_set_gwpca_spatial_weight(CGwmGWPCA* algorithm, CGwmSpatialWeight* spatial);
+
+/**
+ * @brief Set options of CGwmGWPCA.
+ * 
+ * @param algorithm Pointer returned from gwmodel_create_gwpca_algorithm().
+ * @param k Number of components to be kept.
+ */
+extern "C" GWMODEL_API void gwmodel_set_gwpca_options(CGwmGWPCA* algorithm, int k);
+
+/**
  * @brief Run basic GWR algorithm.
  * 
  * @param algorithm Pointer returned from gwmodel_create_gwr_algorithm().
@@ -474,6 +522,13 @@ extern "C" GWMODEL_API void gwmodel_run_gwr(CGwmGWRBasic* algorithm);
  * @param algorithm Pointer returned from gwmodel_create_gwss_algorithm()
  */
 extern "C" GWMODEL_API void gwmodel_run_gwss(CGwmGWSS* algorithm);
+
+/**
+ * @brief Run GWPCA algorithm.
+ * 
+ * @param algorithm Pointer returned from gwmodel_create_gwpca_algorithm()
+ */
+extern "C" GWMODEL_API void gwmodel_run_gwpca(CGwmGWPCA* algorithm);
 
 
 /**
@@ -671,6 +726,22 @@ extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_iqr(CGwmGWSS* gwss
  * The number of columns is the same as number of fields.
  */
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_qi(CGwmGWSS* gwss);
+
+/**
+ * @brief Get local principle component values.
+ * 
+ * @param gwpca Pointer to GWPCA algorithm
+ * @return GwmMatInterface Mat struct of local principle component values. 
+ * The number of rows is the same as number of features. 
+ * The number of columns is the same as number of kept components.
+ */
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwpca_local_pv(CGwmGWPCA* gwpca);
+
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwpca_loadings(CGwmGWPCA* gwpca, int k);
+
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwpca_sdev(CGwmGWPCA* gwpca);
+
+extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwpca_scores(CGwmGWPCA* gwpca, int k);
 
 /**
  * @brief Get spatial bandwidth weight from CGwmSpatialWeight.
