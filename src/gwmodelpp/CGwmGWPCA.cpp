@@ -111,3 +111,16 @@ void CGwmGWPCA::createResultLayer(vector<ResultLayerDataItem> items)
     }
     mResultLayer = new CGwmSimpleLayer(layerPoints, layerData, layerFields);
 }
+
+bool CGwmGWPCA::isValid()
+{
+    if (CGwmSpatialAlgorithm::isValid())
+    {
+        if (mK > 0)
+        {
+            return true;
+        }
+        else return false;
+    }
+    else return false;
+}

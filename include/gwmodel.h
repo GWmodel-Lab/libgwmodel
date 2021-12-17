@@ -32,6 +32,7 @@
 #include "gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h"
 #include "gwmodelpp/CGwmGWRBase.h"
 #include "gwmodelpp/CGwmGWRBasic.h"
+#include "gwmodelpp/CGwmGWPCA.h"
 
 #else   // GWMODEL_SHARED_LIB
 
