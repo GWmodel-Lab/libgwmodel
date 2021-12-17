@@ -59,6 +59,7 @@ set(SOURCES_CXX
     gwmodelpp/CGwmGWRBase.cpp
     gwmodelpp/CGwmGWRBasic.cpp
     gwmodelpp/CGwmGWSS.cpp
+    gwmodelpp/CGwmGWPCA.cpp
 )
 
 set(SOURCES_C
@@ -83,6 +84,7 @@ set(HEADERS_CXX
     ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWRBase.h
     ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWRBasic.h
     ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWSS.h
+    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWPCA.h
 )
 
 set(HEADERS_C

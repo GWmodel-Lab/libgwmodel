@@ -74,15 +74,13 @@ public:
      */
     void setResultLayer(CGwmSimpleLayer* layer);
 
-public:
-
     /**
      * @brief Check whether the algorithm's configuration is valid. 
      * 
      * @return true if the algorithm's configuration is valid.
      * @return false if the algorithm's configuration is invalid.
      */
-    virtual bool isValid() = 0;
+    virtual bool isValid();
 
 protected:
     CGwmSimpleLayer* mSourceLayer = nullptr;    //!< Pointer to source layer.

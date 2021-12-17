@@ -1,7 +1,7 @@
 #ifndef CGWMMINKWOSKIDISTANCE_H
 #define CGWMMINKWOSKIDISTANCE_H
 
-#include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
+#include "CGwmCRSDistance.h"
 
 class CGwmMinkwoskiDistance : public CGwmCRSDistance
 {

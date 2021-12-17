@@ -1,7 +1,7 @@
 #ifndef CGWMCRSDISTANCE_H
 #define CGWMCRSDISTANCE_H
 
-#include "gwmodelpp/spatialweight/CGwmDistance.h"
+#include "CGwmDistance.h"
 
 /**
  * @brief Struct of parameters used in spatial distance calculating according to coordinate reference system. 
