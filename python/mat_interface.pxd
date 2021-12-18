@@ -1,4 +1,4 @@
-from cbase cimport GwmMatInterface, gwmodel_delete_mat
+from .cbase cimport GwmMatInterface, gwmodel_delete_mat
 
 cdef class MatInterface:
     cdef GwmMatInterface _c_instance

@@ -1,6 +1,6 @@
-from mat_interface cimport MatInterface, numpy2mat, mat2numpy
-from name_list_interface cimport NameListInterface, names2list
-from simple_layer cimport gwmodel_create_simple_layer, gwmodel_delete_simple_layer, gwmodel_get_simple_layer_points, gwmodel_get_simple_layer_data, gwmodel_get_simple_layer_fields
+from .mat_interface cimport MatInterface, numpy2mat, mat2numpy
+from .name_list_interface cimport NameListInterface, names2list
+from .simple_layer cimport gwmodel_create_simple_layer, gwmodel_delete_simple_layer, gwmodel_get_simple_layer_points, gwmodel_get_simple_layer_data, gwmodel_get_simple_layer_fields
 
 cdef class SimpleLayer:
     def __cinit__(self, MatInterface points, MatInterface data, NameListInterface fields):

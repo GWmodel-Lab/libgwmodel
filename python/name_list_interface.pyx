@@ -1,4 +1,4 @@
-from name_list_interface cimport GwmNameInterface, GwmNameListInterface, gwmodel_delete_string_list
+from .name_list_interface cimport GwmNameInterface, GwmNameListInterface, gwmodel_delete_string_list
 from libc.stdlib cimport malloc
 from libc.string cimport strcpy, strlen
 from libcpp.string cimport string

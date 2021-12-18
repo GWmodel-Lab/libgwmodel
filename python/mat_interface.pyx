@@ -1,4 +1,4 @@
-from mat_interface cimport GwmMatInterface, gwmodel_delete_mat
+from .mat_interface cimport GwmMatInterface, gwmodel_delete_mat
 from libc.stdlib cimport malloc, free
 from cython cimport view
 import numpy as np

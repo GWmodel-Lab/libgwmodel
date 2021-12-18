@@ -1,9 +1,9 @@
-from gwr_basic cimport *
-from simple_layer cimport SimpleLayer, CGwmSimpleLayer
-from spatial_weight cimport Distance, Weight, SpatialWeight
-from mat_interface cimport MatInterface, mat2numpy, mat2interface
-from variable_interface cimport VariableInterface, VariableListInterface, GwmVariableListInterface, GwmVariableInterface
-from name_list_interface cimport NameListInterface, names2list
+from .gwr_basic cimport *
+from .simple_layer cimport SimpleLayer, CGwmSimpleLayer
+from .spatial_weight cimport Distance, Weight, SpatialWeight
+from .mat_interface cimport MatInterface, mat2numpy, mat2interface
+from .variable_interface cimport VariableInterface, VariableListInterface, GwmVariableListInterface, GwmVariableInterface
+from .name_list_interface cimport NameListInterface, names2list
 from cython.view cimport array as cvarray
 from libcpp.string cimport string
 

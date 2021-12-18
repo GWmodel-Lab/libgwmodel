@@ -1,7 +1,7 @@
-from spatial_weight cimport KernelFunctionType
-from spatial_weight cimport gwmodel_create_crs_distance, gwmodel_delete_crs_distance
-from spatial_weight cimport gwmodel_create_bandwidth_weight, gwmodel_delete_bandwidth_weight
-from spatial_weight cimport gwmodel_create_spatial_weight, gwmodel_delete_spatial_weight
+from .spatial_weight cimport KernelFunctionType
+from .spatial_weight cimport gwmodel_create_crs_distance, gwmodel_delete_crs_distance
+from .spatial_weight cimport gwmodel_create_bandwidth_weight, gwmodel_delete_bandwidth_weight
+from .spatial_weight cimport gwmodel_create_spatial_weight, gwmodel_delete_spatial_weight
 
 cdef class Distance:    
     def __cinit__(self, bint geographical):
