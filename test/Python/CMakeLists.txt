@@ -15,7 +15,7 @@ add_custom_target(testPythonDeps ALL
         ${PYGWMODEL_COPY_DIR}/pygwmodel
     COMMAND ${CMAKE_COMMAND} -E
         copy_if_different
-        ${CMAKE_SOURCE_DIR}/python/__init__.py
+        ${CMAKE_SOURCE_DIR}/pygwmodel/__init__.py
         ${PYGWMODEL_COPY_DIR}/pygwmodel
     COMMAND ${CMAKE_COMMAND} -E
         copy_if_different

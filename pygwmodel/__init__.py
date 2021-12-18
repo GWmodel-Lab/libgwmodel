@@ -9,7 +9,6 @@ from .simple_layer import SimpleLayer as cygSimpleLayer
 from . import spatial_weight as cyg_sw
 from . import variable_interface as cyg_varlist
 from .gwss import GWSS as cygGWSS
-from . import regression_diagnostic as cygDiagnostic
 from .gwr_basic import GWRBasic as cygGWRBasic
 
 KERNEL_GAUSSIAN = 0
