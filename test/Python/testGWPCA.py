@@ -23,7 +23,6 @@ comp_q0 = np.array([
 ])
 comp_q = result_q.loc[:, 'Comp.1_PV':'Comp.2_PV'].values
 if not np.all(np.abs(comp_q - comp_q0) < 1e-8):
-    print(False)
     exit(1)
 
 loadings_q0 = np.array([
@@ -44,8 +43,6 @@ loadings_q0 = np.array([
 ])
 loadings_q = np.apply_along_axis(lambda x: np.quantile(x, [0, 0.25, 0.5, 0.75, 1], interpolation='midpoint'), axis=1, arr=algorithm_loadings)
 if not np.all(np.abs(loadings_q - loadings_q0) < 1e-8):
-    print(False)
     exit(2)
 
-print(True)
 exit(0)

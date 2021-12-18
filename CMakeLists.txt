@@ -18,6 +18,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/src)
 if(BUILD_SHARED_LIBS)
     option(WITH_PYTHON "Whether to build python extension" OFF)
     if(WITH_PYTHON)
+        find_package(Python3 COMPONENTS Interpreter Development)
         add_subdirectory(${CMAKE_SOURCE_DIR}/pygwmodel)
     endif(WITH_PYTHON)
 endif(BUILD_SHARED_LIBS)
@@ -41,6 +42,21 @@ add_test(
     NAME testMultithread 
     COMMAND $<TARGET_FILE:testMultithread> --success
 )
+if(WITH_PYTHON)
+    set(PYTHON_TEST_DATA ${CMAKE_SOURCE_DIR}/test/data/londonhp100.csv)
+    if(WIN32)
+        set(PYTHON_TEST_SCRIPT_DIR ${CMAKE_SOURCE_DIR}/build/bin/$<$<CONFIG:Release>:Release>$<$<CONFIG:Debug>:Debug>)
+    else()
+        set(PYTHON_TEST_SCRIPT_DIR ${CMAKE_SOURCE_DIR}/build/bin)
+    endif()
+    message(STATUS "Python Interpreter: ${Python3_EXECUTABLE}")
+    add_test(
+        NAME testPythonGWPCA
+        COMMAND ${Python3_EXECUTABLE} testGWPCA.py ${PYTHON_TEST_DATA}
+        WORKING_DIRECTORY ${PYTHON_TEST_SCRIPT_DIR}
+    )
+endif(WITH_PYTHON)
+
 
 install(TARGETS gwmodel
     LIBRARY DESTINATION lib

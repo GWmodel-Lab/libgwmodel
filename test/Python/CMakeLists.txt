@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 project(testPython LANGUAGES CXX)
 
 if(WIN32)
-    set(PYGWMODEL_COPY_DIR ${PYGWMODEL_COPY_DIR})
+    set(PYGWMODEL_COPY_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<$<CONFIG:Release>:Release>$<$<CONFIG:Debug>:Debug>)
 else()
     set(PYGWMODEL_COPY_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 endif()

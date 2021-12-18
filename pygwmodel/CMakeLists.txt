@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 project(pygwmodel)
 
-find_package(Python3 COMPONENTS Interpreter Development)
 find_package(PythonExtensions REQUIRED)
 find_package(Cython REQUIRED)
 
