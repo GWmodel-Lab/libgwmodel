@@ -57,29 +57,6 @@ cdef extern from "gwmodel.h":
     cdef CGwmSpatialWeight* gwmodel_create_spatial_weight(CGwmDistance* distance, CGwmWeight* weight)
     cdef void gwmodel_delete_spatial_weight(CGwmSpatialWeight* instance)
 
-    ctypedef struct CGwmGWSS:
-        pass
-    cdef CGwmGWSS* gwmodel_create_gwss_algorithm()
-    cdef void gwmodel_delete_gwss_algorithm(CGwmGWSS* instance)
-    cdef CGwmSimpleLayer* gwmodel_get_gwss_result_layer(CGwmGWSS* gwss)
-    cdef GwmMatInterface gwmodel_get_gwss_local_mean(CGwmGWSS* gwss)
-    cdef GwmMatInterface gwmodel_get_gwss_local_sdev(CGwmGWSS* gwss)
-    cdef GwmMatInterface gwmodel_get_gwss_local_var(CGwmGWSS* gwss)
-    cdef GwmMatInterface gwmodel_get_gwss_local_skew(CGwmGWSS* gwss)
-    cdef GwmMatInterface gwmodel_get_gwss_local_cv(CGwmGWSS* gwss)
-    cdef GwmMatInterface gwmodel_get_gwss_local_cov(CGwmGWSS* gwss)
-    cdef GwmMatInterface gwmodel_get_gwss_local_corr(CGwmGWSS* gwss)
-    cdef GwmMatInterface gwmodel_get_gwss_local_spearman_rho(CGwmGWSS* gwss)
-    cdef GwmMatInterface gwmodel_get_gwss_local_median(CGwmGWSS* gwss)
-    cdef GwmMatInterface gwmodel_get_gwss_local_iqr(CGwmGWSS* gwss)
-    cdef GwmMatInterface gwmodel_get_gwss_local_qi(CGwmGWSS* gwss)
-    cdef void gwmodel_set_gwss_source_layer(CGwmGWSS* algorithm, CGwmSimpleLayer* layer)
-    cdef void gwmodel_set_gwss_spatial_weight(CGwmGWSS* algorithm, CGwmSpatialWeight* spatial)
-    cdef void gwmodel_set_gwss_variables(CGwmGWSS* algorithm, GwmVariableListInterface varList)
-    cdef void gwmodel_set_gwss_options(CGwmGWSS* algorithm, bint quantile, bint corrWithFirstOnly)
-    cdef void gwmodel_set_gwss_openmp(CGwmGWSS* algorithm, int threads)
-    cdef void gwmodel_run_gwss(CGwmGWSS* algorithm)
-
     cdef enum BandwidthSelectionCriterionType:
         AIC,
         CV
@@ -129,5 +106,42 @@ cdef extern from "gwmodel.h":
     cdef GwmVariablesCriterionListInterface gwmodel_get_gwr_indep_var_criterions(CGwmGWRBasic* gwr)
     cdef GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGWRBasic* gwr)
     cdef void gwmodel_run_gwr(CGwmGWRBasic* algorithm)
+
+    ctypedef struct CGwmGWSS:
+        pass
+    cdef CGwmGWSS* gwmodel_create_gwss_algorithm()
+    cdef void gwmodel_delete_gwss_algorithm(CGwmGWSS* instance)
+    cdef CGwmSimpleLayer* gwmodel_get_gwss_result_layer(CGwmGWSS* gwss)
+    cdef GwmMatInterface gwmodel_get_gwss_local_mean(CGwmGWSS* gwss)
+    cdef GwmMatInterface gwmodel_get_gwss_local_sdev(CGwmGWSS* gwss)
+    cdef GwmMatInterface gwmodel_get_gwss_local_var(CGwmGWSS* gwss)
+    cdef GwmMatInterface gwmodel_get_gwss_local_skew(CGwmGWSS* gwss)
+    cdef GwmMatInterface gwmodel_get_gwss_local_cv(CGwmGWSS* gwss)
+    cdef GwmMatInterface gwmodel_get_gwss_local_cov(CGwmGWSS* gwss)
+    cdef GwmMatInterface gwmodel_get_gwss_local_corr(CGwmGWSS* gwss)
+    cdef GwmMatInterface gwmodel_get_gwss_local_spearman_rho(CGwmGWSS* gwss)
+    cdef GwmMatInterface gwmodel_get_gwss_local_median(CGwmGWSS* gwss)
+    cdef GwmMatInterface gwmodel_get_gwss_local_iqr(CGwmGWSS* gwss)
+    cdef GwmMatInterface gwmodel_get_gwss_local_qi(CGwmGWSS* gwss)
+    cdef void gwmodel_set_gwss_source_layer(CGwmGWSS* algorithm, CGwmSimpleLayer* layer)
+    cdef void gwmodel_set_gwss_spatial_weight(CGwmGWSS* algorithm, CGwmSpatialWeight* spatial)
+    cdef void gwmodel_set_gwss_variables(CGwmGWSS* algorithm, GwmVariableListInterface varList)
+    cdef void gwmodel_set_gwss_options(CGwmGWSS* algorithm, bint quantile, bint corrWithFirstOnly)
+    cdef void gwmodel_set_gwss_openmp(CGwmGWSS* algorithm, int threads)
+    cdef void gwmodel_run_gwss(CGwmGWSS* algorithm)
+
+    ctypedef struct CGwmGWPCA:
+        pass
+    cdef CGwmGWPCA* gwmodel_create_gwpca_algorithm();
+    cdef void gwmodel_delete_gwpca_algorithm(CGwmGWPCA* instance);
+    cdef GwmMatInterface gwmodel_get_gwpca_local_pv(CGwmGWPCA* gwpca);
+    cdef GwmMatInterface gwmodel_get_gwpca_loadings(CGwmGWPCA* gwpca, int k);
+    cdef GwmMatInterface gwmodel_get_gwpca_sdev(CGwmGWPCA* gwpca);
+    cdef GwmMatInterface gwmodel_get_gwpca_scores(CGwmGWPCA* gwpca, int k);
+    cdef void gwmodel_set_gwpca_source_layer(CGwmGWPCA* algorithm, CGwmSimpleLayer* layer);
+    cdef void gwmodel_set_gwpca_variables(CGwmGWPCA* algorithm, GwmVariableListInterface varList);
+    cdef void gwmodel_set_gwpca_spatial_weight(CGwmGWPCA* algorithm, CGwmSpatialWeight* spatial);
+    cdef void gwmodel_set_gwpca_options(CGwmGWPCA* algorithm, int k);
+    cdef void gwmodel_run_gwpca(CGwmGWPCA* algorithm);
 
     cdef bint gwmodel_get_spatial_bandwidth_weight(CGwmSpatialWeight* spatial, GwmBandwidthKernelInterface* bandwidth)
