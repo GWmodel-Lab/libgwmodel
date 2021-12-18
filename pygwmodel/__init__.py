@@ -188,6 +188,8 @@ class GWPCA:
     """
     GWPCA python high api class.
     """
+    loadings = None
+    result_layer = None
 
     def __init__(self, sdf: gp.GeoDataFrame, variables: List[str], bw, adaptive=True, kernel=KERNEL_GAUSSIAN, longlat=True, keepComponents=2):
         """
@@ -201,7 +203,6 @@ class GWPCA:
         self.kernel = kernel
         self.adaptive = adaptive
         self.longlat = longlat
-        self.result_layer = None
         self.keepComponents = keepComponents
 
     def fit(self):
@@ -220,4 +221,7 @@ class GWPCA:
         cyg_gwpca = cygGWPCA(cyg_data_layer, cyg_spatial_weight, cyg_in_vars, self.keepComponents)
         cyg_gwpca.run()
         self.result_layer = layer_to_sdf(cyg_gwpca.result_layer, self.sdf.geometry)
+        ''' Get loadings
+        '''
+        self.loadings = np.array([cyg_gwpca.loadings(i) for i in range(self.keepComponents)])
         return self

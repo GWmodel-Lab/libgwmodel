@@ -31,5 +31,6 @@ add_custom_target(testPythonDeps ALL
     COMMAND ${CMAKE_COMMAND} -E
         copy_if_different
         ${CMAKE_CURRENT_SOURCE_DIR}/testGWSS.py
+        ${CMAKE_CURRENT_SOURCE_DIR}/testGWPCA.py
         ${PYGWMODEL_COPY_DIR}
 )
