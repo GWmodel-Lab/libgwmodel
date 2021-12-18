@@ -50,7 +50,7 @@ install(TARGETS gwmodel
 install(DIRECTORY include/ DESTINATION include)
 
 if(WITH_PYTHON)
-    install(TARGETS gwss mat_interface name_list_interface simple_layer spatial_weight variable_interface gwr_basic
+    install(TARGETS mat_interface name_list_interface simple_layer spatial_weight variable_interface gwr_basic gwss gwpca
             LIBRARY DESTINATION pygwmodel)
     install(FILES ${CMAKE_SOURCE_DIR}/pygwmodel/__init__.py DESTINATION pygwmodel)
 endif(WITH_PYTHON)

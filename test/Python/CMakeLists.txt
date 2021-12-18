@@ -19,13 +19,14 @@ add_custom_target(testPythonDeps ALL
         ${PYGWMODEL_COPY_DIR}/pygwmodel
     COMMAND ${CMAKE_COMMAND} -E
         copy_if_different
-        $<TARGET_FILE:gwss>
         $<TARGET_FILE:mat_interface>
         $<TARGET_FILE:name_list_interface>
         $<TARGET_FILE:simple_layer>
         $<TARGET_FILE:spatial_weight>
         $<TARGET_FILE:variable_interface>
         $<TARGET_FILE:gwr_basic>
+        $<TARGET_FILE:gwss>
+        $<TARGET_FILE:gwpca>
         ${PYGWMODEL_COPY_DIR}/pygwmodel
     COMMAND ${CMAKE_COMMAND} -E
         copy_if_different
