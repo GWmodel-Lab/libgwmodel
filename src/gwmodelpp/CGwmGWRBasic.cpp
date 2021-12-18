@@ -554,12 +554,12 @@ void CGwmGWRBasic::setBandwidthSelectionCriterion(const BandwidthSelectionCriter
     case BandwidthSelectionCriterionType::CV:
         mapper = {
             make_pair(ParallelType::SerialOnly, &CGwmGWRBasic::bandwidthSizeCriterionCVSerial),
-            make_pair(ParallelType::OpenMP, &CGwmGWRBasic::bandwidthSizeCriterionAICOmp)
+            make_pair(ParallelType::OpenMP, &CGwmGWRBasic::bandwidthSizeCriterionCVOmp)
         };
         break;
     case BandwidthSelectionCriterionType::AIC:
         mapper = {
-            make_pair(ParallelType::SerialOnly, &CGwmGWRBasic::bandwidthSizeCriterionCVSerial),
+            make_pair(ParallelType::SerialOnly, &CGwmGWRBasic::bandwidthSizeCriterionAICSerial),
             make_pair(ParallelType::OpenMP, &CGwmGWRBasic::bandwidthSizeCriterionAICOmp)
         };
     default:
