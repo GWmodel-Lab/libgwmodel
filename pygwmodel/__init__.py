@@ -10,6 +10,7 @@ from . import spatial_weight as cyg_sw
 from . import variable_interface as cyg_varlist
 from .gwss import GWSS as cygGWSS
 from .gwr_basic import GWRBasic as cygGWRBasic
+from .gwpca import GWPCA as cygGWPCA
 
 KERNEL_GAUSSIAN = 0
 
@@ -42,46 +43,6 @@ def layer_to_sdf(layer: cygSimpleLayer, geometry: gp.GeoSeries=None):
         **result_data,
         "geometry": geometry
     })
-    
-
-class GWSS:
-    """
-    GWSS python high api class.
-    """
-
-    def __init__(self, sdf: gp.GeoDataFrame, variables: List[str], bw, adaptive=True, kernel=KERNEL_GAUSSIAN, longlat=True, quantile=False, first_only=False):
-        """
-        docstring
-        """
-        if not isinstance(sdf, gp.GeoDataFrame):
-            raise ValueError("sdf must be a GeoDataFrame")
-        self.sdf = sdf
-        self.variables = variables
-        self.bw = bw
-        self.kernel = kernel
-        self.adaptive = adaptive
-        self.longlat = longlat
-        self.result_layer = None
-        self.quantile = quantile
-        self.first_only = first_only
-
-    def fit(self):
-        """
-        Run algorithm and return result
-        """
-        ''' Extract data
-        '''
-        cyg_data_layer = sdf_to_layer(self.sdf, self.variables)
-        cyg_distance = cyg_sw.Distance(self.longlat)
-        cyg_weight = cyg_sw.Weight(self.bw, self.adaptive, self.kernel)
-        cyg_spatial_weight = cyg_sw.SpatialWeight(cyg_distance, cyg_weight)
-        cyg_in_vars = cyg_varlist.VariableListInterface([cyg_varlist.VariableInterface(i, True, n.encode()) for i, n in enumerate(self.variables)])
-        ''' Create cython GWSS
-        '''
-        cyg_gwss = cygGWSS(cyg_data_layer, cyg_spatial_weight, cyg_in_vars, self.quantile, self.first_only)
-        cyg_gwss.run()
-        self.result_layer = layer_to_sdf(cyg_gwss.result_layer, self.sdf.geometry)
-        return self
 
 
 class GWRBasic:
@@ -181,3 +142,82 @@ class GWRBasic:
         '''
         cyg_gwr_basic.run()
         return layer_to_sdf(cyg_gwr_basic.result_layer, targets.geometry)
+
+
+class GWSS:
+    """
+    GWSS python high api class.
+    """
+
+    def __init__(self, sdf: gp.GeoDataFrame, variables: List[str], bw, adaptive=True, kernel=KERNEL_GAUSSIAN, longlat=True, quantile=False, first_only=False):
+        """
+        docstring
+        """
+        if not isinstance(sdf, gp.GeoDataFrame):
+            raise ValueError("sdf must be a GeoDataFrame")
+        self.sdf = sdf
+        self.variables = variables
+        self.bw = bw
+        self.kernel = kernel
+        self.adaptive = adaptive
+        self.longlat = longlat
+        self.result_layer = None
+        self.quantile = quantile
+        self.first_only = first_only
+
+    def fit(self):
+        """
+        Run algorithm and return result
+        """
+        ''' Extract data
+        '''
+        cyg_data_layer = sdf_to_layer(self.sdf, self.variables)
+        cyg_distance = cyg_sw.Distance(self.longlat)
+        cyg_weight = cyg_sw.Weight(self.bw, self.adaptive, self.kernel)
+        cyg_spatial_weight = cyg_sw.SpatialWeight(cyg_distance, cyg_weight)
+        cyg_in_vars = cyg_varlist.VariableListInterface([cyg_varlist.VariableInterface(i, True, n.encode()) for i, n in enumerate(self.variables)])
+        ''' Create cython GWSS
+        '''
+        cyg_gwss = cygGWSS(cyg_data_layer, cyg_spatial_weight, cyg_in_vars, self.quantile, self.first_only)
+        cyg_gwss.run()
+        self.result_layer = layer_to_sdf(cyg_gwss.result_layer, self.sdf.geometry)
+        return self
+
+
+class GWPCA:
+    """
+    GWPCA python high api class.
+    """
+
+    def __init__(self, sdf: gp.GeoDataFrame, variables: List[str], bw, adaptive=True, kernel=KERNEL_GAUSSIAN, longlat=True, keepComponents=2):
+        """
+        docstring
+        """
+        if not isinstance(sdf, gp.GeoDataFrame):
+            raise ValueError("sdf must be a GeoDataFrame")
+        self.sdf = sdf
+        self.variables = variables
+        self.bw = bw
+        self.kernel = kernel
+        self.adaptive = adaptive
+        self.longlat = longlat
+        self.result_layer = None
+        self.keepComponents = keepComponents
+
+    def fit(self):
+        """
+        Run algorithm and return result
+        """
+        ''' Extract data
+        '''
+        cyg_data_layer = sdf_to_layer(self.sdf, self.variables)
+        cyg_distance = cyg_sw.Distance(self.longlat)
+        cyg_weight = cyg_sw.Weight(self.bw, self.adaptive, self.kernel)
+        cyg_spatial_weight = cyg_sw.SpatialWeight(cyg_distance, cyg_weight)
+        cyg_in_vars = cyg_varlist.VariableListInterface([cyg_varlist.VariableInterface(i, True, n.encode()) for i, n in enumerate(self.variables)])
+        ''' Create cython GWPCA
+        '''
+        cyg_gwpca = cygGWPCA(cyg_data_layer, cyg_spatial_weight, cyg_in_vars, self.keepComponents)
+        cyg_gwpca.run()
+        self.result_layer = layer_to_sdf(cyg_gwpca.result_layer, self.sdf.geometry)
+        return self
