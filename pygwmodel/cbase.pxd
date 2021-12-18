@@ -132,16 +132,17 @@ cdef extern from "gwmodel.h":
 
     ctypedef struct CGwmGWPCA:
         pass
-    cdef CGwmGWPCA* gwmodel_create_gwpca_algorithm();
-    cdef void gwmodel_delete_gwpca_algorithm(CGwmGWPCA* instance);
-    cdef GwmMatInterface gwmodel_get_gwpca_local_pv(CGwmGWPCA* gwpca);
-    cdef GwmMatInterface gwmodel_get_gwpca_loadings(CGwmGWPCA* gwpca, int k);
-    cdef GwmMatInterface gwmodel_get_gwpca_sdev(CGwmGWPCA* gwpca);
-    cdef GwmMatInterface gwmodel_get_gwpca_scores(CGwmGWPCA* gwpca, int k);
-    cdef void gwmodel_set_gwpca_source_layer(CGwmGWPCA* algorithm, CGwmSimpleLayer* layer);
-    cdef void gwmodel_set_gwpca_variables(CGwmGWPCA* algorithm, GwmVariableListInterface varList);
-    cdef void gwmodel_set_gwpca_spatial_weight(CGwmGWPCA* algorithm, CGwmSpatialWeight* spatial);
-    cdef void gwmodel_set_gwpca_options(CGwmGWPCA* algorithm, int k);
-    cdef void gwmodel_run_gwpca(CGwmGWPCA* algorithm);
+    cdef CGwmGWPCA* gwmodel_create_gwpca_algorithm()
+    cdef void gwmodel_delete_gwpca_algorithm(CGwmGWPCA* instance)
+    cdef CGwmSimpleLayer* gwmodel_get_gwpca_result_layer(CGwmGWPCA* gwpca)
+    cdef GwmMatInterface gwmodel_get_gwpca_local_pv(CGwmGWPCA* gwpca)
+    cdef GwmMatInterface gwmodel_get_gwpca_loadings(CGwmGWPCA* gwpca, int k)
+    cdef GwmMatInterface gwmodel_get_gwpca_sdev(CGwmGWPCA* gwpca)
+    cdef GwmMatInterface gwmodel_get_gwpca_scores(CGwmGWPCA* gwpca, int k)
+    cdef void gwmodel_set_gwpca_source_layer(CGwmGWPCA* algorithm, CGwmSimpleLayer* layer)
+    cdef void gwmodel_set_gwpca_variables(CGwmGWPCA* algorithm, GwmVariableListInterface varList)
+    cdef void gwmodel_set_gwpca_spatial_weight(CGwmGWPCA* algorithm, CGwmSpatialWeight* spatial)
+    cdef void gwmodel_set_gwpca_options(CGwmGWPCA* algorithm, int k)
+    cdef void gwmodel_run_gwpca(CGwmGWPCA* algorithm)
 
     cdef bint gwmodel_get_spatial_bandwidth_weight(CGwmSpatialWeight* spatial, GwmBandwidthKernelInterface* bandwidth)

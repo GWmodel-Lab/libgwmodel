@@ -736,6 +736,14 @@ extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_iqr(CGwmGWSS* gwss
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_qi(CGwmGWSS* gwss);
 
 /**
+ * @brief Get result layer from GWPCA algorithm.
+ * 
+ * @param gwss Pointer to GWPCA algorithm.
+ * @return CGwmSimpleLayer* Pointer to result layer.
+ */
+extern "C" GWMODEL_API CGwmSimpleLayer* gwmodel_get_gwpca_result_layer(CGwmGWPCA* gwpca);
+
+/**
  * @brief Get local principle component values.
  * 
  * @param gwpca Pointer to GWPCA algorithm.
