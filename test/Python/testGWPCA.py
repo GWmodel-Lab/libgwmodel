@@ -21,8 +21,11 @@ comp_q0 = np.array([
     [89.8514496001622, 12.6890545321313],
     [92.5449003124064, 13.8382823156345]
 ])
-comp_q = result_q.loc[:, 'Comp.1_PV':'Comp.2_PV'].values
-if not np.all(np.abs(comp_q - comp_q0) < 1e-8):
+comp_q = result_q.loc[:, 'Comp.1_PV':'Comp.2_PV'].values  # type: ignore
+if not np.all(np.abs(comp_q0 - comp_q) < 1e-8):
+    print("testPythonGWPCA: local principle value is not equal.")
+    print("Turth:", comp_q0, sep='\n')
+    print("Result:", comp_q, sep='\n')
     exit(1)
 
 loadings_q0 = np.array([
@@ -42,7 +45,10 @@ loadings_q0 = np.array([
     ]
 ])
 loadings_q = np.apply_along_axis(lambda x: np.quantile(x, [0, 0.25, 0.5, 0.75, 1], interpolation='midpoint'), axis=1, arr=algorithm_loadings)
-if not np.all(np.abs(loadings_q - loadings_q0) < 1e-8):
-    exit(2)
+if not np.all(np.abs(loadings_q0 - loadings_q) < 1e-8):
+    print("testPythonGWSS: loadings is not equal.")
+    print("Turth:", loadings_q0, sep='\n')
+    print("Result:", loadings_q, sep='\n')
+    exit(1)
 
 exit(0)

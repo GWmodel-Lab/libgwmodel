@@ -13,11 +13,88 @@ londonhp_gwss_result: gp.GeoDataFrame = londonhp_gwss.fit().result_layer
 result = pd.DataFrame(londonhp_gwss_result).drop('geometry', axis=1)
 result_q = result.apply(lambda x: np.quantile(x, [0, 0.25, 0.5, 0.75, 1], interpolation='midpoint'), axis=0)
 
-localmean_q0 = np.array([[155530.887621432, 71.3459254279447, 6.92671958853926, 39.0446823327541],
+localmean_q0 = np.array([
+    [155530.887621432, 71.3459254279447, 6.92671958853926, 39.0446823327541],
     [163797.287583358, 73.3206754261603, 7.53173813461806, 40.4678577700236],
     [174449.84375947, 74.1174325820277, 7.99672839037902, 43.2051994175928],
     [183893.664229323, 75.3118600659781, 8.59668519607066, 45.2164679493302],
-    [188967.723827491, 77.0911277060738, 8.95571485750978, 47.5614366837457]])
-localmean_q = result_q.loc[:, 'PURCHASE_LM':'PROF_LM'].values
-if np.all(np.abs(localmean_q - localmean_q0) < 1e-8):
-    exit(0)
+    [188967.723827491, 77.0911277060738, 8.95571485750978, 47.5614366837457]
+])
+localmean_q = result_q.loc[:, 'PURCHASE_LM':'PROF_LM'].values  # type: ignore
+if not np.all(np.abs(localmean_q0 - localmean_q) < 1e-8):
+    print("testPythonGWSS: localmean is not equal.")
+    print("Turth:", localmean_q0, sep='\n')
+    print("Result:", localmean_q, sep='\n')
+    exit(1)
+
+localsdev_q0 = np.array([
+    [72593.9921817404,28.3099770356131,2.01116607468286,8.4638277922896],
+    [77170.1777015588,29.7600378924393,2.30743344312421,9.96621298558318],
+    [80165.9773579845,30.1391577420805,2.38179570120204,10.7335766559347],
+    [83051.0304538234,31.1706493250992,2.55775279583101,11.2114283718788],
+    [86969.3221725472,32.2881606484993,2.73655762029611,12.0280808931404]
+])
+localsdev_q = result_q.loc[:, 'PURCHASE_LSD':'PROF_LSD'].values  # type: ignore
+if not np.all(np.abs(localsdev_q0 - localsdev_q) < 1e-8):
+    print("testPythonGWSS: localsdev is not equal.")
+    print("Turth:", localsdev_q0, sep='\n')
+    print("Result:", localsdev_q, sep='\n')
+    exit(1)
+
+localskew_q0 = np.array([
+    [1.4092924720023,1.37071524667066,-0.555779877884807,-0.111701647027156],
+    [1.52855813553472,1.41818465286691,-0.306523936775326,0.0688874355072382],
+    [1.7202801518175,1.48329930159006,0.00225908149445752,0.346270682414352],
+    [2.01494028420899,1.65657212304686,0.278551178439127,0.529519631010928],
+    [2.29647902712578,1.85491109594693,0.456786660462276,0.614689755724046]
+])
+localskew_q = result_q.loc[:, 'PURCHASE_LSke':'PROF_LSke'].values  # type: ignore
+if not np.all(np.abs(localskew_q0 - localskew_q) < 1e-8):
+    print("testPythonGWSS: localskew is not equal.")
+    print("Turth:", localskew_q0, sep='\n')
+    print("Result:", localskew_q, sep='\n')
+    exit(1)
+
+localcv_q0 = np.array([
+    [0.426450737915543,0.393305654809352,0.224567899568219,0.211056223726344],
+    [0.437470421902242,0.405332689971102,0.272318025735197,0.230225532145268],
+    [0.451648453541485,0.407743814376727,0.314108382503925,0.23750624244725],
+    [0.490606242780692,0.411684812307897,0.334007325644591,0.26722230789406],
+    [0.520406719170266,0.419294146622537,0.339426249173607,0.2901354343712]
+])
+localcv_q = result_q.loc[:, 'PURCHASE_LCV':'PROF_LCV'].values  # type: ignore
+if not np.all(np.abs(localcv_q0 - localcv_q) < 1e-8):
+    print("testPythonGWSS: localcv is not equal.")
+    print("Turth:", localmean_q0, sep='\n')
+    print("Result:", localmean_q0, sep='\n')
+    exit(1)
+
+localcorr_q0 = np.array([
+    [0.748948486801849,-0.320600183598632,0.203011140141453,-0.126882976445561,-0.0892568204410789,-0.948799446008617],
+    [0.762547101624896,-0.297490396583388,0.246560726908457,-0.0855566960390598,-0.0108045673038358,-0.939669443787772],
+    [0.78483823103956,-0.254451851221453,0.282830629241902,-0.0466716717586483,0.0860667834905564,-0.930939912151655],
+    [0.809708575169509,-0.240880285636795,0.324300091997221,0.030563100930792,0.14224438342357,-0.924880287887928],
+    [0.838005736892351,-0.201907496636598,0.35265748682446,0.106759558870671,0.161751404622356,-0.906594939821811]
+])
+localcorr_q = result_q.loc[:, 'Corr_PURCHASE.FLOORSZ':'Corr_UNEMPLOY.PROF'].values  # type: ignore
+if not np.all(np.abs(localcorr_q0 - localcorr_q) < 1e-8):
+    print("testPythonGWSS: localcorr is not equal.")
+    print("Turth:", localcorr_q0, sep='\n')
+    print("Result:", localcorr_q, sep='\n')
+    exit(1)
+
+localscorr_q0 = np.array([
+    [0.521222457142438,-0.386537315399977,0.272098100316185,-0.132913057346789,-0.0706904961467669,-0.940629495956178],
+    [0.546058956484106,-0.367722715928213,0.28224553968716,-0.100607936868221,0.00362924865128611,-0.931506008150178],
+    [0.591076906824072,-0.333869710084257,0.336014460751443,-0.0756778419096376,0.0739387878352967,-0.928259365660612],
+    [0.642395389246104,-0.314342558536871,0.358117991041394,-0.000170454849373912,0.108476590000141,-0.915878602985333],
+    [0.685066744419873,-0.296544286394518,0.380785226148097,0.0690739762835091,0.170298974146835,-0.895252623185884]
+])
+localscorr_q = result_q.loc[:, 'Spearman_rho_PURCHASE.FLOORSZ':'Spearman_rho_UNEMPLOY.PROF'].values  # type: ignore
+if not np.all(np.abs(localscorr_q0 - localscorr_q) < 1e-1):
+    print("testPythonGWSS: localscorr is not equal.")
+    print("Turth:", localscorr_q0, sep='\n')
+    print("Result:", localscorr_q, sep='\n')
+    exit(1)
+
+exit(0)
