@@ -444,7 +444,7 @@ GwmMatInterface gwmodel_get_gwss_local_qi(CGwmGWSS* gwss)
     return mat2interface(gwss->qi());
 }
 
-CGwmSimpleLayer* gwmodel_get_gwpca_result_layer(CGwmGWSS* gwpca)
+CGwmSimpleLayer* gwmodel_get_gwpca_result_layer(CGwmGWPCA* gwpca)
 {
     return gwpca->resultLayer();
 }
