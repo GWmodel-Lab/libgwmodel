@@ -27,8 +27,8 @@ cdef class GWPCA:
     def local_pv(self):
         return mat2numpy(gwmodel_get_gwpca_local_pv(self._c_instance))
     
-    def loadings(self):
-        return mat2numpy(gwmodel_get_gwpca_loadings(self._c_instance))
+    def loadings(self, unsigned int comp):
+        return mat2numpy(gwmodel_get_gwpca_loadings(self._c_instance, comp))
 
     def sdev(self):
         return mat2numpy(gwmodel_get_gwpca_sdev(self._c_instance))
