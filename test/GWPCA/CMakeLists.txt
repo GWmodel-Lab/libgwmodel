@@ -9,3 +9,8 @@ endif(BUILD_SHARED_LIBS)
 
 add_executable(testGWPCA ${SOURCES} ${SAMPL_LONDONHP100})
 target_link_libraries(testGWPCA PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2)
+
+add_test(
+    NAME testGWPCA 
+    COMMAND $<TARGET_FILE:testGWPCA> --success
+)

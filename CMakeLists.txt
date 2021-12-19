@@ -23,53 +23,13 @@ endif(MSVC)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src)
 
 if(WITH_PYTHON)
-    find_package(Python3 COMPONENTS Interpreter Development)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+    message(STATUS "Python Interpreter: ${Python3_EXECUTABLE}")
     add_subdirectory(${CMAKE_SOURCE_DIR}/pygwmodel)
 endif(WITH_PYTHON)
 
 enable_testing()
-
 add_subdirectory(${CMAKE_SOURCE_DIR}/test)
-add_test(
-    NAME testBasicGWR 
-    COMMAND $<TARGET_FILE:testBasicGWR> --success
-)
-add_test(
-    NAME testGWSS 
-    COMMAND $<TARGET_FILE:testGWSS> --success
-)
-add_test(
-    NAME testGWPCA 
-    COMMAND $<TARGET_FILE:testGWPCA> --success
-)
-add_test(
-    NAME testMultithread 
-    COMMAND $<TARGET_FILE:testMultithread> --success
-)
-if(WITH_PYTHON)
-    set(PYTHON_TEST_DATA ${CMAKE_SOURCE_DIR}/test/data/londonhp100.csv)
-    if(WIN32)
-        set(PYTHON_TEST_SCRIPT_DIR ${CMAKE_SOURCE_DIR}/build/bin/$<$<CONFIG:Release>:Release>$<$<CONFIG:Debug>:Debug>)
-    else()
-        set(PYTHON_TEST_SCRIPT_DIR ${CMAKE_SOURCE_DIR}/build/bin)
-    endif()
-    message(STATUS "Python Interpreter: ${Python3_EXECUTABLE}")
-    add_test(
-        NAME testPythonGWRBasic
-        COMMAND ${Python3_EXECUTABLE} testGWRBasic.py ${PYTHON_TEST_DATA}
-        WORKING_DIRECTORY ${PYTHON_TEST_SCRIPT_DIR}
-    )
-    add_test(
-        NAME testPythonGWSS
-        COMMAND ${Python3_EXECUTABLE} testGWSS.py ${PYTHON_TEST_DATA}
-        WORKING_DIRECTORY ${PYTHON_TEST_SCRIPT_DIR}
-    )
-    add_test(
-        NAME testPythonGWPCA
-        COMMAND ${Python3_EXECUTABLE} testGWPCA.py ${PYTHON_TEST_DATA}
-        WORKING_DIRECTORY ${PYTHON_TEST_SCRIPT_DIR}
-    )
-endif(WITH_PYTHON)
 
 
 install(TARGETS gwmodel
