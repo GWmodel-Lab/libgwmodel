@@ -5,9 +5,16 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 option(BUILD_SHARED_LIBS "Weather to build a shared library" OFF) 
+option(WITH_PYTHON "Whether to build python extension" OFF)
+
+if(WITH_PYTHON)
+    set(BUILD_SHARED_LIBS ON)
+endif(WITH_PYTHON)
+
 if(BUILD_SHARED_LIBS)
     message(STATUS "The library can only be used by C-style interfaces.")
 endif(BUILD_SHARED_LIBS)
+
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
@@ -15,13 +22,10 @@ endif(MSVC)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src)
 
-if(BUILD_SHARED_LIBS)
-    option(WITH_PYTHON "Whether to build python extension" OFF)
-    if(WITH_PYTHON)
-        find_package(Python3 COMPONENTS Interpreter Development)
-        add_subdirectory(${CMAKE_SOURCE_DIR}/pygwmodel)
-    endif(WITH_PYTHON)
-endif(BUILD_SHARED_LIBS)
+if(WITH_PYTHON)
+    find_package(Python3 COMPONENTS Interpreter Development)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/pygwmodel)
+endif(WITH_PYTHON)
 
 enable_testing()
 
