@@ -24,7 +24,7 @@ def sdf_to_layer(sdf: gp.GeoDataFrame, variables: List[str]):
     """
     cyg_coord = cyg_numpy2mat(np.asfortranarray([[x, y] for x, y in zip(sdf.centroid.x, sdf.centroid.y)]))
     cyg_data = cyg_numpy2mat(np.asfortranarray(sdf[variables]))
-    cyg_fields = cygNameListInterface([x.encode() for x in sdf.columns])
+    cyg_fields = cygNameListInterface([x.encode() for x in variables])
     return cygSimpleLayer(cyg_coord, cyg_data, cyg_fields)
 
 

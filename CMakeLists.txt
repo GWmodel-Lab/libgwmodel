@@ -51,6 +51,11 @@ if(WITH_PYTHON)
     endif()
     message(STATUS "Python Interpreter: ${Python3_EXECUTABLE}")
     add_test(
+        NAME testPythonGWRBasic
+        COMMAND ${Python3_EXECUTABLE} testGWRBasic.py ${PYTHON_TEST_DATA}
+        WORKING_DIRECTORY ${PYTHON_TEST_SCRIPT_DIR}
+    )
+    add_test(
         NAME testPythonGWSS
         COMMAND ${Python3_EXECUTABLE} testGWSS.py ${PYTHON_TEST_DATA}
         WORKING_DIRECTORY ${PYTHON_TEST_SCRIPT_DIR}

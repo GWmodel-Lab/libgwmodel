@@ -7,7 +7,7 @@ from pygwmodel import GWPCA
 londonhp_csv = pd.read_csv(sys.argv[1])
 londonhp = gp.GeoDataFrame(londonhp_csv, geometry=gp.points_from_xy(londonhp_csv.x, londonhp_csv.y))
 londonhp_vars = ["FLOORSZ", "UNEMPLOY", "PROF"]
-algorithm = GWPCA(londonhp, londonhp_vars, 36.0, longlat=True, keepComponents=2).fit()
+algorithm = GWPCA(londonhp, londonhp_vars, 36.0, longlat=False, keepComponents=2).fit()
 algorithm_result: gp.GeoDataFrame = algorithm.result_layer
 algorithm_loadings: np.ndarray = algorithm.loadings
 

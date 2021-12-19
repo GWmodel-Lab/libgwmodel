@@ -7,7 +7,7 @@ from pygwmodel import GWSS
 londonhp_csv = pd.read_csv(sys.argv[1])
 londonhp = gp.GeoDataFrame(londonhp_csv, geometry=gp.points_from_xy(londonhp_csv.x, londonhp_csv.y))
 londonhp_vars = ["PURCHASE", "FLOORSZ", "UNEMPLOY", "PROF"]
-londonhp_gwss = GWSS(londonhp, londonhp_vars, 36.0, longlat=True)
+londonhp_gwss = GWSS(londonhp, londonhp_vars, 36.0, longlat=False)
 londonhp_gwss_result: gp.GeoDataFrame = londonhp_gwss.fit().result_layer
 
 result = pd.DataFrame(londonhp_gwss_result).drop('geometry', axis=1)
