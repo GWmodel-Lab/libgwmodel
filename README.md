@@ -7,11 +7,12 @@ This library consist of C++ implementations of some geographically weighted mode
 
 Comparing with other libraries, this library has these features:
 
-- Pure C++ implementation which promise high efficiency
-- Can be linked ether as a static library or shared library
-- Use OpenMP and CUDA (to be supported in next stage) to reach very high efficiency
-- Cross platform, configure and generate by CMake
-- A python wrapper based on Cython
+- [x] Pure C++ implementation which promise high efficiency
+- [x] Can be linked ether as a static library or shared library
+- [x] Use OpenMP to make algorithms faster
+- [ ] Use CUDA to reach very high efficiency
+- [x] Cross platform, configure and generate by CMake
+- [x] A python wrapper based on Cython
 
 With OOP style codes, this library is easy to be integrated in any C++ project.
 
