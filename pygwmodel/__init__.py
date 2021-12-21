@@ -165,7 +165,7 @@ class GWSS:
         self.quantile = quantile
         self.first_only = first_only
 
-    def fit(self):
+    def fit(self, multithreads=None):
         """
         Run algorithm and return result
         """
@@ -179,6 +179,11 @@ class GWSS:
         ''' Create cython GWSS
         '''
         cyg_gwss = cygGWSS(cyg_data_layer, cyg_spatial_weight, cyg_in_vars, self.quantile, self.first_only)
+        if multithreads is not None:
+            if isinstance(multithreads, int) and multithreads > 0:
+                cyg_gwss.enable_openmp(multithreads)
+            else:
+                raise ValueError("multithreads must be a positive integer")
         cyg_gwss.run()
         self.result_layer = layer_to_sdf(cyg_gwss.result_layer, self.sdf.geometry)
         return self
