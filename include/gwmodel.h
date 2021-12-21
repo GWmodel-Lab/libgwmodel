@@ -223,7 +223,7 @@ extern "C" GWMODEL_API void gwmodel_delete_variable_criterion_pair(GwmVariablesC
 /**
  * @brief A struct representing a list of GwmVariablesCriterionPairInterface.
  */
-struct GwmVariablesCriterionListInterface
+extern "C" struct GwmVariablesCriterionListInterface
 {
     size_t size = 0;
     GwmVariablesCriterionPairInterface* items = nullptr;
@@ -590,6 +590,14 @@ extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwr_coefficients(CGwmGWRBasic
  * @param gwr Pointer to GWR algorithm.
  * @return GwmVariablesCriterionListInterface Struct of independent variables and its criterions.
  */
+extern "C" GWMODEL_API GwmBandwidthCriterionListInterface gwmodel_get_gwr_bandwidth_criterions(CGwmGWRBasic* gwr);
+
+/**
+ * @brief Get independent variables and its criterions tested in variable autoselection from GWR algorithm.
+ * 
+ * @param gwr Pointer to GWR algorithm.
+ * @return GwmVariablesCriterionListInterface Struct of independent variables and its criterions.
+ */
 extern "C" GWMODEL_API GwmVariablesCriterionListInterface gwmodel_get_gwr_indep_var_criterions(CGwmGWRBasic* gwr);
 
 /**
@@ -606,7 +614,7 @@ extern "C" GWMODEL_API GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGW
  * @param gwss Pointer to GWSS algorithm.
  * @return CGwmSimpleLayer* Pointer to result layer.
  */
-extern "C" GWMODEL_API CGwmSimpleLayer* gwmodel_get_gwss_result_layer(CGwmGWRBasic* gwss);
+extern "C" GWMODEL_API CGwmSimpleLayer* gwmodel_get_gwss_result_layer(CGwmGWSS* gwss);
 
 /**
  * @brief Get local mean from GWSS algorithm.
@@ -726,6 +734,14 @@ extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_iqr(CGwmGWSS* gwss
  * The number of columns is the same as number of fields.
  */
 extern "C" GWMODEL_API GwmMatInterface gwmodel_get_gwss_local_qi(CGwmGWSS* gwss);
+
+/**
+ * @brief Get result layer from GWPCA algorithm.
+ * 
+ * @param gwss Pointer to GWPCA algorithm.
+ * @return CGwmSimpleLayer* Pointer to result layer.
+ */
+extern "C" GWMODEL_API CGwmSimpleLayer* gwmodel_get_gwpca_result_layer(CGwmGWPCA* gwpca);
 
 /**
  * @brief Get local principle component values.

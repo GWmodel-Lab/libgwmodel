@@ -103,6 +103,7 @@ void CGwmGWRBasic::run()
     }
     else
     {
+        createPredictionDistanceParameter();
         mBetas = regression(mX, mY);
         createResultLayer({
             make_tuple(string("%1"), mBetas, NameFormat::VarName)
@@ -124,13 +125,13 @@ void CGwmGWRBasic::createPredictionDistanceParameter()
     if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
         mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
     {
-        mRegressionDistanceParameter = new CRSDistanceParameter(mPredictLayer->points(), mSourceLayer->points());
+        mPredictionDistanceParameter = new CRSDistanceParameter(hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points(), mSourceLayer->points());
     }
 }
 
 mat CGwmGWRBasic::regressionSerial(const mat& x, const vec& y)
 {
-    uword nRp = mPredictLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nRp = hasPredictLayer() ? mPredictLayer->featureCount() : mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
     mat betas(nVar, nRp, fill::zeros);
     for (uword i = 0; i < nRp; i++)
     {
@@ -191,7 +192,7 @@ mat CGwmGWRBasic::regressionHatmatrixSerial(const mat& x, const vec& y, mat& bet
 #ifdef ENABLE_OPENMP
 mat CGwmGWRBasic::regressionOmp(const mat& x, const vec& y)
 {
-    uword nRp = mPredictLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nRp = hasPredictLayer() ? mPredictLayer->featureCount() : mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
     mat betas(nVar, nRp, arma::fill::zeros);
     int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
@@ -544,14 +545,27 @@ void CGwmGWRBasic::createResultLayer(initializer_list<ResultLayerDataItem> items
     mResultLayer = new CGwmSimpleLayer(layerPoints, layerData, layerFields);
 }
 
-void CGwmGWRBasic::setBandwidthSelectionCriterion(BandwidthSelectionCriterionType type)
+void CGwmGWRBasic::setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion)
 {
-    mBandwidthSelectionCriterion = type;
-    unordered_map<BandwidthSelectionCriterionType, BandwidthSelectionCriterionCalculator> mapper = {
-        make_pair(BandwidthSelectionCriterionType::CV, &CGwmGWRBasic::bandwidthSizeCriterionCVSerial),
-        make_pair(BandwidthSelectionCriterionType::AIC, &CGwmGWRBasic::bandwidthSizeCriterionAICSerial)
-    };
-    mBandwidthSelectionCriterionFunction = mapper[mBandwidthSelectionCriterion];
+    mBandwidthSelectionCriterion = criterion;
+    unordered_map<ParallelType, BandwidthSelectionCriterionCalculator> mapper;
+    switch (mBandwidthSelectionCriterion)
+    {
+    case BandwidthSelectionCriterionType::CV:
+        mapper = {
+            make_pair(ParallelType::SerialOnly, &CGwmGWRBasic::bandwidthSizeCriterionCVSerial),
+            make_pair(ParallelType::OpenMP, &CGwmGWRBasic::bandwidthSizeCriterionCVOmp)
+        };
+        break;
+    case BandwidthSelectionCriterionType::AIC:
+        mapper = {
+            make_pair(ParallelType::SerialOnly, &CGwmGWRBasic::bandwidthSizeCriterionAICSerial),
+            make_pair(ParallelType::OpenMP, &CGwmGWRBasic::bandwidthSizeCriterionAICOmp)
+        };
+    default:
+        break;
+    }
+    mBandwidthSelectionCriterionFunction = mapper[mParallelType];
 }
 
 void CGwmGWRBasic::setParallelType(const ParallelType& type)

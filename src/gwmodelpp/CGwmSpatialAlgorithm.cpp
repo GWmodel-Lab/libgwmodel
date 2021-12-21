@@ -7,8 +7,7 @@ CGwmSpatialAlgorithm::CGwmSpatialAlgorithm()
 
 CGwmSpatialAlgorithm::~CGwmSpatialAlgorithm()
 {
-    if (mSourceLayer) delete mSourceLayer;
-    if (mResultLayer) delete mResultLayer;
+
 }
 
 bool CGwmSpatialAlgorithm::isValid()

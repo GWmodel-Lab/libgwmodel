@@ -345,6 +345,21 @@ GwmRegressionDiagnostic gwmodel_get_gwr_diagnostic(CGwmGWRBasic* gwr)
     return gwr->diagnostic();
 }
 
+GwmBandwidthCriterionListInterface gwmodel_get_gwr_bandwidth_criterions(CGwmGWRBasic* gwr)
+{
+    BandwidthCriterionList criterions = gwr->bandwidthSelectionCriterionList();
+    GwmBandwidthCriterionListInterface interface;
+    interface.size = criterions.size();
+    interface.items = new GwmBandwidthCriterionPairInterface[interface.size];
+    for (size_t i = 0; i < interface.size; i++)
+    {
+        GwmBandwidthCriterionPairInterface* item = interface.items + i;
+        item->bandwidth = criterions[i].first;
+        item->criterion = criterions[i].second;
+    }
+    return interface;
+}
+
 GwmVariablesCriterionListInterface gwmodel_get_gwr_indep_var_criterions(CGwmGWRBasic* gwr)
 {
     VariablesCriterionList criterions = gwr->indepVarsSelectionCriterionList();
@@ -369,7 +384,7 @@ GwmVariablesCriterionListInterface gwmodel_get_gwr_indep_var_criterions(CGwmGWRB
     return interface;
 }
 
-CGwmSimpleLayer* gwmodel_get_gwss_result_layer(CGwmGWRBasic* gwss)
+CGwmSimpleLayer* gwmodel_get_gwss_result_layer(CGwmGWSS* gwss)
 {
     return gwss->resultLayer();
 }
@@ -427,6 +442,11 @@ GwmMatInterface gwmodel_get_gwss_local_iqr(CGwmGWSS* gwss)
 GwmMatInterface gwmodel_get_gwss_local_qi(CGwmGWSS* gwss)
 {
     return mat2interface(gwss->qi());
+}
+
+CGwmSimpleLayer* gwmodel_get_gwpca_result_layer(CGwmGWPCA* gwpca)
+{
+    return gwpca->resultLayer();
 }
 
 GwmMatInterface gwmodel_get_gwpca_local_pv(CGwmGWPCA* gwpca)
