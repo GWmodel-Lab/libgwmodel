@@ -1,24 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 project(libgwmodel)
 
-find_package(Armadillo REQUIRED)
-if(ARMADILLO_FOUND)
-    add_definitions(-DARMA_USE_LAPACK -DARMA_USE_BLAS -DARMA_DONT_USE_WRAPPER)
-    include_directories(${ARMADILLO_INCLUDE_DIRS})
-
-    find_package(BLAS)
-    if(NOT BLAS_FOUND)
-        message(SEND_ERROR "BLAS Not Found!")
-    endif(NOT BLAS_FOUND)
-    
-    find_package(LAPACK)
-    if(NOT LAPACK_FOUND)
-        message(SEND_ERROR "LAPACK Not Found!")
-    endif(NOT LAPACK_FOUND)
-else(ARMADILLO_FOUND)
-    message(FATAL_ERROR "Armadillo Not Found!")
-endif(ARMADILLO_FOUND)
-
 find_package(OpenMP)
 if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
     SET (ENABLE_OpenMP TRUE CACHE BOOL "Determines whether OpemMP support should be built")
@@ -95,6 +77,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${gwmodel_BINARY_DIR}/bin)
 
 if(NOT BUILD_SHARED_LIBS)
     add_library(gwmodel STATIC ${SOURCES_CXX} ${HEADERS_CXX} ${HEADERS_C})
+    set_property(TARGET gwmodel PROPERTY POSITION_INDEPENDENT_CODE ON)
 else(NOT BUILD_SHARED_LIBS)
     add_definitions(-DGWMODEL_SHARED_LIB)
     if(MSVC)

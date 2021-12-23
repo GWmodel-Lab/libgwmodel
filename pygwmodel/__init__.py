@@ -3,14 +3,10 @@ import pandas as pd
 import geopandas as gp
 from shapely.geometry import Point
 from typing import List
-from .mat_interface import numpy2mat as cyg_numpy2mat
-from .name_list_interface import NameListInterface as cygNameListInterface
-from .simple_layer import SimpleLayer as cygSimpleLayer
-from . import spatial_weight as cyg_sw
-from . import variable_interface as cyg_varlist
-from .gwss import GWSS as cygGWSS
-from .gwr_basic import GWRBasic as cygGWRBasic
-from .gwpca import GWPCA as cygGWPCA
+from .pygwmodel import CySimpleLayer, CyVariable, CyVariableList
+from .pygwmodel import CyDistance, CyCRSDistance
+from .pygwmodel import CyWeight, CyBandwidthWeight
+from .pygwmodel import CyGWPCA
 
 KERNEL_GAUSSIAN = 0
 
@@ -22,13 +18,13 @@ def sdf_to_layer(sdf: gp.GeoDataFrame, variables: List[str]):
     """
     Convert GeoDataFrame to SimpleLayer
     """
-    cyg_coord = cyg_numpy2mat(np.asfortranarray([[x, y] for x, y in zip(sdf.centroid.x, sdf.centroid.y)]))
-    cyg_data = cyg_numpy2mat(np.asfortranarray(sdf[variables]))
-    cyg_fields = cygNameListInterface([x.encode() for x in variables])
-    return cygSimpleLayer(cyg_coord, cyg_data, cyg_fields)
+    cyg_coord = np.asfortranarray([[x, y] for x, y in zip(sdf.centroid.x, sdf.centroid.y)])
+    cyg_data = np.asfortranarray(sdf[variables])
+    cyg_fields = [x.encode() for x in variables]
+    return CySimpleLayer(cyg_coord, cyg_data, cyg_fields)
 
 
-def layer_to_sdf(layer: cygSimpleLayer, geometry: gp.GeoSeries=None):
+def layer_to_sdf(layer: CySimpleLayer, geometry: gp.GeoSeries=None):
     """
     Convert GeoDataFrame to SimpleLayer
     """
@@ -45,156 +41,159 @@ def layer_to_sdf(layer: cygSimpleLayer, geometry: gp.GeoSeries=None):
     })
 
 
-class GWRBasic:
-    """
-    Basic GWR python high api class.
-    """
+# class GWRBasic:
+#     """
+#     Basic GWR python high api class.
+#     """
 
-    def __init__(self, sdf: gp.GeoDataFrame, depen_var: str, indep_vars: List[str], bw=None, adaptive=True, kernel=KERNEL_GAUSSIAN, longlat=True):
-        """
-        docstring
-        """
-        if not isinstance(sdf, gp.GeoDataFrame):
-            raise ValueError("sdf must be a GeoDataFrame")
-        self.sdf = sdf
-        self.depen_var = depen_var
-        self.indep_vars = indep_vars
-        self.bw = bw
-        self.kernel = kernel
-        self.adaptive = adaptive
-        self.longlat = longlat
-        self.result_layer = None
-        self.diagnostic = None
-        self.bandwidth_select_criterions = None
-        self.indep_var_select_criterions = None
+#     def __init__(self, sdf: gp.GeoDataFrame, depen_var: str, indep_vars: List[str], bw=None, adaptive=True, kernel=KERNEL_GAUSSIAN, longlat=True):
+#         """
+#         docstring
+#         """
+#         if not isinstance(sdf, gp.GeoDataFrame):
+#             raise ValueError("sdf must be a GeoDataFrame")
+#         self.sdf = sdf
+#         self.depen_var = depen_var
+#         self.indep_vars = indep_vars
+#         self.bw = bw
+#         self.kernel = kernel
+#         self.adaptive = adaptive
+#         self.longlat = longlat
+#         self.result_layer = None
+#         self.diagnostic = None
+#         self.bandwidth_select_criterions = None
+#         self.indep_var_select_criterions = None
     
-    def fit(self, hatmatrix=True, optimize_bw=None, optimize_var=None, multithreads=None):
-        """
-        Run algorithm and return result
-        """
-        ''' Extract data
-        '''
-        cyg_data_layer = sdf_to_layer(self.sdf, [self.depen_var] + self.indep_vars)
-        cyg_distance = cyg_sw.Distance(self.longlat)
-        cyg_weight = cyg_sw.Weight((self.bw if self.bw is not None else 0.0), self.adaptive, self.kernel)
-        cyg_spatial_weight = cyg_sw.SpatialWeight(cyg_distance, cyg_weight)
-        cyg_depen_var = cyg_varlist.VariableInterface(0, True, self.depen_var.encode())
-        cyg_indep_vars = cyg_varlist.VariableListInterface([cyg_varlist.VariableInterface(i + 1, True, n.encode()) for i, n in enumerate(self.indep_vars)])
-        ''' Create cython GWR
-        '''
-        cyg_gwr_basic = cygGWRBasic(cyg_data_layer, cyg_spatial_weight, cyg_indep_vars, cyg_depen_var, hatmatrix)
-        if self.bw is None:
-            cyg_gwr_basic.set_bandwidth_autoselection((optimize_bw if optimize_bw is not None else CRITERION_CV))
-        elif optimize_bw is not None:
-            if optimize_bw == CRITERION_AIC or optimize_bw == CRITERION_CV:
-                cyg_gwr_basic.set_bandwidth_autoselection(optimize_bw)
-            else:
-                raise ValueError("optimize_bw must be CRITERION_AIC(0) or CRITERION_CV(1)")
-        if optimize_var is not None:
-            if isinstance(optimize_var, float) and optimize_var > 0:
-                cyg_gwr_basic.set_indep_vars_autoselection(optimize_var)
-            else:
-                raise ValueError("optimize_var must be a positive real number")
-        if multithreads is not None:
-            if isinstance(multithreads, int) and multithreads > 0:
-                cyg_gwr_basic.enable_openmp(multithreads)
-            else:
-                raise ValueError("multithreads must be a positive integer")
-        cyg_gwr_basic.run()
-        if self.bw is None or optimize_bw is not None:
-            self.bw = cyg_gwr_basic.bandwidth
-            self.bandwidth_select_criterions = cyg_gwr_basic.bandwidth_select_criterions
-        if optimize_var is not None:
-            self.indep_vars = [v.decode() for v in cyg_gwr_basic.indep_vars]
-            self.indep_var_select_criterions = cyg_gwr_basic.indep_var_select_criterions
-        ''' Get result layer
-        '''
-        self.result_layer = layer_to_sdf(cyg_gwr_basic.result_layer, self.sdf.geometry)
-        if hatmatrix:
-            self.diagnostic = cyg_gwr_basic.diagnostic
-        return self
+#     def fit(self, hatmatrix=True, optimize_bw=None, optimize_var=None, multithreads=None):
+#         """
+#         Run algorithm and return result
+#         """
+#         ''' Extract data
+#         '''
+#         cyg_data_layer = sdf_to_layer(self.sdf, [self.depen_var] + self.indep_vars)
+#         cyg_distance = cyg_sw.Distance(self.longlat)
+#         cyg_weight = cyg_sw.Weight((self.bw if self.bw is not None else 0.0), self.adaptive, self.kernel)
+#         cyg_spatial_weight = cyg_sw.SpatialWeight(cyg_distance, cyg_weight)
+#         cyg_depen_var = cyg_varlist.VariableInterface(0, True, self.depen_var.encode())
+#         cyg_indep_vars = cyg_varlist.VariableListInterface([cyg_varlist.VariableInterface(i + 1, True, n.encode()) for i, n in enumerate(self.indep_vars)])
+#         ''' Create cython GWR
+#         '''
+#         cyg_gwr_basic = cygGWRBasic(cyg_data_layer, cyg_spatial_weight, cyg_indep_vars, cyg_depen_var, hatmatrix)
+#         if self.bw is None:
+#             cyg_gwr_basic.set_bandwidth_autoselection((optimize_bw if optimize_bw is not None else CRITERION_CV))
+#         elif optimize_bw is not None:
+#             if optimize_bw == CRITERION_AIC or optimize_bw == CRITERION_CV:
+#                 cyg_gwr_basic.set_bandwidth_autoselection(optimize_bw)
+#             else:
+#                 raise ValueError("optimize_bw must be CRITERION_AIC(0) or CRITERION_CV(1)")
+#         if optimize_var is not None:
+#             if isinstance(optimize_var, float) and optimize_var > 0:
+#                 cyg_gwr_basic.set_indep_vars_autoselection(optimize_var)
+#             else:
+#                 raise ValueError("optimize_var must be a positive real number")
+#         if multithreads is not None:
+#             if isinstance(multithreads, int) and multithreads > 0:
+#                 cyg_gwr_basic.enable_openmp(multithreads)
+#             else:
+#                 raise ValueError("multithreads must be a positive integer")
+#         cyg_gwr_basic.run()
+#         if self.bw is None or optimize_bw is not None:
+#             self.bw = cyg_gwr_basic.bandwidth
+#             self.bandwidth_select_criterions = cyg_gwr_basic.bandwidth_select_criterions
+#         if optimize_var is not None:
+#             self.indep_vars = [v.decode() for v in cyg_gwr_basic.indep_vars]
+#             self.indep_var_select_criterions = cyg_gwr_basic.indep_var_select_criterions
+#         ''' Get result layer
+#         '''
+#         self.result_layer = layer_to_sdf(cyg_gwr_basic.result_layer, self.sdf.geometry)
+#         if hatmatrix:
+#             self.diagnostic = cyg_gwr_basic.diagnostic
+#         return self
 
-    def predict(self, targets: gp.GeoDataFrame, multithreads=None):
-        """
-        Predict
-        """
-        if self.bw is None:
-            raise ValueError("Bandwidth cannot be None when predicting")
-        ''' Extract data
-        '''
-        cyg_source_layer = sdf_to_layer(self.sdf, [self.depen_var] + self.indep_vars)
-        cyg_predict_layer = sdf_to_layer(targets, self.indep_vars)
-        cyg_distance = cyg_sw.Distance(self.longlat)
-        cyg_weight = cyg_sw.Weight(self.bw, self.adaptive, self.kernel)
-        cyg_spatial_weight = cyg_sw.SpatialWeight(cyg_distance, cyg_weight)
-        cyg_depen_var = cyg_varlist.VariableInterface(0, True, self.depen_var.encode())
-        cyg_indep_vars = cyg_varlist.VariableListInterface([cyg_varlist.VariableInterface(i + 1, True, n.encode()) for i, n in enumerate(self.indep_vars)])
-        ''' Create cython GWR
-        '''
-        cyg_gwr_basic = cygGWRBasic(cyg_source_layer, cyg_spatial_weight, cyg_indep_vars, cyg_depen_var, False)
-        cyg_gwr_basic.set_predict_layer(cyg_predict_layer)
-        if multithreads is not None:
-            if isinstance(multithreads, int) and multithreads > 0:
-                cyg_gwr_basic.enable_openmp(multithreads)
-            else:
-                raise ValueError("multithreads must be a positive integer")
-        ''' Get result layer
-        '''
-        cyg_gwr_basic.run()
-        return layer_to_sdf(cyg_gwr_basic.result_layer, targets.geometry)
+#     def predict(self, targets: gp.GeoDataFrame, multithreads=None):
+#         """
+#         Predict
+#         """
+#         if self.bw is None:
+#             raise ValueError("Bandwidth cannot be None when predicting")
+#         ''' Extract data
+#         '''
+#         cyg_source_layer = sdf_to_layer(self.sdf, [self.depen_var] + self.indep_vars)
+#         cyg_predict_layer = sdf_to_layer(targets, self.indep_vars)
+#         cyg_distance = cyg_sw.Distance(self.longlat)
+#         cyg_weight = cyg_sw.Weight(self.bw, self.adaptive, self.kernel)
+#         cyg_spatial_weight = cyg_sw.SpatialWeight(cyg_distance, cyg_weight)
+#         cyg_depen_var = cyg_varlist.VariableInterface(0, True, self.depen_var.encode())
+#         cyg_indep_vars = cyg_varlist.VariableListInterface([cyg_varlist.VariableInterface(i + 1, True, n.encode()) for i, n in enumerate(self.indep_vars)])
+#         ''' Create cython GWR
+#         '''
+#         cyg_gwr_basic = cygGWRBasic(cyg_source_layer, cyg_spatial_weight, cyg_indep_vars, cyg_depen_var, False)
+#         cyg_gwr_basic.set_predict_layer(cyg_predict_layer)
+#         if multithreads is not None:
+#             if isinstance(multithreads, int) and multithreads > 0:
+#                 cyg_gwr_basic.enable_openmp(multithreads)
+#             else:
+#                 raise ValueError("multithreads must be a positive integer")
+#         ''' Get result layer
+#         '''
+#         cyg_gwr_basic.run()
+#         return layer_to_sdf(cyg_gwr_basic.result_layer, targets.geometry)
 
 
-class GWSS:
-    """
-    GWSS python high api class.
-    """
+# class GWSS:
+#     """
+#     GWSS python high api class.
+#     """
 
-    def __init__(self, sdf: gp.GeoDataFrame, variables: List[str], bw, adaptive=True, kernel=KERNEL_GAUSSIAN, longlat=True, quantile=False, first_only=False):
-        """
-        docstring
-        """
-        if not isinstance(sdf, gp.GeoDataFrame):
-            raise ValueError("sdf must be a GeoDataFrame")
-        self.sdf = sdf
-        self.variables = variables
-        self.bw = bw
-        self.kernel = kernel
-        self.adaptive = adaptive
-        self.longlat = longlat
-        self.result_layer = None
-        self.quantile = quantile
-        self.first_only = first_only
+#     def __init__(self, sdf: gp.GeoDataFrame, variables: List[str], bw, adaptive=True, kernel=KERNEL_GAUSSIAN, longlat=True, quantile=False, first_only=False):
+#         """
+#         docstring
+#         """
+#         if not isinstance(sdf, gp.GeoDataFrame):
+#             raise ValueError("sdf must be a GeoDataFrame")
+#         self.sdf = sdf
+#         self.variables = variables
+#         self.bw = bw
+#         self.kernel = kernel
+#         self.adaptive = adaptive
+#         self.longlat = longlat
+#         self.result_layer = None
+#         self.quantile = quantile
+#         self.first_only = first_only
 
-    def fit(self, multithreads=None):
-        """
-        Run algorithm and return result
-        """
-        ''' Extract data
-        '''
-        cyg_data_layer = sdf_to_layer(self.sdf, self.variables)
-        cyg_distance = cyg_sw.Distance(self.longlat)
-        cyg_weight = cyg_sw.Weight(self.bw, self.adaptive, self.kernel)
-        cyg_spatial_weight = cyg_sw.SpatialWeight(cyg_distance, cyg_weight)
-        cyg_in_vars = cyg_varlist.VariableListInterface([cyg_varlist.VariableInterface(i, True, n.encode()) for i, n in enumerate(self.variables)])
-        ''' Create cython GWSS
-        '''
-        cyg_gwss = cygGWSS(cyg_data_layer, cyg_spatial_weight, cyg_in_vars, self.quantile, self.first_only)
-        if multithreads is not None:
-            if isinstance(multithreads, int) and multithreads > 0:
-                cyg_gwss.enable_openmp(multithreads)
-            else:
-                raise ValueError("multithreads must be a positive integer")
-        cyg_gwss.run()
-        self.result_layer = layer_to_sdf(cyg_gwss.result_layer, self.sdf.geometry)
-        return self
+#     def fit(self, multithreads=None):
+#         """
+#         Run algorithm and return result
+#         """
+#         ''' Extract data
+#         '''
+#         cyg_data_layer = sdf_to_layer(self.sdf, self.variables)
+#         # cyg_distance = cyg_sw.Distance(self.longlat)
+#         # cyg_weight = cyg_sw.Weight(self.bw, self.adaptive, self.kernel)
+#         # cyg_spatial_weight = cyg_sw.SpatialWeight(cyg_distance, cyg_weight)
+#         cyg_in_vars = CyVariableList([CyVariable(i, True, n.encode("utf-8")) for i, n in enumerate(self.variables)])
+#         ''' Create cython GWSS
+#         '''
+#         print("seg1")
+#         cyg_gwss = CyGWSS(cyg_data_layer, cyg_in_vars, self.bw, self.quantile, self.first_only)
+#         print("seg2")
+#         if multithreads is not None:
+#             if isinstance(multithreads, int) and multithreads > 0:
+#                 cyg_gwss.enable_openmp(multithreads)
+#             else:
+#                 raise ValueError("multithreads must be a positive integer")
+#         cyg_gwss.run()
+#         self.result_layer = layer_to_sdf(cyg_gwss.result_layer, self.sdf.geometry)
+#         return self
 
 
 class GWPCA:
     """
     GWPCA python high api class.
     """
-    loadings = None
     result_layer = None
+    loadings = None
+    local_pv = None
 
     def __init__(self, sdf: gp.GeoDataFrame, variables: List[str], bw, adaptive=True, kernel=KERNEL_GAUSSIAN, longlat=True, keepComponents=2):
         """
@@ -217,16 +216,17 @@ class GWPCA:
         ''' Extract data
         '''
         cyg_data_layer = sdf_to_layer(self.sdf, self.variables)
-        cyg_distance = cyg_sw.Distance(self.longlat)
-        cyg_weight = cyg_sw.Weight(self.bw, self.adaptive, self.kernel)
-        cyg_spatial_weight = cyg_sw.SpatialWeight(cyg_distance, cyg_weight)
-        cyg_in_vars = cyg_varlist.VariableListInterface([cyg_varlist.VariableInterface(i, True, n.encode()) for i, n in enumerate(self.variables)])
+        cyg_distance = CyCRSDistance(self.longlat)
+        cyg_weight = CyBandwidthWeight(self.bw, self.adaptive, self.kernel)
+        # cyg_spatial_weight = cyg_sw.SpatialWeight(cyg_distance, cyg_weight)
+        cyg_in_vars = CyVariableList([CyVariable(i, True, n.encode("utf-8")) for i, n in enumerate(self.variables)])
         ''' Create cython GWPCA
         '''
-        cyg_gwpca = cygGWPCA(cyg_data_layer, cyg_spatial_weight, cyg_in_vars, self.keepComponents)
+        cyg_gwpca = CyGWPCA(cyg_data_layer, cyg_in_vars, cyg_weight, cyg_distance, self.keepComponents)
         cyg_gwpca.run()
         self.result_layer = layer_to_sdf(cyg_gwpca.result_layer, self.sdf.geometry)
         ''' Get loadings
         '''
-        self.loadings = np.array([cyg_gwpca.loadings(i) for i in range(self.keepComponents)])
+        self.local_pv = cyg_gwpca.local_pv()
+        self.loadings = cyg_gwpca.loadings()
         return self

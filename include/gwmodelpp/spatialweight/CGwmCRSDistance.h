@@ -67,6 +67,8 @@ private:
 
 public:
 
+    CGwmCRSDistance();
+
     /**
      * @brief Construct a new CGwmCRSDistance object
      * 
