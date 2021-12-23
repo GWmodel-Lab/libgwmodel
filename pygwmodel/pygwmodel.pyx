@@ -11,7 +11,8 @@ from .gwmodel cimport GwmVariable
 from .gwmodel cimport CGwmDistance, CGwmCRSDistance
 from .gwmodel cimport CGwmWeight, CGwmBandwidthWeight
 from .gwmodel cimport CGwmSpatialWeight
-from .gwmodel cimport CGwmGWPCA
+from .gwmodel cimport CGwmGWPCA, CGwmGWSS
+from .gwmodel cimport ParallelType
 
 
 cdef mat numpy2mat(double[::1, :] array):
@@ -174,6 +175,69 @@ cdef class CyBandwidthWeight(CyWeight):
     
     def __cinit__(self, double size, bint adaptive, int kernel):
         self._c_instance = new CGwmBandwidthWeight(size, adaptive, <CGwmBandwidthWeight.KernelFunctionType>kernel)
+
+
+cdef class CyGWSS:
+    cdef CGwmGWSS* _c_instance
+
+    def __cinit__(self, CySimpleLayer layer, CyVariableList variable_list, CyWeight weight, CyDistance distance, bint quantile, bint first_only):
+        self._c_instance = new CGwmGWSS()
+        self._c_instance.setSourceLayer(layer._c_instance)
+        self._c_instance.setVariables(variable_list._c_instance)
+        cdef CGwmSpatialWeight spatial = CGwmSpatialWeight(weight._c_instance, distance._c_instance)
+        self._c_instance.setSpatialWeight(spatial)
+        self._c_instance.setQuantile(quantile)
+        self._c_instance.setIsCorrWithFirstOnly(first_only)
+    
+    def enable_openmp(self, int threads):
+        self._c_instance.setParallelType(ParallelType.OpenMP)
+        self._c_instance.setOmpThreadNum(threads)
+    
+    def valid(self):
+        return self._c_instance.isValid()
+    
+    def run(self):
+        self._c_instance.run()
+
+    def local_mean(self):
+        return mat2numpy(self._c_instance.localMean())
+
+    def local_sdev(self):
+        return mat2numpy(self._c_instance.localSDev())
+
+    def local_skewness(self):
+        return mat2numpy(self._c_instance.localSkewness())
+
+    def local_cv(self):
+        return mat2numpy(self._c_instance.localCV())
+
+    def local_var(self):
+        return mat2numpy(self._c_instance.localVar())
+
+    def local_median(self):
+        return mat2numpy(self._c_instance.localMedian())
+
+    def iqr(self):
+        return mat2numpy(self._c_instance.iqr())
+
+    def qi(self):
+        return mat2numpy(self._c_instance.qi())
+
+    def local_cov(self):
+        return mat2numpy(self._c_instance.localCov())
+
+    def local_corr(self):
+        return mat2numpy(self._c_instance.localCorr())
+
+    def local_scorr(self):
+        return mat2numpy(self._c_instance.localSCorr())
+    
+    @property
+    def result_layer(self):
+        cdef CGwmSimpleLayer* layer = self._c_instance.resultLayer()
+        return CySimpleLayer(mat2numpy(layer.points()), 
+                             mat2numpy(layer.data()),
+                             name_vector2list(layer.fields()))
 
 
 cdef class CyGWPCA:

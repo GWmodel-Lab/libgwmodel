@@ -111,8 +111,23 @@ cdef extern from "IGwmMultivariableAnalysis.h":
         void setVariables(const vector[GwmVariable]& variables)
 
 
+cdef extern from "IGwmParallelizable.h":
+    enum ParallelType:
+        SerialOnly = 1
+        OpenMP = 2
+        CUDA = 4
+
+    cdef cppclass IGwmParallelizable:
+        int parallelAbility() const
+        ParallelType parallelType() const
+        void setParallelType(const ParallelType& type)
+    
+    cdef cppclass IGwmOpenmpParallelizable(IGwmParallelizable):
+        void setOmpThreadNum(const int threadNum)
+
+
 cdef extern from "CGwmGWSS.h":
-    cdef cppclass CGwmGWSS(CGwmSpatialMonoscaleAlgorithm, IGwmMultivariableAnalysis):
+    cdef cppclass CGwmGWSS(CGwmSpatialMonoscaleAlgorithm, IGwmMultivariableAnalysis, IGwmOpenmpParallelizable):
         CGwmGWSS()
         bint quantile() const;
         void setQuantile(bint quantile);

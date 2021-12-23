@@ -6,7 +6,7 @@ from typing import List
 from .pygwmodel import CySimpleLayer, CyVariable, CyVariableList
 from .pygwmodel import CyDistance, CyCRSDistance
 from .pygwmodel import CyWeight, CyBandwidthWeight
-from .pygwmodel import CyGWPCA
+from .pygwmodel import CyGWSS, CyGWPCA
 
 KERNEL_GAUSSIAN = 0
 
@@ -140,51 +140,48 @@ def layer_to_sdf(layer: CySimpleLayer, geometry: gp.GeoSeries=None):
 #         return layer_to_sdf(cyg_gwr_basic.result_layer, targets.geometry)
 
 
-# class GWSS:
-#     """
-#     GWSS python high api class.
-#     """
+class GWSS:
+    """
+    GWSS python high api class.
+    """
 
-#     def __init__(self, sdf: gp.GeoDataFrame, variables: List[str], bw, adaptive=True, kernel=KERNEL_GAUSSIAN, longlat=True, quantile=False, first_only=False):
-#         """
-#         docstring
-#         """
-#         if not isinstance(sdf, gp.GeoDataFrame):
-#             raise ValueError("sdf must be a GeoDataFrame")
-#         self.sdf = sdf
-#         self.variables = variables
-#         self.bw = bw
-#         self.kernel = kernel
-#         self.adaptive = adaptive
-#         self.longlat = longlat
-#         self.result_layer = None
-#         self.quantile = quantile
-#         self.first_only = first_only
+    def __init__(self, sdf: gp.GeoDataFrame, variables: List[str], bw, adaptive=True, kernel=KERNEL_GAUSSIAN, longlat=True, quantile=False, first_only=False):
+        """
+        docstring
+        """
+        if not isinstance(sdf, gp.GeoDataFrame):
+            raise ValueError("sdf must be a GeoDataFrame")
+        self.sdf = sdf
+        self.variables = variables
+        self.bw = bw
+        self.kernel = kernel
+        self.adaptive = adaptive
+        self.longlat = longlat
+        self.result_layer = None
+        self.quantile = quantile
+        self.first_only = first_only
 
-#     def fit(self, multithreads=None):
-#         """
-#         Run algorithm and return result
-#         """
-#         ''' Extract data
-#         '''
-#         cyg_data_layer = sdf_to_layer(self.sdf, self.variables)
-#         # cyg_distance = cyg_sw.Distance(self.longlat)
-#         # cyg_weight = cyg_sw.Weight(self.bw, self.adaptive, self.kernel)
-#         # cyg_spatial_weight = cyg_sw.SpatialWeight(cyg_distance, cyg_weight)
-#         cyg_in_vars = CyVariableList([CyVariable(i, True, n.encode("utf-8")) for i, n in enumerate(self.variables)])
-#         ''' Create cython GWSS
-#         '''
-#         print("seg1")
-#         cyg_gwss = CyGWSS(cyg_data_layer, cyg_in_vars, self.bw, self.quantile, self.first_only)
-#         print("seg2")
-#         if multithreads is not None:
-#             if isinstance(multithreads, int) and multithreads > 0:
-#                 cyg_gwss.enable_openmp(multithreads)
-#             else:
-#                 raise ValueError("multithreads must be a positive integer")
-#         cyg_gwss.run()
-#         self.result_layer = layer_to_sdf(cyg_gwss.result_layer, self.sdf.geometry)
-#         return self
+    def fit(self, multithreads=None):
+        """
+        Run algorithm and return result
+        """
+        ''' Extract data
+        '''
+        cyg_data_layer = sdf_to_layer(self.sdf, self.variables)
+        cyg_distance = CyCRSDistance(self.longlat)
+        cyg_weight = CyBandwidthWeight(self.bw, self.adaptive, self.kernel)
+        cyg_in_vars = CyVariableList([CyVariable(i, True, n.encode("utf-8")) for i, n in enumerate(self.variables)])
+        ''' Create cython GWSS
+        '''
+        cyg_gwss = CyGWSS(cyg_data_layer, cyg_in_vars, cyg_weight, cyg_distance, self.quantile, self.first_only)
+        if multithreads is not None:
+            if isinstance(multithreads, int) and multithreads > 0:
+                cyg_gwss.enable_openmp(multithreads)
+            else:
+                raise ValueError("multithreads must be a positive integer")
+        cyg_gwss.run()
+        self.result_layer = layer_to_sdf(cyg_gwss.result_layer, self.sdf.geometry)
+        return self
 
 
 class GWPCA:
