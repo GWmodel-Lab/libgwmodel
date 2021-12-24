@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 3.1)
 project(testPython LANGUAGES CXX)
 
-if(WIN32)
-    set(PYTHON_TEST_SCRIPT_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<$<CONFIG:Release>:Release>$<$<CONFIG:Debug>:Debug>)
+if(SKBUILD)
+    message(STATUS "The project is built using scikit-build")
 else()
-    set(PYTHON_TEST_SCRIPT_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
+if(WIN32)
+set(PYTHON_TEST_SCRIPT_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<$<CONFIG:Release>:Release>$<$<CONFIG:Debug>:Debug>)
+else()
+set(PYTHON_TEST_SCRIPT_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 endif()
 
 add_custom_target(testPythonDeps ALL 
@@ -15,18 +19,12 @@ add_custom_target(testPythonDeps ALL
         ${PYTHON_TEST_SCRIPT_DIR}/pygwmodel
     COMMAND ${CMAKE_COMMAND} -E
         copy_if_different
-        ${CMAKE_SOURCE_DIR}/pygwmodel/__init__.py
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../python/pygwmodel/__init__.py
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../python/pygwmodel/high_api.py
         ${PYTHON_TEST_SCRIPT_DIR}/pygwmodel
     COMMAND ${CMAKE_COMMAND} -E
         copy_if_different
-        $<TARGET_FILE:mat_interface>
-        $<TARGET_FILE:name_list_interface>
-        $<TARGET_FILE:simple_layer>
-        $<TARGET_FILE:spatial_weight>
-        $<TARGET_FILE:variable_interface>
-        $<TARGET_FILE:gwr_basic>
-        $<TARGET_FILE:gwss>
-        $<TARGET_FILE:gwpca>
+        $<TARGET_FILE:pygwmodel>
         ${PYTHON_TEST_SCRIPT_DIR}/pygwmodel
     COMMAND ${CMAKE_COMMAND} -E
         copy_if_different
@@ -36,7 +34,7 @@ add_custom_target(testPythonDeps ALL
         ${PYTHON_TEST_SCRIPT_DIR}
 )
 
-set(PYTHON_TEST_DATA ${CMAKE_SOURCE_DIR}/test/data/londonhp100.csv)
+set(PYTHON_TEST_DATA ${CMAKE_CURRENT_SOURCE_DIR}/../data/londonhp100.csv)
 add_test(
     NAME testPythonGWRBasic
     COMMAND ${Python3_EXECUTABLE} testGWRBasic.py ${PYTHON_TEST_DATA}
@@ -52,3 +50,5 @@ add_test(
     COMMAND ${Python3_EXECUTABLE} testGWPCA.py ${PYTHON_TEST_DATA}
     WORKING_DIRECTORY ${PYTHON_TEST_SCRIPT_DIR}
 )
+
+endif()

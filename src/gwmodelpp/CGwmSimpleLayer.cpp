@@ -11,6 +11,13 @@ CGwmSimpleLayer::CGwmSimpleLayer(const mat& points, const mat& data, const vecto
     mFields = fields;
 }
 
+CGwmSimpleLayer::CGwmSimpleLayer(const CGwmSimpleLayer& layer)
+{
+    mPoints = layer.mPoints;
+    mData = layer.mData;
+    mFields = layer.mFields;
+}
+
 CGwmSimpleLayer::~CGwmSimpleLayer()
 {
 }

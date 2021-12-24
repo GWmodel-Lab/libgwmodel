@@ -146,4 +146,4 @@ class TestGWRBasic(unittest.TestCase):
         self.assertTrue(np.all(np.abs(localscorr_q0 - localscorr_q) < 1e-1))
 
 if __name__ == '__main__':
-    unittest.main(argv=[''], exit=False, verbosity=2)
+    unittest.main(argv=[''], verbosity=2)

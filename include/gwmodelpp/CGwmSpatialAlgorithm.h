@@ -52,6 +52,7 @@ public:
      * @param layer Pointer to source layer.
      */
     void setSourceLayer(CGwmSimpleLayer* layer);
+    void setSourceLayer(const CGwmSimpleLayer& layer);
     
     /**
      * @brief Get the CGwmSpatialAlgorithm::mResultLayer object .
@@ -91,7 +92,12 @@ inline CGwmSimpleLayer* CGwmSpatialAlgorithm::sourceLayer() const
 
 inline void CGwmSpatialAlgorithm::setSourceLayer(CGwmSimpleLayer* layer)
 {
-    mSourceLayer = layer;
+    mSourceLayer = new CGwmSimpleLayer(*layer);
+}
+
+inline void CGwmSpatialAlgorithm::setSourceLayer(const CGwmSimpleLayer& layer)
+{
+    mSourceLayer = new CGwmSimpleLayer(layer);
 }
 
 inline CGwmSimpleLayer* CGwmSpatialAlgorithm::resultLayer() const

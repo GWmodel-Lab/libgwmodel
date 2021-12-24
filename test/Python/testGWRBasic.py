@@ -54,13 +54,13 @@ class TestGWRBasic(unittest.TestCase):
     def test_autoselect_bandwidth(self):
         londonhp_depen = 'PURCHASE'
         londonhp_indep = ["FLOORSZ", "UNEMPLOY", "PROF"]
-        algorithm = GWRBasic(self.londonhp, londonhp_depen, londonhp_indep, 36.0, longlat=False).fit(optimize_bw=pygwmodel.CRITERION_CV)
+        algorithm = GWRBasic(self.londonhp, londonhp_depen, londonhp_indep, 36.0, longlat=False).fit(optimize_bw=pygwmodel.BandwidthSelectionCriterionType.CV)
         self.assertEqual(algorithm.bw, 67)
 
     def test_autoselect_bandwidth_multithread(self):
         londonhp_depen = 'PURCHASE'
         londonhp_indep = ["FLOORSZ", "UNEMPLOY", "PROF"]
-        algorithm = GWRBasic(self.londonhp, londonhp_depen, londonhp_indep, 36.0, longlat=False).fit(optimize_bw=pygwmodel.CRITERION_CV, multithreads=8)
+        algorithm = GWRBasic(self.londonhp, londonhp_depen, londonhp_indep, 36.0, longlat=False).fit(optimize_bw=pygwmodel.BandwidthSelectionCriterionType.CV, multithreads=8)
         self.assertEqual(algorithm.bw, 67)
 
     def test_autoselect_indepvars(self):
@@ -104,7 +104,7 @@ class TestGWRBasic(unittest.TestCase):
     def test_autoselect_all(self):
         londonhp_depen = 'PURCHASE'
         londonhp_indep = ["FLOORSZ", "UNEMPLOY", "PROF"]
-        algorithm = GWRBasic(self.londonhp, londonhp_depen, londonhp_indep, 36.0, longlat=False).fit(optimize_var=3.0, optimize_bw=pygwmodel.CRITERION_CV)
+        algorithm = GWRBasic(self.londonhp, londonhp_depen, londonhp_indep, 36.0, longlat=False).fit(optimize_var=3.0, optimize_bw=pygwmodel.BandwidthSelectionCriterionType.CV)
         criterion = algorithm.indep_var_select_criterions
         self.assertSequenceEqual(criterion[0][0], ['UNEMPLOY'])
         self.assertSequenceEqual(criterion[1][0], ['PROF'])
@@ -119,12 +119,12 @@ class TestGWRBasic(unittest.TestCase):
         self.assertAlmostEqual(criterion[4][1], 2450.59642666509, delta=1e-8)
         self.assertAlmostEqual(criterion[5][1], 2452.80388934625, delta=1e-8)
         self.assertSequenceEqual(algorithm.indep_vars, ['FLOORSZ', 'PROF'])
-        self.assertEqual(algorithm.bw, 67)
+        self.assertEqual(algorithm.bw, 31)
 
     def test_autoselect_all_multithreads(self):
         londonhp_depen = 'PURCHASE'
         londonhp_indep = ["FLOORSZ", "UNEMPLOY", "PROF"]
-        algorithm = GWRBasic(self.londonhp, londonhp_depen, londonhp_indep, 36.0, longlat=False).fit(optimize_var=3.0, optimize_bw=pygwmodel.CRITERION_CV, multithreads=8)
+        algorithm = GWRBasic(self.londonhp, londonhp_depen, londonhp_indep, 36.0, longlat=False).fit(optimize_var=3.0, optimize_bw=pygwmodel.BandwidthSelectionCriterionType.CV, multithreads=8)
         criterion = algorithm.indep_var_select_criterions
         self.assertSequenceEqual(criterion[0][0], ['UNEMPLOY'])
         self.assertSequenceEqual(criterion[1][0], ['PROF'])
@@ -139,8 +139,8 @@ class TestGWRBasic(unittest.TestCase):
         self.assertAlmostEqual(criterion[4][1], 2450.59642666509, delta=1e-8)
         self.assertAlmostEqual(criterion[5][1], 2452.80388934625, delta=1e-8)
         self.assertSequenceEqual(algorithm.indep_vars, ['FLOORSZ', 'PROF'])
-        self.assertEqual(algorithm.bw, 67)
+        self.assertEqual(algorithm.bw, 31)
 
 
 if __name__ == '__main__':
-    unittest.main(argv=[''], exit=False, verbosity=2)
+    unittest.main(argv=[''], verbosity=2)

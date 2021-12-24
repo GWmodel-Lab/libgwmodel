@@ -73,6 +73,11 @@ vec CGwmCRSDistance::SpatialDistance(const rowvec &out_loc, const mat &in_locs)
     return dists;
 }
 
+CGwmCRSDistance::CGwmCRSDistance() : CGwmDistance()
+{
+
+}
+
 CGwmCRSDistance::CGwmCRSDistance(bool isGeographic) : CGwmDistance()
 {
     mGeographic = isGeographic;

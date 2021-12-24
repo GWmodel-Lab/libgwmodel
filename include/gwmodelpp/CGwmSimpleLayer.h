@@ -10,7 +10,9 @@ using namespace arma;
 class CGwmSimpleLayer
 {
 public:
+    CGwmSimpleLayer() {};
     CGwmSimpleLayer(const mat& points, const mat& data, const vector<string>& fields);
+    CGwmSimpleLayer(const CGwmSimpleLayer& layer);
     virtual ~CGwmSimpleLayer();
 
     mat points() const;
