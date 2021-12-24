@@ -1,5 +1,6 @@
 from libcpp.string cimport string
 from libcpp.vector cimport vector
+from libcpp.pair cimport pair
 
 cdef extern from "armadillo" namespace "arma":
     cdef cppclass mat:
@@ -124,6 +125,66 @@ cdef extern from "IGwmParallelizable.h":
     
     cdef cppclass IGwmOpenmpParallelizable(IGwmParallelizable):
         void setOmpThreadNum(const int threadNum)
+
+
+cdef extern from "GwmRegressionDiagnostic.h":
+    cdef cppclass GwmRegressionDiagnostic:
+        double RSS
+        double AIC
+        double AICc
+        double ENP
+        double EDF
+        double RSquare
+        double RSquareAdjust
+
+
+cdef extern from "IGwmRegressionAnalysis.h":
+    cdef cppclass IGwmRegressionAnalysis:
+        GwmVariable dependentVariable() const
+        void setDependentVariable(const GwmVariable& variable)
+        vector[GwmVariable] independentVariables() const
+        void setIndependentVariables(const vector[GwmVariable]& variables)
+        GwmRegressionDiagnostic diagnostic() const
+
+
+cdef extern from "IGwmBandwidthSelectable.h":
+    cdef cppclass IGwmBandwidthSelectable:
+        double getCriterion(CGwmBandwidthWeight* weight)
+    ctypedef vector[pair[double, double] ] BandwidthCriterionList
+
+
+cdef extern from "IGwmVarialbeSelectable.h":
+    cdef cppclass IGwmVarialbeSelectable:
+        double getCriterion(const vector[GwmVariable]& variables)
+    ctypedef vector[pair[vector[GwmVariable], double] ] VariablesCriterionList
+
+
+cdef extern from "CGwmGWRBase.h":
+    cdef cppclass CGwmGWRBase(CGwmSpatialMonoscaleAlgorithm, IGwmRegressionAnalysis):
+        CGwmGWRBase()
+        mat betas() const
+        CGwmSimpleLayer* predictLayer() const;
+        void setPredictLayer(CGwmSimpleLayer* layer);
+
+
+cdef extern from "CGwmGWRBasic.h":
+    cdef cppclass CGwmGWRBasic(CGwmGWRBase, IGwmBandwidthSelectable, IGwmVarialbeSelectable, IGwmOpenmpParallelizable):
+        enum BandwidthSelectionCriterionType:
+            AIC = 0
+            CV = 1
+        CGwmGWRBasic()
+        bint isAutoselectBandwidth() const
+        void setIsAutoselectBandwidth(bint isAutoSelect)
+        BandwidthSelectionCriterionType bandwidthSelectionCriterion() const
+        void setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion)
+        bint isAutoselectIndepVars() const
+        void setIsAutoselectIndepVars(bint isAutoSelect)
+        double indepVarSelectionThreshold() const
+        void setIndepVarSelectionThreshold(double threshold)
+        VariablesCriterionList indepVarsSelectionCriterionList() const
+        BandwidthCriterionList bandwidthSelectionCriterionList() const
+        bint hasHatMatrix() const
+        void setHasHatMatrix(const bint has)
 
 
 cdef extern from "CGwmGWSS.h":

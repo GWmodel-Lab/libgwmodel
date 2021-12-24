@@ -2,6 +2,7 @@
 
 from libcpp.string cimport string
 from libcpp.vector cimport vector
+from libcpp.pair cimport pair
 import numpy as np
 cimport numpy as np
 import geopandas as gp
@@ -11,7 +12,8 @@ from .gwmodel cimport GwmVariable
 from .gwmodel cimport CGwmDistance, CGwmCRSDistance
 from .gwmodel cimport CGwmWeight, CGwmBandwidthWeight
 from .gwmodel cimport CGwmSpatialWeight
-from .gwmodel cimport CGwmGWPCA, CGwmGWSS
+from .gwmodel cimport CGwmGWRBasic, CGwmGWRBase, CGwmGWPCA, CGwmGWSS, GwmRegressionDiagnostic
+from .gwmodel cimport BandwidthCriterionList, VariablesCriterionList
 from .gwmodel cimport ParallelType
 
 
@@ -175,6 +177,94 @@ cdef class CyBandwidthWeight(CyWeight):
     
     def __cinit__(self, double size, bint adaptive, int kernel):
         self._c_instance = new CGwmBandwidthWeight(size, adaptive, <CGwmBandwidthWeight.KernelFunctionType>kernel)
+
+
+cdef class CyGWRBasic:
+    cdef CGwmGWRBasic* _c_instance
+
+    def __cinit__(self, CySimpleLayer layer, CyVariable depen_var, CyVariableList indep_var_list, CyWeight weight, CyDistance distance, bint hatmatrix):
+        self._c_instance = new CGwmGWRBasic()
+        self._c_instance.setSourceLayer(layer._c_instance)
+        self._c_instance.setDependentVariable(depen_var._c_instance)
+        self._c_instance.setIndependentVariables(indep_var_list._c_instance)
+        cdef CGwmSpatialWeight spatial = CGwmSpatialWeight(weight._c_instance, distance._c_instance)
+        self._c_instance.setSpatialWeight(spatial)
+        self._c_instance.setHasHatMatrix(hatmatrix)
+    
+    def enable_bandwidth_autoselection(self, int criterion):
+        self._c_instance.setIsAutoselectBandwidth(True)
+        self._c_instance.setBandwidthSelectionCriterion(<CGwmGWRBasic.BandwidthSelectionCriterionType>criterion)
+    
+    def enable_indep_var_autoselection(self, double threshold):
+        self._c_instance.setIsAutoselectIndepVars(True)
+        self._c_instance.setIndepVarSelectionThreshold(threshold)
+    
+    def enable_openmp(self, int threads):
+        self._c_instance.setParallelType(ParallelType.OpenMP)
+        self._c_instance.setOmpThreadNum(threads)
+    
+    def set_predict_layer(self, CySimpleLayer predict_layer):
+        self._c_instance.setPredictLayer(&predict_layer._c_instance)
+
+    def run(self):
+        self._c_instance.run()
+    
+    def diagnostic(self):
+        cdef GwmRegressionDiagnostic diag = self._c_instance.diagnostic()
+        return {
+            "RSS": diag.RSS,
+            "AIC": diag.AIC,
+            "AICc": diag.AICc,
+            "ENP": diag.ENP,
+            "EDF": diag.EDF,
+            "RSquare": diag.RSquare,
+            "RSquareAdjust": diag.RSquareAdjust
+        }
+    
+    def bandwidth_select_criterions(self):
+        cdef BandwidthCriterionList criterion_c = self._c_instance.bandwidthSelectionCriterionList()
+        criterion_py = []
+        cdef unsigned long long size = criterion_c.size()
+        cdef pair[double, double] item
+        for i in range(size):
+            item = criterion_c.at(i)
+            criterion_py.append((item.first, item.second))
+        return criterion_py
+
+    def indep_var_select_criterions(self):
+        cdef VariablesCriterionList criterion_c = self._c_instance.indepVarsSelectionCriterionList()
+        criterion_py = []
+        cdef unsigned long long criterion_size = criterion_c.size()
+        cdef pair[vector[GwmVariable],double] item
+        cdef vector[GwmVariable] var_list
+        cdef unsigned long long var_size
+        cdef string var
+        for i in range(criterion_size):
+            item = criterion_c.at(i)
+            var_list = item.first
+            var_size = var_list.size()
+            var_list_py = []
+            for j in range(var_size):
+                var = var_list.at(j).name
+                var_list_py.append(var.decode())
+            criterion_py.append((var_list_py, item.second))
+        return criterion_py
+    
+    def bandwidth(self):
+        cdef CGwmSpatialWeight spatial_weight = self._c_instance.spatialWeight()
+        return (<CGwmBandwidthWeight*>(spatial_weight.weight())).bandwidth()
+    
+    def indep_vars(self):
+        cdef CGwmSimpleLayer* layer = self._c_instance.resultLayer()
+        cdef mat betas = self._c_instance.betas()
+        return name_vector2list(layer.fields())[1:betas.n_cols]
+    
+    @property
+    def result_layer(self):
+        cdef CGwmSimpleLayer* layer = self._c_instance.resultLayer()
+        return CySimpleLayer(mat2numpy(layer.points()), 
+                             mat2numpy(layer.data()),
+                             name_vector2list(layer.fields()))
 
 
 cdef class CyGWSS:

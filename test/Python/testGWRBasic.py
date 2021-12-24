@@ -119,7 +119,7 @@ class TestGWRBasic(unittest.TestCase):
         self.assertAlmostEqual(criterion[4][1], 2450.59642666509, delta=1e-8)
         self.assertAlmostEqual(criterion[5][1], 2452.80388934625, delta=1e-8)
         self.assertSequenceEqual(algorithm.indep_vars, ['FLOORSZ', 'PROF'])
-        self.assertEqual(algorithm.bw, 67)
+        self.assertEqual(algorithm.bw, 31)
 
     def test_autoselect_all_multithreads(self):
         londonhp_depen = 'PURCHASE'
@@ -139,7 +139,7 @@ class TestGWRBasic(unittest.TestCase):
         self.assertAlmostEqual(criterion[4][1], 2450.59642666509, delta=1e-8)
         self.assertAlmostEqual(criterion[5][1], 2452.80388934625, delta=1e-8)
         self.assertSequenceEqual(algorithm.indep_vars, ['FLOORSZ', 'PROF'])
-        self.assertEqual(algorithm.bw, 67)
+        self.assertEqual(algorithm.bw, 31)
 
 
 if __name__ == '__main__':

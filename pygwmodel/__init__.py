@@ -6,7 +6,7 @@ from typing import List
 from .pygwmodel import CySimpleLayer, CyVariable, CyVariableList
 from .pygwmodel import CyDistance, CyCRSDistance
 from .pygwmodel import CyWeight, CyBandwidthWeight
-from .pygwmodel import CyGWSS, CyGWPCA
+from .pygwmodel import CyGWRBasic, CyGWSS, CyGWPCA
 
 KERNEL_GAUSSIAN = 0
 
@@ -41,103 +41,101 @@ def layer_to_sdf(layer: CySimpleLayer, geometry: gp.GeoSeries=None):
     })
 
 
-# class GWRBasic:
-#     """
-#     Basic GWR python high api class.
-#     """
+class GWRBasic:
+    """
+    Basic GWR python high api class.
+    """
 
-#     def __init__(self, sdf: gp.GeoDataFrame, depen_var: str, indep_vars: List[str], bw=None, adaptive=True, kernel=KERNEL_GAUSSIAN, longlat=True):
-#         """
-#         docstring
-#         """
-#         if not isinstance(sdf, gp.GeoDataFrame):
-#             raise ValueError("sdf must be a GeoDataFrame")
-#         self.sdf = sdf
-#         self.depen_var = depen_var
-#         self.indep_vars = indep_vars
-#         self.bw = bw
-#         self.kernel = kernel
-#         self.adaptive = adaptive
-#         self.longlat = longlat
-#         self.result_layer = None
-#         self.diagnostic = None
-#         self.bandwidth_select_criterions = None
-#         self.indep_var_select_criterions = None
+    def __init__(self, sdf: gp.GeoDataFrame, depen_var: str, indep_vars: List[str], bw=None, adaptive=True, kernel=KERNEL_GAUSSIAN, longlat=True):
+        """
+        docstring
+        """
+        if not isinstance(sdf, gp.GeoDataFrame):
+            raise ValueError("sdf must be a GeoDataFrame")
+        self.sdf = sdf
+        self.depen_var = depen_var
+        self.indep_vars = indep_vars
+        self.bw = bw
+        self.kernel = kernel
+        self.adaptive = adaptive
+        self.longlat = longlat
+        self.result_layer = None
+        self.diagnostic = None
+        self.bandwidth_select_criterions = None
+        self.indep_var_select_criterions = None
     
-#     def fit(self, hatmatrix=True, optimize_bw=None, optimize_var=None, multithreads=None):
-#         """
-#         Run algorithm and return result
-#         """
-#         ''' Extract data
-#         '''
-#         cyg_data_layer = sdf_to_layer(self.sdf, [self.depen_var] + self.indep_vars)
-#         cyg_distance = cyg_sw.Distance(self.longlat)
-#         cyg_weight = cyg_sw.Weight((self.bw if self.bw is not None else 0.0), self.adaptive, self.kernel)
-#         cyg_spatial_weight = cyg_sw.SpatialWeight(cyg_distance, cyg_weight)
-#         cyg_depen_var = cyg_varlist.VariableInterface(0, True, self.depen_var.encode())
-#         cyg_indep_vars = cyg_varlist.VariableListInterface([cyg_varlist.VariableInterface(i + 1, True, n.encode()) for i, n in enumerate(self.indep_vars)])
-#         ''' Create cython GWR
-#         '''
-#         cyg_gwr_basic = cygGWRBasic(cyg_data_layer, cyg_spatial_weight, cyg_indep_vars, cyg_depen_var, hatmatrix)
-#         if self.bw is None:
-#             cyg_gwr_basic.set_bandwidth_autoselection((optimize_bw if optimize_bw is not None else CRITERION_CV))
-#         elif optimize_bw is not None:
-#             if optimize_bw == CRITERION_AIC or optimize_bw == CRITERION_CV:
-#                 cyg_gwr_basic.set_bandwidth_autoselection(optimize_bw)
-#             else:
-#                 raise ValueError("optimize_bw must be CRITERION_AIC(0) or CRITERION_CV(1)")
-#         if optimize_var is not None:
-#             if isinstance(optimize_var, float) and optimize_var > 0:
-#                 cyg_gwr_basic.set_indep_vars_autoselection(optimize_var)
-#             else:
-#                 raise ValueError("optimize_var must be a positive real number")
-#         if multithreads is not None:
-#             if isinstance(multithreads, int) and multithreads > 0:
-#                 cyg_gwr_basic.enable_openmp(multithreads)
-#             else:
-#                 raise ValueError("multithreads must be a positive integer")
-#         cyg_gwr_basic.run()
-#         if self.bw is None or optimize_bw is not None:
-#             self.bw = cyg_gwr_basic.bandwidth
-#             self.bandwidth_select_criterions = cyg_gwr_basic.bandwidth_select_criterions
-#         if optimize_var is not None:
-#             self.indep_vars = [v.decode() for v in cyg_gwr_basic.indep_vars]
-#             self.indep_var_select_criterions = cyg_gwr_basic.indep_var_select_criterions
-#         ''' Get result layer
-#         '''
-#         self.result_layer = layer_to_sdf(cyg_gwr_basic.result_layer, self.sdf.geometry)
-#         if hatmatrix:
-#             self.diagnostic = cyg_gwr_basic.diagnostic
-#         return self
+    def fit(self, hatmatrix=True, optimize_bw=None, optimize_var=None, multithreads=None):
+        """
+        Run algorithm and return result
+        """
+        ''' Extract data
+        '''
+        cyg_data_layer = sdf_to_layer(self.sdf, [self.depen_var] + self.indep_vars)
+        cyg_distance = CyCRSDistance(self.longlat)
+        cyg_weight = CyBandwidthWeight(self.bw, self.adaptive, self.kernel)
+        cyg_depen_var = CyVariable(0, True, self.depen_var.encode("utf-8"))
+        cyg_indep_vars = CyVariableList([CyVariable(i + 1, True, n.encode("utf-8")) for i, n in enumerate(self.indep_vars)])
+        ''' Create cython GWR
+        '''
+        cyg_gwr_basic = CyGWRBasic(cyg_data_layer, cyg_depen_var, cyg_indep_vars, cyg_weight, cyg_distance, hatmatrix)
+        if self.bw is None and optimize_bw is None:
+            optimize_bw = CRITERION_CV
+        if optimize_bw is not None:
+            if optimize_bw == CRITERION_AIC or optimize_bw == CRITERION_CV:
+                cyg_gwr_basic.enable_bandwidth_autoselection(optimize_bw)
+            else:
+                raise ValueError("optimize_bw must be CRITERION_AIC(0) or CRITERION_CV(1)")
+        if optimize_var is not None:
+            if isinstance(optimize_var, float) and optimize_var > 0:
+                cyg_gwr_basic.enable_indep_var_autoselection(optimize_var)
+            else:
+                raise ValueError("optimize_var must be a positive real number")
+        if multithreads is not None:
+            if isinstance(multithreads, int) and multithreads > 0:
+                cyg_gwr_basic.enable_openmp(multithreads)
+            else:
+                raise ValueError("multithreads must be a positive integer")
+        cyg_gwr_basic.run()
+        if self.bw is None or optimize_bw is not None:
+            self.bw = cyg_gwr_basic.bandwidth()
+            self.bandwidth_select_criterions = cyg_gwr_basic.bandwidth_select_criterions()
+        if optimize_var is not None:
+            self.indep_vars = [v.decode() for v in cyg_gwr_basic.indep_vars()]
+            self.indep_var_select_criterions = cyg_gwr_basic.indep_var_select_criterions()
+        ''' Get result layer
+        '''
+        self.result_layer = layer_to_sdf(cyg_gwr_basic.result_layer, self.sdf.geometry)
+        if hatmatrix:
+            self.diagnostic = cyg_gwr_basic.diagnostic()
+        return self
 
-#     def predict(self, targets: gp.GeoDataFrame, multithreads=None):
-#         """
-#         Predict
-#         """
-#         if self.bw is None:
-#             raise ValueError("Bandwidth cannot be None when predicting")
-#         ''' Extract data
-#         '''
-#         cyg_source_layer = sdf_to_layer(self.sdf, [self.depen_var] + self.indep_vars)
-#         cyg_predict_layer = sdf_to_layer(targets, self.indep_vars)
-#         cyg_distance = cyg_sw.Distance(self.longlat)
-#         cyg_weight = cyg_sw.Weight(self.bw, self.adaptive, self.kernel)
-#         cyg_spatial_weight = cyg_sw.SpatialWeight(cyg_distance, cyg_weight)
-#         cyg_depen_var = cyg_varlist.VariableInterface(0, True, self.depen_var.encode())
-#         cyg_indep_vars = cyg_varlist.VariableListInterface([cyg_varlist.VariableInterface(i + 1, True, n.encode()) for i, n in enumerate(self.indep_vars)])
-#         ''' Create cython GWR
-#         '''
-#         cyg_gwr_basic = cygGWRBasic(cyg_source_layer, cyg_spatial_weight, cyg_indep_vars, cyg_depen_var, False)
-#         cyg_gwr_basic.set_predict_layer(cyg_predict_layer)
-#         if multithreads is not None:
-#             if isinstance(multithreads, int) and multithreads > 0:
-#                 cyg_gwr_basic.enable_openmp(multithreads)
-#             else:
-#                 raise ValueError("multithreads must be a positive integer")
-#         ''' Get result layer
-#         '''
-#         cyg_gwr_basic.run()
-#         return layer_to_sdf(cyg_gwr_basic.result_layer, targets.geometry)
+    def predict(self, targets: gp.GeoDataFrame, multithreads=None):
+        """
+        Predict
+        """
+        if self.bw is None:
+            raise ValueError("Bandwidth cannot be None when predicting")
+        ''' Extract data
+        '''
+        cyg_source_layer = sdf_to_layer(self.sdf, [self.depen_var] + self.indep_vars)
+        cyg_predict_layer = sdf_to_layer(targets, self.indep_vars)
+        cyg_distance = CyCRSDistance(self.longlat)
+        cyg_weight = CyBandwidthWeight(self.bw, self.adaptive, self.kernel)
+        cyg_depen_var = CyVariable(0, True, self.depen_var.encode("utf-8"))
+        cyg_indep_vars = CyVariableList([CyVariable(i + 1, True, n.encode("utf-8")) for i, n in enumerate(self.indep_vars)])
+        ''' Create cython GWR
+        '''
+        cyg_gwr_basic = CyGWRBasic(cyg_source_layer, cyg_depen_var, cyg_indep_vars, cyg_weight, cyg_distance, False)
+        cyg_gwr_basic.set_predict_layer(cyg_predict_layer)
+        if multithreads is not None:
+            if isinstance(multithreads, int) and multithreads > 0:
+                cyg_gwr_basic.enable_openmp(multithreads)
+            else:
+                raise ValueError("multithreads must be a positive integer")
+        ''' Get result layer
+        '''
+        cyg_gwr_basic.run()
+        return layer_to_sdf(cyg_gwr_basic.result_layer, targets.geometry)
 
 
 class GWSS:
