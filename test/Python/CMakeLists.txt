@@ -12,29 +12,29 @@ set(PYTHON_TEST_SCRIPT_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 endif()
 
 add_custom_target(testPythonDeps ALL 
-VERBATIM 
-COMMAND_EXPAND_LISTS
-COMMAND ${CMAKE_COMMAND} -E
-make_directory
-${PYTHON_TEST_SCRIPT_DIR}/pygwmodel
-COMMAND ${CMAKE_COMMAND} -E
-copy_if_different
-${CMAKE_SOURCE_DIR}/python/__init__.py
-${CMAKE_SOURCE_DIR}/python/high_api.py
-${PYTHON_TEST_SCRIPT_DIR}/pygwmodel
-COMMAND ${CMAKE_COMMAND} -E
-copy_if_different
-$<TARGET_FILE:pygwmodel>
-${PYTHON_TEST_SCRIPT_DIR}/pygwmodel
-COMMAND ${CMAKE_COMMAND} -E
-copy_if_different
-${CMAKE_CURRENT_SOURCE_DIR}/testGWRBasic.py
-${CMAKE_CURRENT_SOURCE_DIR}/testGWSS.py
-${CMAKE_CURRENT_SOURCE_DIR}/testGWPCA.py
-${PYTHON_TEST_SCRIPT_DIR}
+    VERBATIM 
+    COMMAND_EXPAND_LISTS
+    COMMAND ${CMAKE_COMMAND} -E
+        make_directory
+        ${PYTHON_TEST_SCRIPT_DIR}/pygwmodel
+    COMMAND ${CMAKE_COMMAND} -E
+        copy_if_different
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../python/pygwmodel/__init__.py
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../python/pygwmodel/high_api.py
+        ${PYTHON_TEST_SCRIPT_DIR}/pygwmodel
+    COMMAND ${CMAKE_COMMAND} -E
+        copy_if_different
+        $<TARGET_FILE:pygwmodel>
+        ${PYTHON_TEST_SCRIPT_DIR}/pygwmodel
+    COMMAND ${CMAKE_COMMAND} -E
+        copy_if_different
+        ${CMAKE_CURRENT_SOURCE_DIR}/testGWRBasic.py
+        ${CMAKE_CURRENT_SOURCE_DIR}/testGWSS.py
+        ${CMAKE_CURRENT_SOURCE_DIR}/testGWPCA.py
+        ${PYTHON_TEST_SCRIPT_DIR}
 )
 
-set(PYTHON_TEST_DATA ${CMAKE_SOURCE_DIR}/test/data/londonhp100.csv)
+set(PYTHON_TEST_DATA ${CMAKE_CURRENT_SOURCE_DIR}/../data/londonhp100.csv)
 add_test(
     NAME testPythonGWRBasic
     COMMAND ${Python3_EXECUTABLE} testGWRBasic.py ${PYTHON_TEST_DATA}

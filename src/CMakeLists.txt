@@ -14,8 +14,8 @@ if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
 endif(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
 
 include_directories(
-    ${CMAKE_SOURCE_DIR}/include 
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp
+    ${LIBGWMODEL_INCLUDE_DIR} 
+    ${LIBGWMODEL_INCLUDE_DIR}/gwmodelpp
 )
 
 add_definitions(-DM_PI=3.14159265358979323846 -DM_PI_2=1.57079632679489661923 -DDOUBLE_EPS=1e-8)
@@ -49,28 +49,28 @@ set(SOURCES_C
 )
 
 set(HEADERS_CXX
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/spatialweight/CGwmBandwidthWeight.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/spatialweight/CGwmCRSDistance.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/spatialweight/CGwmDistance.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/spatialweight/CGwmDMatDistance.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/spatialweight/CGwmSpatialWeight.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/spatialweight/CGwmWeight.h
+    ../include/gwmodelpp/spatialweight/CGwmBandwidthWeight.h
+    ../include/gwmodelpp/spatialweight/CGwmCRSDistance.h
+    ../include/gwmodelpp/spatialweight/CGwmDistance.h
+    ../include/gwmodelpp/spatialweight/CGwmDMatDistance.h
+    ../include/gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h
+    ../include/gwmodelpp/spatialweight/CGwmSpatialWeight.h
+    ../include/gwmodelpp/spatialweight/CGwmWeight.h
 
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmAlgorithm.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmBandwidthSelector.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmVariableForwardSelector.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmSimpleLayer.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmSpatialAlgorithm.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWRBase.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWRBasic.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWSS.h
-    ${CMAKE_SOURCE_DIR}/include/gwmodelpp/CGwmGWPCA.h
+    ../include/gwmodelpp/CGwmAlgorithm.h
+    ../include/gwmodelpp/CGwmBandwidthSelector.h
+    ../include/gwmodelpp/CGwmVariableForwardSelector.h
+    ../include/gwmodelpp/CGwmSimpleLayer.h
+    ../include/gwmodelpp/CGwmSpatialAlgorithm.h
+    ../include/gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h
+    ../include/gwmodelpp/CGwmGWRBase.h
+    ../include/gwmodelpp/CGwmGWRBasic.h
+    ../include/gwmodelpp/CGwmGWSS.h
+    ../include/gwmodelpp/CGwmGWPCA.h
 )
 
 set(HEADERS_C
-    ${CMAKE_SOURCE_DIR}/include/gwmodel.h
+    ../include/gwmodel.h
 )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${gwmodel_BINARY_DIR}/bin)
@@ -104,4 +104,4 @@ install(TARGETS gwmodel
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
 )
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/ DESTINATION include)
+install(DIRECTORY ../include/ DESTINATION include)
