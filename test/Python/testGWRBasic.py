@@ -143,4 +143,4 @@ class TestGWRBasic(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(argv=[''], exit=False, verbosity=2)
+    unittest.main(argv=[''], verbosity=2)
