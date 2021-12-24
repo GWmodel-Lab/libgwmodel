@@ -43,7 +43,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/src)
 if(WITH_PYTHON)
     find_package(Python3 REQUIRED COMPONENTS Interpreter Development NumPy)
     message(STATUS "Python Interpreter: ${Python3_EXECUTABLE}")
-    add_subdirectory(${CMAKE_SOURCE_DIR}/pygwmodel)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/python)
 endif(WITH_PYTHON)
 
 enable_testing()
