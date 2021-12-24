@@ -61,3 +61,5 @@ build/
 
 ### Doxygen ###
 docs/
+_skbuild/
+.mypy_cache
