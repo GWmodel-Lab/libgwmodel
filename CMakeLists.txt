@@ -48,17 +48,3 @@ endif(WITH_PYTHON)
 
 enable_testing()
 add_subdirectory(${CMAKE_SOURCE_DIR}/test)
-
-
-install(TARGETS gwmodel
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION bin
-)
-install(DIRECTORY include/ DESTINATION include)
-
-if(WITH_PYTHON)
-    install(TARGETS pygwmodel# arma name_list_interface simple_layer spatial_weight variable_interface gwr_basic gwss gwpca
-            LIBRARY DESTINATION pygwmodel)
-    install(FILES ${CMAKE_SOURCE_DIR}/pygwmodel/__init__.py DESTINATION pygwmodel)
-endif(WITH_PYTHON)
