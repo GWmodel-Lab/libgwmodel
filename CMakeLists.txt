@@ -24,6 +24,12 @@ endif(ARMADILLO_FOUND)
 
 option(BUILD_SHARED_LIBS "Weather to build a shared library" OFF) 
 option(WITH_PYTHON "Whether to build python extension" OFF)
+option(USE_SKBUILD "Whether to use scikit-build as building and packaging tools" OFF)
+
+if(USE_SKBUILD)
+    set(WITH_PYTHON ON)
+endif()
+
 
 # if(WITH_PYTHON)
 #     # set(BUILD_SHARED_LIBS ON)
@@ -46,7 +52,26 @@ if(WITH_PYTHON)
     find_package(Python3 REQUIRED COMPONENTS Interpreter Development NumPy)
     message(STATUS "Python Interpreter: ${Python3_EXECUTABLE}")
     add_subdirectory(${CMAKE_SOURCE_DIR}/python)
-endif(WITH_PYTHON)
+else()
+    set(USE_SKBUILD OFF)
+endif()
+
+if(USE_SKBUILD)
+    set(PYGWMODEL_SKBUILD_DIR ${CMAKE_BINARY_DIR}/pygwmodel)
+    add_custom_target(pygwmodel_skbuild
+        VERBATIM
+        COMMAND_EXPAND_LISTS
+        COMMAND ${CMAKE_COMMAND} -E
+            copy_directory ${CMAKE_SOURCE_DIR}/python ${PYGWMODEL_SKBUILD_DIR}
+        COMMAND ${CMAKE_COMMAND} -E
+            copy_directory ${CMAKE_SOURCE_DIR}/include ${PYGWMODEL_SKBUILD_DIR}/include
+        COMMAND ${CMAKE_COMMAND} -E
+            copy_directory ${CMAKE_SOURCE_DIR}/src ${PYGWMODEL_SKBUILD_DIR}/src
+        COMMAND ${Python3_EXECUTABLE} setup.py bdist_wheel 
+            WORKING_DIRECTORY ${PYGWMODEL_SKBUILD_DIR}
+    )
+endif()
+
 
 enable_testing()
 add_subdirectory(${CMAKE_SOURCE_DIR}/test)
