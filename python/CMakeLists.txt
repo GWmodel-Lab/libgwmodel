@@ -14,11 +14,6 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/include/gwmodelpp
 )
 
-add_definitions(-DGWMODEL_SHARED_LIB)
-if(MSVC)
-    add_definitions(-DCREATE_DLL_EXPORTS)
-endif(MSVC)
-
 add_cython_target(pygwmodel.pyx CXX)
 add_library(pygwmodel MODULE ${pygwmodel})
 target_link_libraries(pygwmodel gwmodel ${ARMADILLO_LIBRARIES} ${Python3_LIBRARIES} Python3::NumPy)
