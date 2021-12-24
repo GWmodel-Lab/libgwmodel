@@ -64,6 +64,8 @@ if(USE_SKBUILD)
         COMMAND ${CMAKE_COMMAND} -E
             copy_directory ${CMAKE_SOURCE_DIR}/python ${PYGWMODEL_SKBUILD_DIR}
         COMMAND ${CMAKE_COMMAND} -E
+            copy_directory ${CMAKE_SOURCE_DIR}/cmake ${PYGWMODEL_SKBUILD_DIR}/cmake
+        COMMAND ${CMAKE_COMMAND} -E
             copy_directory ${CMAKE_SOURCE_DIR}/include ${PYGWMODEL_SKBUILD_DIR}/include
         COMMAND ${CMAKE_COMMAND} -E
             copy_directory ${CMAKE_SOURCE_DIR}/src ${PYGWMODEL_SKBUILD_DIR}/src

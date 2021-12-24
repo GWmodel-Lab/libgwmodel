@@ -11,7 +11,7 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 
 if(SKBUILD)
     set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
+    set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
     find_package(Armadillo REQUIRED)
     if(ARMADILLO_FOUND)
         add_definitions(-DARMA_USE_LAPACK -DARMA_USE_BLAS -DARMA_DONT_USE_WRAPPER)
