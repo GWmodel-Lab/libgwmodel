@@ -57,9 +57,14 @@ _deps
 
 ### VSCode CMake Build ###
 .vscode
-build/
 
 ### Doxygen ###
-docs/
-_skbuild/
+docs
+_skbuild
 .mypy_cache
+*.egg
+*.egg-info
+dist
+build
+_skbuild
+eggs

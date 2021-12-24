@@ -25,5 +25,3 @@ target_link_libraries(pygwmodel gwmodel ${ARMADILLO_LIBRARIES} ${Python3_LIBRARI
 python_extension_module(pygwmodel)
 
 install(TARGETS pygwmodel LIBRARY DESTINATION pygwmodel)
-install(FILES ${CMAKE_SOURCE_DIR}/python/__init__.py DESTINATION pygwmodel)
-install(FILES ${CMAKE_SOURCE_DIR}/python/high_api.py DESTINATION pygwmodel)

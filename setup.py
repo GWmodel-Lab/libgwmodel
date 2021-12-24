@@ -7,5 +7,7 @@ setup(
     packages=["pygwmodel"],
     package_dir={
         "pygwmodel": "python"
-    }
+    },
+    install_requires=['cython'],
+    cmake_args=["-DWITH_PYTHON:BOOL=ON"]
 )
