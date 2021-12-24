@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(gwmodel)
+project(libgwmodel)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
@@ -54,24 +54,6 @@ if(WITH_PYTHON)
     add_subdirectory(${CMAKE_SOURCE_DIR}/python)
 else()
     set(USE_SKBUILD OFF)
-endif()
-
-if(USE_SKBUILD)
-    set(PYGWMODEL_SKBUILD_DIR ${CMAKE_BINARY_DIR}/pygwmodel)
-    add_custom_target(pygwmodel_skbuild
-        VERBATIM
-        COMMAND_EXPAND_LISTS
-        COMMAND ${CMAKE_COMMAND} -E
-            copy_directory ${CMAKE_SOURCE_DIR}/python ${PYGWMODEL_SKBUILD_DIR}
-        COMMAND ${CMAKE_COMMAND} -E
-            copy_directory ${CMAKE_SOURCE_DIR}/cmake ${PYGWMODEL_SKBUILD_DIR}/cmake
-        COMMAND ${CMAKE_COMMAND} -E
-            copy_directory ${CMAKE_SOURCE_DIR}/include ${PYGWMODEL_SKBUILD_DIR}/include
-        COMMAND ${CMAKE_COMMAND} -E
-            copy_directory ${CMAKE_SOURCE_DIR}/src ${PYGWMODEL_SKBUILD_DIR}/src
-        COMMAND ${Python3_EXECUTABLE} setup.py bdist_wheel 
-            WORKING_DIRECTORY ${PYGWMODEL_SKBUILD_DIR}
-    )
 endif()
 
 

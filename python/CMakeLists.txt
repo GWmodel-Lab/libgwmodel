@@ -34,6 +34,24 @@ if(SKBUILD)
     endif(MSVC)
     set(LIBGWMODEL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src ${pygwmodel_BINARY_DIR}/libgwmodel)
+else()
+if(USE_SKBUILD)
+    set(PYGWMODEL_SKBUILD_DIR ${CMAKE_BINARY_DIR}/pygwmodel)
+    add_custom_target(pygwmodel_skbuild
+        VERBATIM
+        COMMAND_EXPAND_LISTS
+        COMMAND ${CMAKE_COMMAND} -E
+            copy_directory ${CMAKE_SOURCE_DIR}/python ${PYGWMODEL_SKBUILD_DIR}
+        COMMAND ${CMAKE_COMMAND} -E
+            copy_directory ${CMAKE_SOURCE_DIR}/cmake ${PYGWMODEL_SKBUILD_DIR}/cmake
+        COMMAND ${CMAKE_COMMAND} -E
+            copy_directory ${CMAKE_SOURCE_DIR}/include ${PYGWMODEL_SKBUILD_DIR}/include
+        COMMAND ${CMAKE_COMMAND} -E
+            copy_directory ${CMAKE_SOURCE_DIR}/src ${PYGWMODEL_SKBUILD_DIR}/src
+        COMMAND ${Python3_EXECUTABLE} setup.py bdist_wheel 
+            WORKING_DIRECTORY ${PYGWMODEL_SKBUILD_DIR}
+    )
+endif()
 endif()
     
 include_directories(${LIBGWMODEL_INCLUDE_DIR}/gwmodelpp)

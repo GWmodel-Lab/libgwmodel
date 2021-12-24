@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(testMultithread LANGUAGES CXX)
-
 set(SOURCES static.cpp)
 if(BUILD_SHARED_LIBS)
 set(SOURCES shared.cpp)

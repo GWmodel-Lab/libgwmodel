@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.1)
-project(testPython LANGUAGES CXX)
 
 if(SKBUILD)
     message(STATUS "The project is built using scikit-build")

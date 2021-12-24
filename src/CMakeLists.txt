@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.1)
-project(libgwmodel)
 
 find_package(OpenMP)
 if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
