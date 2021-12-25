@@ -30,6 +30,8 @@ if(USE_SKBUILD)
     set(WITH_PYTHON ON)
 endif()
 
+enable_testing()
+
 
 # if(WITH_PYTHON)
 #     # set(BUILD_SHARED_LIBS ON)
@@ -47,6 +49,7 @@ endif(MSVC)
 set(LIBGWMODEL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/src)
+add_subdirectory(${CMAKE_SOURCE_DIR}/test)
 
 if(WITH_PYTHON)
     find_package(Python3 REQUIRED COMPONENTS Interpreter Development NumPy)
@@ -55,7 +58,3 @@ if(WITH_PYTHON)
 else()
     set(USE_SKBUILD OFF)
 endif()
-
-
-enable_testing()
-add_subdirectory(${CMAKE_SOURCE_DIR}/test)

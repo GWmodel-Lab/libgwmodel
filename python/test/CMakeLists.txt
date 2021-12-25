@@ -1,13 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
 
-if(SKBUILD)
-    message(STATUS "The project is built using scikit-build")
-else()
-
 if(WIN32)
-set(PYTHON_TEST_SCRIPT_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<$<CONFIG:Release>:Release>$<$<CONFIG:Debug>:Debug>)
+set(PYTHON_TEST_SCRIPT_DIR ${pygwmodel_BINARY_DIR}/bin/$<$<CONFIG:Release>:Release>$<$<CONFIG:Debug>:Debug>)
 else()
-set(PYTHON_TEST_SCRIPT_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set(PYTHON_TEST_SCRIPT_DIR ${pygwmodel_BINARY_DIR}/bin)
 endif()
 
 add_custom_target(testPythonDeps ALL 
@@ -18,8 +14,8 @@ add_custom_target(testPythonDeps ALL
         ${PYTHON_TEST_SCRIPT_DIR}/pygwmodel
     COMMAND ${CMAKE_COMMAND} -E
         copy_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../python/pygwmodel/__init__.py
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../python/pygwmodel/high_api.py
+        ${CMAKE_CURRENT_SOURCE_DIR}/../pygwmodel/__init__.py
+        ${CMAKE_CURRENT_SOURCE_DIR}/../pygwmodel/high_api.py
         ${PYTHON_TEST_SCRIPT_DIR}/pygwmodel
     COMMAND ${CMAKE_COMMAND} -E
         copy_if_different
@@ -33,7 +29,7 @@ add_custom_target(testPythonDeps ALL
         ${PYTHON_TEST_SCRIPT_DIR}
 )
 
-set(PYTHON_TEST_DATA ${CMAKE_CURRENT_SOURCE_DIR}/../data/londonhp100.csv)
+set(PYTHON_TEST_DATA ${CMAKE_CURRENT_SOURCE_DIR}/londonhp100.csv)
 add_test(
     NAME testPythonGWRBasic
     COMMAND ${Python3_EXECUTABLE} testGWRBasic.py ${PYTHON_TEST_DATA}
@@ -49,5 +45,3 @@ add_test(
     COMMAND ${Python3_EXECUTABLE} testGWPCA.py ${PYTHON_TEST_DATA}
     WORKING_DIRECTORY ${PYTHON_TEST_SCRIPT_DIR}
 )
-
-endif()
