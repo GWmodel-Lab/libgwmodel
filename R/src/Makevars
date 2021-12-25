@@ -8,7 +8,34 @@
 ##
 ## And with R 3.4.0, and RcppArmadillo 0.7.960.*, we turn C++11 on as OpenMP
 ## support within Armadillo prefers / requires it
-CXX_STD = CXX11
+CXX_STD = CXX14
 
-PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) 
+LIBGWMODEL_DEFINES = -DM_PI=3.14159265358979323846 -DM_PI_2=1.57079632679489661923 -DDOUBLE_EPS=1e-8 -DDBL_MAX=__DBL_MAX__
+LIBGWMODEL_CXXFLAGS = $(LIBGWMODEL_DEFINES) -I./libgwmodel
+
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) $(LIBGWMODEL_CXXFLAGS)
 PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+
+OBJECTS_LIBGWMODEL = \
+    libgwmodel/gwmodelpp/spatialweight/CGwmBandwidthWeight.o \
+    libgwmodel/gwmodelpp/spatialweight/CGwmCRSDistance.o \
+    libgwmodel/gwmodelpp/spatialweight/CGwmDMatDistance.o \
+    libgwmodel/gwmodelpp/spatialweight/CGwmDistance.o \
+    libgwmodel/gwmodelpp/spatialweight/CGwmMinkwoskiDistance.o \
+    libgwmodel/gwmodelpp/spatialweight/CGwmSpatialWeight.o \
+    libgwmodel/gwmodelpp/spatialweight/CGwmWeight.o \
+    libgwmodel/gwmodelpp/CGwmAlgorithm.o \
+    libgwmodel/gwmodelpp/CGwmGWPCA.o \
+    libgwmodel/gwmodelpp/CGwmGWRBasic.o \
+    libgwmodel/gwmodelpp/CGwmSimpleLayer.o \
+    libgwmodel/gwmodelpp/CGwmSpatialMonoscaleAlgorithm.o \
+    libgwmodel/gwmodelpp/CGwmBandwidthSelector.o \
+    libgwmodel/gwmodelpp/CGwmGWRBase.o \
+    libgwmodel/gwmodelpp/CGwmGWSS.o \
+    libgwmodel/gwmodelpp/CGwmSpatialAlgorithm.o \
+    libgwmodel/gwmodelpp/CGwmVariableForwardSelector.o
+
+OBEJCTS_GWMODELR = RcppExport.o
+
+OBJECTS = $(OBJECTS_LIBGWMODEL) $(OBEJCTS_GWMODELR)
+    

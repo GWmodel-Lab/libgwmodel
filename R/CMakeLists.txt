@@ -21,8 +21,8 @@ add_custom_target(gwmodelr_rbuild
     COMMAND ${CMAKE_COMMAND} -E
         copy_directory ${CMAKE_SOURCE_DIR}/R/src ${GWMODELR_RBUILD_DIR}/src
     COMMAND ${CMAKE_COMMAND} -E
-        copy_directory ${CMAKE_SOURCE_DIR}/include ${GWMODELR_RBUILD_DIR}/src/libgwmodel/include
+        copy_directory ${CMAKE_SOURCE_DIR}/include ${GWMODELR_RBUILD_DIR}/src/libgwmodel
     COMMAND ${CMAKE_COMMAND} -E
-        copy_directory ${CMAKE_SOURCE_DIR}/src ${GWMODELR_RBUILD_DIR}/src/libgwmodel/src
+        copy_directory ${CMAKE_SOURCE_DIR}/src ${GWMODELR_RBUILD_DIR}/src/libgwmodel
     WORKING_DIRECTORY ${GWMODELR_RBUILD_DIR}
 )
