@@ -39,7 +39,7 @@ BEGIN_RCPP
     CGwmBandwidthWeight weight(bw, adaptive, (CGwmBandwidthWeight::KernelFunctionType)kernel);
     CGwmSpatialWeight sw(&weight, &distance);
     vector<GwmVariable> variables;
-    for (size_t i = 0; i < fields.size(); i++)
+    for (R_xlen_t i = 0; i < fields.size(); i++)
     {
         variables.push_back(GwmVariable(i, true, string(fields[i])));
     }

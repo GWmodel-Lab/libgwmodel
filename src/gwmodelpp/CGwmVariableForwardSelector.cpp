@@ -21,15 +21,15 @@ CGwmVariableForwardSelector::~CGwmVariableForwardSelector()
 vector<GwmVariable> CGwmVariableForwardSelector::optimize(IGwmVarialbeSelectable *instance)
 {
     vector<int> curIndex, restIndex;
-    for (int i = 0; i < mVariables.size(); i++)
+    for (size_t i = 0; i < mVariables.size(); i++)
     {
         restIndex.push_back(i);
     }
     vector<pair<vector<int>, double> > modelCriterions;
-    for (int i = 0; i < mVariables.size(); i++)
+    for (size_t i = 0; i < mVariables.size(); i++)
     {
         vec criterions = vec(mVariables.size() - i);
-        for (int j = 0; j < restIndex.size(); j++)
+        for (size_t j = 0; j < restIndex.size(); j++)
         {
             curIndex.push_back(restIndex[j]);
             double aic = instance->getCriterion(convertIndexToVariables(curIndex));

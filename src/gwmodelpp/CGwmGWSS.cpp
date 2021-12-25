@@ -9,7 +9,7 @@ vec CGwmGWSS::del(vec x, int rowcount){
     vec res;
     if(rowcount == 0)
         res = x.rows(rowcount+1,x.n_rows-1);
-    else if(rowcount == x.n_rows-1)
+    else if(uword(rowcount) == x.n_rows-1)
         res = x.rows(0,x.n_rows-2);
     else
         res = join_cols(x.rows(0,rowcount - 1),x.rows(rowcount+1,x.n_rows-1));
@@ -285,9 +285,11 @@ void CGwmGWSS::setParallelType(const ParallelType &type)
         case ParallelType::SerialOnly:
             mSummaryFunction = &CGwmGWSS::summarySerial;
             break;
+#ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
             mSummaryFunction = &CGwmGWSS::summaryOmp;
             break;
+#endif // ENABLE_OPENMP
         default:
             mSummaryFunction = &CGwmGWSS::summarySerial;
             break;

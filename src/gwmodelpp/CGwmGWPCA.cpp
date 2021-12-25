@@ -40,11 +40,11 @@ void CGwmGWPCA::createDistanceParameter()
 
 void CGwmGWPCA::setX(mat& x, const CGwmSimpleLayer* layer, const vector<GwmVariable>& variables)
 {
-    uword nRp = mSourceLayer->featureCount(), nVar = variables.size();
+    uword nVar = variables.size();
     arma::uvec varIndeces(nVar);
     for (size_t i = 0; i < nVar; i++)
     {
-        assert(variables[i].index < layer->data().n_cols);
+        assert(uword(variables[i].index) < layer->data().n_cols);
         varIndeces(i) = variables[i].index;
     }
     x = layer->data().cols(varIndeces);

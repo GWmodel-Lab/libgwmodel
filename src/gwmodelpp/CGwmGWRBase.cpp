@@ -25,11 +25,11 @@ bool CGwmGWRBase::isValid()
 
 void CGwmGWRBase::setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmVariable& depVar, const vector<GwmVariable>& indepVars)
 {
-    uword nDp = layer->featureCount(), nVar = indepVars.size() + 1;
-    arma::uvec indepVarIndeces(indepVars.size());
-    for (size_t i = 0; i < indepVars.size(); i++)
+    uword nDp = layer->featureCount(), nVar = indepVars.size();
+    arma::uvec indepVarIndeces(nVar);
+    for (size_t i = 0; i < nVar; i++)
     {
-        assert(indepVars[i].index < layer->data().n_cols);
+        assert(uword(indepVars[i].index) < layer->data().n_cols);
         indepVarIndeces(i) = indepVars[i].index;
     }
     x = join_rows(mat(nDp, 1, arma::fill::ones), layer->data().cols(indepVarIndeces));

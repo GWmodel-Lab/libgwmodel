@@ -144,7 +144,7 @@ mat CGwmGWRBasic::regressionSerial(const mat& x, const vec& y)
             mat xtwx_inv = inv_sympd(xtwx);
             betas.col(i) = xtwx_inv * xtwy;
         }
-        catch (exception e)
+        catch (exception const &e)
         {
             throw e;
         }
@@ -180,7 +180,7 @@ mat CGwmGWRBasic::regressionHatmatrixSerial(const mat& x, const vec& y, mat& bet
             qDiag += p % p;
             S.row(isStoreS() ? i : 0) = si;
         }
-        catch (std::exception e)
+        catch (std::exception const &e)
         {
             throw e;
         }
@@ -208,7 +208,7 @@ mat CGwmGWRBasic::regressionOmp(const mat& x, const vec& y)
             mat xtwx_inv = inv_sympd(xtwx);
             betas.col(i) = xtwx_inv * xtwy;
         }
-        catch (exception e)
+        catch (exception const &e)
         {
             throw e;
         }
@@ -247,7 +247,7 @@ mat CGwmGWRBasic::regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasS
             qDiag_all.col(thread) += p % p;
             S.row(isStoreS() ? i : 0) = si;
         }
-        catch (std::exception e)
+        catch (std::exception const &e)
         {
             throw e;
         }
@@ -312,7 +312,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwi
             shat(0) += si(0, i);
             shat(1) += det(si * si.t());
         }
-        catch (std::exception e)
+        catch (std::exception const &e)
         {
             return DBL_MAX;
         }
@@ -394,7 +394,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICOmp(CGwmBandwidthWeight* bandwidth
                 shat_all(0, thread) += si(0, i);
                 shat_all(1, thread) += det(si * si.t());
             }
-            catch (std::exception e)
+            catch (std::exception const &e)
             {
                 flag = false;
             }
@@ -552,16 +552,17 @@ void CGwmGWRBasic::setBandwidthSelectionCriterion(const BandwidthSelectionCriter
     switch (mBandwidthSelectionCriterion)
     {
     case BandwidthSelectionCriterionType::CV:
-        mapper = {
-            make_pair(ParallelType::SerialOnly, &CGwmGWRBasic::bandwidthSizeCriterionCVSerial),
-            make_pair(ParallelType::OpenMP, &CGwmGWRBasic::bandwidthSizeCriterionCVOmp)
-        };
+        mapper.insert(make_pair(ParallelType::SerialOnly, &CGwmGWRBasic::bandwidthSizeCriterionCVSerial));
+#ifdef ENABLE_OPENMP
+        mapper.insert(make_pair(ParallelType::OpenMP, &CGwmGWRBasic::bandwidthSizeCriterionCVOmp));
+#endif // ENABLE_OPENMP
         break;
     case BandwidthSelectionCriterionType::AIC:
-        mapper = {
-            make_pair(ParallelType::SerialOnly, &CGwmGWRBasic::bandwidthSizeCriterionAICSerial),
-            make_pair(ParallelType::OpenMP, &CGwmGWRBasic::bandwidthSizeCriterionAICOmp)
-        };
+        mapper.insert(make_pair(ParallelType::SerialOnly, &CGwmGWRBasic::bandwidthSizeCriterionAICSerial));
+#ifdef ENABLE_OPENMP
+        mapper.insert(make_pair(ParallelType::OpenMP, &CGwmGWRBasic::bandwidthSizeCriterionAICOmp));
+#endif // ENABLE_OPENMP
+        break;
     default:
         break;
     }
@@ -579,11 +580,13 @@ void CGwmGWRBasic::setParallelType(const ParallelType& type)
             mRegressionHatmatrixFunction = &CGwmGWRBasic::regressionHatmatrixSerial;
             mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionSerial;
             break;
+#ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
             mPredictFunction = &CGwmGWRBasic::regressionOmp;
             mRegressionHatmatrixFunction = &CGwmGWRBasic::regressionHatmatrixOmp;
             mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionOmp;
             break;
+#endif // ENABLE_OPENMP
         default:
             mPredictFunction = &CGwmGWRBasic::regressionSerial;
             mRegressionHatmatrixFunction = &CGwmGWRBasic::regressionHatmatrixSerial;
