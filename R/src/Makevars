@@ -8,7 +8,7 @@
 ##
 ## And with R 3.4.0, and RcppArmadillo 0.7.960.*, we turn C++11 on as OpenMP
 ## support within Armadillo prefers / requires it
-CXX_STD = CXX14
+CXX_STD = CXX11
 
 LIBGWMODEL_DEFINES = -DM_PI=3.14159265358979323846 -DM_PI_2=1.57079632679489661923 -DDOUBLE_EPS=1e-8 -DDBL_MAX=__DBL_MAX__
 LIBGWMODEL_CXXFLAGS = $(LIBGWMODEL_DEFINES) -I./libgwmodel
