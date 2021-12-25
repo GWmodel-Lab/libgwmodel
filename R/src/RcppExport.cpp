@@ -15,8 +15,52 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+NumericMatrix gwmodelr_simplelayer_matrix(const CGwmSimpleLayer* layer)
+{
+    NumericMatrix rmat = wrap(layer->data());
+    CharacterVector cnames = wrap(layer->fields());
+    colnames(rmat) = cnames;
+    return rmat;
+}
+
+RcppExport SEXP gwmodelr_gwpca(SEXP dataSEXP, SEXP pointsSEXP, SEXP fieldsSEXP, SEXP bwSEXP, SEXP adaptiveSEXP, SEXP kernelSEXP, SEXP longlatSEXP, SEXP kSEXP)
+{
+BEGIN_RCPP
+    NumericMatrix data = as<NumericMatrix>(dataSEXP);
+    NumericMatrix points = as<NumericMatrix>(pointsSEXP);
+    StringVector fields = as<StringVector>(fieldsSEXP);
+    double bw = as<double>(bwSEXP);
+    bool adaptive = as<bool>(adaptiveSEXP);
+    int kernel = as<int>(kernelSEXP);
+    bool longlat = as<bool>(longlatSEXP);
+    int k = as<int>(kSEXP);
+    CGwmSimpleLayer layer(as<mat>(data), as<mat>(points), as<vector<string> >(fields));
+    CGwmCRSDistance distance(longlat);
+    CGwmBandwidthWeight weight(bw, adaptive, (CGwmBandwidthWeight::KernelFunctionType)kernel);
+    CGwmSpatialWeight sw(&weight, &distance);
+    vector<GwmVariable> variables;
+    for (size_t i = 0; i < fields.size(); i++)
+    {
+        variables.push_back(GwmVariable(i, true, string(fields[i])));
+    }
+    CGwmGWPCA algorithm;
+    algorithm.setSourceLayer(layer);
+    algorithm.setSpatialWeight(sw);
+    algorithm.setVariables(variables);
+    algorithm.setKeepComponents(k);
+    algorithm.run();
+    List result = List::create(
+        Named("data") = gwmodelr_simplelayer_matrix(algorithm.resultLayer()),
+        Named("loadings") = algorithm.loadings(),
+        Named("local.PV") = algorithm.localPV(),
+        Named("sdev") = algorithm.sdev()
+    );
+    return wrap(result);
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
+    {"gwmodelr_gwpca", (DL_FUNC) &gwmodelr_gwpca, 8},
     {NULL, NULL, 0}
 };
 
