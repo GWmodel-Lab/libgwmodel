@@ -24,6 +24,7 @@ endif(ARMADILLO_FOUND)
 
 option(BUILD_SHARED_LIBS "Weather to build a shared library" OFF) 
 option(WITH_PYTHON "Whether to build python extension" OFF)
+option(WITH_R "Whether to build R extension" OFF)
 option(USE_SKBUILD "Whether to use scikit-build as building and packaging tools" OFF)
 
 if(USE_SKBUILD)
@@ -48,13 +49,18 @@ endif(MSVC)
 
 set(LIBGWMODEL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/src)
-add_subdirectory(${CMAKE_SOURCE_DIR}/test)
+add_subdirectory(src)
+add_subdirectory(test)
 
 if(WITH_PYTHON)
     find_package(Python3 REQUIRED COMPONENTS Interpreter Development NumPy)
     message(STATUS "Python Interpreter: ${Python3_EXECUTABLE}")
-    add_subdirectory(${CMAKE_SOURCE_DIR}/python)
+    add_subdirectory(python)
 else()
     set(USE_SKBUILD OFF)
 endif()
+
+if(WITH_R)
+    add_subdirectory(R)
+endif()
+
