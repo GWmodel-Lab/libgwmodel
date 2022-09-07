@@ -12,6 +12,7 @@ endif(BUILD_SHARED_LIBS)
 
 include_directories(
     ${LIBGWMODEL_INCLUDE_DIR}
+    ${ARMADILLO_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
