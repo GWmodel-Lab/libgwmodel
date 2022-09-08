@@ -53,3 +53,6 @@ Examples for python is coming.
 [gwr]:https://www.onlinelibrary.wiley.com/doi/abs/10.1111/j.1538-4632.2003.tb01114.x
 [gwss]:https://www.sciencedirect.com/science/article/pii/S0198971501000096
 [arma]:http://arma.sourceforge.net/
+
+> Bindings for Python are archived.
+> Please find it at tag [v0.2.0](https://github.com/GWmodel-Lab/libgwmodel/releases/tag/v0.2.0).
