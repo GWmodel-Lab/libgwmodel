@@ -56,3 +56,17 @@ Examples for python is coming.
 
 > Bindings for Python are archived.
 > Please find it at tag [v0.2.0](https://github.com/GWmodel-Lab/libgwmodel/releases/tag/v0.2.0).
+
+## Development
+
+This repositry provides VSCode container development configurations.
+Developers can create a container with ready-to-use development environment.
+To do so,
+
+1.  Install Docker on your PC.
+2.  Open this repositry with VSCode.
+3.  Press `Ctrl+P` to open command panel, then choose `Open in Container`.
+4.  Wait for the building of container.
+
+When the container is ready, make some changes then build and test.
+Happy coding!
