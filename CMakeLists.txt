@@ -22,14 +22,7 @@ else(ARMADILLO_FOUND)
     message(FATAL_ERROR "Armadillo Not Found!")
 endif(ARMADILLO_FOUND)
 
-option(BUILD_SHARED_LIBS "Weather to build a shared library" OFF) 
-
 enable_testing()
-
-if(BUILD_SHARED_LIBS)
-    message(STATUS "The library can only be used by C-style interfaces.")
-endif(BUILD_SHARED_LIBS)
-
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)

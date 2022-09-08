@@ -33,12 +33,6 @@ cd build
 cmake ..
 ```
 
-If you want to build a shared library, configure the project with:
-
-```bash
-cmake .. -DBUILD_SHARED_LIBS
-```
-
 Then build the projects, for example
 
 ```bash
