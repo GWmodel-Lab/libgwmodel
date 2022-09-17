@@ -20,7 +20,7 @@ RUN if [ "${REINSTALL_CMAKE_VERSION_FROM_SOURCE}" != "none" ]; then \
 
 # [Optional] Uncomment this section to install additional packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends libopenblas-dev
+    && apt-get -y install --no-install-recommends libopenblas-dev libgsl-dev
 
 RUN mkdir armadillo && \
     wget -qO- http://sourceforge.net/projects/arma/files/armadillo-9.900.6.tar.xz | \

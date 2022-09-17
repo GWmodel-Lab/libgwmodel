@@ -12,6 +12,14 @@ if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
     endif(ENABLE_OpenMP)
 endif(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
 
+find_package(GSL REQUIRED)
+if(GSL_FOUND)
+    include_directories(${GSL_INCLUDE_DIRS})
+else()
+    message(FATAL "GSL not found!")
+endif()
+
+
 include_directories(
     ${LIBGWMODEL_INCLUDE_DIR} 
     ${LIBGWMODEL_INCLUDE_DIR}/gwmodelpp
@@ -81,6 +89,8 @@ target_link_libraries(gwmodel
     ${ARMADILLO_LIBRARIES}
     ${BLAS_LIBRARIES}
     ${LAPACK_LIBRARIES}
+    GSL::gsl
+    GSL::gslcblas
 )
 
 if(OpenMP_FOUND)
