@@ -71,8 +71,9 @@ public:     // Implement CGwmAlgorithm
 public:     // Implement IGwmRegressionAnalysis
     mat regression(const mat& x, const vec& y) override;
     mat regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S) override;
-private:
     mat regressionSerial(const mat& x, const vec& y);
+private:
+    // mat regressionSerial(const mat& x, const vec& y);
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
     
 #ifdef ENABLE_OPENMP
