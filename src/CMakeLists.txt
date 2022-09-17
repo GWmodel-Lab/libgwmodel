@@ -56,6 +56,7 @@ set(SOURCES_CXX
     gwmodelpp/CGwmGWSS.cpp
     gwmodelpp/CGwmGWPCA.cpp
     gwmodelpp/CGwmGWDR.cpp
+    gwmodelpp/CGwmMGWR.cpp
 )
 
 set(SOURCES_C
@@ -83,6 +84,7 @@ set(HEADERS_CXX
     ../include/gwmodelpp/CGwmGWSS.h
     ../include/gwmodelpp/CGwmGWPCA.h
     ../include/gwmodelpp/CGwmGWDR.h
+    ../include/gwmodelpp/CGwmMGWR.h
 )
 
 set(HEADERS_C
