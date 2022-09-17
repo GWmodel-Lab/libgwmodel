@@ -23,22 +23,6 @@ public:
 
     typedef tuple<string, mat, NameFormat> ResultLayerDataItem;
 
-public: // CGwmAlgorithm
-    void run();
-    bool isValid();
-
-public: // IGwmRegressionAnalysis
-    GwmVariable dependentVariable() const;
-    void setDependentVariable(const GwmVariable& variable);
-
-    vector<GwmVariable> independentVariables() const;
-    void setIndependentVariables(const vector<GwmVariable>& variables);
-
-    mat regression(const mat& x, const vec& y);
-    mat regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
-
-    GwmRegressionDiagnostic diagnostic() const;
-
 public:
     static GwmRegressionDiagnostic CGwmGWDR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
 
@@ -58,6 +42,66 @@ public:
         double ss = RSS(x, y, betas), n = (double)x.n_rows;
         return n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
     }
+
+public:
+    mat betas() const
+    {
+        return mBetas;
+    }
+
+    bool hasHatMatrix() const
+    {
+        return mHasHatMatrix;
+    }
+
+    void setHasHatMatrix(bool flag)
+    {
+        mHasHatMatrix = flag;
+    }
+
+public: // CGwmAlgorithm
+    void run();
+    bool isValid();
+
+public: // IGwmRegressionAnalysis
+    GwmVariable dependentVariable() const
+    {
+        return mDepVar;
+    }
+
+    void setDependentVariable(const GwmVariable& variable)
+    {
+        mDepVar = variable;
+    }
+
+    vector<GwmVariable> independentVariables() const
+    {
+        return mIndepVars;
+    }
+
+    void setIndependentVariables(const vector<GwmVariable>& variables)
+    {
+        mIndepVars = variables;
+    }
+
+    mat regression(const mat& x, const vec& y)
+    {
+        return regression(x, y);
+    }
+
+    mat regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
+    {
+        return regressionHatmatrixSerial(x, y, betasSE, shat, qdiag, S);
+    }
+
+    GwmRegressionDiagnostic diagnostic() const
+    {
+        return mDiagnostic;
+    }
+
+protected:
+    mat regressionSerial(const mat& x, const vec& y);
+    mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
 
 protected:
     void createResultLayer(initializer_list<ResultLayerDataItem> items);

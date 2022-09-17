@@ -90,7 +90,36 @@ void CGwmGWDR::setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmVari
     y = layer->data().col(depVar.index);
 }
 
-mat CGwmGWDR::regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
+mat CGwmGWDR::regressionSerial(const mat& x, const vec& y)
+{
+    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1, nDim = mSourceLayer->points().n_cols;
+    mat betas(nDp, nVar, arma::fill::zeros);
+    for (size_t i = 0; i < nDp; i++)
+    {
+        vec w(nDp, arma::fill::ones);
+        for (size_t m = 0; m < nDim; m++)
+        {
+            vec w_m = mSpatialWeights[m].weightVector(mDistParameters[m], i);
+            w = w % w_m;
+        }
+        mat ws(1, nVar, arma::fill::ones);
+        mat xtw = trans(x %(w * ws));
+        mat xtwx = xtw * x;
+        mat xtwy = trans(x) * (w % y);
+        try
+        {
+            mat xtwx_inv = inv(xtwx_inv);
+            betas.row(i) = trans(xtwx_inv * xtwy);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }
+    return betas.t();
+}
+
+mat CGwmGWDR::regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
 {
     uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1, nDim = mSourceLayer->points().n_cols;
     mat betas(nDp, nVar, arma::fill::zeros);
