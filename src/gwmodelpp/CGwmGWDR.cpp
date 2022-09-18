@@ -24,14 +24,10 @@ void CGwmGWDR::run()
 
     // Set coordinates matrices.
     uword nDims = mSourceLayer->points().n_cols;
-    for (size_t i = 0; i < nDims; i++)
+    for (size_t m = 0; m < nDims; m++)
     {
-        if (mSpatialWeights[i].distance()->type() == CGwmDistance::DistanceType::CRSDistance ||
-            mSpatialWeights[i].distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
-        {
-            DistanceParameter* crsDP = new CRSDistanceParameter(mSourceLayer->points().col(i), mSourceLayer->points().col(i));
-            mDistParameters.push_back(crsDP);
-        }
+        DistanceParameter* oneDimDP = new OneDimDistanceParameter(mSourceLayer->points().col(m), mSourceLayer->points().col(m));
+        mDistParameters.push_back(oneDimDP);
     }
     
     // Has hatmatrix
@@ -57,7 +53,7 @@ void CGwmGWDR::run()
             vec w(nDp, arma::fill::ones);
             for (size_t m = 0; m < nDim; m++)
             {
-                w = w % mSpatialWeights[i].weightVector(mDistParameters[i], i);
+                w = w % mSpatialWeights[m].weightVector(mDistParameters[m], i);
             }
             double tss = sum(dybar2 % w);
             double rss = sum(dyhat2 % w);
@@ -93,7 +89,7 @@ void CGwmGWDR::setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmVari
 mat CGwmGWDR::regressionSerial(const mat& x, const vec& y)
 {
     uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1, nDim = mSourceLayer->points().n_cols;
-    mat betas(nDp, nVar, arma::fill::zeros);
+    mat betas(nVar, nDp, arma::fill::zeros);
     for (size_t i = 0; i < nDp; i++)
     {
         vec w(nDp, arma::fill::ones);
@@ -103,13 +99,13 @@ mat CGwmGWDR::regressionSerial(const mat& x, const vec& y)
             w = w % w_m;
         }
         mat ws(1, nVar, arma::fill::ones);
-        mat xtw = trans(x %(w * ws));
+        mat xtw = (x %(w * ws)).t();
         mat xtwx = xtw * x;
-        mat xtwy = trans(x) * (w % y);
+        mat xtwy = x.t() * (w % y);
         try
         {
-            mat xtwx_inv = inv(xtwx_inv);
-            betas.row(i) = trans(xtwx_inv * xtwy);
+            mat xtwx_inv = xtwx.i();
+            betas.col(i) = xtwx_inv * xtwy;
         }
         catch(const std::exception& e)
         {
@@ -122,9 +118,9 @@ mat CGwmGWDR::regressionSerial(const mat& x, const vec& y)
 mat CGwmGWDR::regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
 {
     uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1, nDim = mSourceLayer->points().n_cols;
-    mat betas(nDp, nVar, arma::fill::zeros);
-    betasSE = mat(nDp, nVar, arma::fill::zeros);
-    qdiag = mat(1, nDp, arma::fill::zeros);
+    mat betas(nVar, nDp, arma::fill::zeros);
+    betasSE = mat(nVar, nDp, arma::fill::zeros);
+    qdiag = vec(nDp, arma::fill::zeros);
     S = mat(isStoreS() ? nDp : 1, nDp, arma::fill::zeros);
     mat rowsumSE(nDp, 1, arma::fill::ones);
     vec s_hat1(nDp, arma::fill::zeros), s_hat2(nDp, arma::fill::zeros);
@@ -142,17 +138,17 @@ mat CGwmGWDR::regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE
         mat xtwy = trans(x) * (w % y);
         try
         {
-            mat xtwx_inv = inv(xtwx_inv);
-            betas.row(i) = trans(xtwx_inv * xtwy);
+            mat xtwx_inv = xtwx.i();
+            betas.col(i) = xtwx_inv * xtwy;
             // hatmatrix
             mat ci = xtwx_inv * xtw;
             mat si = x.row(i) * ci;
-            betasSE.row(i) = trans((ci % ci) * rowsumSE);
+            betasSE.col(i) = (ci % ci) * rowsumSE;
             s_hat1(i) = si(0, i);
-            s_hat2(i) = det(si * trans(si));
+            s_hat2(i) = det(si * si.t());
             mat onei(1, nDp, arma::fill::zeros);
             onei(i) = 1;
-            mat p = onei - si;
+            mat p = (onei - si).t();
             qdiag += p % p;
             S.row(isStoreS() ? i : 0) = si;
         }

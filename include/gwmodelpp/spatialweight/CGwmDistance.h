@@ -51,7 +51,8 @@ public:
     {
         CRSDistance,        //!< Distance according to coordinate reference system.
         MinkwoskiDistance,  //!< Minkwoski distance
-        DMatDistance        //!< Distance according to a .dmat file
+        DMatDistance,       //!< Distance according to a .dmat file
+        OneDimDistance,     //!< Distance for just one dimension
     };
     
     /**

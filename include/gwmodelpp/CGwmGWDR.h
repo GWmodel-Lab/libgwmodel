@@ -10,7 +10,7 @@
 using namespace std;
 using namespace arma;
 
-class CGwmGWDR : CGwmSpatialAlgorithm, IGwmRegressionAnalysis
+class CGwmGWDR : public CGwmSpatialAlgorithm, public IGwmRegressionAnalysis
 {
 public:
     enum NameFormat
@@ -24,7 +24,7 @@ public:
     typedef tuple<string, mat, NameFormat> ResultLayerDataItem;
 
 public:
-    static GwmRegressionDiagnostic CGwmGWDR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
+    static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
 
     static vec Fitted(const mat& x, const mat& betas)
     {
@@ -61,7 +61,11 @@ public:
 
 public: // CGwmAlgorithm
     void run();
-    bool isValid();
+    bool isValid()
+    {
+        // [TODO]: Add actual check codes.
+        return true;
+    }
 
 public: // IGwmRegressionAnalysis
     GwmVariable dependentVariable() const
@@ -99,6 +103,17 @@ public: // IGwmRegressionAnalysis
         return mDiagnostic;
     }
 
+public:
+    vector<CGwmSpatialWeight> spatialWeights()
+    {
+        return mSpatialWeights;
+    }
+
+    void setSpatialWeights(vector<CGwmSpatialWeight> spatialWeights)
+    {
+        mSpatialWeights = spatialWeights;
+    }
+
 protected:
     mat regressionSerial(const mat& x, const vec& y);
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
@@ -118,7 +133,7 @@ private:
     vector<CGwmSpatialWeight> mSpatialWeights;
     vector<DistanceParameter*> mDistParameters;
 
-    mat mY;
+    vec mY;
     mat mX;
     mat mBetas;
     GwmVariable mDepVar;

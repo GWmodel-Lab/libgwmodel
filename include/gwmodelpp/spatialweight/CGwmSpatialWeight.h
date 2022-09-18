@@ -9,6 +9,7 @@
 #include "CGwmCRSDistance.h"
 #include "CGwmMinkwoskiDistance.h"
 #include "CGwmDMatDistance.h"
+#include "CGwmOneDimDistance.h"
 
 /**
  * @brief A combined class of distance and weight. 
@@ -225,6 +226,12 @@ template<>
 inline CGwmDMatDistance* CGwmSpatialWeight::distance<CGwmDMatDistance>() const
 {
     return static_cast<CGwmDMatDistance*>(mDistance);
+}
+
+template<>
+inline CGwmOneDimDistance* CGwmSpatialWeight::distance<CGwmOneDimDistance>() const
+{
+    return static_cast<CGwmOneDimDistance*>(mDistance);
 }
 
 inline void CGwmSpatialWeight::setDistance(CGwmDistance *distance)
