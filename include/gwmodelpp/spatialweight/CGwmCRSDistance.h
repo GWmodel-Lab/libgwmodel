@@ -49,7 +49,11 @@ public:
      * @param in_locs Matrix of data points' coordinates. The shape of it must be nx2 and the first column is x-coordinate, the second column is y-coordinate.
      * @return vec Distance vector for out_loc.
      */
-    static vec EuclideanDistance(const rowvec& out_loc, const mat& in_locs);
+    static vec EuclideanDistance(const rowvec& out_loc, const mat& in_locs)
+    {
+        mat diff = (in_locs.each_row() - out_loc);
+        return sqrt(sum(diff % diff, 1));
+    }
 
     /**
      * @brief Calculate spatial distance for two points with geographical coordinate reference system.
@@ -96,16 +100,34 @@ public:
      * @return true if the coordinate reference system is geographical.
      * @return false if the coordinate reference system is not geographical.
      */
-    bool geographic() const;
+    bool geographic() const
+    {
+        return mGeographic;
+    }
 
     /**
      * @brief Set the CGwmCRSDistance::mGeographic object.
      * 
      * @param geographic Whether the coordinate reference system is geographical.
      */
-    void setGeographic(bool geographic);
+    void setGeographic(bool geographic)
+    {
+        mGeographic = geographic;
+        mCalculator = mGeographic ? &SpatialDistance : &EuclideanDistance;
+    }
 
 public:
+    virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) override
+    {
+        if (plist.size() == 2)
+        {
+            const mat& fp = get<mat>(*(plist.begin()));
+            const mat& dp = get<mat>(*(plist.begin() + 1));
+            return new CRSDistanceParameter(fp, dp);
+        }
+        else return nullptr;
+    }
+
     virtual vec distance(DistanceParameter* parameter, uword focus) override;
 
 protected:
@@ -114,22 +136,5 @@ protected:
 private:
     CalculatorType mCalculator = &EuclideanDistance;
 };
-
-inline vec CGwmCRSDistance::EuclideanDistance(const rowvec& out_loc, const mat& in_locs)
-{
-    mat diff = (in_locs.each_row() - out_loc);
-    return sqrt(sum(diff % diff, 1));
-}
-
-inline bool CGwmCRSDistance::geographic() const
-{
-    return mGeographic;
-}
-
-inline void CGwmCRSDistance::setGeographic(bool geographic)
-{
-    mGeographic = geographic;
-    mCalculator = mGeographic ? &SpatialDistance : &EuclideanDistance;
-}
 
 #endif // CGWMCRSDISTANCE_H

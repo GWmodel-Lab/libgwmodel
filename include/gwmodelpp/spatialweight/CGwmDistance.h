@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <string>
 #include <armadillo>
+#include <variant>
 
 using namespace std;
 using namespace arma;
@@ -21,6 +22,8 @@ struct DistanceParameter
      */
     DistanceParameter(): total(0) {}
 };
+
+typedef variant<mat, vec, uword> DistParamVariant;
 
 /**
  * @brief Abstract base class for calculating spatial distance.
@@ -92,6 +95,8 @@ public:
 
 
 public:
+
+    virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) = 0;
 
     /**
      * @brief Calculate distance vector for a focus point. 

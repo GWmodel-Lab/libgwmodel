@@ -8,9 +8,9 @@ using namespace std;
 
 struct DMatDistanceParameter : public DistanceParameter
 {
-    int rowSize;
+    uword rowSize;
 
-    DMatDistanceParameter(int size, uword rows) : rowSize(size) 
+    DMatDistanceParameter(uword size, uword rows) : rowSize(size) 
     {
         total = rows;
     }
@@ -36,6 +36,17 @@ public:
     void setDMatFile(const string &dMatFile);
 
 public:
+    virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) override
+    {
+        if (plist == 2)
+        {
+            const uword size = get(*(plist.begin()));
+            const uword rows = get(*(plist.begin() + 1));
+            return new DMatDistanceParameter(size, rows);
+        }
+        else return nullptr;
+    }
+
     virtual vec distance(DistanceParameter* parameter, uword focus) override;
 
 private:
