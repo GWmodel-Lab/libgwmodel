@@ -37,7 +37,7 @@ public:
     static unordered_map<KernelFunctionType, string> KernelFunctionTypeNameMapper;
     static unordered_map<bool, string> BandwidthTypeNameMapper;
 
-    typedef double (*KernelFunction)(double, double);
+    typedef vec (*KernelFunction)(vec, double);
 
     static KernelFunction Kernel[];
 
@@ -48,7 +48,10 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static double GaussianKernelFunction(double dist, double bw);
+    static vec GaussianKernelFunction(vec dist, double bw)
+    {
+        return exp((dist % dist) / ((-2.0) * (bw * bw)));
+    }
     
     /**
      * @brief Exponential kernel function.
@@ -57,7 +60,10 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static double ExponentialKernelFunction(double dist, double bw);
+    static vec ExponentialKernelFunction(vec dist, double bw)
+    {
+        return exp(-dist / bw);
+    }
     
     /**
      * @brief Bisquare kernel function.
@@ -66,7 +72,11 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static double BisquareKernelFunction(double dist, double bw);
+    static vec BisquareKernelFunction(vec dist, double bw)
+    {
+        vec d2_d_b2 = 1.0 - (dist % dist) / (bw * bw);
+        return (dist < bw) % (d2_d_b2 % d2_d_b2);
+    }
     
     /**
      * @brief Tricube kernel function.
@@ -75,7 +85,11 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static double TricubeKernelFunction(double dist, double bw);
+    static vec TricubeKernelFunction(vec dist, double bw)
+    {
+        vec d3_d_b3 = 1.0 - (dist % dist % dist) / (bw * bw * bw);
+        return (dist < bw) % (d3_d_b3 % d3_d_b3 % d3_d_b3);
+    }
     
     /**
      * @brief Boxcar kernel function.
@@ -84,14 +98,17 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static double BoxcarKernelFunction(double dist, double bw);
+    static vec BoxcarKernelFunction(vec dist, double bw)
+    {
+        return (dist < bw) % vec(arma::size(dist), arma::fill::ones);
+    }
 
 public:
 
     /**
      * @brief Construct a new CGwmBandwidthWeight object.
      */
-    CGwmBandwidthWeight();
+    CGwmBandwidthWeight() {}
 
     /**
      * @brief Construct a new CGwmBandwidthWeight object.
@@ -100,21 +117,36 @@ public:
      * @param adaptive Whether use an adaptive bandwidth. 
      * @param kernel Type of kernel function.
      */
-    CGwmBandwidthWeight(double size, bool adaptive, KernelFunctionType kernel);
+    CGwmBandwidthWeight(double size, bool adaptive, KernelFunctionType kernel)
+    {
+        mBandwidth = size;
+        mAdaptive = adaptive;
+        mKernel = kernel;
+    }
 
     /**
      * @brief Construct a new CGwmBandwidthWeight object.
      * 
      * @param bandwidthWeight Reference to the object for copying.
      */
-    CGwmBandwidthWeight(const CGwmBandwidthWeight& bandwidthWeight);
+    CGwmBandwidthWeight(const CGwmBandwidthWeight& bandwidthWeight)
+    {
+        mBandwidth = bandwidthWeight.mBandwidth;
+        mAdaptive = bandwidthWeight.mAdaptive;
+        mKernel = bandwidthWeight.mKernel;
+    }
 
     /**
      * @brief Construct a new CGwmBandwidthWeight object.
      * 
      * @param bandwidthWeight Pointer to the object for copying.
      */
-    CGwmBandwidthWeight(const CGwmBandwidthWeight* bandwidthWeight);
+    CGwmBandwidthWeight(const CGwmBandwidthWeight* bandwidthWeight)
+    {
+        mBandwidth = bandwidthWeight->bandwidth();
+        mAdaptive = bandwidthWeight->adaptive();
+        mKernel = bandwidthWeight->kernel();
+    }
 
     virtual CGwmWeight * clone() override
     {
@@ -129,14 +161,20 @@ public:
      * 
      * @return Bandwidth size. 
      */
-    double bandwidth() const;
+    double bandwidth() const
+    {
+        return mBandwidth;
+    }
 
     /**
      * @brief Set the CGwmBandwidthWeight::mBandwidth object.
      * 
      * @param bandwidth Bandwidth size. 
      */
-    void setBandwidth(double bandwidth);
+    void setBandwidth(double bandwidth)
+    {
+        mBandwidth = bandwidth;
+    }
 
     /**
      * @brief Get the CGwmBandwidthWeight::mAdaptive object.
@@ -144,87 +182,45 @@ public:
      * @return true if use an adaptive bandwidth. 
      * @return false if use an fixed bandwidth.
      */
-    bool adaptive() const;
+    bool adaptive() const
+    {
+        return mAdaptive;
+    }
 
     /**
      * @brief Set the CGwmBandwidthWeight::mAdaptive object.
      * 
      * @param bandwidth Whether use an adaptive bandwidth. 
      */
-    void setAdaptive(bool adaptive);
+    void setAdaptive(bool adaptive)
+    {
+        mAdaptive = adaptive;
+    }
 
     /**
      * @brief Get the CGwmBandwidthWeight::mKernel object.
      * 
      * @return Type of kernel function. 
      */
-    KernelFunctionType kernel() const;
+    KernelFunctionType kernel() const
+    {
+        return mKernel;
+    }
 
     /**
      * @brief Set the CGwmBandwidthWeight::mBandwidth object.
      * 
      * @param bandwidth Type of kernel function. 
      */
-    void setKernel(const KernelFunctionType &kernel);
+    void setKernel(const KernelFunctionType &kernel)
+    {
+        mKernel = kernel;
+    }
 
 private:
     double mBandwidth;
     bool mAdaptive;
     KernelFunctionType mKernel;
 };
-
-inline double CGwmBandwidthWeight::GaussianKernelFunction(double dist, double bw) {
-  return exp((dist * dist)/((-2)*(bw * bw)));
-}
-
-inline double CGwmBandwidthWeight::ExponentialKernelFunction(double dist, double bw) {
-  return exp(-dist/bw);
-}
-
-inline double CGwmBandwidthWeight::BisquareKernelFunction(double dist, double bw) {
-  return dist > bw ? 0 : (1 - (dist * dist)/(bw * bw)) * (1 - (dist * dist)/(bw * bw));
-}
-
-inline double CGwmBandwidthWeight::TricubeKernelFunction(double dist, double bw) {
-  return dist > bw ?
-              0 :
-              (1 - (dist * dist * dist)/(bw * bw * bw)) *
-              (1 - (dist * dist * dist)/(bw * bw * bw)) *
-              (1 - (dist * dist * dist)/(bw * bw * bw));
-}
-
-inline double CGwmBandwidthWeight::BoxcarKernelFunction(double dist, double bw) {
-  return dist > bw ? 0 : 1;
-}
-
-inline double CGwmBandwidthWeight::bandwidth() const
-{
-    return mBandwidth;
-}
-
-inline void CGwmBandwidthWeight::setBandwidth(double bandwidth)
-{
-    mBandwidth = bandwidth;
-}
-
-inline bool CGwmBandwidthWeight::adaptive() const
-{
-    return mAdaptive;
-}
-
-inline void CGwmBandwidthWeight::setAdaptive(bool adaptive)
-{
-    mAdaptive = adaptive;
-}
-
-inline CGwmBandwidthWeight::KernelFunctionType CGwmBandwidthWeight::kernel() const
-{
-    return mKernel;
-}
-
-inline void CGwmBandwidthWeight::setKernel(const KernelFunctionType &kernel)
-{
-    mKernel = kernel;
-}
 
 #endif // CGWMBANDWIDTHWEIGHT_H

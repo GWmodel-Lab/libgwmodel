@@ -342,11 +342,6 @@ private:
     void setXY(mat& x, const CGwmSimpleLayer* layer, const vector<GwmVariable>& variables);
 
     /**
-     * @brief Create a Distance Parameter object. Store in CGwmGWSS::mDistanceParameter.
-     */
-    void createDistanceParameter();
-
-    /**
      * @brief Summary algorithm implemented with no parallel methods.
      */
     void summarySerial();
@@ -382,8 +377,6 @@ private:
     mat mCorrmat;       //!< Local correlations (Pearson's).
     mat mSCorrmat;      //!< Local correlations (Spearman's).
     
-    DistanceParameter* mDistanceParameter = nullptr;    //!< Distance parameter used in calling for CGwmSpatialWeight::weightVector() and CGwmMinkwoskiDistance::distance().
-
     SummaryCalculator mSummaryFunction = &CGwmGWSS::summarySerial;  //!< Summary function specified by CGwmGWSS::mParallelType.
     
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< Parallel type.

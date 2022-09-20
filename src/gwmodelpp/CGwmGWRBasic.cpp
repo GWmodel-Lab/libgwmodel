@@ -36,8 +36,8 @@ CGwmGWRBasic::~CGwmGWRBasic()
 
 void CGwmGWRBasic::run()
 {
-    createRegressionDistanceParameter();
-    assert(mRegressionDistanceParameter != nullptr);
+    createDistanceParameter();
+    assert(mDistanceParameter != nullptr);
 
     if (!hasPredictLayer() && mIsAutoselectIndepVars)
     {
@@ -57,7 +57,7 @@ void CGwmGWRBasic::run()
     {
         CGwmBandwidthWeight* bw0 = mSpatialWeight.weight<CGwmBandwidthWeight>();
         double lower = bw0->adaptive() ? 20 : 0.0;
-        double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance(nDp, mRegressionDistanceParameter);
+        double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance(nDp, mDistanceParameter);
         CGwmBandwidthSelector selector(bw0, lower, upper);
         CGwmBandwidthWeight* bw = selector.optimize(this);
         if (bw)
@@ -85,7 +85,7 @@ void CGwmGWRBasic::run()
         vec localR2 = vec(nDp, fill::zeros);
         for (uword i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeight.weightVector(mRegressionDistanceParameter, i);
+            vec w = mSpatialWeight.weightVector(mDistanceParameter, i);
             double tss = sum(dybar2 % w);
             double rss = sum(dyhat2 % w);
             localR2(i) = (tss - rss) / tss;
@@ -111,21 +111,15 @@ void CGwmGWRBasic::run()
     }
 }
 
-void CGwmGWRBasic::createRegressionDistanceParameter()
-{
-    if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
-        mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
-    {
-        mRegressionDistanceParameter = new CRSDistanceParameter(mSourceLayer->points(), mSourceLayer->points());
-    }
-}
-
 void CGwmGWRBasic::createPredictionDistanceParameter()
 {
     if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
         mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
     {
-        mPredictionDistanceParameter = new CRSDistanceParameter(hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points(), mSourceLayer->points());
+        mPredictionDistanceParameter = mSpatialWeight.distance()->makeParameter({
+            hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points(),
+            mSourceLayer->points()
+        });
     }
 }
 
@@ -162,7 +156,7 @@ mat CGwmGWRBasic::regressionHatmatrixSerial(const mat& x, const vec& y, mat& bet
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec w = mSpatialWeight.weightVector(mRegressionDistanceParameter, i);
+        vec w = mSpatialWeight.weightVector(mDistanceParameter, i);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -229,7 +223,7 @@ mat CGwmGWRBasic::regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasS
     for (int i = 0; (uword)i < nDp; i++)
     {
         int thread = omp_get_thread_num();
-        vec w = mSpatialWeight.weightVector(mRegressionDistanceParameter, i);
+        vec w = mSpatialWeight.weightVector(mDistanceParameter, i);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -266,7 +260,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwid
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mSpatialWeight.distance()->distance(mRegressionDistanceParameter, i);
+        vec d = mSpatialWeight.distance()->distance(mDistanceParameter, i);
         vec w = bandwidthWeight->weight(d);
         w(i) = 0.0;
         mat xtw = trans(mX.each_col() % w);
@@ -298,7 +292,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwi
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec d = mSpatialWeight.distance()->distance(mRegressionDistanceParameter, i);
+        vec d = mSpatialWeight.distance()->distance(mDistanceParameter, i);
         vec w = bandwidthWeight->weight(d);
         mat xtw = trans(mX.each_col() % w);
         mat xtwx = xtw * mX;
@@ -338,7 +332,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthW
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec d = mSpatialWeight.distance()->distance(mRegressionDistanceParameter, i);
+            vec d = mSpatialWeight.distance()->distance(mDistanceParameter, i);
             vec w = bandwidthWeight->weight(d);
             w(i) = 0.0;
             mat xtw = trans(mX.each_col() % w);
@@ -380,7 +374,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICOmp(CGwmBandwidthWeight* bandwidth
         if (flag)
         {
             int thread = omp_get_thread_num();
-            vec d = mSpatialWeight.distance()->distance(mRegressionDistanceParameter, i);
+            vec d = mSpatialWeight.distance()->distance(mDistanceParameter, i);
             vec w = bandwidthWeight->weight(d);
             mat xtw = trans(mX.each_col() % w);
             mat xtwx = xtw * mX;

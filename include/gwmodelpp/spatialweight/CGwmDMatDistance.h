@@ -8,9 +8,9 @@ using namespace std;
 
 struct DMatDistanceParameter : public DistanceParameter
 {
-    int rowSize;
+    uword rowSize;
 
-    DMatDistanceParameter(int size, uword rows) : rowSize(size) 
+    DMatDistanceParameter(uword size, uword rows) : rowSize(size) 
     {
         total = rows;
     }
@@ -36,6 +36,19 @@ public:
     void setDMatFile(const string &dMatFile);
 
 public:
+
+    /**
+     * @brief Create Parameter for Caclulating CRS Distance.
+     * 
+     * @param plist A list of parameters containing 2 items:
+     *  - `uword` size
+     *  - `uword` rows
+     *  . 
+     * 
+     * @return DistanceParameter* The pointer to parameters.
+     */
+    virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) override;
+    
     virtual vec distance(DistanceParameter* parameter, uword focus) override;
 
 private:
