@@ -31,13 +31,12 @@ if(NOT MSVC)
 endif(NOT MSVC)
 
 set(SOURCES_CXX
-    gwmodelpp/spatialweight/CGwmBandwidthWeight.cpp
-    gwmodelpp/spatialweight/CGwmCRSDistance.cpp
     gwmodelpp/spatialweight/CGwmDistance.cpp
-    gwmodelpp/spatialweight/CGwmDMatDistance.cpp
+    gwmodelpp/spatialweight/CGwmCRSDistance.cpp
     gwmodelpp/spatialweight/CGwmMinkwoskiDistance.cpp
-    gwmodelpp/spatialweight/CGwmSpatialWeight.cpp
+    gwmodelpp/spatialweight/CGwmDMatDistance.cpp
     gwmodelpp/spatialweight/CGwmWeight.cpp
+    gwmodelpp/spatialweight/CGwmBandwidthWeight.cpp
 
     gwmodelpp/CGwmAlgorithm.cpp
     gwmodelpp/CGwmBandwidthSelector.cpp
@@ -56,13 +55,13 @@ set(SOURCES_C
 )
 
 set(HEADERS_CXX
-    ../include/gwmodelpp/spatialweight/CGwmBandwidthWeight.h
-    ../include/gwmodelpp/spatialweight/CGwmCRSDistance.h
+    ../include/gwmodelpp/spatialweight/CGwmSpatialWeight.hpp
     ../include/gwmodelpp/spatialweight/CGwmDistance.h
-    ../include/gwmodelpp/spatialweight/CGwmDMatDistance.h
+    ../include/gwmodelpp/spatialweight/CGwmCRSDistance.h
     ../include/gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h
-    ../include/gwmodelpp/spatialweight/CGwmSpatialWeight.h
+    ../include/gwmodelpp/spatialweight/CGwmDMatDistance.h
     ../include/gwmodelpp/spatialweight/CGwmWeight.h
+    ../include/gwmodelpp/spatialweight/CGwmBandwidthWeight.h
 
     ../include/gwmodelpp/CGwmAlgorithm.h
     ../include/gwmodelpp/CGwmBandwidthSelector.h
