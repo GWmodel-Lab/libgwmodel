@@ -342,11 +342,6 @@ private:
     void setXY(mat& x, const CGwmSimpleLayer* layer, const vector<GwmVariable>& variables);
 
     /**
-     * @brief Create a Distance Parameter object. Store in CGwmGWSS::mDistanceParameter.
-     */
-    void createDistanceParameter();
-
-    /**
      * @brief Summary algorithm implemented with no parallel methods.
      */
     void summarySerial();

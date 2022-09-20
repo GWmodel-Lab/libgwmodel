@@ -37,7 +37,10 @@ public:
      * 
      * @return Spatial weight configuration object.
      */
-    CGwmSpatialWeight spatialWeight() const;
+    CGwmSpatialWeight spatialWeight() const
+    {
+        return mSpatialWeight;
+    }
 
     /**
      * @brief Set the spatial weight configuration.
@@ -48,20 +51,20 @@ public:
      * 
      * @param spatialWeight Reference of spatial weight configuration object.
      */
-    void setSpatialWeight(const CGwmSpatialWeight &spatialWeight);
+    void setSpatialWeight(const CGwmSpatialWeight &spatialWeight)
+    {
+        mSpatialWeight = spatialWeight;
+    }
+
+    /**
+     * @brief Create a Distance Parameter object. Store in CGwmGWSS::mDistanceParameter.
+     */
+    void createDistanceParameter();
 
 protected:
     CGwmSpatialWeight mSpatialWeight;   //!< Spatial weight configuration.
+    
+    DistanceParameter* mDistanceParameter = nullptr;    //!< Distance parameter used in calling for CGwmSpatialWeight::weightVector() and CGwmMinkwoskiDistance::distance().
 };
-
-inline CGwmSpatialWeight CGwmSpatialMonoscaleAlgorithm::spatialWeight() const
-{
-    return mSpatialWeight;
-}
-
-inline void CGwmSpatialMonoscaleAlgorithm::setSpatialWeight(const CGwmSpatialWeight &spatialWeight)
-{
-    mSpatialWeight = spatialWeight;
-}
 
 #endif  // CGWMSPATIALMONOSCALEALGORITHM_H

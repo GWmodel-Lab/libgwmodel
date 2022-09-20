@@ -122,15 +122,6 @@ void CGwmGWSS::setXY(mat& x, const CGwmSimpleLayer* layer, const vector<GwmVaria
     }
 }
 
-void CGwmGWSS::createDistanceParameter()
-{
-    if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
-        mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
-    {
-        mDistanceParameter = new CRSDistanceParameter(mSourceLayer->points(), mSourceLayer->points());
-    }
-}
-
 void CGwmGWSS::summarySerial()
 {
     mat rankX = mX;

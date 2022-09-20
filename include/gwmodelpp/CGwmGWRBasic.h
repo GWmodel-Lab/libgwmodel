@@ -109,7 +109,6 @@ public:     // Implement IGwmOpenmpParallelizable
 protected:
     bool isStoreS();
 
-    void createRegressionDistanceParameter();
     void createPredictionDistanceParameter();
 
     void createResultLayer(initializer_list<ResultLayerDataItem> items);
@@ -118,8 +117,7 @@ protected:
     bool mHasHatMatrix = true;
     bool mHasFTest = false;
     bool mHasPredict = false;
-
-    DistanceParameter* mRegressionDistanceParameter = nullptr;
+    
     DistanceParameter* mPredictionDistanceParameter = nullptr;
 
     bool mIsAutoselectIndepVars = false;

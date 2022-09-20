@@ -29,15 +29,6 @@ void CGwmGWPCA::run()
     createResultLayer(resultLayerData);
 }
 
-void CGwmGWPCA::createDistanceParameter()
-{
-    if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
-        mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
-    {
-        mDistanceParameter = new CRSDistanceParameter(mSourceLayer->points(), mSourceLayer->points());
-    }
-}
-
 void CGwmGWPCA::setX(mat& x, const CGwmSimpleLayer* layer, const vector<GwmVariable>& variables)
 {
     uword nRp = mSourceLayer->featureCount(), nVar = variables.size();

@@ -112,11 +112,6 @@ private:
     void setX(mat& x, const CGwmSimpleLayer* layer, const vector<GwmVariable>& variables);
 
     /**
-     * @brief Create a Distance Parameter object. Store in CGwmGWSS::mDistanceParameter.
-     */
-    void createDistanceParameter();
-
-    /**
      * @brief Function to carry out PCA.
      * 
      * @param x Symmetric data matrix.
