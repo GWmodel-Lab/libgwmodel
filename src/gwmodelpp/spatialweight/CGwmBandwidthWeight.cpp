@@ -23,32 +23,6 @@ CGwmBandwidthWeight::KernelFunction CGwmBandwidthWeight::Kernel[] =
     &CGwmBandwidthWeight::BoxcarKernelFunction
 };
 
-CGwmBandwidthWeight::CGwmBandwidthWeight() : CGwmWeight()
-{
-
-}
-
-CGwmBandwidthWeight::CGwmBandwidthWeight(double size, bool adaptive, CGwmBandwidthWeight::KernelFunctionType kernel)
-{
-    mBandwidth = size;
-    mAdaptive = adaptive;
-    mKernel = kernel;
-}
-
-CGwmBandwidthWeight::CGwmBandwidthWeight(const CGwmBandwidthWeight &bandwidthWeight)
-{
-    mBandwidth = bandwidthWeight.mBandwidth;
-    mAdaptive = bandwidthWeight.mAdaptive;
-    mKernel = bandwidthWeight.mKernel;
-}
-
-CGwmBandwidthWeight::CGwmBandwidthWeight(const CGwmBandwidthWeight *bandwidthWeight)
-{
-    mBandwidth = bandwidthWeight->bandwidth();
-    mAdaptive = bandwidthWeight->adaptive();
-    mKernel = bandwidthWeight->kernel();
-}
-
 vec CGwmBandwidthWeight::weight(vec dist)
 {
     const KernelFunction *kerf = Kernel + mKernel;
