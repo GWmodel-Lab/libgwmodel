@@ -38,10 +38,10 @@ public:
 public:
     virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) override
     {
-        if (plist == 2)
+        if (plist.size() == 2)
         {
-            const uword size = get(*(plist.begin()));
-            const uword rows = get(*(plist.begin() + 1));
+            const uword size = get<uword>(*(plist.begin()));
+            const uword rows = get<uword>(*(plist.begin() + 1));
             return new DMatDistanceParameter(size, rows);
         }
         else return nullptr;
