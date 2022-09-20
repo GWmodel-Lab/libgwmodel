@@ -96,6 +96,13 @@ public:
 
 public:
 
+    /**
+     * @brief Create Parameter for Caclulating Distance.
+     * This function is pure virtual. It would never be called directly.
+     * 
+     * @param plist A list of parameters. 
+     * @return DistanceParameter* The pointer to parameters.
+     */
     virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) = 0;
 
     /**

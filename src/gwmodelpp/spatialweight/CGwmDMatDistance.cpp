@@ -11,6 +11,17 @@ CGwmDMatDistance::CGwmDMatDistance(const CGwmDMatDistance &distance) : CGwmDista
     mDMatFile = distance.mDMatFile;
 }
 
+DistanceParameter* CGwmDMatDistance::makeParameter(initializer_list<DistParamVariant> plist)
+{
+    if (plist.size() == 2)
+    {
+        const uword size = get<uword>(*(plist.begin()));
+        const uword rows = get<uword>(*(plist.begin() + 1));
+        return new DMatDistanceParameter(size, rows);
+    }
+    else return nullptr;
+}
+
 vec CGwmDMatDistance::distance(DistanceParameter* parameter, uword focus)
 {
     assert(parameter != nullptr);

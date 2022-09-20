@@ -377,8 +377,6 @@ private:
     mat mCorrmat;       //!< Local correlations (Pearson's).
     mat mSCorrmat;      //!< Local correlations (Spearman's).
     
-    DistanceParameter* mDistanceParameter = nullptr;    //!< Distance parameter used in calling for CGwmSpatialWeight::weightVector() and CGwmMinkwoskiDistance::distance().
-
     SummaryCalculator mSummaryFunction = &CGwmGWSS::summarySerial;  //!< Summary function specified by CGwmGWSS::mParallelType.
     
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< Parallel type.

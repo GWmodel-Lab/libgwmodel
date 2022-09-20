@@ -117,16 +117,18 @@ public:
     }
 
 public:
-    virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) override
-    {
-        if (plist.size() == 2)
-        {
-            const mat& fp = get<mat>(*(plist.begin()));
-            const mat& dp = get<mat>(*(plist.begin() + 1));
-            return new CRSDistanceParameter(fp, dp);
-        }
-        else return nullptr;
-    }
+
+    /**
+     * @brief Create Parameter for Caclulating CRS Distance.
+     * 
+     * @param plist A list of parameters containing 2 items:
+     *  - `mat` focus points
+     *  - `mat` data points
+     *  .
+     * 
+     * @return DistanceParameter* The pointer to parameters.
+     */
+    virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) override;
 
     virtual vec distance(DistanceParameter* parameter, uword focus) override;
 

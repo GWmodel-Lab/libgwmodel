@@ -36,17 +36,19 @@ public:
     void setDMatFile(const string &dMatFile);
 
 public:
-    virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) override
-    {
-        if (plist.size() == 2)
-        {
-            const uword size = get<uword>(*(plist.begin()));
-            const uword rows = get<uword>(*(plist.begin() + 1));
-            return new DMatDistanceParameter(size, rows);
-        }
-        else return nullptr;
-    }
 
+    /**
+     * @brief Create Parameter for Caclulating CRS Distance.
+     * 
+     * @param plist A list of parameters containing 2 items:
+     *  - `uword` size
+     *  - `uword` rows
+     *  . 
+     * 
+     * @return DistanceParameter* The pointer to parameters.
+     */
+    virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) override;
+    
     virtual vec distance(DistanceParameter* parameter, uword focus) override;
 
 private:

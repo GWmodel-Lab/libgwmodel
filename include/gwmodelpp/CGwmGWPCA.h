@@ -161,7 +161,6 @@ private:    // Algorithm Runtime Variables
     vec mLatestWt;
 
     Solver mSolver = &CGwmGWPCA::solveSerial;
-    DistanceParameter* mDistanceParameter = nullptr;
 };
 
 inline int CGwmGWPCA::keepComponents()
