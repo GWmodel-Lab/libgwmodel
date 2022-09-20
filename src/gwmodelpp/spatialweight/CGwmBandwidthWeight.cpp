@@ -40,17 +40,11 @@ vec CGwmBandwidthWeight::weight(vec dist)
         {
             fixbw = dn * max(dist);
         }
-        for (uword r = 0; r < nr; r++)
-        {
-            w(r) = (*kerf)(dist(r), fixbw);
-        }
+        w = (*kerf)(dist, fixbw);
     }
     else
     {
-        for (uword r = 0; r < nr; r++)
-        {
-            w(r) = (*kerf)(dist(r), mBandwidth);
-        }
+        w = (*kerf)(dist, mBandwidth);
     }
     return w;
 }

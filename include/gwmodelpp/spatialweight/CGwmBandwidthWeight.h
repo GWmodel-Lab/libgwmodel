@@ -37,7 +37,7 @@ public:
     static unordered_map<KernelFunctionType, string> KernelFunctionTypeNameMapper;
     static unordered_map<bool, string> BandwidthTypeNameMapper;
 
-    typedef double (*KernelFunction)(double, double);
+    typedef vec (*KernelFunction)(vec, double);
 
     static KernelFunction Kernel[];
 
@@ -48,9 +48,9 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static double GaussianKernelFunction(double dist, double bw)
+    static vec GaussianKernelFunction(vec dist, double bw)
     {
-        return exp((dist * dist)/((-2)*(bw * bw)));
+        return exp((dist % dist) / ((-2.0) * (bw * bw)));
     }
     
     /**
@@ -60,9 +60,9 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static double ExponentialKernelFunction(double dist, double bw)
+    static vec ExponentialKernelFunction(vec dist, double bw)
     {
-        return exp(-dist/bw);
+        return exp(-dist / bw);
     }
     
     /**
@@ -72,9 +72,10 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static double BisquareKernelFunction(double dist, double bw)
+    static vec BisquareKernelFunction(vec dist, double bw)
     {
-        return dist > bw ? 0 : (1 - (dist * dist)/(bw * bw)) * (1 - (dist * dist)/(bw * bw));
+        vec d2_d_b2 = 1.0 - (dist % dist) / (bw * bw);
+        return (dist < bw) % (d2_d_b2 % d2_d_b2);
     }
     
     /**
@@ -84,13 +85,10 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static double TricubeKernelFunction(double dist, double bw)
+    static vec TricubeKernelFunction(vec dist, double bw)
     {
-        return dist > bw ?
-            0 :
-            (1 - (dist * dist * dist)/(bw * bw * bw)) *
-            (1 - (dist * dist * dist)/(bw * bw * bw)) *
-            (1 - (dist * dist * dist)/(bw * bw * bw));
+        vec d3_d_b3 = 1.0 - (dist % dist % dist) / (bw * bw * bw);
+        return (dist < bw) % (d3_d_b3 % d3_d_b3 % d3_d_b3);
     }
     
     /**
@@ -100,9 +98,9 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static double BoxcarKernelFunction(double dist, double bw)
+    static vec BoxcarKernelFunction(vec dist, double bw)
     {
-        return dist > bw ? 0 : 1;
+        return (dist < bw) % vec(arma::size(dist), arma::fill::ones);
     }
 
 public:
