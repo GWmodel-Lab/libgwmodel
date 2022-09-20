@@ -30,6 +30,11 @@ if(NOT MSVC)
     add_definitions(-DDBL_MAX=__DBL_MAX__)    
 endif(NOT MSVC)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions(-D_DEBUG)
+endif()
+
+
 set(SOURCES_CXX
     gwmodelpp/spatialweight/CGwmBandwidthWeight.cpp
     gwmodelpp/spatialweight/CGwmCRSDistance.cpp

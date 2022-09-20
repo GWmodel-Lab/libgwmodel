@@ -3,12 +3,14 @@
 
 #include <vector>
 #include <armadillo>
+#include <gsl/gsl_vector.h>
 #include "CGwmSpatialAlgorithm.h"
 #include "spatialweight/CGwmSpatialWeight.h"
 #include "IGwmRegressionAnalysis.h"
 
 using namespace std;
 using namespace arma;
+
 
 class CGwmGWDR : public CGwmSpatialAlgorithm, public IGwmRegressionAnalysis
 {
@@ -114,9 +116,27 @@ public:
         mSpatialWeights = spatialWeights;
     }
 
+    bool enableBandwidthOptimize()
+    {
+        return mEnableBandwidthOptimize;
+    }
+
+    void setEnableBandwidthOptimize(bool flag)
+    {
+        mEnableBandwidthOptimize = flag;
+    }
+
+public:
+    double bandwidthCriterion(const vector<CGwmBandwidthWeight*>& bandwidths)
+    {
+        return this->bandwidthCriterionCVSerial(bandwidths);
+    }
+
 protected:
     mat regressionSerial(const mat& x, const vec& y);
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
+
+    double bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
 
 protected:
     void createResultLayer(initializer_list<ResultLayerDataItem> items);
@@ -140,6 +160,32 @@ private:
     vector<GwmVariable> mIndepVars;
     bool mHasHatMatrix;
     GwmRegressionDiagnostic mDiagnostic;
+
+    bool mEnableBandwidthOptimize = false;
+};
+
+
+class CGwmGWDRBandwidthOptimizer
+{
+public:
+    struct Parameter
+    {
+        CGwmGWDR* instance;
+        vector<CGwmBandwidthWeight*>* bandwidths;
+        uword featureCount;
+    };
+
+    static double criterion_function(const gsl_vector* bws, void* params);
+
+public:
+    CGwmGWDRBandwidthOptimizer(vector<CGwmBandwidthWeight*> weights);
+
+
+    const int optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps);
+
+private:
+    vector<CGwmBandwidthWeight*> mBandwidths;
+    Parameter mParameter;
 };
 
 #endif  // CGWMGWDR_H

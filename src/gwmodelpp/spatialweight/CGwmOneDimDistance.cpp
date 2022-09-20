@@ -14,6 +14,17 @@ CGwmOneDimDistance::CGwmOneDimDistance(const CGwmOneDimDistance &distance) : CGw
     
 }
 
+DistanceParameter* CGwmOneDimDistance::makeParameter(initializer_list<DistParamVariant> plist)
+{
+    if (plist.size() == 2)
+    {
+        const mat& fp = get<vec>(*(plist.begin()));
+        const mat& dp = get<vec>(*(plist.begin() + 1));
+        return new OneDimDistanceParameter(fp, dp);
+    }
+    else return nullptr;
+}
+
 vec CGwmOneDimDistance::distance(DistanceParameter* parameter, uword focus)
 {
     assert(parameter != nullptr);

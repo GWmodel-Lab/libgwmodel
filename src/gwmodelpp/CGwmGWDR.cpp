@@ -1,5 +1,9 @@
 #include "CGwmGWDR.h"
 #include <assert.h>
+#include <exception>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_multimin.h>
+#include <gsl/gsl_errno.h>
 
 
 GwmRegressionDiagnostic CGwmGWDR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
@@ -19,15 +23,33 @@ GwmRegressionDiagnostic CGwmGWDR::CalcDiagnostic(const mat& x, const vec& y, con
 
 void CGwmGWDR::run()
 {
-    // Set data matrices.
-    setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
-
     // Set coordinates matrices.
     uword nDims = mSourceLayer->points().n_cols;
     for (size_t m = 0; m < nDims; m++)
     {
-        DistanceParameter* oneDimDP = new OneDimDistanceParameter(mSourceLayer->points().col(m), mSourceLayer->points().col(m));
+        DistanceParameter* oneDimDP = mSpatialWeights[m].distance()->makeParameter({
+            vec(mSourceLayer->points().col(m)),
+            vec(mSourceLayer->points().col(m))
+        });
         mDistParameters.push_back(oneDimDP);
+    }
+
+    // Set data matrices.
+    setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
+
+    if (mEnableBandwidthOptimize)
+    {
+        vector<CGwmBandwidthWeight*> bws;
+        for (auto&& iter : mSpatialWeights)
+        {
+            bws.push_back(iter.weight<CGwmBandwidthWeight>());
+        }
+        CGwmGWDRBandwidthOptimizer optimizer(bws);
+        int status = optimizer.optimize(this, mSourceLayer->featureCount(), 100000, 1e-8);
+        if (status)
+        {
+            throw runtime_error("[CGwmGWDR::run] Bandwidth optimization invoke failed.");
+        }
     }
     
     // Has hatmatrix
@@ -162,6 +184,44 @@ mat CGwmGWDR::regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE
     return betas.t();
 }
 
+double CGwmGWDR::bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& bandwidths)
+{
+    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1, nDim = mSourceLayer->points().n_cols;
+    double cv = 0.0;
+    bool flag = true;
+    for (size_t i = 0; i < nDp; i++)
+    {
+        if (flag)
+        {
+            vec w(nDp, arma::fill::ones);
+            for (size_t m = 0; m < nDim; m++)
+            {
+                vec d_m = mSpatialWeights[m].distance()->distance(mDistParameters[m], i);
+                vec w_m = bandwidths[m]->weight(d_m);
+                w = w % w_m;
+            }
+            w(i) = 0.0;
+            mat ws(1, nVar, arma::fill::ones);
+            mat xtw = (mX %(w * ws)).t();
+            mat xtwx = xtw * mX;
+            mat xtwy = mX.t() * (w % mY);
+            try
+            {
+                mat xtwx_inv = xtwx.i();
+                vec beta = xtwx_inv * xtwy;
+                double yhat = as_scalar(mX.row(i) * beta);
+                cv += yhat - mY(i);
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+                flag = false;
+            }
+        }
+    }
+    return flag ? abs(cv) : DBL_MAX;
+}
+
 void CGwmGWDR::createResultLayer(initializer_list<ResultLayerDataItem> items)
 {
     mat layerPoints = mSourceLayer->points();
@@ -206,4 +266,83 @@ void CGwmGWDR::createResultLayer(initializer_list<ResultLayerDataItem> items)
     }
     
     mResultLayer = new CGwmSimpleLayer(layerPoints, layerData, layerFields);
+}
+
+CGwmGWDRBandwidthOptimizer::CGwmGWDRBandwidthOptimizer(vector<CGwmBandwidthWeight*> weights)
+{
+    mBandwidths = weights;
+};
+
+double CGwmGWDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, void* params)
+{
+    Parameter* p = static_cast<Parameter*>(params);
+    CGwmGWDR* instance = p->instance;
+    const vector<CGwmBandwidthWeight*>& bandwidths = *(p->bandwidths);
+    double nFeature = double(p->featureCount);
+    for (size_t m = 0; m < bandwidths.size(); m++)
+    {
+        double pbw = abs(gsl_vector_get(bws, m));
+        bandwidths[m]->setBandwidth((pbw > 1.0 ? 1.0 : pbw) * nFeature);
+    }
+    return instance->bandwidthCriterion(bandwidths);
+}
+
+const int CGwmGWDRBandwidthOptimizer::optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps)
+{
+    size_t nDim = mBandwidths.size();
+    gsl_multimin_fminimizer* minimizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex, nDim);
+    gsl_vector* target = gsl_vector_alloc(nDim);
+    gsl_vector* step = gsl_vector_alloc(nDim);
+    for (size_t m = 0; m < nDim; m++)
+    {
+        double target_value = mBandwidths[m]->adaptive() ? mBandwidths[m]->bandwidth() / double(featureCount) : mBandwidths[m]->bandwidth();
+        gsl_vector_set(target, m, target_value);
+        gsl_vector_set(step, m, 0.1);
+    }
+    Parameter params = { instance, &mBandwidths, featureCount };
+    gsl_multimin_function function = { criterion_function, nDim, &params };
+    double criterion = DBL_MAX;
+    int status = gsl_multimin_fminimizer_set(minimizer, &function, target, step);
+    if (status == GSL_SUCCESS)
+    {
+        int iter = 0;
+        double size = DBL_MAX, size0 = DBL_MAX;
+        do
+        {
+            size0 = size;
+            iter++;
+            status = gsl_multimin_fminimizer_iterate(minimizer);
+            if (status)
+                break;
+            size = gsl_multimin_fminimizer_size(minimizer);
+            status = gsl_multimin_test_size(size, eps);
+            #ifdef _DEBUG
+            for (size_t m = 0; m < nDim; m++)
+            {
+                cout << gsl_vector_get(minimizer->x, m) << ",";
+            }
+            cout << minimizer->fval << ",";
+            cout << size << "\n";
+            #endif
+        } 
+        while (status == GSL_CONTINUE && iter < maxIter);
+        #ifdef _DEBUG
+        for (size_t m = 0; m < nDim; m++)
+        {
+            cout << gsl_vector_get(minimizer->x, m) << ",";
+        }
+        cout << minimizer->fval << ",";
+        cout << size << "\n";
+        #endif
+        for (size_t m = 0; m < nDim; m++)
+        {
+            double pbw = abs(gsl_vector_get(minimizer->x, m));
+            pbw = (pbw > 1.0 ? 1.0 : pbw);
+            mBandwidths[m]->setBandwidth(round(pbw * featureCount));
+        }
+    }
+    gsl_multimin_fminimizer_free(minimizer);
+    gsl_vector_free(target);
+    gsl_vector_free(step);
+    return status;
 }

@@ -73,6 +73,19 @@ public:
     DistanceType type() override { return DistanceType::OneDimDistance; }
 
 public:
+
+    /**
+     * @brief Create Parameter for Caclulating CRS Distance.
+     * 
+     * @param plist A list of parameters containing 2 items:
+     *  - `vec` focus coordinates (one column)
+     *  - `vec` data coordinates (one column)
+     *  .
+     * 
+     * @return DistanceParameter* The pointer to parameters.
+     */
+    virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) override;
+
     virtual vec distance(DistanceParameter* parameter, uword focus) override;
 };
 

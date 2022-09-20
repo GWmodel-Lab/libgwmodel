@@ -34,7 +34,9 @@ vec CGwmBandwidthWeight::weight(vec dist)
         if (dn <= 1)
         {
             vec vdist = sort(dist);
-            fixbw = vdist(mBandwidth > 0 ? int(mBandwidth) - 1 : 0);
+            double b0 = floor(mBandwidth), bx = mBandwidth - b0;
+            double d0 = vdist(int(b0) - 1), d1 = vdist(int(b0));
+            fixbw = d0 + (d1 - d0) * bx;
         }
         else
         {
