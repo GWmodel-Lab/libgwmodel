@@ -23,8 +23,9 @@ GwmRegressionDiagnostic CGwmGWDR::CalcDiagnostic(const mat& x, const vec& y, con
 
 void CGwmGWDR::run()
 {
+    uword nDp = mSourceLayer->featureCount(), nDims = mSourceLayer->points().n_cols;
+
     // Set coordinates matrices.
-    uword nDims = mSourceLayer->points().n_cols;
     for (size_t m = 0; m < nDims; m++)
     {
         DistanceParameter* oneDimDP = mSpatialWeights[m].distance()->makeParameter({
@@ -39,6 +40,17 @@ void CGwmGWDR::run()
 
     if (mEnableBandwidthOptimize)
     {
+        for (size_t m = 0; m < mSpatialWeights.size(); m++)
+        {
+            const CGwmSpatialWeight& sw = mSpatialWeights[m];
+            CGwmBandwidthWeight* bw = sw.weight<CGwmBandwidthWeight>();
+            // Set Initial value
+            if (bw->bandwidth() == 0.0)
+            {
+                double upper = bw->adaptive() ? nDp : sw.distance()->maxDistance(nDp, mDistParameters[m]);
+                bw->setBandwidth(upper * 0.618);
+            }
+        }
         vector<CGwmBandwidthWeight*> bws;
         for (auto&& iter : mSpatialWeights)
         {
@@ -53,7 +65,6 @@ void CGwmGWDR::run()
     }
     
     // Has hatmatrix
-    uword nDp = mSourceLayer->featureCount(), nDim = mSourceLayer->points().n_cols;
     if (mHasHatMatrix)
     {
         mat betasSE, S;
@@ -73,7 +84,7 @@ void CGwmGWDR::run()
         for (uword i = 0; i < nDp; i++)
         {
             vec w(nDp, arma::fill::ones);
-            for (size_t m = 0; m < nDim; m++)
+            for (size_t m = 0; m < nDims; m++)
             {
                 w = w % mSpatialWeights[m].weightVector(mDistParameters[m], i);
             }

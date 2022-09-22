@@ -81,7 +81,7 @@ TEST_CASE("GWDR: basic flow with bandwidth optimization (CV)")
     for (size_t i = 0; i < nDim; i++)
     {
         CGwmOneDimDistance distance;
-        CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Bisquare);
+        CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Bisquare);
         spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
     }
 
@@ -122,7 +122,7 @@ TEST_CASE("GWDR: basic flow with bandwidth optimization (AIC)")
     for (size_t i = 0; i < nDim; i++)
     {
         CGwmOneDimDistance distance;
-        CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Bisquare);
+        CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Bisquare);
         spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
     }
 
