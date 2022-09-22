@@ -25,6 +25,14 @@ public:
 
     typedef tuple<string, mat, NameFormat> ResultLayerDataItem;
 
+    enum BandwidthCriterionType
+    {
+        CV,
+        AIC
+    };
+
+    typedef double (CGwmGWDR::*BandwidthCriterionCalculator)(const vector<CGwmBandwidthWeight*>&);
+
 public:
     static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
 
@@ -90,9 +98,18 @@ public: // IGwmRegressionAnalysis
         mIndepVars = variables;
     }
 
+    BandwidthCriterionType bandwidthCriterionType() const
+    {
+        return mBandwidthCriterionType;
+    }
+
+    void setBandwidthCriterionType(const BandwidthCriterionType& type);
+
+public:  // IRgressionAnalysis
+
     mat regression(const mat& x, const vec& y)
     {
-        return regression(x, y);
+        return regressionSerial(x, y);
     }
 
     mat regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
@@ -129,7 +146,7 @@ public:
 public:
     double bandwidthCriterion(const vector<CGwmBandwidthWeight*>& bandwidths)
     {
-        return this->bandwidthCriterionCVSerial(bandwidths);
+        return (this->*mBandwidthCriterionFunction)(bandwidths);
     }
 
 protected:
@@ -137,6 +154,7 @@ protected:
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
 
     double bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
+    double bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
 
 protected:
     void createResultLayer(initializer_list<ResultLayerDataItem> items);
@@ -162,6 +180,8 @@ private:
     GwmRegressionDiagnostic mDiagnostic;
 
     bool mEnableBandwidthOptimize = false;
+    BandwidthCriterionType mBandwidthCriterionType = BandwidthCriterionType::CV;
+    BandwidthCriterionCalculator mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionCVSerial;
 };
 
 
@@ -178,8 +198,10 @@ public:
     static double criterion_function(const gsl_vector* bws, void* params);
 
 public:
-    CGwmGWDRBandwidthOptimizer(vector<CGwmBandwidthWeight*> weights);
-
+    CGwmGWDRBandwidthOptimizer(vector<CGwmBandwidthWeight*> weights)
+    {
+        mBandwidths = weights;
+    }
 
     const int optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps);
 

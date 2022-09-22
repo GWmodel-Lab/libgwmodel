@@ -222,6 +222,47 @@ double CGwmGWDR::bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& 
     return flag ? abs(cv) : DBL_MAX;
 }
 
+double CGwmGWDR::bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>& bandwidths)
+{
+    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1, nDim = mSourceLayer->points().n_cols;
+    mat betas(nVar, nDp, fill::zeros);
+    double trS = 0.0;
+    bool flag = true;
+    for (size_t i = 0; i < nDp; i++)
+    {
+        if (flag)
+        {
+            vec w(nDp, arma::fill::ones);
+            for (size_t m = 0; m < nDim; m++)
+            {
+                vec d_m = mSpatialWeights[m].distance()->distance(mDistParameters[m], i);
+                vec w_m = bandwidths[m]->weight(d_m);
+                w = w % w_m;
+            }
+            mat ws(1, nVar, arma::fill::ones);
+            mat xtw = (mX %(w * ws)).t();
+            mat xtwx = xtw * mX;
+            mat xtwy = mX.t() * (w % mY);
+            try
+            {
+                mat xtwx_inv = xtwx.i();
+                betas.col(i) = xtwx_inv * xtwy;
+                mat ci = xtwx_inv * xtw;
+                mat si = mX.row(i) * ci;
+                trS += si(0, i);
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+                flag = false;
+            }
+        }
+    }
+    if (!flag) return DBL_MAX;
+    double value = CGwmGWDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
+    return isfinite(value) ? value : DBL_MAX;
+}
+
 void CGwmGWDR::createResultLayer(initializer_list<ResultLayerDataItem> items)
 {
     mat layerPoints = mSourceLayer->points();
@@ -268,10 +309,19 @@ void CGwmGWDR::createResultLayer(initializer_list<ResultLayerDataItem> items)
     mResultLayer = new CGwmSimpleLayer(layerPoints, layerData, layerFields);
 }
 
-CGwmGWDRBandwidthOptimizer::CGwmGWDRBandwidthOptimizer(vector<CGwmBandwidthWeight*> weights)
+void CGwmGWDR::setBandwidthCriterionType(const BandwidthCriterionType& type)
 {
-    mBandwidths = weights;
-};
+    mBandwidthCriterionType = type;
+    switch (mBandwidthCriterionType)
+    {
+    case BandwidthCriterionType::AIC:
+        mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionAICSerial;
+        break;
+    default:
+        mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionCVSerial;
+        break;
+    }
+}
 
 double CGwmGWDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, void* params)
 {
@@ -282,7 +332,7 @@ double CGwmGWDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, voi
     for (size_t m = 0; m < bandwidths.size(); m++)
     {
         double pbw = abs(gsl_vector_get(bws, m));
-        bandwidths[m]->setBandwidth((pbw > 1.0 ? 1.0 : pbw) * nFeature);
+        bandwidths[m]->setBandwidth(pbw * nFeature);
     }
     return instance->bandwidthCriterion(bandwidths);
 }
@@ -337,7 +387,7 @@ const int CGwmGWDRBandwidthOptimizer::optimize(CGwmGWDR* instance, uword feature
         for (size_t m = 0; m < nDim; m++)
         {
             double pbw = abs(gsl_vector_get(minimizer->x, m));
-            pbw = (pbw > 1.0 ? 1.0 : pbw);
+            // pbw = (pbw > 1.0 ? 1.0 : pbw);
             mBandwidths[m]->setBandwidth(round(pbw * featureCount));
         }
     }

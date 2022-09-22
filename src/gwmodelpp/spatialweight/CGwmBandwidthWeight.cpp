@@ -31,7 +31,7 @@ vec CGwmBandwidthWeight::weight(vec dist)
     if (mAdaptive)
     {
         double dn = mBandwidth / nr, fixbw = 0;
-        if (dn <= 1)
+        if (dn < 1)
         {
             vec vdist = sort(dist);
             double b0 = floor(mBandwidth), bx = mBandwidth - b0;
