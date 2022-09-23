@@ -5,7 +5,6 @@
 #include <gsl/gsl_multimin.h>
 #include <gsl/gsl_errno.h>
 
-
 GwmRegressionDiagnostic CGwmGWDR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
     vec r = y - sum(betas % x, 1);
@@ -34,6 +33,19 @@ void CGwmGWDR::run()
         });
         mDistParameters.push_back(oneDimDP);
     }
+
+    // Select Independent Variable
+    if (mEnableIndepVarSelect)
+    {
+        CGwmVariableForwardSelector selector(mIndepVars, mIndepVarSelectThreshold);
+        vector<GwmVariable> selectedIndepVars = selector.optimize(this);
+        if (selectedIndepVars.size() > 0)
+        {
+            mIndepVars = selectedIndepVars;
+            mIndepVarCriterionList = selector.indepVarsCriterion();
+        }
+    }
+    
 
     // Set data matrices.
     setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
@@ -271,6 +283,89 @@ double CGwmGWDR::bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>&
     }
     if (!flag) return DBL_MAX;
     double value = CGwmGWDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
+    return isfinite(value) ? value : DBL_MAX;
+}
+
+double CGwmGWDR::indepVarCriterionSerial(const vector<GwmVariable>& indepVars)
+{
+    mat x;
+    vec y;
+    setXY(x, y, mSourceLayer, mDepVar, indepVars);
+    uword nDp = x.n_rows, nVar = x.n_cols;
+    mat betas(nVar, nDp, fill::zeros);
+    double trS = 0.0;
+    bool isGlobal = false, success = true;
+    if (mEnableBandwidthOptimize) isGlobal = true;
+    else
+    {
+        for (auto &&sw : mSpatialWeights)
+        {
+            if (sw.weight<CGwmBandwidthWeight>()->bandwidth() == 0.0) isGlobal = true;
+        }
+    }
+    if (isGlobal)
+    {
+        mat xtwx = x.t() * x;
+        vec xtwy = x.t() * y;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            vec beta = xtwx_inv * xtwy;
+            betas = betas.each_col() + beta;
+            mat ci = xtwx_inv * x.t();
+            for (uword i = 0; i < nDp; i++)
+            {
+                mat si = x.row(i) * ci;
+                trS += si(0, i);
+            }
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+            success = false;
+        }
+        
+    }
+    else
+    {
+        int nDim = mSpatialWeights.size();
+        for (uword i = 0; i < nDp; i++)
+        {
+            if (success)
+            {
+                vec w(nDp, arma::fill::ones);
+                for (size_t m = 0; m < nDim; m++)
+                {
+                    vec w_m = mSpatialWeights[m].weightVector(mDistParameters[m], i);
+                    w = w % w_m;
+                }
+                mat xtw = (x.each_col() % w).t();
+                mat xtwx = xtw * x;
+                mat xtwy = xtw * y;
+                try
+                {
+                    mat xtwx_inv = inv_sympd(xtwx);
+                    betas.col(i) = xtwx_inv * xtwy;
+                    mat ci = xtwx_inv * xtw;
+                    mat si = x.row(i) * ci;
+                    trS += si(0, i);
+                }
+                catch (std::exception& e)
+                {
+                    std::cerr << e.what() << '\n';
+                    success = false;
+                }
+            }
+        }
+    }
+    double value = success ? CGwmGWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
+    // string msg = "Model: " + mDepVar.name + " ~ ";
+    // for (size_t i = 0; i < indepVars.size() - 1; i++)
+    // {
+    //     msg += indepVars[i].name + " + ";
+    // }
+    // msg += indepVars.back().name;
+    // msg += " (AICc Value: " + to_string(value) + ")";
     return isfinite(value) ? value : DBL_MAX;
 }
 

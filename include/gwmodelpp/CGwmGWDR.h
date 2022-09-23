@@ -7,12 +7,13 @@
 #include "CGwmSpatialAlgorithm.h"
 #include "spatialweight/CGwmSpatialWeight.h"
 #include "IGwmRegressionAnalysis.h"
+#include "CGwmVariableForwardSelector.h"
 
 using namespace std;
 using namespace arma;
 
 
-class CGwmGWDR : public CGwmSpatialAlgorithm, public IGwmRegressionAnalysis
+class CGwmGWDR : public CGwmSpatialAlgorithm, public IGwmRegressionAnalysis, public IGwmVarialbeSelectable
 {
 public:
     enum NameFormat
@@ -32,6 +33,8 @@ public:
     };
 
     typedef double (CGwmGWDR::*BandwidthCriterionCalculator)(const vector<CGwmBandwidthWeight*>&);
+
+    typedef double (CGwmGWDR::*IndepVarCriterionCalculator)(const vector<GwmVariable>&);
 
 public:
     static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
@@ -69,6 +72,48 @@ public:
         mHasHatMatrix = flag;
     }
 
+    vector<CGwmSpatialWeight> spatialWeights()
+    {
+        return mSpatialWeights;
+    }
+
+    void setSpatialWeights(vector<CGwmSpatialWeight> spatialWeights)
+    {
+        mSpatialWeights = spatialWeights;
+    }
+
+    bool enableBandwidthOptimize()
+    {
+        return mEnableBandwidthOptimize;
+    }
+
+    void setEnableBandwidthOptimize(bool flag)
+    {
+        mEnableBandwidthOptimize = flag;
+    }
+
+    BandwidthCriterionType bandwidthCriterionType() const
+    {
+        return mBandwidthCriterionType;
+    }
+
+    void setBandwidthCriterionType(const BandwidthCriterionType& type);
+
+    bool enableIndpenVarSelect() const
+    {
+        return mEnableIndepVarSelect;
+    }
+
+    void setEnableIndepVarSelect(bool flag)
+    {
+        mEnableIndepVarSelect = flag;
+    }
+
+    VariablesCriterionList indepVarCriterionList() const
+    {
+        return mIndepVarCriterionList;
+    }
+
 public: // CGwmAlgorithm
     void run();
     bool isValid()
@@ -98,13 +143,6 @@ public: // IGwmRegressionAnalysis
         mIndepVars = variables;
     }
 
-    BandwidthCriterionType bandwidthCriterionType() const
-    {
-        return mBandwidthCriterionType;
-    }
-
-    void setBandwidthCriterionType(const BandwidthCriterionType& type);
-
 public:  // IRgressionAnalysis
 
     mat regression(const mat& x, const vec& y)
@@ -122,25 +160,10 @@ public:  // IRgressionAnalysis
         return mDiagnostic;
     }
 
-public:
-    vector<CGwmSpatialWeight> spatialWeights()
+public:  // IGwmVariableSelectable
+    double getCriterion(const vector<GwmVariable>& variables) override
     {
-        return mSpatialWeights;
-    }
-
-    void setSpatialWeights(vector<CGwmSpatialWeight> spatialWeights)
-    {
-        mSpatialWeights = spatialWeights;
-    }
-
-    bool enableBandwidthOptimize()
-    {
-        return mEnableBandwidthOptimize;
-    }
-
-    void setEnableBandwidthOptimize(bool flag)
-    {
-        mEnableBandwidthOptimize = flag;
+        return (this->*mIndepVarCriterionFunction)(variables);
     }
 
 public:
@@ -155,6 +178,8 @@ protected:
 
     double bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
     double bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
+
+    double indepVarCriterionSerial(const vector<GwmVariable>& indepVars);
 
 protected:
     void createResultLayer(initializer_list<ResultLayerDataItem> items);
@@ -182,6 +207,11 @@ private:
     bool mEnableBandwidthOptimize = false;
     BandwidthCriterionType mBandwidthCriterionType = BandwidthCriterionType::CV;
     BandwidthCriterionCalculator mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionCVSerial;
+
+    bool mEnableIndepVarSelect = false;
+    double mIndepVarSelectThreshold = 3.0;
+    VariablesCriterionList mIndepVarCriterionList;
+    IndepVarCriterionCalculator mIndepVarCriterionFunction = &CGwmGWDR::indepVarCriterionSerial;
 };
 
 
