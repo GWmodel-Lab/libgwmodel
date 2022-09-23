@@ -17,6 +17,16 @@
 using namespace std;
 using namespace arma;
 
+vector<int> variables2indices(vector<GwmVariable> variables)
+{
+    vector<int> index(variables.size());
+    std::transform(variables.begin(), variables.end(), index.begin(), [](const GwmVariable& v) -> int
+    {
+        return v.index;
+    });
+    return index;
+}
+
 TEST_CASE("GWDR: basic flow")
 {
     mat londonhp100_coord, londonhp100_data;
@@ -192,10 +202,16 @@ TEST_CASE("GWDR: basic flow with independent variable selection")
     REQUIRE_NOTHROW(algorithm.run());
 
     VariablesCriterionList criterions = algorithm.indepVarCriterionList();
+    REQUIRE_THAT(variables2indices(criterions[0].first), Catch::Equals(vector<int>({ 2 })));
     REQUIRE_THAT(criterions[0].second, Catch::WithinAbs(2567.715486436010, 1e-8));
+    REQUIRE_THAT(variables2indices(criterions[1].first), Catch::Equals(vector<int>({ 3 })));
     REQUIRE_THAT(criterions[1].second, Catch::WithinAbs(2566.326946530555, 1e-8));
+    REQUIRE_THAT(variables2indices(criterions[2].first), Catch::Equals(vector<int>({ 1 })));
     REQUIRE_THAT(criterions[2].second, Catch::WithinAbs(2446.849320258895, 1e-8));
+    REQUIRE_THAT(variables2indices(criterions[3].first), Catch::Equals(vector<int>({ 1, 3 })));
     REQUIRE_THAT(criterions[3].second, Catch::WithinAbs(2456.445607367164, 1e-8));
+    REQUIRE_THAT(variables2indices(criterions[4].first), Catch::Equals(vector<int>({ 1, 2 })));
     REQUIRE_THAT(criterions[4].second, Catch::WithinAbs(2452.651290897472, 1e-8));
+    REQUIRE_THAT(variables2indices(criterions[5].first), Catch::Equals(vector<int>({ 1, 2, 3 })));
     REQUIRE_THAT(criterions[5].second, Catch::WithinAbs(2465.692469262322, 1e-8));
 }
