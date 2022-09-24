@@ -4,6 +4,7 @@ This library consist of C++ implementations of some geographically weighted mode
 
 - [Geographically Weighted Regression][gwr]
 - [Geographically Weighted Summary Statistics][gwss]
+- Geographically Weighted Density Regression
 
 Comparing with other libraries, this library has these features:
 

@@ -30,9 +30,15 @@ if(NOT MSVC)
     add_definitions(-DDBL_MAX=__DBL_MAX__)    
 endif(NOT MSVC)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions(-D_DEBUG)
+endif()
+
+
 set(SOURCES_CXX
     gwmodelpp/spatialweight/CGwmBandwidthWeight.cpp
     gwmodelpp/spatialweight/CGwmCRSDistance.cpp
+    gwmodelpp/spatialweight/CGwmOneDimDistance.cpp
     gwmodelpp/spatialweight/CGwmDistance.cpp
     gwmodelpp/spatialweight/CGwmDMatDistance.cpp
     gwmodelpp/spatialweight/CGwmMinkwoskiDistance.cpp
@@ -49,6 +55,7 @@ set(SOURCES_CXX
     gwmodelpp/CGwmGWRBasic.cpp
     gwmodelpp/CGwmGWSS.cpp
     gwmodelpp/CGwmGWPCA.cpp
+    gwmodelpp/CGwmGWDR.cpp
 )
 
 set(SOURCES_C
@@ -58,6 +65,7 @@ set(SOURCES_C
 set(HEADERS_CXX
     ../include/gwmodelpp/spatialweight/CGwmBandwidthWeight.h
     ../include/gwmodelpp/spatialweight/CGwmCRSDistance.h
+    ../include/gwmodelpp/spatialweight/CGwmOneDimDistance.h
     ../include/gwmodelpp/spatialweight/CGwmDistance.h
     ../include/gwmodelpp/spatialweight/CGwmDMatDistance.h
     ../include/gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h
@@ -74,6 +82,7 @@ set(HEADERS_CXX
     ../include/gwmodelpp/CGwmGWRBasic.h
     ../include/gwmodelpp/CGwmGWSS.h
     ../include/gwmodelpp/CGwmGWPCA.h
+    ../include/gwmodelpp/CGwmGWDR.h
 )
 
 set(HEADERS_C
