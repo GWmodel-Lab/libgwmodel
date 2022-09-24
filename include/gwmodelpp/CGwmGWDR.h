@@ -8,14 +8,20 @@
 #include "spatialweight/CGwmSpatialWeight.h"
 #include "IGwmRegressionAnalysis.h"
 #include "CGwmVariableForwardSelector.h"
+#include "IGwmParallelizable.h"
 
 using namespace std;
 using namespace arma;
 
 
-class CGwmGWDR : public CGwmSpatialAlgorithm, public IGwmRegressionAnalysis, public IGwmVarialbeSelectable
+class CGwmGWDR : public CGwmSpatialAlgorithm, public IGwmRegressionAnalysis, public IGwmVarialbeSelectable, public IGwmOpenmpParallelizable
 {
 public:
+    typedef mat (CGwmGWDR::*RegressionCalculator)(const mat&, const vec&);
+
+    typedef mat (CGwmGWDR::*RegressionHatmatrixCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
+
+
     enum NameFormat
     {
         Fixed,
@@ -147,12 +153,12 @@ public:  // IRgressionAnalysis
 
     mat regression(const mat& x, const vec& y)
     {
-        return regressionSerial(x, y);
+        return (this->*mRegressionFunction)(x, y);
     }
 
     mat regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
     {
-        return regressionHatmatrixSerial(x, y, betasSE, shat, qdiag, S);
+        return (this->*mRegressionHatmatrixFunction)(x, y, betasSE, shat, qdiag, S);
     }
 
     GwmRegressionDiagnostic diagnostic() const
@@ -166,6 +172,29 @@ public:  // IGwmVariableSelectable
         return (this->*mIndepVarCriterionFunction)(variables);
     }
 
+public:  // IGwmOpenmpParallelizable
+    int parallelAbility() const
+    {
+        return ParallelType::SerialOnly
+        #ifdef ENABLE_OPENMP
+        | ParallelType::OpenMP
+        #endif        
+        ;
+    }
+    
+    ParallelType parallelType() const
+    {
+        return mParallelType;
+    }
+    
+    void setParallelType(const ParallelType& type);
+
+    void setOmpThreadNum(const int threadNum)
+    {
+        mOmpThreadNum = threadNum;
+    }
+
+
 public:
     double bandwidthCriterion(const vector<CGwmBandwidthWeight*>& bandwidths)
     {
@@ -174,12 +203,17 @@ public:
 
 protected:
     mat regressionSerial(const mat& x, const vec& y);
+    mat regressionOmp(const mat& x, const vec& y);
     mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
+    mat regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
 
     double bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
+    double bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& bandwidths);
     double bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
+    double bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& bandwidths);
 
     double indepVarCriterionSerial(const vector<GwmVariable>& indepVars);
+    double indepVarCriterionOmp(const vector<GwmVariable>& indepVars);
 
 protected:
     void createResultLayer(initializer_list<ResultLayerDataItem> items);
@@ -204,6 +238,9 @@ private:
     bool mHasHatMatrix;
     GwmRegressionDiagnostic mDiagnostic;
 
+    RegressionCalculator mRegressionFunction = &CGwmGWDR::regressionSerial;
+    RegressionHatmatrixCalculator mRegressionHatmatrixFunction = &CGwmGWDR::regressionHatmatrixSerial;
+
     bool mEnableBandwidthOptimize = false;
     BandwidthCriterionType mBandwidthCriterionType = BandwidthCriterionType::CV;
     BandwidthCriterionCalculator mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionCVSerial;
@@ -212,6 +249,9 @@ private:
     double mIndepVarSelectThreshold = 3.0;
     VariablesCriterionList mIndepVarCriterionList;
     IndepVarCriterionCalculator mIndepVarCriterionFunction = &CGwmGWDR::indepVarCriterionSerial;
+
+    ParallelType mParallelType = ParallelType::SerialOnly;
+    int mOmpThreadNum = 8;
 };
 
 
