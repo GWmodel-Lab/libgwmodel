@@ -118,8 +118,6 @@ protected:
     bool mHasFTest = false;
     bool mHasPredict = false;
     
-    DistanceParameter* mPredictionDistanceParameter = nullptr;
-
     bool mIsAutoselectIndepVars = false;
     double mIndepVarSelectionThreshold = 3.0;
     IndepVarsSelectCriterionCalculator mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionSerial;

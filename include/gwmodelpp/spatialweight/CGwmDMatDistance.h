@@ -6,21 +6,23 @@
 
 using namespace std;
 
-struct DMatDistanceParameter : public DistanceParameter
-{
-    uword rowSize;
-
-    DMatDistanceParameter(uword size, uword rows) : rowSize(size) 
-    {
-        total = rows;
-    }
-};
-
 /**
  * [NOT AVALIABLE]
  */
 class CGwmDMatDistance : public CGwmDistance
 {
+public:
+
+    struct Parameter : public CGwmDistance::Parameter
+    {
+        uword rowSize;
+
+        Parameter(uword size, uword rows) : rowSize(size) 
+        {
+            total = rows;
+        }
+    };
+
 public:
     explicit CGwmDMatDistance(string dmatFile);
     CGwmDMatDistance(const CGwmDMatDistance& distance);
@@ -47,9 +49,9 @@ public:
      * 
      * @return DistanceParameter* The pointer to parameters.
      */
-    virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) override;
+    virtual CGwmDistance::Parameter* makeParameter(initializer_list<DistParamVariant> plist) override;
     
-    virtual vec distance(DistanceParameter* parameter, uword focus) override;
+    virtual vec distance(uword focus) override;
 
 private:
     string mDMatFile;

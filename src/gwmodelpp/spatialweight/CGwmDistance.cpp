@@ -8,25 +8,25 @@ unordered_map<CGwmDistance::DistanceType, string> CGwmDistance::TypeNameMapper =
     std::make_pair(CGwmDistance::DistanceType::DMatDistance, "DMatDistance")
 };
 
-double CGwmDistance::maxDistance(uword total, DistanceParameter* parameter)
+double CGwmDistance::maxDistance()
 {
-    assert(parameter != nullptr);
+    assert(mParameter != nullptr);
     double maxD = 0.0;
-    for (uword i = 0; i < total; i++)
+    for (uword i = 0; i < mParameter->total; i++)
     {
-        double d = max(distance(parameter, i));
+        double d = max(distance(i));
         maxD = d > maxD ? d : maxD;
     }
     return maxD;
 }
 
-double CGwmDistance::minDistance(uword total, DistanceParameter* parameter)
+double CGwmDistance::minDistance()
 {
-    assert(parameter != nullptr);
+    assert(mParameter != nullptr);
     double minD = DBL_MAX;
-    for (uword i = 0; i < total; i++)
+    for (uword i = 0; i < mParameter->total; i++)
     {
-        double d = min(distance(parameter, i));
+        double d = min(distance(i));
         minD = d < minD ? d : minD;
     }
     return minD;

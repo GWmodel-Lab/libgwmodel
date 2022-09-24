@@ -4,33 +4,35 @@
 #include "CGwmDistance.h"
 
 /**
- * @brief Struct of parameters used in spatial distance calculating according to coordinate reference system. 
- * Usually a pointer to object of this class is passed to CGwmCRSDistance::distance().
- */
-struct CRSDistanceParameter : public DistanceParameter
-{
-    mat focusPoints;    //!< Matrix of focus points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
-    mat dataPoints;     //!< Matrix of data points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
-
-    /**
-     * @brief Construct a new CRSDistanceParameter object.
-     * 
-     * @param fp Reference to focus points.
-     * @param dp Reference to data points.
-     */
-    CRSDistanceParameter(const mat& fp, const mat& dp) : DistanceParameter()
-        , focusPoints(fp)
-        , dataPoints(dp)
-    {
-        total = fp.n_rows;
-    }
-};
-
-/**
  * @brief Class for calculating spatial distance according to coordinate reference system.
  */
 class CGwmCRSDistance : public CGwmDistance
 {
+public:
+
+    /**
+     * @brief Struct of parameters used in spatial distance calculating according to coordinate reference system. 
+     * Usually a pointer to object of this class is passed to CGwmCRSDistance::distance().
+     */
+    struct Parameter : public CGwmDistance::Parameter
+    {
+        mat focusPoints;    //!< Matrix of focus points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
+        mat dataPoints;     //!< Matrix of data points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
+
+        /**
+         * @brief Construct a new CRSDistanceParameter object.
+         * 
+         * @param fp Reference to focus points.
+         * @param dp Reference to data points.
+         */
+        Parameter(const mat& fp, const mat& dp) : CGwmDistance::Parameter()
+            , focusPoints(fp)
+            , dataPoints(dp)
+        {
+            total = fp.n_rows;
+        }
+    };
+
 public:
 
     /**
@@ -128,9 +130,9 @@ public:
      * 
      * @return DistanceParameter* The pointer to parameters.
      */
-    virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) override;
+    virtual CGwmDistance::Parameter* makeParameter(initializer_list<DistParamVariant> plist) override;
 
-    virtual vec distance(DistanceParameter* parameter, uword focus) override;
+    virtual vec distance(uword focus) override;
 
 protected:
     bool mGeographic = false;

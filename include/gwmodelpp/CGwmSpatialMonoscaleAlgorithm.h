@@ -62,9 +62,7 @@ public:
     void createDistanceParameter();
 
 protected:
-    CGwmSpatialWeight mSpatialWeight;   //!< Spatial weight configuration.
-    
-    DistanceParameter* mDistanceParameter = nullptr;    //!< Distance parameter used in calling for CGwmSpatialWeight::weightVector() and CGwmMinkwoskiDistance::distance().
+    CGwmSpatialWeight mSpatialWeight;   //!< Spatial weight configuration.    
 };
 
 #endif  // CGWMSPATIALMONOSCALEALGORITHM_H

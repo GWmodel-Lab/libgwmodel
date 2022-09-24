@@ -9,20 +9,6 @@
 using namespace std;
 using namespace arma;
 
-/**
- * @brief Struct of parameters used in spatial distance calculating. 
- * Usually a pointer to object of its derived classes is passed to CGwmDistance::distance().
- */
-struct DistanceParameter
-{
-    uword total;    //!< Total focus points.
-
-    /**
-     * @brief Construct a new DistanceParameter object.
-     */
-    DistanceParameter(): total(0) {}
-};
-
 typedef variant<mat, vec, uword> DistParamVariant;
 
 /**
@@ -43,6 +29,20 @@ typedef variant<mat, vec, uword> DistParamVariant;
 class CGwmDistance
 {
 public:
+
+    /**
+     * @brief Struct of parameters used in spatial distance calculating. 
+     * Usually a pointer to object of its derived classes is passed to CGwmDistance::distance().
+     */
+    struct Parameter
+    {
+        uword total;    //!< Total focus points.
+
+        /**
+         * @brief Construct a new DistanceParameter object.
+         */
+        Parameter(): total(0) {}
+    };
 
     /**
      * @brief Enum for types of distance.
@@ -94,6 +94,11 @@ public:
      */
     virtual DistanceType type() = 0;
 
+    virtual Parameter* parameter() const
+    {
+        return mParameter;
+    }
+
 
 public:
 
@@ -104,7 +109,7 @@ public:
      * @param plist A list of parameters. 
      * @return DistanceParameter* The pointer to parameters.
      */
-    virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) = 0;
+    virtual Parameter* makeParameter(initializer_list<DistParamVariant> plist) = 0;
 
     /**
      * @brief Calculate distance vector for a focus point. 
@@ -113,7 +118,7 @@ public:
      * @param focus Focused point's index. Require focus < total.
      * @return Distance vector for the focused point.
      */
-    virtual vec distance(DistanceParameter* parameter, uword focus) = 0;
+    virtual vec distance(uword focus) = 0;
 
     /**
      * @brief Get maximum distance among all points。
@@ -122,7 +127,7 @@ public:
      * @param parameter Pointer to parameter object used for calculating distance. 
      * @return Maximum distance. 
      */
-    double maxDistance(uword total, DistanceParameter* parameter);
+    double maxDistance();
     
     /**
      * @brief Get minimum distance among all points
@@ -131,7 +136,12 @@ public:
      * @param parameter Pointer to parameter object used for calculating distance. 
      * @return Maximum distance.  
      */
-    double minDistance(uword total, DistanceParameter* parameter);
+    double minDistance();
+
+protected:
+
+    Parameter* mParameter = nullptr;
+
 };
 
 

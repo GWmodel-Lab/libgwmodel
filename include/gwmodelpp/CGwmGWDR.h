@@ -228,7 +228,6 @@ private:
 
 private:
     vector<CGwmSpatialWeight> mSpatialWeights;
-    vector<DistanceParameter*> mDistParameters;
 
     vec mY;
     mat mX;

@@ -89,21 +89,23 @@ CGwmCRSDistance::CGwmCRSDistance(const CGwmCRSDistance &distance) : CGwmDistance
     mGeographic = distance.mGeographic;
 }
 
-DistanceParameter* CGwmCRSDistance::makeParameter(initializer_list<DistParamVariant> plist)
+CGwmDistance::Parameter* CGwmCRSDistance::makeParameter(initializer_list<DistParamVariant> plist)
 {
+    if (mParameter != nullptr) delete mParameter;
     if (plist.size() == 2)
     {
         const mat& fp = get<mat>(*(plist.begin()));
         const mat& dp = get<mat>(*(plist.begin() + 1));
-        return new CRSDistanceParameter(fp, dp);
+        mParameter = new Parameter(fp, dp);
     }
-    else return nullptr;
+    else mParameter = nullptr;
+    return mParameter;
 }
 
-vec CGwmCRSDistance::distance(DistanceParameter* parameter, uword focus)
+vec CGwmCRSDistance::distance(uword focus)
 {
-    assert(parameter != nullptr);
-    CRSDistanceParameter* p = static_cast<CRSDistanceParameter*>(parameter);
+    assert(mParameter != nullptr);
+    Parameter* p = static_cast<Parameter*>(mParameter);
     if (p->dataPoints.n_cols == 2 && p->focusPoints.n_cols == 2)
     {
         if (focus < p->total)

@@ -11,20 +11,22 @@ CGwmDMatDistance::CGwmDMatDistance(const CGwmDMatDistance &distance) : CGwmDista
     mDMatFile = distance.mDMatFile;
 }
 
-DistanceParameter* CGwmDMatDistance::makeParameter(initializer_list<DistParamVariant> plist)
+CGwmDistance::Parameter* CGwmDMatDistance::makeParameter(initializer_list<DistParamVariant> plist)
 {
+    if (mParameter != nullptr) delete mParameter;
     if (plist.size() == 2)
     {
         const uword size = get<uword>(*(plist.begin()));
         const uword rows = get<uword>(*(plist.begin() + 1));
-        return new DMatDistanceParameter(size, rows);
+        mParameter = new Parameter(size, rows);
     }
-    else return nullptr;
+    else mParameter = nullptr;
+    return mParameter;
 }
 
-vec CGwmDMatDistance::distance(DistanceParameter* parameter, uword focus)
+vec CGwmDMatDistance::distance(uword focus)
 {
-    assert(parameter != nullptr);
+    assert(mParameter != nullptr);
     // QFile dmat(mDMatFile);
     // if (focus < mTotal && dmat.open(QFile::QIODevice::ReadOnly))
     // {

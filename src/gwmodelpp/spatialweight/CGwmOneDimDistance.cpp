@@ -14,21 +14,23 @@ CGwmOneDimDistance::CGwmOneDimDistance(const CGwmOneDimDistance &distance) : CGw
     
 }
 
-DistanceParameter* CGwmOneDimDistance::makeParameter(initializer_list<DistParamVariant> plist)
+CGwmDistance::Parameter* CGwmOneDimDistance::makeParameter(initializer_list<DistParamVariant> plist)
 {
+    if (mParameter != nullptr) delete mParameter;
     if (plist.size() == 2)
     {
         const mat& fp = get<vec>(*(plist.begin()));
         const mat& dp = get<vec>(*(plist.begin() + 1));
-        return new OneDimDistanceParameter(fp, dp);
+        mParameter = new Parameter(fp, dp);
     }
-    else return nullptr;
+    else mParameter = nullptr;
+    return mParameter;
 }
 
-vec CGwmOneDimDistance::distance(DistanceParameter* parameter, uword focus)
+vec CGwmOneDimDistance::distance(uword focus)
 {
-    assert(parameter != nullptr);
-    OneDimDistanceParameter* p = (OneDimDistanceParameter*)parameter;
+    assert(mParameter != nullptr);
+    Parameter* p = static_cast<Parameter*>(mParameter);
     if (focus < p->total)
     {
         return AbstractDistance(p->focusPoints(focus), p->dataPoints);

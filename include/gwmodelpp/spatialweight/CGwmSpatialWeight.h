@@ -161,7 +161,7 @@ public:
      * @param focus 
      * @return vec 
      */
-    virtual vec weightVector(DistanceParameter* parameter, uword focus);
+    virtual vec weightVector(uword focus);
 
     /**
      * @brief Get whether this object is valid in geting weight vector.
@@ -252,9 +252,9 @@ inline void CGwmSpatialWeight::setDistance(CGwmDistance&& distance)
     mDistance = distance.clone();
 }
 
-inline vec CGwmSpatialWeight::weightVector(DistanceParameter* parameter, uword focus)
+inline vec CGwmSpatialWeight::weightVector(uword focus)
 {
-    return mWeight->weight(mDistance->distance(parameter, focus));
+    return mWeight->weight(mDistance->distance(focus));
 }
 
 #endif // CGWMSPATIALWEIGHT_H

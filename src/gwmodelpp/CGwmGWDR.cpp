@@ -27,11 +27,10 @@ void CGwmGWDR::run()
     // Set coordinates matrices.
     for (size_t m = 0; m < nDims; m++)
     {
-        DistanceParameter* oneDimDP = mSpatialWeights[m].distance()->makeParameter({
+        mSpatialWeights[m].distance()->makeParameter({
             vec(mSourceLayer->points().col(m)),
             vec(mSourceLayer->points().col(m))
         });
-        mDistParameters.push_back(oneDimDP);
     }
 
     // Select Independent Variable
@@ -57,8 +56,8 @@ void CGwmGWDR::run()
             const CGwmSpatialWeight& sw = mSpatialWeights[m];
             CGwmBandwidthWeight* bw = sw.weight<CGwmBandwidthWeight>();
             // Set Initial value
-            double lower = bw->adaptive() ? nVars + 1 : sw.distance()->minDistance(nDp, mDistParameters[m]);
-            double upper = bw->adaptive() ? nDp : sw.distance()->maxDistance(nDp, mDistParameters[m]);
+            double lower = bw->adaptive() ? nVars + 1 : sw.distance()->minDistance();
+            double upper = bw->adaptive() ? nDp : sw.distance()->maxDistance();
             if (bw->bandwidth() <= 0.0 || bw->bandwidth() >= upper)
             {
                 bw->setBandwidth(upper * 0.618);
@@ -99,7 +98,7 @@ void CGwmGWDR::run()
             vec w(nDp, arma::fill::ones);
             for (size_t m = 0; m < nDims; m++)
             {
-                w = w % mSpatialWeights[m].weightVector(mDistParameters[m], i);
+                w = w % mSpatialWeights[m].weightVector(i);
             }
             double tss = sum(dybar2 % w);
             double rss = sum(dyhat2 % w);
@@ -141,7 +140,7 @@ mat CGwmGWDR::regressionSerial(const mat& x, const vec& y)
         vec w(nDp, arma::fill::ones);
         for (size_t m = 0; m < nDim; m++)
         {
-            vec w_m = mSpatialWeights[m].weightVector(mDistParameters[m], i);
+            vec w_m = mSpatialWeights[m].weightVector(i);
             w = w % w_m;
         }
         mat ws(1, nVar, arma::fill::ones);
@@ -175,7 +174,7 @@ mat CGwmGWDR::regressionOmp(const mat& x, const vec& y)
             vec w(nDp, arma::fill::ones);
             for (size_t m = 0; m < nDim; m++)
             {
-                vec w_m = mSpatialWeights[m].weightVector(mDistParameters[m], i);
+                vec w_m = mSpatialWeights[m].weightVector(i);
                 w = w % w_m;
             }
             mat ws(1, nVar, arma::fill::ones);
@@ -211,7 +210,7 @@ mat CGwmGWDR::regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE
         vec w(nDp, arma::fill::ones);
         for (size_t m = 0; m < nDim; m++)
         {
-            vec w_m = mSpatialWeights[m].weightVector(mDistParameters[m], i);
+            vec w_m = mSpatialWeights[m].weightVector(i);
             w = w % w_m;
         }
         mat ws(1, nVar, arma::fill::ones);
@@ -265,7 +264,7 @@ mat CGwmGWDR::regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, v
             vec w(nDp, arma::fill::ones);
             for (size_t m = 0; m < nDim; m++)
             {
-                vec w_m = mSpatialWeights[m].weightVector(mDistParameters[m], i);
+                vec w_m = mSpatialWeights[m].weightVector(i);
                 w = w % w_m;
             }
             mat ws(1, nVar, arma::fill::ones);
@@ -317,7 +316,7 @@ double CGwmGWDR::bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& 
             vec w(nDp, arma::fill::ones);
             for (size_t m = 0; m < nDim; m++)
             {
-                vec d_m = mSpatialWeights[m].distance()->distance(mDistParameters[m], i);
+                vec d_m = mSpatialWeights[m].distance()->distance(i);
                 vec w_m = bandwidths[m]->weight(d_m);
                 w = w % w_m;
             }
@@ -357,7 +356,7 @@ double CGwmGWDR::bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& ban
             vec w(nDp, arma::fill::ones);
             for (size_t m = 0; m < nDim; m++)
             {
-                vec d_m = mSpatialWeights[m].distance()->distance(mDistParameters[m], i);
+                vec d_m = mSpatialWeights[m].distance()->distance(i);
                 vec w_m = bandwidths[m]->weight(d_m);
                 w = w % w_m;
             }
@@ -398,7 +397,7 @@ double CGwmGWDR::bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>&
             vec w(nDp, arma::fill::ones);
             for (size_t m = 0; m < nDim; m++)
             {
-                vec d_m = mSpatialWeights[m].distance()->distance(mDistParameters[m], i);
+                vec d_m = mSpatialWeights[m].distance()->distance(i);
                 vec w_m = bandwidths[m]->weight(d_m);
                 w = w % w_m;
             }
@@ -442,7 +441,7 @@ double CGwmGWDR::bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& ba
             vec w(nDp, arma::fill::ones);
             for (size_t m = 0; m < nDim; m++)
             {
-                vec d_m = mSpatialWeights[m].distance()->distance(mDistParameters[m], i);
+                vec d_m = mSpatialWeights[m].distance()->distance(i);
                 vec w_m = bandwidths[m]->weight(d_m);
                 w = w % w_m;
             }
@@ -522,7 +521,7 @@ double CGwmGWDR::indepVarCriterionSerial(const vector<GwmVariable>& indepVars)
                 vec w(nDp, arma::fill::ones);
                 for (size_t m = 0; m < nDim; m++)
                 {
-                    vec w_m = mSpatialWeights[m].weightVector(mDistParameters[m], i);
+                    vec w_m = mSpatialWeights[m].weightVector(i);
                     w = w % w_m;
                 }
                 mat xtw = (x.each_col() % w).t();
@@ -609,7 +608,7 @@ double CGwmGWDR::indepVarCriterionOmp(const vector<GwmVariable>& indepVars)
                 vec w(nDp, arma::fill::ones);
                 for (size_t m = 0; m < nDim; m++)
                 {
-                    vec w_m = mSpatialWeights[m].weightVector(mDistParameters[m], i);
+                    vec w_m = mSpatialWeights[m].weightVector(i);
                     w = w % w_m;
                 }
                 mat xtw = (x.each_col() % w).t();

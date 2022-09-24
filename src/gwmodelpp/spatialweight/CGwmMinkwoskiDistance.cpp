@@ -22,13 +22,13 @@ mat CGwmMinkwoskiDistance::CoordinateRotate(const mat& coords, double theta)
     return rotated_coords;
 }
 
-vec CGwmMinkwoskiDistance::distance(DistanceParameter* parameter, uword focus)
+vec CGwmMinkwoskiDistance::distance(uword focus)
 {
-    assert(parameter != nullptr);
-    if (mGeographic) return CGwmCRSDistance::distance(parameter, focus);
+    assert(mParameter != nullptr);
+    if (mGeographic) return CGwmCRSDistance::distance(focus);
     else
     {
-        CRSDistanceParameter* p = (CRSDistanceParameter*)parameter;
+        CGwmCRSDistance::Parameter* p = static_cast<CGwmCRSDistance::Parameter*>(mParameter);
         if (p->dataPoints.n_cols == 2 && p->focusPoints.n_cols == 2)
         {
             if (focus < p->total)
