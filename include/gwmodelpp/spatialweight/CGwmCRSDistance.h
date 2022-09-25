@@ -130,12 +130,15 @@ public:
      * 
      * @return DistanceParameter* The pointer to parameters.
      */
-    virtual CGwmDistance::Parameter* makeParameter(initializer_list<DistParamVariant> plist) override;
+    virtual void makeParameter(initializer_list<DistParamVariant> plist) override;
 
     virtual vec distance(uword focus) override;
+    virtual double maxDistance() override;
+    virtual double minDistance() override;
 
 protected:
     bool mGeographic = false;
+    unique_ptr<Parameter> mParameter = nullptr;
 
 private:
     CalculatorType mCalculator = &EuclideanDistance;

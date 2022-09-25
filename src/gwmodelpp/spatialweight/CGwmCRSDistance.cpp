@@ -89,30 +89,58 @@ CGwmCRSDistance::CGwmCRSDistance(const CGwmCRSDistance &distance) : CGwmDistance
     mGeographic = distance.mGeographic;
 }
 
-CGwmDistance::Parameter* CGwmCRSDistance::makeParameter(initializer_list<DistParamVariant> plist)
+void CGwmCRSDistance::makeParameter(initializer_list<DistParamVariant> plist)
 {
-    if (mParameter != nullptr) delete mParameter;
     if (plist.size() == 2)
     {
         const mat& fp = get<mat>(*(plist.begin()));
         const mat& dp = get<mat>(*(plist.begin() + 1));
-        mParameter = new Parameter(fp, dp);
+        if (fp.n_cols == 2 && dp.n_cols == 2)
+            mParameter = make_unique<Parameter>(fp, dp);
+        else 
+        {
+            mParameter.reset(nullptr);
+            throw std::runtime_error("The dimension of data points or focus points is not 2."); 
+        }
     }
-    else mParameter = nullptr;
-    return mParameter;
+    else
+    {
+        mParameter.reset(nullptr);
+        throw std::runtime_error("The number of parameters must be 2.");
+    }
 }
 
 vec CGwmCRSDistance::distance(uword focus)
 {
-    assert(mParameter != nullptr);
-    Parameter* p = static_cast<Parameter*>(mParameter);
-    if (p->dataPoints.n_cols == 2 && p->focusPoints.n_cols == 2)
+    if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
+
+    if (focus < mParameter->total)
     {
-        if (focus < p->total)
-        {
-            return mCalculator(p->focusPoints.row(focus), p->dataPoints);
-        }
-        else throw std::runtime_error("Target is out of bounds of data points.");
+        return mCalculator(mParameter->focusPoints.row(focus), mParameter->dataPoints);
     }
-    else throw std::runtime_error("The dimension of data points or focus points is not 2.");
+    else throw std::runtime_error("Target is out of bounds of data points.");
+}
+
+double CGwmCRSDistance::maxDistance()
+{
+    if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
+    double maxD = 0.0;
+    for (uword i = 0; i < mParameter->total; i++)
+    {
+        double d = max(mCalculator(mParameter->focusPoints.row(i), mParameter->dataPoints));
+        maxD = d > maxD ? d : maxD;
+    }
+    return maxD;
+}
+
+double CGwmCRSDistance::minDistance()
+{
+    if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
+    double minD = DBL_MAX;
+    for (uword i = 0; i < mParameter->total; i++)
+    {
+        double d = min(mCalculator(mParameter->focusPoints.row(i), mParameter->dataPoints));
+        minD = d < minD ? d : minD;
+    }
+    return minD;
 }

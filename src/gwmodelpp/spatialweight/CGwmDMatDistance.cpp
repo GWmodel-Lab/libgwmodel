@@ -11,22 +11,20 @@ CGwmDMatDistance::CGwmDMatDistance(const CGwmDMatDistance &distance) : CGwmDista
     mDMatFile = distance.mDMatFile;
 }
 
-CGwmDistance::Parameter* CGwmDMatDistance::makeParameter(initializer_list<DistParamVariant> plist)
+void CGwmDMatDistance::makeParameter(initializer_list<DistParamVariant> plist)
 {
-    if (mParameter != nullptr) delete mParameter;
     if (plist.size() == 2)
     {
         const uword size = get<uword>(*(plist.begin()));
         const uword rows = get<uword>(*(plist.begin() + 1));
-        mParameter = new Parameter(size, rows);
+        mParameter = make_unique<Parameter>(size, rows);
     }
     else mParameter = nullptr;
-    return mParameter;
 }
 
 vec CGwmDMatDistance::distance(uword focus)
 {
-    assert(mParameter != nullptr);
+    if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
     // QFile dmat(mDMatFile);
     // if (focus < mTotal && dmat.open(QFile::QIODevice::ReadOnly))
     // {
@@ -36,4 +34,16 @@ vec CGwmDMatDistance::distance(uword focus)
     //     return vec((double*)values.data(), mRowSize);
     // }
     return vec();
+}
+
+double CGwmDMatDistance::maxDistance()
+{
+    if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
+    return DBL_MAX;
+}
+
+double CGwmDMatDistance::minDistance()
+{
+    if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
+    return 0.0;
 }

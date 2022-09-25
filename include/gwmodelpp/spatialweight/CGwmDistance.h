@@ -1,8 +1,9 @@
 #ifndef CGWMDISTANCE_H
 #define CGWMDISTANCE_H
 
-#include <unordered_map>
+#include <memory>
 #include <string>
+#include <unordered_map>
 #include <armadillo>
 #include <variant>
 
@@ -94,10 +95,7 @@ public:
      */
     virtual DistanceType type() = 0;
 
-    virtual Parameter* parameter() const
-    {
-        return mParameter;
-    }
+    virtual Parameter* parameter() const = delete;
 
 
 public:
@@ -107,9 +105,8 @@ public:
      * This function is pure virtual. It would never be called directly.
      * 
      * @param plist A list of parameters. 
-     * @return DistanceParameter* The pointer to parameters.
      */
-    virtual Parameter* makeParameter(initializer_list<DistParamVariant> plist) = 0;
+    virtual void makeParameter(initializer_list<DistParamVariant> plist) = 0;
 
     /**
      * @brief Calculate distance vector for a focus point. 
@@ -127,7 +124,7 @@ public:
      * @param parameter Pointer to parameter object used for calculating distance. 
      * @return Maximum distance. 
      */
-    double maxDistance();
+    virtual double maxDistance() = 0;
     
     /**
      * @brief Get minimum distance among all points
@@ -136,11 +133,7 @@ public:
      * @param parameter Pointer to parameter object used for calculating distance. 
      * @return Maximum distance.  
      */
-    double minDistance();
-
-protected:
-
-    Parameter* mParameter = nullptr;
+    virtual double minDistance() = 0;
 
 };
 
