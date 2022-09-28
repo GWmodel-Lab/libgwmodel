@@ -65,18 +65,6 @@ public:
 public:
 
     /**
-     * @brief Construct a new CGwmDistance object.
-     */
-    explicit CGwmDistance() {};
-
-    /**
-     * @brief Construct a new CGwmDistance object.
-     * 
-     * @param d Reference to object for copying.
-     */
-    CGwmDistance(const CGwmDistance& d) {};
-
-    /**
      * @brief Destroy the CGwmDistance object.
      */
     virtual ~CGwmDistance() {};

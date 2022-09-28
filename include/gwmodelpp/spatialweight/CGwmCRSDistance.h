@@ -83,7 +83,7 @@ public:
     explicit CGwmCRSDistance(bool isGeographic);
 
     /**
-     * @brief Construct a new CGwmCRSDistance object.
+     * @brief Copy construct a new CGwmCRSDistance object.
      * 
      * @param distance Refernce to object for copying.
      */

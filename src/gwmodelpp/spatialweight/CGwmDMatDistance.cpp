@@ -1,12 +1,12 @@
 #include "gwmodelpp/spatialweight/CGwmDMatDistance.h"
 #include <assert.h>
 
-CGwmDMatDistance::CGwmDMatDistance(string dmatFile) : CGwmDistance()
+CGwmDMatDistance::CGwmDMatDistance(string dmatFile)
 {
     mDMatFile = dmatFile;
 }
 
-CGwmDMatDistance::CGwmDMatDistance(const CGwmDMatDistance &distance) : CGwmDistance(distance)
+CGwmDMatDistance::CGwmDMatDistance(const CGwmDMatDistance &distance)
 {
     mDMatFile = distance.mDMatFile;
 }
