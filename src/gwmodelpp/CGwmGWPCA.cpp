@@ -9,7 +9,6 @@ CGwmGWPCA::CGwmGWPCA()
 
 CGwmGWPCA::~CGwmGWPCA()
 {
-    delete mDistanceParameter;
 }
 
 void CGwmGWPCA::run()
@@ -49,7 +48,7 @@ mat CGwmGWPCA::solveSerial(const mat& x, cube& loadings, mat& sdev)
     loadings = cube(nDp, nVar, mK, arma::fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
-        vec w = mSpatialWeight.weightVector(mDistanceParameter, i);
+        vec w = mSpatialWeight.weightVector(i);
         mat V;
         vec d;
         wpca(x, w, V, d);

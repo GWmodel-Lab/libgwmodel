@@ -130,7 +130,7 @@ void CGwmGWSS::summarySerial()
     uword corrSize = mIsCorrWithFirstOnly ? 1 : nVar - 1;
     for (uword i = 0; i < nRp; i++)
     {
-        vec w = mSpatialWeight.weightVector(mDistanceParameter, i);
+        vec w = mSpatialWeight.weightVector(i);
         double sumw = sum(w);
         vec Wi = w / sumw;
         mLocalMean.row(i) = trans(Wi) * mX;
@@ -182,7 +182,7 @@ void CGwmGWSS::summaryOmp()
     for (int i = 0; (uword)i < nRp; i++)
     {
         int thread = omp_get_thread_num();
-        vec w = mSpatialWeight.weightVector(mDistanceParameter, i);
+        vec w = mSpatialWeight.weightVector(i);
         double sumw = sum(w);
         vec Wi = w / sumw;
         mLocalMean.row(i) = trans(Wi) * mX;

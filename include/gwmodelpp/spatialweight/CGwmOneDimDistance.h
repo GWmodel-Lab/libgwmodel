@@ -4,33 +4,35 @@
 #include "CGwmDistance.h"
 
 /**
- * @brief Struct of parameters used in spatial distance calculating according to coordinate reference system. 
- * Usually a pointer to object of this class is passed to CGwmOneDimDistance::distance().
- */
-struct OneDimDistanceParameter : public DistanceParameter
-{
-    vec focusPoints;    //!< Matrix of focus points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
-    vec dataPoints;     //!< Matrix of data points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
-
-    /**
-     * @brief Construct a new OneDimDistanceParameter object.
-     * 
-     * @param fp Reference to focus points.
-     * @param dp Reference to data points.
-     */
-    OneDimDistanceParameter(const vec& fp, const vec& dp) : DistanceParameter()
-        , focusPoints(fp)
-        , dataPoints(dp)
-    {
-        total = fp.n_rows;
-    }
-};
-
-/**
  * @brief Class for calculating spatial distance according to coordinate reference system.
  */
 class CGwmOneDimDistance : public CGwmDistance
 {
+public:
+
+    /**
+     * @brief Struct of parameters used in spatial distance calculating according to coordinate reference system. 
+     * Usually a pointer to object of this class is passed to CGwmOneDimDistance::distance().
+     */
+    struct Parameter : public CGwmDistance::Parameter
+    {
+        vec focusPoints;    //!< Matrix of focus points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
+        vec dataPoints;     //!< Matrix of data points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
+
+        /**
+         * @brief Construct a new OneDimDistanceParameter object.
+         * 
+         * @param fp Reference to focus points.
+         * @param dp Reference to data points.
+         */
+        Parameter(const vec& fp, const vec& dp) : CGwmDistance::Parameter()
+            , focusPoints(fp)
+            , dataPoints(dp)
+        {
+            total = fp.n_rows;
+        }
+    };
+
 public:
 
     /**
@@ -84,9 +86,14 @@ public:
      * 
      * @return DistanceParameter* The pointer to parameters.
      */
-    virtual DistanceParameter* makeParameter(initializer_list<DistParamVariant> plist) override;
+    virtual void makeParameter(initializer_list<DistParamVariant> plist) override;
 
-    virtual vec distance(DistanceParameter* parameter, uword focus) override;
+    virtual vec distance(uword focus) override;
+    virtual double maxDistance() override;
+    virtual double minDistance() override;
+
+protected:
+    unique_ptr<Parameter> mParameter = nullptr;
 };
 
 #endif // CGWMOneDimDISTANCE_H

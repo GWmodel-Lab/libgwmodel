@@ -55,7 +55,10 @@ public:
      * 
      * @return Pointer to CGwmSpatialWeight::mWeight .
      */
-    CGwmWeight *weight() const;
+    CGwmWeight *weight() const
+    {
+        return mWeight;
+    }
 
     /**
      * @brief Set the pointer to CGwmSpatialWeight::mWeight object.
@@ -63,7 +66,11 @@ public:
      * @param weight Pointer to CGwmWeight instance. 
      * Control of this pointer will be taken, and it will be deleted when destructing.
      */
-    void setWeight(CGwmWeight *weight);
+    void setWeight(CGwmWeight *weight)
+    {
+        if (mWeight) delete mWeight;
+        mWeight = weight;
+    }
 
     /**
      * @brief Set the pointer to CGwmSpatialWeight::mWeight object.
@@ -71,7 +78,11 @@ public:
      * @param weight Reference to CGwmWeight instance.
      * This object will be cloned.
      */
-    void setWeight(CGwmWeight& weight);
+    void setWeight(CGwmWeight& weight)
+    {
+        if (mWeight) delete mWeight;
+        mWeight = weight.clone();
+    }
 
     /**
      * @brief Set the pointer to CGwmSpatialWeight::mWeight object.
@@ -79,7 +90,11 @@ public:
      * @param weight Reference to CGwmWeight instance.
      * This object will be cloned.
      */
-    void setWeight(CGwmWeight&& weight);
+    void setWeight(CGwmWeight&& weight)
+    {
+        if (mWeight) delete mWeight;
+        mWeight = weight.clone();
+    }
 
     /**
      * @brief Get the pointer to CGwmSpatialWeight::mWeight and cast it to required type.
@@ -95,7 +110,10 @@ public:
      * 
      * @return Pointer to CGwmSpatialWeight::mDistance.
      */
-    CGwmDistance *distance() const;
+    CGwmDistance *distance() const
+    {
+        return mDistance;
+    }
 
     /**
      * @brief Set the pointer to CGwmSpatialWeight::mDistance object.
@@ -103,7 +121,11 @@ public:
      * @param distance Pointer to CGwmDistance instance. 
      * Control of this pointer will be taken, and it will be deleted when destructing.
      */
-    void setDistance(CGwmDistance *distance);
+    void setDistance(CGwmDistance *distance)
+    {
+        if (mDistance) delete mDistance;
+        mDistance = distance;
+    }
 
     /**
      * @brief Set the pointer to CGwmSpatialWeight::mDistance object.
@@ -111,7 +133,11 @@ public:
      * @param distance Reference to CGwmDistance instance.
      * This object will be cloned.
      */
-    void setDistance(CGwmDistance& distance);
+    void setDistance(CGwmDistance& distance)
+    {
+        if (mDistance) delete mDistance;
+        mDistance = distance.clone();
+    }
 
     /**
      * @brief Set the pointer to CGwmSpatialWeight::mDistance object.
@@ -119,7 +145,11 @@ public:
      * @param distance Reference to CGwmDistance instance.
      * This object will be cloned.
      */
-    void setDistance(CGwmDistance&& distance);
+    void setDistance(CGwmDistance&& distance)
+    {
+        if (mDistance) delete mDistance;
+        mDistance = distance.clone();
+    }
 
     /**
      * @brief Get the pointer to CGwmSpatialWeight::mDistance and cast it to required type.
@@ -161,7 +191,10 @@ public:
      * @param focus 
      * @return vec 
      */
-    virtual vec weightVector(DistanceParameter* parameter, uword focus);
+    virtual vec weightVector(uword focus)
+    {
+        return mWeight->weight(mDistance->distance(focus));
+    }
 
     /**
      * @brief Get whether this object is valid in geting weight vector.
@@ -176,38 +209,10 @@ private:
     CGwmDistance* mDistance = nullptr;  //!< Pointer to distance configuration.
 };
 
-inline CGwmWeight *CGwmSpatialWeight::weight() const
-{
-    return mWeight;
-}
-
 template<>
 inline CGwmBandwidthWeight* CGwmSpatialWeight::weight<CGwmBandwidthWeight>() const
 {
     return static_cast<CGwmBandwidthWeight*>(mWeight);
-}
-
-inline void CGwmSpatialWeight::setWeight(CGwmWeight *weight)
-{
-    if (mWeight) delete mWeight;
-    mWeight = weight;
-}
-
-inline void CGwmSpatialWeight::setWeight(CGwmWeight& weight)
-{
-    if (mWeight) delete mWeight;
-    mWeight = weight.clone();
-}
-
-inline void CGwmSpatialWeight::setWeight(CGwmWeight&& weight)
-{
-    if (mWeight) delete mWeight;
-    mWeight = weight.clone();
-}
-
-inline CGwmDistance *CGwmSpatialWeight::distance() const
-{
-    return mDistance;
 }
 
 template<>
@@ -232,29 +237,6 @@ template<>
 inline CGwmOneDimDistance* CGwmSpatialWeight::distance<CGwmOneDimDistance>() const
 {
     return static_cast<CGwmOneDimDistance*>(mDistance);
-}
-
-inline void CGwmSpatialWeight::setDistance(CGwmDistance *distance)
-{
-    if (mDistance) delete mDistance;
-    mDistance = distance;
-}
-
-inline void CGwmSpatialWeight::setDistance(CGwmDistance& distance)
-{
-    if (mDistance) delete mDistance;
-    mDistance = distance.clone();
-}
-
-inline void CGwmSpatialWeight::setDistance(CGwmDistance&& distance)
-{
-    if (mDistance) delete mDistance;
-    mDistance = distance.clone();
-}
-
-inline vec CGwmSpatialWeight::weightVector(DistanceParameter* parameter, uword focus)
-{
-    return mWeight->weight(mDistance->distance(parameter, focus));
 }
 
 #endif // CGWMSPATIALWEIGHT_H

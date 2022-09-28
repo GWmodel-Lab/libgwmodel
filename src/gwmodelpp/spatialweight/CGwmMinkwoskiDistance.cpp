@@ -22,30 +22,26 @@ mat CGwmMinkwoskiDistance::CoordinateRotate(const mat& coords, double theta)
     return rotated_coords;
 }
 
-vec CGwmMinkwoskiDistance::distance(DistanceParameter* parameter, uword focus)
+vec CGwmMinkwoskiDistance::distance(uword focus)
 {
-    assert(parameter != nullptr);
-    if (mGeographic) return CGwmCRSDistance::distance(parameter, focus);
+    if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
+
+    if (mGeographic) return CGwmCRSDistance::distance(focus);
     else
     {
-        CRSDistanceParameter* p = (CRSDistanceParameter*)parameter;
-        if (p->dataPoints.n_cols == 2 && p->focusPoints.n_cols == 2)
+        if (focus < mParameter->total)
         {
-            if (focus < p->total)
+            mat dp = mParameter->dataPoints;
+            rowvec rp = mParameter->focusPoints.row(focus);
+            if (mPoly != 2 && mTheta != 0)
             {
-                mat dp = p->dataPoints;
-                rowvec rp = p->focusPoints.row(focus);
-                if (mPoly != 2 && mTheta != 0)
-                {
-                    dp = CoordinateRotate(p->dataPoints, mTheta);
-                    rp = CoordinateRotate(p->focusPoints.row(focus), mTheta);
-                }
-                if (mPoly == 1.0) return ChessDistance(rp, dp);
-                else if (mPoly == -1.0) return ManhattonDistance(rp, dp);
-                else return MinkwoskiDistance(rp, dp, mPoly);
+                dp = CoordinateRotate(mParameter->dataPoints, mTheta);
+                rp = CoordinateRotate(mParameter->focusPoints.row(focus), mTheta);
             }
-            else throw std::runtime_error("Target is out of bounds of data points.");
+            if (mPoly == 1.0) return ChessDistance(rp, dp);
+            else if (mPoly == -1.0) return ManhattonDistance(rp, dp);
+            else return MinkwoskiDistance(rp, dp, mPoly);
         }
-        else throw std::runtime_error("The dimension of data points or focus points is not 2.");
+        else throw std::runtime_error("Target is out of bounds of data points.");
     }
 }
