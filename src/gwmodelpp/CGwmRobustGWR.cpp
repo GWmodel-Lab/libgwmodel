@@ -13,7 +13,7 @@ GwmRegressionDiagnostic CGwmRobustGWR::CalcDiagnostic(const mat &x, const vec &y
 {
     vec r = y - sum(betas % x, 1);
     double rss = sum(r % r);
-    int n = x.n_rows;
+    double n = (double)x.n_rows;
     double AIC = n * log(rss / n) + n * log(2 * datum::pi) + n + shat(0);
     double AICc = n * log(rss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
     double edf = n - 2 * shat(0) + shat(1);
@@ -51,25 +51,11 @@ void CGwmRobustGWR::run()
     setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
     uword nDp = mSourceLayer->featureCount();
     mWeightMask = vec(nDp, fill::ones);
-    if (!hasPredictLayer() && mIsAutoselectBandwidth)
-    {
-        CGwmBandwidthWeight *bw0 = mSpatialWeight.weight<CGwmBandwidthWeight>();
-        double lower = bw0->adaptive() ? 20 : 0.0;
-        double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance(nDp, mRegressionDistanceParameter);
-        CGwmBandwidthSelector selector(bw0, lower, upper);
-        CGwmBandwidthWeight *bw = selector.optimize(this);
-        if (bw)
-        {
-            mSpatialWeight.setWeight(bw);
-            mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
-        }
-    }
     if (mHasHatMatrix)
     {
         mat betasSE, S;
         vec shat, qdiag;
         mBetas = regressionHatmatrix(mX, mY, betasSE, shat, qdiag, S);
-        mDiagnostic = CalcDiagnostic(mX, mY, mBetas, shat);
         double trS = shat(0), trStS = shat(1);
         double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
         betasSE = sqrt(sigmaHat * betasSE);
@@ -137,7 +123,7 @@ mat CGwmRobustGWR::robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, 
     vec studentizedResidual = residual / sqrt(sigmaHat * qDiag);
 
     vec WVect(nDp, fill::zeros);
-
+    mDiagnostic = diagnostic;
     //生成W.vect
     for (int i = 0; i < studentizedResidual.size(); i++)
     {
@@ -171,6 +157,7 @@ mat CGwmRobustGWR::robustGWRCaliSecond(const mat &x, const vec &y, mat &betasSE,
     double mse = sum((residual % residual)) / residual.size();
     //计算WVect
     mWeightMask = filtWeight(residual, mse);
+    mDiagnostic = CalcDiagnostic(x, y, betas, shat);
     while (diffmse > delta && iter < maxiter)
     {
         double oldmse = mse;
