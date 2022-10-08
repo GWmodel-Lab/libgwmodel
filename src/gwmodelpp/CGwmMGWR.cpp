@@ -5,30 +5,44 @@
 #include <exception>
 #include "gwmodel.h"
 #include <spatialweight/CGwmCRSDistance.h>
+#include "CGwmBandwidthSelector.h"
+#include "CGwmVariableForwardSelector.h"
+
 
 using namespace std;
 
 int CGwmMGWR::treeChildCount = 0;
 
-unordered_map<CGwmMGWR::BandwidthInitilizeType> CGwmMGWR::BandwidthInitilizeTypeNameMapper = {
+unordered_map<CGwmMGWR::BandwidthInitilizeType,string> CGwmMGWR::BandwidthInitilizeTypeNameMapper = {
     make_pair(CGwmMGWR::BandwidthInitilizeType::Null, ("Not initilized, not specified")),
     make_pair(CGwmMGWR::BandwidthInitilizeType::Initial, ("Initilized")),
     make_pair(CGwmMGWR::BandwidthInitilizeType::Specified, ("Specified"))
 };
 
-unordered_map<CGwmMGWR::BandwidthSelectionCriterionType> CGwmMGWR::BandwidthSelectionCriterionTypeNameMapper = {
+unordered_map<CGwmMGWR::BandwidthSelectionCriterionType,string> CGwmMGWR::BandwidthSelectionCriterionTypeNameMapper = {
     make_pair(CGwmMGWR::BandwidthSelectionCriterionType::CV, ("CV")),
     make_pair(CGwmMGWR::BandwidthSelectionCriterionType::AIC, ("AIC"))
 };
 
-unordered_map<CGwmMGWR::BackFittingCriterionType> CGwmMGWR::BackFittingCriterionTypeNameMapper = {
+unordered_map<CGwmMGWR::BackFittingCriterionType,string> CGwmMGWR::BackFittingCriterionTypeNameMapper = {
     make_pair(CGwmMGWR::BackFittingCriterionType::CVR, ("CVR")),
     make_pair(CGwmMGWR::BackFittingCriterionType::dCVR, ("dCVR"))
 };
 
-GwmRegressionDiagnostic CGwmMGWR::CalcDiagnostic(const mat &x, const vec &y, const mat &S0, double RSS)
-{
-    // 诊断信息
+GwmRegressionDiagnostic CGwmMGWR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
+{//诊断值
+    vec r = y - sum(betas % x, 1);
+    double rss = sum(r % r);
+    double n = (double)x.n_rows;
+    double AIC = n * log(rss / n) + n * log(2 * datum::pi) + n + shat(0);
+    double AICc = n * log(rss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
+    double edf = n - 2 * shat(0) + shat(1);
+    double enp = 2 * shat(0) - shat(1);
+    double yss = sum((y - mean(y)) % (y - mean(y)));
+    double r2 = 1 - rss / yss;
+    double r2_adj = 1 - (1 - r2) * (n - 1) / (edf - 1);
+    return { rss, AIC, AICc, enp, edf, r2, r2_adj };
+    /*// 诊断信息
     double nDp = x.n_rows;
     double RSSg = RSS;
     double sigmaHat21 = RSSg / nDp;
@@ -50,18 +64,18 @@ GwmRegressionDiagnostic CGwmMGWR::CalcDiagnostic(const mat &x, const vec &y, con
     diagnostic.EDF = edf;
     diagnostic.RSquareAdjust = adjustRsquare;
     diagnostic.RSquare = Rsquare;
-    return diagnostic;
+    return diagnostic;*/
 }
 
 CGwmMGWR::CGwmMGWR()
-    : GwmSpatialMultiscaleAlgorithm()
+    : CGwmSpatialMultiscaleAlgorithm()
 {
 }
 
 void CGwmMGWR::setCanceled(bool canceled)
 {
     selector.setCanceled(canceled);
-    return GwmTaskThread::setCanceled(canceled);
+    return CGwmTaskThread::setCanceled(canceled);
 }
 
 //OLS计算代码
@@ -107,11 +121,10 @@ GwmBasicGWRAlgorithm::OLSVar CGwmMGWR::CalOLS(const mat &x, const vec &y){
 */
 void CGwmMGWR::run()
 {
-    if(!checkCanceled())
-    {
-        initPoints();
-        initXY(mX, mY, mDepVar, mIndepVars);
-    }
+    //createRegressionDistanceParameter();
+    //assert(mRegressionDistanceParameter != nullptr);
+    initPoints();
+    initXY(mX, mY, mDepVar, mIndepVars);
     uword nDp = mX.n_rows, nVar = mX.n_cols;
 
     // ********************************
@@ -119,7 +132,7 @@ void CGwmMGWR::run()
     // ********************************
     mX0 = mX;
     mY0 = mY;
-    for (uword i = 1; i < nVar & !checkCanceled(); i++)
+    for (uword i = 1; i < nVar ; i++)
     {
         if (mPreditorCentered[i])
         {
@@ -131,52 +144,52 @@ void CGwmMGWR::run()
     // Intialize the bandwidth
     // ***********************
     mYi = mY;
-    for (uword i = 0; i < nVar & !checkCanceled(); i++)
+    for (uword i = 0; i < nVar ; i++)
     {
         if (mBandwidthInitilize[i] == BandwidthInitilizeType::Null)
         {
-            emit message(tr("Calculating the initial bandwidth for %1 ...").arg(i == 0 ? "Intercept" : mIndepVars[i-1].name));
+            //emit message(("Calculating the initial bandwidth for %1 ...").arg(i == 0 ? "Intercept" : mIndepVars[i-1].name));
             mBandwidthSizeCriterion = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
             mBandwidthSelectionCurrentIndex = i;
             mXi = mX.col(i);
-            GwmBandwidthWeight* bw0 = bandwidth(i);
+            CGwmBandwidthWeight* bw0 = bandwidth(i);
             bool adaptive = bw0->adaptive();
             selector.setBandwidth(bw0);
             selector.setLower(adaptive ? mAdaptiveLower : 0.0);
-            selector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
-            GwmBandwidthWeight* bw = selector.optimize(this);
+            selector.setUpper(adaptive ? mSourceLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
+            CGwmBandwidthWeight* bw = selector.optimize(this);
             if (bw)
             {
                 mSpatialWeights[i].setWeight(bw);
             }
         }
     }
-
+    /*
     if(mOLS&&!checkCanceled()){
         mOLSVar = CalOLS(mX,mY);
     }
-
+    */
     // *****************************************************
     // Calculate the initial beta0 from the above bandwidths
     // *****************************************************
-    emit message(tr("Calculating the initial beta0 from the above bandwidths ..."));
-    GwmBandwidthWeight* bw0 = bandwidth(0);
+    //emit message(tr("Calculating the initial beta0 from the above bandwidths ..."));
+    CGwmBandwidthWeight* bw0 = bandwidth(0);
     bool adaptive = bw0->adaptive();
     mBandwidthSizeCriterion = bandwidthSizeCriterionAll(mBandwidthSelectionApproach[0]);
-    GwmBandwidthSizeSelector initBwSelector;
+    CGwmBandwidthSelector initBwSelector;
     initBwSelector.setBandwidth(bw0);
     initBwSelector.setLower(adaptive ? mAdaptiveLower : 0.0);
-    initBwSelector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[0].distance()->maxDistance());
-    GwmBandwidthWeight* initBw = initBwSelector.optimize(this);
+    initBwSelector.setUpper(adaptive ? mSourceLayer->featureCount() : mSpatialWeights[0].distance()->maxDistance());
+    CGwmBandwidthWeight* initBw = initBwSelector.optimize(this);
     if (!initBw)
     {
-        emit error(tr("Cannot select initial bandwidth."));
+        //emit error(tr("Cannot select initial bandwidth."));
         return;
     }
     mInitSpatialWeight.setWeight(initBw);
 
     // 初始化诊断信息矩阵
-    if (mHasHatMatrix && !checkCanceled())
+    if (mHasHatMatrix )
     {
         mS0 = mat(nDp, nDp, fill::zeros);
         mSArray = cube(nDp, nDp, nVar, fill::zeros);
@@ -185,33 +198,87 @@ void CGwmMGWR::run()
 
     mBetas = regression(mX, mY);
 
-    if (mHasHatMatrix && !checkCanceled())
+    if (mHasHatMatrix )
     {
-        mDiagnostic = CalcDiagnostic(mX, mY, mS0, mRSS0);
-        vec yhat = fitted(mX, mBetas);
+        mat betasSE, S;
+        vec shat, qdiag;
+        mBetas = regressionHatmatrix(mX, mY, betasSE, shat, qdiag, S);
+        mDiagnostic = CalcDiagnostic(mX, mY, mBetas, shat);
+        double trS = shat(0), trStS = shat(1);
+        double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
+        vec yhat = Fitted(mX, mBetas);
         vec residual = mY - yhat;
+        vec stu_res = residual / sqrt(sigmaHat * qdiag);
         mBetasTV = mBetas / mBetasSE;
-        createResultLayer({
-            qMakePair(QString("%1"), mBetas),
+        /*vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
+        vec dyhat2 = (mY - yhat) % (mY - yhat);
+        vec localR2 = vec(nDp, fill::zeros);
+        for (uword i = 0; i < nDp; i++)
+        {
+            vec w = mSpatialWeight.weightVector(mRegressionDistanceParameter, i);
+            double tss = sum(dybar2 % w);
+            double rss = sum(dyhat2 % w);
+            localR2(i) = (tss - rss) / tss;
+        }*/
+        createResultLayer({//结果及诊断信息
+            make_tuple(string("%1"), mBetas, NameFormat::VarName),
+            make_tuple(string("y"), mY, NameFormat::Fixed),
+            make_tuple(string("yhat"), yhat, NameFormat::Fixed),
+            make_tuple(string("residual"), residual, NameFormat::Fixed),
+            make_tuple(string("Stud_residual"), stu_res, NameFormat::Fixed),
+            make_tuple(string("SE"), mBetasSE, NameFormat::PrefixVarName),
+            make_tuple(string("TV"), mBetasTV, NameFormat::PrefixVarName),
+            //make_tuple(string("localR2"), localR2, NameFormat::Fixed)
+            /*qMakePair(QString("%1"), mBetas),
             qMakePair(QString("yhat"), yhat),
             qMakePair(QString("residual"), residual),
             qMakePair(QString("%1_SE"),mBetasSE),
-            qMakePair(QString("%1_TV"),mBetasTV)
+            qMakePair(QString("%1_TV"),mBetasTV)*/
         });
     }
     else
     {
         createResultLayer({
-            qMakePair(QString("%1"), mBetas)
+            make_tuple(string("%1"), mBetas, NameFormat::VarName)
+            //qMakePair(QString("%1"), mBetas)
         });
     }
 
-    if(!checkCanceled())
+    /*if(!checkCanceled())
     {
-        emit success();
-        emit tick(100,100);
+        //emit success();
+        //emit tick(100,100);
     }
-    else return;
+    else return;*/
+}
+
+void CGwmMGWR::createRegressionDistanceParameter()
+{//回归距离计算
+    for (uword i = 0; i < mIndepVars.size(); i++){
+        if (mSpatialWeights[i].distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
+            mSpatialWeights[i].distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
+        {
+            mSpatialWeights[i].distance().makeParameters({
+                hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points(),
+                mSourceLayer->points()
+            });
+        }
+    }
+}
+
+void CGwmMGWR::createPredictionDistanceParameter()
+{//预测距离计算
+    for (uword i = 0; i < mIndepVars.size(); i++){
+        if (mSpatialWeights[i].distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
+            mSpatialWeights[i].distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
+        {
+            mSpatialWeights[i].distance().makeParameters({
+                hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points(),
+                mSourceLayer->points()
+            });
+            //mPredictionDistanceParameter = new CRSDistanceParameter(hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points(), mSourceLayer->points());
+        }
+    }
 }
 
 mat CGwmMGWR::regression(const mat &x, const vec &y)
@@ -219,12 +286,12 @@ mat CGwmMGWR::regression(const mat &x, const vec &y)
     uword nDp = x.n_rows, nVar = x.n_cols;
     mat betas = (this->*mRegressionAll)(x, y);
 
-    if (mHasHatMatrix && !checkCanceled())
+    if (mHasHatMatrix)
     {
         mat idm(nVar, nVar, fill::eye);
-        for (uword i = 0; i < nVar & !checkCanceled(); ++i)
+        for (uword i = 0; i < nVar; ++i)
         {
-            for (uword j = 0; j < nDp & !checkCanceled(); ++j)
+            for (uword j = 0; j < nDp ; ++j)
             {
                 mSArray.slice(i).row(j) = x(j, i) * (idm.row(i) * mC.slice(j));
             }
@@ -234,40 +301,40 @@ mat CGwmMGWR::regression(const mat &x, const vec &y)
     // ***********************************************************
     // Select the optimum bandwidths for each independent variable
     // ***********************************************************
-    emit message(QString("-------- Select the Optimum Bandwidths for each Independent Varialbe --------"));
+    //emit message(QString("-------- Select the Optimum Bandwidths for each Independent Varialbe --------"));
     uvec bwChangeNo(nVar, fill::zeros);
-    vec resid = y - fitted(x, betas);
+    vec resid = y - Fitted(x, betas);
     double RSS0 = sum(resid % resid), RSS1 = DBL_MAX;
     double criterion = DBL_MAX;
-    for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold & !checkCanceled(); iteration++)
+    for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold; iteration++)
     {
-        emit tick(iteration - 1, mMaxIteration);
-        for (uword i = 0; i < nVar & !checkCanceled(); i++)
+        //emit tick(iteration - 1, mMaxIteration);
+        for (uword i = 0; i < nVar  ; i++)
         {
-            QString varName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i-1].name;
+            //QString varName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i-1].name;
             vec fi = betas.col(i) % x.col(i);
             vec yi = resid + fi;
             if (mBandwidthInitilize[i] != BandwidthInitilizeType::Specified)
             {
-                emit message(QString("Now select an optimum bandwidth for the variable: %1").arg(varName));
+                //emit message(QString("Now select an optimum bandwidth for the variable: %1").arg(varName));
                 mBandwidthSizeCriterion = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
                 mBandwidthSelectionCurrentIndex = i;
                 mYi = yi;
                 mXi = mX.col(i);
-                GwmBandwidthWeight* bwi0 = bandwidth(i);
+                CGwmBandwidthWeight* bwi0 = bandwidth(i);
                 bool adaptive = bwi0->adaptive();
-                GwmBandwidthSizeSelector selector;
+                CGwmBandwidthSelector selector;
                 selector.setBandwidth(bwi0);
                 selector.setLower(adaptive ? mAdaptiveLower : 0.0);
-                selector.setUpper(adaptive ? mDataLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
-                GwmBandwidthWeight* bwi = selector.optimize(this);
+                selector.setUpper(adaptive ? mSourceLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
+                CGwmBandwidthWeight* bwi = selector.optimize(this);
                 double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
-                emit message(QString("The newly selected bandwidth for variable %1 is %2 (last is %3, difference is %4)")
-                             .arg(varName).arg(bwi1s).arg(bwi0s).arg(abs(bwi1s - bwi0s)));
+                //emit message(QString("The newly selected bandwidth for variable %1 is %2 (last is %3, difference is %4)")
+                            // .arg(varName).arg(bwi1s).arg(bwi0s).arg(abs(bwi1s - bwi0s)));
                 if (abs(bwi1s - bwi0s) > mBandwidthSelectThreshold[i])
                 {
                     bwChangeNo(i) = 0;
-                    emit message(QString("The bandwidth for variable %1 will be continually selected in the next iteration").arg(varName));
+                    //emit message(QString("The bandwidth for variable %1 will be continually selected in the next iteration").arg(varName));
                 }
                 else
                 {
@@ -275,12 +342,12 @@ mat CGwmMGWR::regression(const mat &x, const vec &y)
                     if (bwChangeNo(i) >= mBandwidthSelectRetryTimes)
                     {
                         mBandwidthInitilize[i] = BandwidthInitilizeType::Specified;
-                        emit message(QString("The bandwidth for variable %1 seems to be converged and will be kept the same in the following iterations.").arg(varName));
+                        //emit message(QString("The bandwidth for variable %1 seems to be converged and will be kept the same in the following iterations.").arg(varName));
                     }
                     else
                     {
-                        emit message(QString("The bandwidth for variable %1 seems to be converged for %2 times. It will be continually optimized in the next %3 times.")
-                                     .arg(varName).arg(bwChangeNo(i)).arg(mBandwidthSelectRetryTimes - bwChangeNo(i)));
+                        //emit message(QString("The bandwidth for variable %1 seems to be converged for %2 times. It will be continually optimized in the next %3 times.")
+                                     //.arg(varName).arg(bwChangeNo(i)).arg(mBandwidthSelectRetryTimes - bwChangeNo(i)));
                     }
                 }
                 mSpatialWeights[i].setWeight(bwi);
@@ -288,7 +355,7 @@ mat CGwmMGWR::regression(const mat &x, const vec &y)
 
             mat S;
             betas.col(i) = (this->*mRegressionVar)(x.col(i), yi, i, S);
-            if (mHasHatMatrix && !checkCanceled())
+            if (mHasHatMatrix )
             {
                 mat SArrayi = mSArray.slice(i);
                 mSArray.slice(i) = S * SArrayi + S - S * mS0;
@@ -300,12 +367,12 @@ mat CGwmMGWR::regression(const mat &x, const vec &y)
         criterion = (mCriterionType == BackFittingCriterionType::CVR) ?
                     abs(RSS1 - RSS0) :
                     sqrt(abs(RSS1 - RSS0) / RSS1);
-        QString criterionName = mCriterionType == BackFittingCriterionType::CVR ? "change value of RSS (CVR)" : "differential change value of RSS (dCVR)";
-        emit message(QString("Iteration %1 the %2 is %3").arg(iteration).arg(criterionName).arg(criterion));
+        //QString criterionName = mCriterionType == BackFittingCriterionType::CVR ? "change value of RSS (CVR)" : "differential change value of RSS (dCVR)";
+        //emit message(QString("Iteration %1 the %2 is %3").arg(iteration).arg(criterionName).arg(criterion));
         RSS0 = RSS1;
-        emit message(QString("---- End of Iteration %1 ----").arg(iteration));
+        //emit message(QString("---- End of Iteration %1 ----").arg(iteration));
     }
-    emit message(QString("-------- [End] Select the Optimum Bandwidths for each Independent Varialbe --------"));
+    //emit message(QString("-------- [End] Select the Optimum Bandwidths for each Independent Varialbe --------"));
     mRSS0 = RSS0;
     return betas;
 }
@@ -334,7 +401,7 @@ bool CGwmMGWR::isValid()
 
     for (int i = 0; i < nVar; i++)
     {
-        GwmBandwidthWeight* bw = mSpatialWeights[i].weight<GwmBandwidthWeight>();
+        CGwmBandwidthWeight* bw = mSpatialWeights[i].weight<CGwmBandwidthWeight>();
         if (mBandwidthInitilize[i] == CGwmMGWR::Specified || mBandwidthInitilize[i] == CGwmMGWR::Initial)
         {
             if (bw->adaptive())
@@ -352,13 +419,13 @@ bool CGwmMGWR::isValid()
 
     return true;
 }
-
+/*
 void CGwmMGWR::initPoints()
 {
-    int nDp = mDataLayer->featureCount();
+    int nDp = mSourceLayer->featureCount();
     mDataPoints = mat(nDp, 2, fill::zeros);
-    QgsFeatureIterator iterator = mDataLayer->getFeatures();
-    QgsFeature f;
+    //QgsFeatureIterator iterator = mSourceLayer->getFeatures();
+    //QgsFeature f;
     for (int i = 0; i < nDp && iterator.nextFeature(f); i++)
     {
         QgsPointXY centroPoint = f.geometry().centroid().asPoint();
@@ -381,30 +448,30 @@ void CGwmMGWR::initPoints()
     }
     else mRegressionPoints = mDataPoints;
     // 设置空间距离中的数据指针
-    if (mInitSpatialWeight.distance()->type() == GwmDistance::CRSDistance || mInitSpatialWeight.distance()->type() == GwmDistance::MinkwoskiDistance)
+    if (mInitSpatialWeight.distance()->type() == CGwmDistance::CRSDistance || mInitSpatialWeight.distance()->type() == CGwmDistance::MinkwoskiDistance)
     {
-        GwmCRSDistance* d = mInitSpatialWeight.distance<GwmCRSDistance>();
+        CGwmCRSDistance* d = mInitSpatialWeight.distance<CGwmCRSDistance>();
         d->setDataPoints(&mDataPoints);
         d->setFocusPoints(&mRegressionPoints);
     }
-    for (const GwmSpatialWeight& sw : mSpatialWeights)
+    for (const CGwmSpatialWeight& sw : mSpatialWeights)
     {
-        if (sw.distance()->type() == GwmDistance::CRSDistance || sw.distance()->type() == GwmDistance::MinkwoskiDistance)
+        if (sw.distance()->type() == CGwmDistance::CRSDistance || sw.distance()->type() == CGwmDistance::MinkwoskiDistance)
         {
-            GwmCRSDistance* d = sw.distance<GwmCRSDistance>();
+            CGwmCRSDistance* d = sw.distance<CGwmCRSDistance>();
             d->setDataPoints(&mDataPoints);
             d->setFocusPoints(&mRegressionPoints);
         }
     }
 }
-
-void CGwmMGWR::initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<GwmVariable> &indepVars)
+*/
+void CGwmMGWR::initXY(mat &x, mat &y, const GwmVariable &depVar, const vector<GwmVariable> &indepVars)
 {
-    int nDp = mDataLayer->featureCount(), nVar = indepVars.size() + 1;
+    int nDp = mSourceLayer->featureCount(), nVar = indepVars.size() + 1;
     // Data layer and X,Y
-    x = mat(nDp, nVar, fill::zeros);
-    y = vec(nDp, fill::zeros);
-    QgsFeatureIterator iterator = mDataLayer->getFeatures();
+    x = mat(nDp, nVar, arma::fill::zeros);
+    y = vec(nDp, arma::fill::zeros);
+    QgsFeatureIterator iterator = mSourceLayer->getFeatures();
     QgsFeature f;
     bool ok = false;
     for (int i = 0; iterator.nextFeature(f); i++)
@@ -427,9 +494,51 @@ void CGwmMGWR::initXY(mat &x, mat &y, const GwmVariable &depVar, const QList<Gwm
 }
 
 void CGwmMGWR::createResultLayer(initializer_list<CreateResultLayerDataItem> data)
-{
-    emit message("Creating result layer...");
-    QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mDataLayer;
+{//输出结果图层
+    mat layerPoints = hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points();
+    uword layerFeatureCount = layerPoints.n_rows;
+    mat layerData(layerFeatureCount, 0);
+    vector<string> layerFields;
+    for (auto &&i : items)
+    {
+        NameFormat nf = get<2>(i);
+        mat column = get<1>(i);
+        string name = get<0>(i);
+        if (nf == NameFormat::Fixed)
+        {
+            layerData = join_rows(layerData, column.col(0));
+            layerFields.push_back(name);
+        }
+        else
+        {
+            layerData = join_rows(layerData, column);
+            for (size_t k = 0; k < column.n_cols; k++)
+            {
+                string variableName = k == 0 ? "Intercept" : mIndepVars[k - 1].name;
+                string fieldName;
+                switch (nf)
+                {
+                case NameFormat::VarName:
+                    fieldName = variableName;
+                    break;
+                case NameFormat::PrefixVarName:
+                    fieldName = variableName + "_" + name;
+                    break;
+                case NameFormat::SuffixVariable:
+                    fieldName = name + "_" + variableName;
+                    break;
+                default:
+                    fieldName = variableName;
+                }
+                layerFields.push_back(fieldName);
+            }
+        }
+        
+    }
+    
+    mResultLayer = new CGwmSimpleLayer(layerPoints, layerData, layerFields);
+    /*//emit message("Creating result layer...");
+    QgsVectorLayer* srcLayer = mRegressionLayer ? mRegressionLayer : mSourceLayer;
     QString layerFileName = QgsWkbTypes::displayString(srcLayer->wkbType()) + QStringLiteral("?");
     QString layerName = srcLayer->name();
     //避免图层名重复
@@ -492,7 +601,7 @@ void CGwmMGWR::createResultLayer(initializer_list<CreateResultLayerDataItem> dat
 
         mResultLayer->addFeature(feature);
     }
-    mResultLayer->commitChanges();
+    mResultLayer->commitChanges();*/
 }
 
 
@@ -500,10 +609,10 @@ mat CGwmMGWR::regressionAllSerial(const mat& x, const vec& y)
 {
     int nDp = x.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
-    if (mHasHatMatrix && !checkCanceled())
+    if (mHasHatMatrix )
     {
         mat betasSE(nVar, nDp, fill::zeros);
-        for (int i = 0; i < nDp & !checkCanceled(); i++)
+        for (int i = 0; i < nDp ; i++)
         {
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
@@ -519,14 +628,14 @@ mat CGwmMGWR::regressionAllSerial(const mat& x, const vec& y)
                 mS0.row(i) = si;
                 mC.slice(i) = ci;
             } catch (exception e) {
-                emit error(e.what());
+                //emit error(e.what());
             }
         }
         mBetasSE = betasSE.t();
     }
     else
     {
-        for (int i = 0; i < nDp & !checkCanceled(); i++)
+        for (int i = 0; i < nDp ; i++)
         {
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
@@ -537,7 +646,7 @@ mat CGwmMGWR::regressionAllSerial(const mat& x, const vec& y)
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
             } catch (exception e) {
-                emit error(e.what());
+                //emit error(e.what());
             }
         }
     }
@@ -604,11 +713,11 @@ vec CGwmMGWR::regressionVarSerial(const vec &x, const vec &y, const int var, mat
 {
     int nDp = x.n_rows;
     mat betas(1, nDp, fill::zeros);
-    if (mHasHatMatrix && !checkCanceled())
+    if (mHasHatMatrix )
     {
         mat ci, si;
         S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
-        for (int i = 0; i < nDp & !checkCanceled(); i++)
+        for (int i = 0; i < nDp  ; i++)
         {
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
@@ -622,13 +731,13 @@ vec CGwmMGWR::regressionVarSerial(const vec &x, const vec &y, const int var, mat
                 mat si = x(i) * ci;
                 S.row(i) = si;
             } catch (exception e) {
-                emit error(e.what());
+                //emit error(e.what());
             }
         }
     }
     else
     {
-        for (int i = 0; i < nDp & !checkCanceled(); i++)
+        for (int i = 0; i < nDp  ; i++)
         {
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
@@ -639,7 +748,7 @@ vec CGwmMGWR::regressionVarSerial(const vec &x, const vec &y, const int var, mat
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
             } catch (exception e) {
-                emit error(e.what());
+                //emit error(e.what());
             }
         }
     }
@@ -700,12 +809,12 @@ vec CGwmMGWR::regressionVarOmp(const vec &x, const vec &y, const int var, mat &S
     return betas.t();
 }
 #endif
-double CGwmMGWR::mBandwidthSizeCriterionAllCVSerial(GwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::mBandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp; i++)
     {
         vec d = mInitSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -730,11 +839,11 @@ double CGwmMGWR::mBandwidthSizeCriterionAllCVSerial(GwmBandwidthWeight *bandwidt
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(cv);
 //    emit message(msg);
-    if(!checkCanceled()) return cv;
-    else return DBL_MAX;
+    return cv;
+    //else return DBL_MAX;
 }
 #ifdef ENABLE_OpenMP
-double CGwmMGWR::mBandwidthSizeCriterionAllCVOmp(GwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::mBandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     int nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
@@ -777,12 +886,12 @@ double CGwmMGWR::mBandwidthSizeCriterionAllCVOmp(GwmBandwidthWeight *bandwidthWe
     else return DBL_MAX;
 }
 #endif
-double CGwmMGWR::mBandwidthSizeCriterionAllAICSerial(GwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::mBandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp ; i++)
     {
         vec d = mInitSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -809,11 +918,11 @@ double CGwmMGWR::mBandwidthSizeCriterionAllAICSerial(GwmBandwidthWeight *bandwid
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(value);
 //    emit message(msg);
-    if(!checkCanceled()) return value;
-    else return DBL_MAX;
+    return value;
+    //else return DBL_MAX;
 }
 #ifdef ENABLE_OpenMP
-double CGwmMGWR::mBandwidthSizeCriterionAllAICOmp(GwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::mBandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     int nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
@@ -859,13 +968,13 @@ double CGwmMGWR::mBandwidthSizeCriterionAllAICOmp(GwmBandwidthWeight *bandwidthW
     else return DBL_MAX;
 }
 #endif
-double CGwmMGWR::mBandwidthSizeCriterionVarCVSerial(GwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::mBandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
     uword nDp = mDataPoints.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp; i++)
     {
         vec d = mSpatialWeights[var].distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -890,11 +999,11 @@ double CGwmMGWR::mBandwidthSizeCriterionVarCVSerial(GwmBandwidthWeight *bandwidt
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(cv);
 //    emit message(msg);
-    if(!checkCanceled()) return cv;
-    else return DBL_MAX;
+    return cv;
+    //else return DBL_MAX;
 }
 #ifdef ENABLE_OpenMP
-double CGwmMGWR::mBandwidthSizeCriterionVarCVOmp(GwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::mBandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
     int nDp = mDataPoints.n_rows;
@@ -938,13 +1047,13 @@ double CGwmMGWR::mBandwidthSizeCriterionVarCVOmp(GwmBandwidthWeight *bandwidthWe
     else return DBL_MAX;
 }
 #endif
-double CGwmMGWR::mBandwidthSizeCriterionVarAICSerial(GwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::mBandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
     uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
     mat betas(1, nDp, fill::zeros);
     vec shat(2, fill::zeros);
-    for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    for (uword i = 0; i < nDp ; i++)
     {
         vec d = mSpatialWeights[var].distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -971,11 +1080,11 @@ double CGwmMGWR::mBandwidthSizeCriterionVarAICSerial(GwmBandwidthWeight *bandwid
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(value);
 //    emit message(msg);
-    if(!checkCanceled()) return value;
-    else return DBL_MAX;
+    return value;
+    //else return DBL_MAX;
 }
 #ifdef ENABLE_OpenMP
-double CGwmMGWR::mBandwidthSizeCriterionVarAICOmp(GwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::mBandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
     int nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
@@ -1064,13 +1173,13 @@ CGwmMGWR::BandwidthSizeCriterionFunction CGwmMGWR::bandwidthSizeCriterionVar(CGw
     return mapper[type][mParallelType];
 }
 
-void CGwmMGWR::setParallelType(const IParallelalbe::ParallelType &type)
+void CGwmMGWR::setParallelType(const ParallelType &type)
 {
     if (parallelAbility() & type)
     {
         mParallelType = type;
         switch (type) {
-        case IParallelalbe::ParallelType::SerialOnly:
+        case ParallelType::SerialOnly:
             mRegressionAll = &CGwmMGWR::regressionAllSerial;
             mRegressionVar = &CGwmMGWR::regressionVarSerial;
             break;
@@ -1090,9 +1199,9 @@ void CGwmMGWR::setParallelType(const IParallelalbe::ParallelType &type)
     }
 }
 
-void CGwmMGWR::setSpatialWeights(const QList<GwmSpatialWeight> &spatialWeights)
+void CGwmMGWR::setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights)
 {
-    GwmSpatialMultiscaleAlgorithm::setSpatialWeights(spatialWeights);
+    CGwmSpatialMultiscaleAlgorithm::setSpatialWeights(spatialWeights);
     if (spatialWeights.size() > 0)
     {
         mInitSpatialWeight = spatialWeights[0];

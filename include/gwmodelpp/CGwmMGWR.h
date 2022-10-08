@@ -1,14 +1,18 @@
 #ifndef CGWMMGWR_H
 #define CGWMMGWR_H
 
-#include "CGwmSpatialAlgorithm.h"
+#include <utility>
+#include <string>
+#include <initializer_list>
+#include "CGwmSpatialMultiscaleAlgorithm.h"
 #include "spatialweight/CGwmSpatialWeight.h"
+#include "GwmRegressionDiagnostic.h"
 #include "IGwmRegressionAnalysis.h"
 #include "IGwmParallelizable.h"
 #include "IGwmBandwidthSelectable.h"
 
 
-class CGwmMGWR : public CGwmSpatialAlgorithm, public IGwmRegressionAnalysis, public IGwmBandwidthSelectable, public IGwmOpenmpParallelizable
+class CGwmMGWR : public CGwmSpatialMultiscaleAlgorithm, public IGwmRegressionAnalysis, public IGwmBandwidthSelectable, public IGwmOpenmpParallelizable
 {
 public:
     enum BandwidthInitilizeType
@@ -17,35 +21,39 @@ public:
         Initial,
         Specified
     };
-    //static GwmEnumValueNameMapper<BandwidthInitilizeType> BandwidthInitilizeTypeNameMapper;
-    static unordered_map<BandwidthInitilizeType, string> BandwidthInitilizeTypeNameMapper;
+    static unordered_map<BandwidthInitilizeType,string> BandwidthInitilizeTypeNameMapper;
 
     enum BandwidthSelectionCriterionType
     {
         CV,
         AIC
     };
-    //static GwmEnumValueNameMapper<BandwidthSelectionCriterionType> BandwidthSelectionCriterionTypeNameMapper;
-    static unordered_map<BandwidthSelectionCriterionType, string> BandwidthSelectionCriterionTypeNameMapper;
+    static unordered_map<BandwidthSelectionCriterionType,string> BandwidthSelectionCriterionTypeNameMapper;
 
     enum BackFittingCriterionType
     {
         CVR,
         dCVR
     };
-    //static GwmEnumValueNameMapper<BackFittingCriterionType> BackFittingCriterionTypeNameMapper;
-    static unordered_map<BackFittingCriterionType, string> BackFittingCriterionTypeNameMapper;
+    static unordered_map<BackFittingCriterionType,string> BackFittingCriterionTypeNameMapper;
 
-    //CGwmGWRBasic::OLSVar mOLSVar;
+    enum NameFormat
+    {
+        Fixed,
+        VarName,
+        PrefixVarName,
+        SuffixVariable
+    };
+    //GwmBasicGWRAlgorithm::OLSVar mOLSVar;
 
-    //CGwmGWRBasic::OLSVar CalOLS(const mat &x, const vec &y);
+    //GwmBasicGWRAlgorithm::OLSVar CalOLS(const mat &x, const vec &y);
 
 
     typedef double (CGwmMGWR::*BandwidthSizeCriterionFunction)(CGwmBandwidthWeight*);
     typedef mat (CGwmMGWR::*RegressionAllFunction)(const arma::mat&, const arma::vec&);
     typedef vec (CGwmMGWR::*RegressionVarFunction)(const arma::vec&, const arma::vec&, int, mat&);
-    //typedef QPair<QString, const mat> CreateResultLayerDataItem;
-
+    //typedef pair<string, const mat> CreateResultLayerDataItem;
+    typedef tuple<string, mat, NameFormat> CreateResultLayerDataItem;
 private:
     static vec Fitted(const mat& x, const mat& betas)
     {
@@ -64,8 +72,7 @@ private:
         return n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
     }
 
-    static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& S0, double RSS0);
-    
+    static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
 
 public:
     CGwmMGWR();
@@ -77,19 +84,19 @@ public:
     bool OLS() const;
     void setOLS(bool value);
 
-    //CGwmGWRBasic::OLSVar getOLSVar() const;
+    //GwmBasicGWRAlgorithm::OLSVar getOLSVar() const;
 
-    BandwidthInitilizeType bandwidthInitilize() const;
-    void setBandwidthInitilize(const BandwidthInitilizeType &bandwidthInitilize);
+    vector<BandwidthInitilizeType> bandwidthInitilize() const;
+    void setBandwidthInitilize(const vector<BandwidthInitilizeType> &bandwidthInitilize);
 
-    BandwidthSelectionCriterionType bandwidthSelectionApproach() const;
-    void setBandwidthSelectionApproach(const BandwidthSelectionCriterionType &bandwidthSelectionApproach);
+    vector<BandwidthSelectionCriterionType> bandwidthSelectionApproach() const;
+    void setBandwidthSelectionApproach(const vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach);
 
-    bool preditorCentered() const;
-    void setPreditorCentered(const bool &preditorCentered);
+    vector<bool> preditorCentered() const;
+    void setPreditorCentered(const vector<bool> &preditorCentered);
 
-    double bandwidthSelectThreshold() const;
-    void setBandwidthSelectThreshold(const double &bandwidthSelectThreshold);
+    vector<double> bandwidthSelectThreshold() const;
+    void setBandwidthSelectThreshold(const vector<double> &bandwidthSelectThreshold);
 
     bool hasHatMatrix() const;
     void setHasHatMatrix(bool hasHatMatrix);
@@ -113,12 +120,12 @@ public:
 
     bool hasRegressionLayer()
     {
-        return mRegressionLayer != nullptr;
+        return hasRegressionLayer != nullptr;
     }
 
 
 public:     // GwmTaskThread interface
-    string name() const  { return tr("Multiscale GWR"); }
+    string name() const { return "Multiscale GWR"; }//override 
 
 
 public:     // GwmSpatialAlgorithm interface
@@ -126,7 +133,7 @@ public:     // GwmSpatialAlgorithm interface
 
 
 public:     // GwmSpatialMultiscaleAlgorithm interface
-    virtual void setSpatialWeights(const CGwmSpatialWeight &spatialWeights);
+    virtual void setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights);
 
 
 public:     // IBandwidthSizeSelectable interface
@@ -141,9 +148,9 @@ public:     // IRegressionAnalysis interface
 
     void setDependentVariable(const GwmVariable &variable) override;
 
-    GwmVariable independentVariables() const; //override;
+    vector<GwmVariable> independentVariables() const override;
 
-    void setIndependentVariables(const GwmVariable &variables);// override;
+    void setIndependentVariables(const vector<GwmVariable> &variables) override;
 
     GwmRegressionDiagnostic diagnostic() const override;
 
@@ -163,7 +170,7 @@ public:     // IOpenmpParallelable interface
 
 protected:
     void initPoints();
-    void initXY(mat& x, mat& y, const GwmVariable& depVar, const GwmVariable& indepVars);
+    void initXY(mat& x, mat& y, const GwmVariable& depVar, const vector<GwmVariable>& indepVars);
 
     CGwmBandwidthWeight* bandwidth(int i)
     {
@@ -198,13 +205,16 @@ protected:
 #ifdef ENABLE_OpenMP
     double mBandwidthSizeCriterionVarAICOmp(GwmBandwidthWeight* bandwidthWeight);
 #endif
+    void createRegressionDistanceParameter();
+
+    void createPredictionDistanceParameter();
 
     void createResultLayer(initializer_list<CreateResultLayerDataItem> data);
 
 protected:
     CGwmBandwidthSelector selector;
 private:
-    QgsVectorLayer* mRegressionLayer = nullptr;
+    //QgsVectorLayer* mRegressionLayer = nullptr;
     mat mDataPoints;
     mat mRegressionPoints;
 
@@ -212,16 +222,16 @@ private:
     RegressionVarFunction mRegressionVar = &CGwmMGWR::regressionVarSerial;
 
     GwmVariable mDepVar;
-    GwmVariable mIndepVars;
+    vector<GwmVariable> mIndepVars;
 
     CGwmSpatialWeight mInitSpatialWeight;
     BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &CGwmMGWR::mBandwidthSizeCriterionAllCVSerial;
     int mBandwidthSelectionCurrentIndex = 0;
 
-    BandwidthInitilizeType mBandwidthInitilize;
-    BandwidthSelectionCriterionType mBandwidthSelectionApproach;
-    bool mPreditorCentered;
-    double mBandwidthSelectThreshold;
+    vector<BandwidthInitilizeType> mBandwidthInitilize;
+    vector<BandwidthSelectionCriterionType> mBandwidthSelectionApproach;
+    vector<bool> mPreditorCentered;
+    vector<double> mBandwidthSelectThreshold;
     uword mBandwidthSelectRetryTimes = 5;
     int mMaxIteration = 500;
     BackFittingCriterionType mCriterionType = BackFittingCriterionType::CVR;
@@ -267,12 +277,12 @@ inline void CGwmMGWR::setDependentVariable(const GwmVariable &variable)
     mDepVar = variable;
 }
 
-inline GwmVariable CGwmMGWR::independentVariables() const
+inline vector<GwmVariable> CGwmMGWR::independentVariables() const
 {
     return mIndepVars;
 }
 
-inline void CGwmMGWR::setIndependentVariables(const GwmVariable &variables)
+inline void CGwmMGWR::setIndependentVariables(const vector<GwmVariable> &variables)
 {
     mIndepVars = variables;
 }
@@ -332,42 +342,42 @@ inline void CGwmMGWR::setBandwidthSelectRetryTimes(int bandwidthSelectRetryTimes
     mBandwidthSelectRetryTimes = bandwidthSelectRetryTimes;
 }
 
-inline bool CGwmMGWR::preditorCentered() const
+inline vector<bool> CGwmMGWR::preditorCentered() const
 {
     return mPreditorCentered;
 }
 
-inline void CGwmMGWR::setPreditorCentered(const bool &preditorCentered)
+inline void CGwmMGWR::setPreditorCentered(const vector<bool> &preditorCentered)
 {
     mPreditorCentered = preditorCentered;
 }
 
-inline CGwmMGWR::BandwidthSelectionCriterionType CGwmMGWR::bandwidthSelectionApproach() const
+inline vector<CGwmMGWR::BandwidthSelectionCriterionType> CGwmMGWR::bandwidthSelectionApproach() const
 {
     return CGwmMGWR::mBandwidthSelectionApproach;
 }
 
-inline void CGwmMGWR::setBandwidthSelectionApproach(const BandwidthSelectionCriterionType &bandwidthSelectionApproach)
+inline void CGwmMGWR::setBandwidthSelectionApproach(const vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach)
 {
     mBandwidthSelectionApproach = bandwidthSelectionApproach;
 }
 
-inline CGwmMGWR::BandwidthInitilizeType CGwmMGWR::bandwidthInitilize() const
+inline vector<CGwmMGWR::BandwidthInitilizeType> CGwmMGWR::bandwidthInitilize() const
 {
     return CGwmMGWR::mBandwidthInitilize;
 }
 
-inline void CGwmMGWR::setBandwidthInitilize(const BandwidthInitilizeType &bandwidthInitilize)
+inline void CGwmMGWR::setBandwidthInitilize(const vector<BandwidthInitilizeType> &bandwidthInitilize)
 {
     mBandwidthInitilize = bandwidthInitilize;
 }
 
-inline double CGwmMGWR::bandwidthSelectThreshold() const
+inline vector<double> CGwmMGWR::bandwidthSelectThreshold() const
 {
     return mBandwidthSelectThreshold;
 }
 
-inline void CGwmMGWR::setBandwidthSelectThreshold(const double &bandwidthSelectThreshold)
+inline void CGwmMGWR::setBandwidthSelectThreshold(const vector<double> &bandwidthSelectThreshold)
 {
     mBandwidthSelectThreshold = bandwidthSelectThreshold;
 }
@@ -410,12 +420,12 @@ inline bool CGwmMGWR::OLS() const
 {
     return mOLS;
 }
-
-/*inline CGwmGWRBasic::OLSVar CGwmMGWR::getOLSVar() const
+/*
+inline GwmBasicGWRAlgorithm::OLSVar CGwmMGWR::getOLSVar() const
 {
     return mOLSVar;
-}*/
-
+}
+*/
 inline void CGwmMGWR::setOLS(bool value)
 {
     mOLS = value;
