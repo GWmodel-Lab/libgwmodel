@@ -10,6 +10,7 @@
 #include "IGwmVarialbeSelectable.h"
 #include "IGwmParallelizable.h"
 
+#include "spatialweight/CGwmCRSTDistance.h"
 
 using namespace std;
 
@@ -46,6 +47,13 @@ private:
 public:
     CGwmGTWR();
     ~CGwmGTWR();
+
+private:
+    CGwmWeight* mWeight = nullptr;      
+    CGwmDistance* mDistance = nullptr;  
+
+//public:
+//    vec weightVector(uword focus);//recalculate weight using spatial temporal distance
 
 public:
     bool isAutoselectBandwidth() const;

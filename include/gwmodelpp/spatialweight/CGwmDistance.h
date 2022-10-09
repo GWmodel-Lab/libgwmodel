@@ -23,6 +23,7 @@ typedef std::variant<arma::mat, arma::vec, arma::uword> DistParamVariant;
  * 
  * - CGwmCRSDistance
  * - CGwmMinkwoskiDistance
+ * - CGwmCRSTDistance
  * 
  */
 class CGwmDistance
@@ -48,6 +49,7 @@ public:
      */
     enum DistanceType
     {
+        CRSTDistance,       //!< Distance according to coordinate reference system with timestamps.
         CRSDistance,        //!< Distance according to coordinate reference system.
         MinkwoskiDistance,  //!< Minkwoski distance
         DMatDistance,       //!< Distance according to a .dmat file

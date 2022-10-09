@@ -34,6 +34,12 @@ CGwmGTWR::~CGwmGTWR()
     
 }
 
+/*vec CGwmGTWR::weightVector(uword focus)
+{
+    return mWeight->weight(mDistance->distance(focus));
+}*/
+
+
 void CGwmGTWR::run()
 {
     createDistanceParameter();
