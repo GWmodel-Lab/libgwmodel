@@ -48,10 +48,7 @@ public:
      * 
      * @param spatialWeights Reference of spatial weight configuration object.
      */
-    virtual void setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights)
-    {
-        mSpatialWeights = spatialWeights;
-    };
+    virtual void setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights);
     
     void createDistanceParameter();
 

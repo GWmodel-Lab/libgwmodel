@@ -1,5 +1,5 @@
 #include "CGwmMGWR.h"
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
 #include <exception>
@@ -7,7 +7,7 @@
 #include <spatialweight/CGwmCRSDistance.h>
 #include "CGwmBandwidthSelector.h"
 #include "CGwmVariableForwardSelector.h"
-
+#include <assert.h>
 
 using namespace std;
 
@@ -71,13 +71,13 @@ CGwmMGWR::CGwmMGWR()
     : CGwmSpatialMultiscaleAlgorithm()
 {
 }
-
+/*
 void CGwmMGWR::setCanceled(bool canceled)
 {
     selector.setCanceled(canceled);
     return CGwmTaskThread::setCanceled(canceled);
 }
-
+*/
 //OLS计算代码
 /*
 GwmBasicGWRAlgorithm::OLSVar CGwmMGWR::CalOLS(const mat &x, const vec &y){
@@ -121,10 +121,10 @@ GwmBasicGWRAlgorithm::OLSVar CGwmMGWR::CalOLS(const mat &x, const vec &y){
 */
 void CGwmMGWR::run()
 {
-    //createRegressionDistanceParameter();
+    createRegressionDistanceParameter();
     //assert(mRegressionDistanceParameter != nullptr);
-    initPoints();
-    initXY(mX, mY, mDepVar, mIndepVars);
+    //initPoints();
+    setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
     uword nDp = mX.n_rows, nVar = mX.n_cols;
 
     // ********************************
@@ -154,10 +154,10 @@ void CGwmMGWR::run()
             mXi = mX.col(i);
             CGwmBandwidthWeight* bw0 = bandwidth(i);
             bool adaptive = bw0->adaptive();
-            selector.setBandwidth(bw0);
-            selector.setLower(adaptive ? mAdaptiveLower : 0.0);
-            selector.setUpper(adaptive ? mSourceLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
-            CGwmBandwidthWeight* bw = selector.optimize(this);
+            mselector.setBandwidth(bw0);
+            mselector.setLower(adaptive ? mAdaptiveLower : 0.0);
+            mselector.setUpper(adaptive ? mSourceLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
+            CGwmBandwidthWeight* bw = mselector.optimize(this);
             if (bw)
             {
                 mSpatialWeights[i].setWeight(bw);
@@ -210,16 +210,18 @@ void CGwmMGWR::run()
         vec residual = mY - yhat;
         vec stu_res = residual / sqrt(sigmaHat * qdiag);
         mBetasTV = mBetas / mBetasSE;
-        /*vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
+        vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
         vec dyhat2 = (mY - yhat) % (mY - yhat);
-        vec localR2 = vec(nDp, fill::zeros);
+        vec localR2 = vec(nDp, nVar,fill::zeros);
         for (uword i = 0; i < nDp; i++)
         {
-            vec w = mSpatialWeight.weightVector(mRegressionDistanceParameter, i);
-            double tss = sum(dybar2 % w);
-            double rss = sum(dyhat2 % w);
-            localR2(i) = (tss - rss) / tss;
-        }*/
+            for(uword j=0;j<nVar;j++){
+                vec w = mSpatialWeights[j].weightVector(i);
+                double tss = sum(dybar2 % w);
+                double rss = sum(dyhat2 % w);
+                localR2(i,j) = (tss - rss) / tss;
+            }
+        }
         createResultLayer({//结果及诊断信息
             make_tuple(string("%1"), mBetas, NameFormat::VarName),
             make_tuple(string("y"), mY, NameFormat::Fixed),
@@ -228,7 +230,7 @@ void CGwmMGWR::run()
             make_tuple(string("Stud_residual"), stu_res, NameFormat::Fixed),
             make_tuple(string("SE"), mBetasSE, NameFormat::PrefixVarName),
             make_tuple(string("TV"), mBetasTV, NameFormat::PrefixVarName),
-            //make_tuple(string("localR2"), localR2, NameFormat::Fixed)
+            make_tuple(string("localR2"), localR2, NameFormat::Fixed)
             /*qMakePair(QString("%1"), mBetas),
             qMakePair(QString("yhat"), yhat),
             qMakePair(QString("residual"), residual),
@@ -258,25 +260,10 @@ void CGwmMGWR::createRegressionDistanceParameter()
         if (mSpatialWeights[i].distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
             mSpatialWeights[i].distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
         {
-            mSpatialWeights[i].distance().makeParameters({
-                hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points(),
+            mSpatialWeights[i].distance()->makeParameter({
+                mSourceLayer->points(),
                 mSourceLayer->points()
             });
-        }
-    }
-}
-
-void CGwmMGWR::createPredictionDistanceParameter()
-{//预测距离计算
-    for (uword i = 0; i < mIndepVars.size(); i++){
-        if (mSpatialWeights[i].distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
-            mSpatialWeights[i].distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
-        {
-            mSpatialWeights[i].distance().makeParameters({
-                hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points(),
-                mSourceLayer->points()
-            });
-            //mPredictionDistanceParameter = new CRSDistanceParameter(hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points(), mSourceLayer->points());
         }
     }
 }
@@ -323,11 +310,11 @@ mat CGwmMGWR::regression(const mat &x, const vec &y)
                 mXi = mX.col(i);
                 CGwmBandwidthWeight* bwi0 = bandwidth(i);
                 bool adaptive = bwi0->adaptive();
-                CGwmBandwidthSelector selector;
-                selector.setBandwidth(bwi0);
-                selector.setLower(adaptive ? mAdaptiveLower : 0.0);
-                selector.setUpper(adaptive ? mSourceLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
-                CGwmBandwidthWeight* bwi = selector.optimize(this);
+                CGwmBandwidthSelector mselector;
+                mselector.setBandwidth(bwi0);
+                mselector.setLower(adaptive ? mAdaptiveLower : 0.0);
+                mselector.setUpper(adaptive ? mSourceLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
+                CGwmBandwidthWeight* bwi = mselector.optimize(this);
                 double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
                 //emit message(QString("The newly selected bandwidth for variable %1 is %2 (last is %3, difference is %4)")
                             // .arg(varName).arg(bwi1s).arg(bwi0s).arg(abs(bwi1s - bwi0s)));
@@ -376,7 +363,52 @@ mat CGwmMGWR::regression(const mat &x, const vec &y)
     mRSS0 = RSS0;
     return betas;
 }
-
+mat CGwmMGWR::regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
+{
+    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    mat betas(nVar, nDp, arma::fill::zeros);
+    betasSE = mat(nVar, nDp, arma::fill::zeros);
+    qdiag = vec(nDp, arma::fill::zeros);
+    S = mat(isStoreS() ? nDp : 1, nDp, arma::fill::zeros);
+    mat rowsumSE(nDp, 1, arma::fill::ones);
+    vec s_hat1(nDp, arma::fill::zeros), s_hat2(nDp, arma::fill::zeros);
+    for (size_t i = 0; i < nDp; i++)
+    {
+        vec w(nDp, arma::fill::ones);
+        for (auto&& sw : mSpatialWeights)
+        {
+            vec w_m = sw.weightVector(i);
+            w = w % w_m;
+        }
+        mat ws(1, nVar, arma::fill::ones);
+        mat xtw = trans(x %(w * ws));
+        mat xtwx = xtw * x;
+        mat xtwy = trans(x) * (w % y);
+        try
+        {
+            mat xtwx_inv = xtwx.i();
+            betas.col(i) = xtwx_inv * xtwy;
+            // hatmatrix
+            mat ci = xtwx_inv * xtw;
+            mat si = x.row(i) * ci;
+            betasSE.col(i) = (ci % ci) * rowsumSE;
+            s_hat1(i) = si(0, i);
+            s_hat2(i) = det(si * si.t());
+            mat onei(1, nDp, arma::fill::zeros);
+            onei(i) = 1;
+            mat p = (onei - si).t();
+            qdiag += p % p;
+            S.row(isStoreS() ? i : 0) = si;
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }
+    shat = {sum(s_hat1), sum(s_hat2)};
+    betasSE = betasSE.t();
+    return betas.t();
+}
 bool CGwmMGWR::isValid()
 {
     if (mIndepVars.size() < 1)
@@ -465,37 +497,48 @@ void CGwmMGWR::initPoints()
     }
 }
 */
+/*
 void CGwmMGWR::initXY(mat &x, mat &y, const GwmVariable &depVar, const vector<GwmVariable> &indepVars)
-{
+{//
     int nDp = mSourceLayer->featureCount(), nVar = indepVars.size() + 1;
     // Data layer and X,Y
     x = mat(nDp, nVar, arma::fill::zeros);
     y = vec(nDp, arma::fill::zeros);
-    QgsFeatureIterator iterator = mSourceLayer->getFeatures();
-    QgsFeature f;
+    mat data = mSourceLayer->data();
     bool ok = false;
-    for (int i = 0; iterator.nextFeature(f); i++)
+    for (uword i = 0; i<nVar; i++)
     {
-
         double vY = f.attribute(depVar.name).toDouble(&ok);
-        if (ok)
+        //if (ok)
         {
             y(i) = vY;
             x(i, 0) = 1.0;
             for (int k = 0; k < indepVars.size(); k++)
             {
                 double vX = f.attribute(indepVars[k].name).toDouble(&ok);
-                if (ok) x(i, k + 1) = vX;
-                else emit error(tr("Independent variable value cannot convert to a number. Set to 0."));
+                //if (ok) x(i, k + 1) = vX;
+                //else emit error(tr("Independent variable value cannot convert to a number. Set to 0."));
             }
         }
-        else emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
+        //else emit error(tr("Dependent variable value cannot convert to a number. Set to 0."));
     }
 }
-
-void CGwmMGWR::createResultLayer(initializer_list<CreateResultLayerDataItem> data)
+*/
+void CGwmMGWR::setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmVariable& depVar, const vector<GwmVariable>& indepVars)
+{
+    uword nDp = layer->featureCount(), nVar = indepVars.size() + 1;
+    arma::uvec indepVarIndeces(indepVars.size());
+    for (size_t i = 0; i < indepVars.size(); i++)
+    {
+        assert(indepVars[i].index < layer->data().n_cols);
+        indepVarIndeces(i) = indepVars[i].index;
+    }
+    x = join_rows(mat(nDp, 1, arma::fill::ones), layer->data().cols(indepVarIndeces));
+    y = layer->data().col(depVar.index);
+}
+void CGwmMGWR::createResultLayer(initializer_list<CreateResultLayerDataItem> items)
 {//输出结果图层
-    mat layerPoints = hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points();
+    mat layerPoints = mSourceLayer->points();
     uword layerFeatureCount = layerPoints.n_rows;
     mat layerData(layerFeatureCount, 0);
     vector<string> layerFields;
@@ -652,19 +695,17 @@ mat CGwmMGWR::regressionAllSerial(const mat& x, const vec& y)
     }
     return betas.t();
 }
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 mat CGwmMGWR::regressionAllOmp(const mat &x, const vec &y)
 {
     int nDp = x.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
-    if (mHasHatMatrix && !checkCanceled())
+    if (mHasHatMatrix )
     {
         mat betasSE(nVar, nDp, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            if(!checkCanceled())
-            {
                 vec w = mInitSpatialWeight.weightVector(i);
                 mat xtw = trans(x.each_col() % w);
                 mat xtwx = xtw * x;
@@ -679,9 +720,8 @@ mat CGwmMGWR::regressionAllOmp(const mat &x, const vec &y)
                     mS0.row(i) = si;
                     mC.slice(i) = ci;
                 } catch (exception e) {
-                    emit error(e.what());
+                    //emit error(e.what());
                 }
-            }
         }
         mBetasSE = betasSE.t();
     }
@@ -690,8 +730,6 @@ mat CGwmMGWR::regressionAllOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            if(!checkCanceled())
-            {
                 vec w = mInitSpatialWeight.weightVector(i);
                 mat xtw = trans(x.each_col() % w);
                 mat xtwx = xtw * x;
@@ -701,9 +739,8 @@ mat CGwmMGWR::regressionAllOmp(const mat &x, const vec &y)
                     mat xtwx_inv = inv_sympd(xtwx);
                     betas.col(i) = xtwx_inv * xtwy;
                 } catch (exception e) {
-                    emit error(e.what());
+                    //emit error(e.what());
                 }
-            }
         }
     }
     return betas.t();
@@ -754,7 +791,7 @@ vec CGwmMGWR::regressionVarSerial(const vec &x, const vec &y, const int var, mat
     }
     return betas.t();
 }
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 vec CGwmMGWR::regressionVarOmp(const vec &x, const vec &y, const int var, mat &S)
 {
     int nDp = x.n_rows;
@@ -766,8 +803,6 @@ vec CGwmMGWR::regressionVarOmp(const vec &x, const vec &y, const int var, mat &S
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            if(!checkCanceled())
-            {
                 vec w = mSpatialWeights[var].weightVector(i);
                 mat xtw = trans(x % w);
                 mat xtwx = xtw * x;
@@ -780,9 +815,8 @@ vec CGwmMGWR::regressionVarOmp(const vec &x, const vec &y, const int var, mat &S
                     mat si = x(i) * ci;
                     S.row(i) = si;
                 } catch (exception e) {
-                    emit error(e.what());
+                    //emit error(e.what());
                 }
-            }
         }
     }
     else
@@ -790,8 +824,6 @@ vec CGwmMGWR::regressionVarOmp(const vec &x, const vec &y, const int var, mat &S
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-            if(!checkCanceled())
-            {
                 vec w = mSpatialWeights[var].weightVector(i);
                 mat xtw = trans(x % w);
                 mat xtwx = xtw * x;
@@ -801,9 +833,8 @@ vec CGwmMGWR::regressionVarOmp(const vec &x, const vec &y, const int var, mat &S
                     mat xtwx_inv = inv_sympd(xtwx);
                     betas.col(i) = xtwx_inv * xtwy;
                 } catch (exception e) {
-                    emit error(e.what());
+                    //emit error(e.what());
                 }
-            }
         }
     }
     return betas.t();
@@ -842,7 +873,7 @@ double CGwmMGWR::mBandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwid
     return cv;
     //else return DBL_MAX;
 }
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 double CGwmMGWR::mBandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     int nDp = mDataPoints.n_rows;
@@ -852,7 +883,7 @@ double CGwmMGWR::mBandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthW
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
-        if (flag && !checkCanceled())
+        if (flag)
         {
             int thread = omp_get_thread_num();
             vec d = mInitSpatialWeight.distance()->distance(i);
@@ -879,7 +910,7 @@ double CGwmMGWR::mBandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthW
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(cv);
 //    emit message(msg);
-    if (flag && !checkCanceled())
+    if (flag)
     {
         return sum(cv_all);
     }
@@ -921,7 +952,7 @@ double CGwmMGWR::mBandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwi
     return value;
     //else return DBL_MAX;
 }
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 double CGwmMGWR::mBandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     int nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
@@ -931,7 +962,7 @@ double CGwmMGWR::mBandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidth
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
-        if (flag && !checkCanceled())
+        if (flag)
         {
             int thread = omp_get_thread_num();
             vec d = mInitSpatialWeight.distance()->distance(i);
@@ -954,7 +985,7 @@ double CGwmMGWR::mBandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidth
             }
         }
     }
-    if (flag && !checkCanceled())
+    if (flag)
     {
         vec shat = sum(shat_all, 1);
         double value = CGwmMGWR::AICc(mX, mY, betas.t(), shat);
@@ -1002,7 +1033,7 @@ double CGwmMGWR::mBandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwid
     return cv;
     //else return DBL_MAX;
 }
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 double CGwmMGWR::mBandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
@@ -1013,7 +1044,7 @@ double CGwmMGWR::mBandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthW
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
-        if (flag && !checkCanceled())
+        if (flag)
         {
             int thread = omp_get_thread_num();
             vec d = mSpatialWeights[var].distance()->distance(i);
@@ -1035,7 +1066,7 @@ double CGwmMGWR::mBandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthW
             }
         }
     }
-    if (flag && !checkCanceled())
+    if (flag)
     {
 //    QString msg = QString(tr("%1 bandwidth: %2 (CV Score: %3)"))
 //            .arg(bandwidthWeight->adaptive() ? "Adaptive" : "Fixed")
@@ -1083,7 +1114,7 @@ double CGwmMGWR::mBandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwi
     return value;
     //else return DBL_MAX;
 }
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 double CGwmMGWR::mBandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
@@ -1094,7 +1125,7 @@ double CGwmMGWR::mBandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidth
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
-        if (flag && !checkCanceled())
+        if (flag)
         {
             int thread = omp_get_thread_num();
             vec d = mSpatialWeights[var].distance()->distance(i);
@@ -1117,7 +1148,7 @@ double CGwmMGWR::mBandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidth
             }
         }
     }
-    if (flag && !checkCanceled())
+    if (flag)
     {
         vec shat = sum(shat_all, 1);
         double value = CGwmMGWR::AICc(mXi, mYi, betas.t(), shat);
@@ -1131,22 +1162,23 @@ double CGwmMGWR::mBandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidth
     return DBL_MAX;
 }
 #endif
+
 CGwmMGWR::BandwidthSizeCriterionFunction CGwmMGWR::bandwidthSizeCriterionAll(CGwmMGWR::BandwidthSelectionCriterionType type)
 {
-    QMap<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> > mapper = {
-        std::make_pair<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
-            std::make_pair(IParallelalbe::ParallelType::SerialOnly, &CGwmMGWR::mBandwidthSizeCriterionAllCVSerial),
-        #ifdef ENABLE_OpenMP
-            std::make_pair(IParallelalbe::ParallelType::OpenMP, &CGwmMGWR::mBandwidthSizeCriterionAllCVOmp),
+    unordered_map<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> > mapper = {
+        std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
+            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::mBandwidthSizeCriterionAllCVSerial),
+        #ifdef ENABLE_OPENMP
+            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::mBandwidthSizeCriterionAllCVOmp),
         #endif
-            std::make_pair(IParallelalbe::ParallelType::CUDA, &CGwmMGWR::mBandwidthSizeCriterionAllCVSerial)
+            std::make_pair(ParallelType::CUDA, &CGwmMGWR::mBandwidthSizeCriterionAllCVSerial)
         }),
-        std::make_pair<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
-            std::make_pair(IParallelalbe::ParallelType::SerialOnly, &CGwmMGWR::mBandwidthSizeCriterionAllAICSerial),
-        #ifdef ENABLE_OpenMP
-            std::make_pair(IParallelalbe::ParallelType::OpenMP, &CGwmMGWR::mBandwidthSizeCriterionAllAICOmp),
+        std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
+            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::mBandwidthSizeCriterionAllAICSerial),
+        #ifdef ENABLE_OPENMP
+            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::mBandwidthSizeCriterionAllAICOmp),
         #endif
-            std::make_pair(IParallelalbe::ParallelType::CUDA, &CGwmMGWR::mBandwidthSizeCriterionAllAICSerial)
+            std::make_pair(ParallelType::CUDA, &CGwmMGWR::mBandwidthSizeCriterionAllAICSerial)
         })
     };
     return mapper[type][mParallelType];
@@ -1154,20 +1186,20 @@ CGwmMGWR::BandwidthSizeCriterionFunction CGwmMGWR::bandwidthSizeCriterionAll(CGw
 
 CGwmMGWR::BandwidthSizeCriterionFunction CGwmMGWR::bandwidthSizeCriterionVar(CGwmMGWR::BandwidthSelectionCriterionType type)
 {
-    QMap<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> > mapper = {
-        std::make_pair<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
-            std::make_pair(IParallelalbe::ParallelType::SerialOnly, &CGwmMGWR::mBandwidthSizeCriterionVarCVSerial),
-        #ifdef ENABLE_OpenMP
-            std::make_pair(IParallelalbe::ParallelType::OpenMP, &CGwmMGWR::mBandwidthSizeCriterionVarCVOmp),
+    unordered_map<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> > mapper = {
+        std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
+            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::mBandwidthSizeCriterionVarCVSerial),
+        #ifdef ENABLE_OPENMP
+            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::mBandwidthSizeCriterionVarCVOmp),
         #endif
-            std::make_pair(IParallelalbe::ParallelType::CUDA, &CGwmMGWR::mBandwidthSizeCriterionVarCVSerial)
+            std::make_pair(ParallelType::CUDA, &CGwmMGWR::mBandwidthSizeCriterionVarCVSerial)
         }),
-        std::make_pair<BandwidthSelectionCriterionType, QMap<IParallelalbe::ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
-            std::make_pair(IParallelalbe::ParallelType::SerialOnly, &CGwmMGWR::mBandwidthSizeCriterionVarAICSerial),
-        #ifdef ENABLE_OpenMP
-            std::make_pair(IParallelalbe::ParallelType::OpenMP, &CGwmMGWR::mBandwidthSizeCriterionVarAICOmp),
+        std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
+            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::mBandwidthSizeCriterionVarAICSerial),
+        #ifdef ENABLE_OPENMP
+            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::mBandwidthSizeCriterionVarAICOmp),
         #endif
-            std::make_pair(IParallelalbe::ParallelType::CUDA, &CGwmMGWR::mBandwidthSizeCriterionVarAICSerial)
+            std::make_pair(ParallelType::CUDA, &CGwmMGWR::mBandwidthSizeCriterionVarAICSerial)
         })
     };
     return mapper[type][mParallelType];
@@ -1183,8 +1215,8 @@ void CGwmMGWR::setParallelType(const ParallelType &type)
             mRegressionAll = &CGwmMGWR::regressionAllSerial;
             mRegressionVar = &CGwmMGWR::regressionVarSerial;
             break;
-#ifdef ENABLE_OpenMP
-        case IParallelalbe::ParallelType::OpenMP:
+#ifdef ENABLE_OPENMP
+        case ParallelType::OpenMP:
             mRegressionAll = &CGwmMGWR::regressionAllOmp;
             mRegressionVar = &CGwmMGWR::regressionVarOmp;
             break;

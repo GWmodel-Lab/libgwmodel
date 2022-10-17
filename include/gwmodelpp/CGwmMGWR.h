@@ -6,13 +6,13 @@
 #include <initializer_list>
 #include "CGwmSpatialMultiscaleAlgorithm.h"
 #include "spatialweight/CGwmSpatialWeight.h"
-#include "GwmRegressionDiagnostic.h"
 #include "IGwmRegressionAnalysis.h"
-#include "IGwmParallelizable.h"
 #include "IGwmBandwidthSelectable.h"
+#include "CGwmBandwidthSelector.h"
+#include "IGwmParallelizable.h"
 
 
-class CGwmMGWR : public CGwmSpatialMultiscaleAlgorithm, public IGwmRegressionAnalysis, public IGwmBandwidthSelectable, public IGwmOpenmpParallelizable
+class CGwmMGWR : public CGwmSpatialMultiscaleAlgorithm, public IGwmBandwidthSelectable,public IGwmOpenmpParallelizable,public IGwmRegressionAnalysis 
 {
 public:
     enum BandwidthInitilizeType
@@ -52,6 +52,7 @@ public:
     typedef double (CGwmMGWR::*BandwidthSizeCriterionFunction)(CGwmBandwidthWeight*);
     typedef mat (CGwmMGWR::*RegressionAllFunction)(const arma::mat&, const arma::vec&);
     typedef vec (CGwmMGWR::*RegressionVarFunction)(const arma::vec&, const arma::vec&, int, mat&);
+    typedef mat (CGwmMGWR::*RegressionHatmatrixCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
     //typedef pair<string, const mat> CreateResultLayerDataItem;
     typedef tuple<string, mat, NameFormat> CreateResultLayerDataItem;
 private:
@@ -70,6 +71,10 @@ private:
     {
         double ss = RSS(x, y, betas), n = x.n_rows;
         return n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
+    }
+    bool isStoreS()
+    {
+        return mHasHatMatrix && (mSourceLayer->featureCount() < 8192);
     }
 
     static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
@@ -120,8 +125,11 @@ public:
 
     bool hasRegressionLayer()
     {
-        return hasRegressionLayer != nullptr;
+        return hasRegressionLayer()!= false;
     }
+
+    BandwidthSizeCriterionFunction bandwidthSizeCriterionAll(BandwidthSelectionCriterionType type);
+    BandwidthSizeCriterionFunction bandwidthSizeCriterionVar(BandwidthSelectionCriterionType type);
 
 
 public:     // GwmTaskThread interface
@@ -137,10 +145,7 @@ public:     // GwmSpatialMultiscaleAlgorithm interface
 
 
 public:     // IBandwidthSizeSelectable interface
-    double criterion(CGwmBandwidthWeight *weight) //override
-    {
-        return (this->*mBandwidthSizeCriterion)(weight);
-    }
+    double getCriterion(CGwmBandwidthWeight* weight);
 
 
 public:     // IRegressionAnalysis interface
@@ -156,6 +161,8 @@ public:     // IRegressionAnalysis interface
 
     mat regression(const mat &x, const vec &y) override;
 
+    mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
+
 
 public:     // IParallelalbe interface
     int parallelAbility() const override;
@@ -168,51 +175,55 @@ public:     // IOpenmpParallelable interface
 
     void setCanceled(bool canceled);
 
+
+
 protected:
     void initPoints();
     void initXY(mat& x, mat& y, const GwmVariable& depVar, const vector<GwmVariable>& indepVars);
+    virtual void setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmVariable& depVar, const vector<GwmVariable>& indepVars);
 
     CGwmBandwidthWeight* bandwidth(int i)
     {
         return static_cast<CGwmBandwidthWeight*>(mSpatialWeights[i].weight());
     }
-
+    mat regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
+    {
+        return (this->*mRegressionHatmatrixFunction)(x, y, betasSE, shat, qdiag, S);
+    }
     mat regressionAllSerial(const mat& x, const vec& y);
-#ifdef ENABLE_OpenMP
+
     mat regressionAllOmp(const mat& x, const vec& y);
-#endif
+
     vec regressionVarSerial(const vec& x, const vec& y, const int var, mat& S);
-#ifdef ENABLE_OpenMP
+
     vec regressionVarOmp(const vec& x, const vec& y, const int var, mat& S);
-#endif
 
-    BandwidthSizeCriterionFunction bandwidthSizeCriterionAll(BandwidthSelectionCriterionType type);
+
+
     double mBandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight* bandwidthWeight);
-#ifdef ENABLE_OpenMP
-    double mBandwidthSizeCriterionAllCVOmp(GwmBandwidthWeight* bandwidthWeight);
-#endif
-    double mBandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight* bandwidthWeight);
-#ifdef ENABLE_OpenMP
-    double mBandwidthSizeCriterionAllAICOmp(GwmBandwidthWeight* bandwidthWeight);
-#endif
 
-    BandwidthSizeCriterionFunction bandwidthSizeCriterionVar(BandwidthSelectionCriterionType type);
+    double mBandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight* bandwidthWeight);
+
+    double mBandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight* bandwidthWeight);
+
+    double mBandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight* bandwidthWeight);
+
+
+
     double mBandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight* bandwidthWeight);
-#ifdef ENABLE_OpenMP
-    double mBandwidthSizeCriterionVarCVOmp(GwmBandwidthWeight* bandwidthWeight);
-#endif
+
+    double mBandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight* bandwidthWeight);
+
     double mBandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight* bandwidthWeight);
-#ifdef ENABLE_OpenMP
-    double mBandwidthSizeCriterionVarAICOmp(GwmBandwidthWeight* bandwidthWeight);
-#endif
+
+    double mBandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight* bandwidthWeight);
+
     void createRegressionDistanceParameter();
 
-    void createPredictionDistanceParameter();
-
-    void createResultLayer(initializer_list<CreateResultLayerDataItem> data);
+    void createResultLayer(initializer_list<CreateResultLayerDataItem> items);
 
 protected:
-    CGwmBandwidthSelector selector;
+    CGwmBandwidthSelector mselector;
 private:
     //QgsVectorLayer* mRegressionLayer = nullptr;
     mat mDataPoints;
@@ -220,6 +231,7 @@ private:
 
     RegressionAllFunction mRegressionAll = &CGwmMGWR::regressionAllSerial;
     RegressionVarFunction mRegressionVar = &CGwmMGWR::regressionVarSerial;
+    RegressionHatmatrixCalculator mRegressionHatmatrixFunction = &CGwmMGWR::regressionHatmatrixSerial;
 
     GwmVariable mDepVar;
     vector<GwmVariable> mIndepVars;
@@ -227,6 +239,7 @@ private:
     CGwmSpatialWeight mInitSpatialWeight;
     BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &CGwmMGWR::mBandwidthSizeCriterionAllCVSerial;
     int mBandwidthSelectionCurrentIndex = 0;
+
 
     vector<BandwidthInitilizeType> mBandwidthInitilize;
     vector<BandwidthSelectionCriterionType> mBandwidthSelectionApproach;
@@ -265,7 +278,10 @@ public:
     static int treeChildCount;
 };
 
-
+inline double CGwmMGWR::getCriterion(CGwmBandwidthWeight* weight)
+{
+    return (this->*mBandwidthSizeCriterion)(weight);
+}
 
 inline GwmVariable CGwmMGWR::dependentVariable() const
 {
@@ -291,7 +307,6 @@ inline GwmRegressionDiagnostic CGwmMGWR::diagnostic() const
 {
     return mDiagnostic;
 }
-
 inline int CGwmMGWR::adaptiveLower() const
 {
     return mAdaptiveLower;
@@ -400,10 +415,10 @@ inline mat CGwmMGWR::betas() const
 inline int CGwmMGWR::parallelAbility() const
 {
     return ParallelType::SerialOnly
-        #ifdef ENABLE_OpenMP
-            | IParallelalbe::OpenMP
-        #endif
-            ;
+        #ifdef ENABLE_OPENMP
+        | ParallelType::OpenMP
+        #endif        
+        ;
 }
 
 inline ParallelType CGwmMGWR::parallelType() const
