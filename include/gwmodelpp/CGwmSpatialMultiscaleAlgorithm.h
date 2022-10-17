@@ -50,7 +50,7 @@ public:
      */
     virtual void setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights);
     
-    void createDistanceParameter();
+    void createDistanceParameter(size_t size);
 
 protected:
     vector<CGwmSpatialWeight> mSpatialWeights;   //!< Spatial weight configuration.

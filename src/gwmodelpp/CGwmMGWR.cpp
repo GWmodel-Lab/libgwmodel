@@ -121,7 +121,8 @@ GwmBasicGWRAlgorithm::OLSVar CGwmMGWR::CalOLS(const mat &x, const vec &y){
 */
 void CGwmMGWR::run()
 {
-    createRegressionDistanceParameter();
+    createDistanceParameter(mIndepVars.size() + 1);
+    createInitialDistanceParameter();
     //assert(mRegressionDistanceParameter != nullptr);
     //initPoints();
     setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
@@ -210,18 +211,6 @@ void CGwmMGWR::run()
         vec residual = mY - yhat;
         vec stu_res = residual / sqrt(sigmaHat * qdiag);
         mBetasTV = mBetas / mBetasSE;
-        vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
-        vec dyhat2 = (mY - yhat) % (mY - yhat);
-        vec localR2 = vec(nDp, nVar,fill::zeros);
-        for (uword i = 0; i < nDp; i++)
-        {
-            for(uword j=0;j<nVar;j++){
-                vec w = mSpatialWeights[j].weightVector(i);
-                double tss = sum(dybar2 % w);
-                double rss = sum(dyhat2 % w);
-                localR2(i,j) = (tss - rss) / tss;
-            }
-        }
         createResultLayer({//结果及诊断信息
             make_tuple(string("%1"), mBetas, NameFormat::VarName),
             make_tuple(string("y"), mY, NameFormat::Fixed),
@@ -230,7 +219,6 @@ void CGwmMGWR::run()
             make_tuple(string("Stud_residual"), stu_res, NameFormat::Fixed),
             make_tuple(string("SE"), mBetasSE, NameFormat::PrefixVarName),
             make_tuple(string("TV"), mBetasTV, NameFormat::PrefixVarName),
-            make_tuple(string("localR2"), localR2, NameFormat::Fixed)
             /*qMakePair(QString("%1"), mBetas),
             qMakePair(QString("yhat"), yhat),
             qMakePair(QString("residual"), residual),
@@ -254,17 +242,15 @@ void CGwmMGWR::run()
     else return;*/
 }
 
-void CGwmMGWR::createRegressionDistanceParameter()
+void CGwmMGWR::createInitialDistanceParameter()
 {//回归距离计算
-    for (uword i = 0; i < mIndepVars.size(); i++){
-        if (mSpatialWeights[i].distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
-            mSpatialWeights[i].distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
-        {
-            mSpatialWeights[i].distance()->makeParameter({
-                mSourceLayer->points(),
-                mSourceLayer->points()
-            });
-        }
+    if (mInitSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
+        mInitSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
+    {
+        mInitSpatialWeight.distance()->makeParameter({
+            mSourceLayer->points(),
+            mSourceLayer->points()
+        });
     }
 }
 

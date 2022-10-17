@@ -218,7 +218,7 @@ protected:
 
     double mBandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight* bandwidthWeight);
 
-    void createRegressionDistanceParameter();
+    void createInitialDistanceParameter();
 
     void createResultLayer(initializer_list<CreateResultLayerDataItem> items);
 
