@@ -694,14 +694,14 @@ void CGwmGWDR::setBandwidthCriterionType(const BandwidthCriterionType& type)
     case BandwidthCriterionType::AIC:
         mapper = {
             make_pair(ParallelType::SerialOnly, &CGwmGWDR::bandwidthCriterionAICSerial),
-            make_pair(ParallelType::OpenMP, &CGwmGWDR::bandwidthCriterionAICSerial)
+            make_pair(ParallelType::OpenMP, &CGwmGWDR::bandwidthCriterionAICOmp)
         };
         mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionAICSerial;
         break;
     default:
         mapper = {
             make_pair(ParallelType::SerialOnly, &CGwmGWDR::bandwidthCriterionCVSerial),
-            make_pair(ParallelType::OpenMP, &CGwmGWDR::bandwidthCriterionCVSerial)
+            make_pair(ParallelType::OpenMP, &CGwmGWDR::bandwidthCriterionCVOmp)
         };
         mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionCVSerial;
         break;
@@ -716,9 +716,9 @@ void CGwmGWDR::setParallelType(const ParallelType& type)
         mParallelType = type;
         switch (type) {
         case ParallelType::OpenMP:
-            mRegressionFunction = &CGwmGWDR::regressionSerial;
-            mRegressionHatmatrixFunction = &CGwmGWDR::regressionHatmatrixSerial;
-            mIndepVarCriterionFunction= &CGwmGWDR::indepVarCriterionSerial;
+            mRegressionFunction = &CGwmGWDR::regressionOmp;
+            mRegressionHatmatrixFunction = &CGwmGWDR::regressionHatmatrixOmp;
+            mIndepVarCriterionFunction= &CGwmGWDR::indepVarCriterionOmp;
             break;
         default:
             mRegressionFunction = &CGwmGWDR::regressionSerial;
