@@ -329,7 +329,7 @@ double CGwmGWDR::bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& 
                 mat xtwx_inv = xtwx.i();
                 vec beta = xtwx_inv * xtwy;
                 double yhat = as_scalar(mX.row(i) * beta);
-                cv += yhat - mY(i);
+                cv += abs(yhat - mY(i));
             }
             catch(const std::exception& e)
             {
@@ -338,7 +338,7 @@ double CGwmGWDR::bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& 
             }
         }
     }
-    return success ? abs(cv) : DBL_MAX;
+    return success ? cv : DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -369,7 +369,7 @@ double CGwmGWDR::bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& ban
                 mat xtwx_inv = xtwx.i();
                 vec beta = xtwx_inv * xtwy;
                 double yhat = as_scalar(mX.row(i) * beta);
-                cv_all(thread) += yhat - mY(i);
+                cv_all(thread) += abs(yhat - mY(i));
             }
             catch(const std::exception& e)
             {
@@ -379,7 +379,7 @@ double CGwmGWDR::bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& ban
         }
     }
     double cv = sum(cv_all);
-    return success ? abs(cv) : DBL_MAX;
+    return success ? cv : DBL_MAX;
 }
 #endif
 
