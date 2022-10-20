@@ -68,7 +68,7 @@ void CGwmGWDR::run()
             bws.push_back(iter.weight<CGwmBandwidthWeight>());
         }
         CGwmGWDRBandwidthOptimizer optimizer(bws);
-        int status = optimizer.optimize(this, mSourceLayer->featureCount(), mBandwidthOptimizeMaxIter, mBandwidthOptimizeEps);
+        int status = optimizer.optimize(this, mSourceLayer->featureCount(), mBandwidthOptimizeMaxIter, mBandwidthOptimizeEps, mBandwidthOptimizeStep);
         if (status)
         {
             throw runtime_error("[CGwmGWDR::run] Bandwidth optimization invoke failed.");
@@ -745,22 +745,22 @@ double CGwmGWDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, voi
     return instance->bandwidthCriterion(bandwidths);
 }
 
-const int CGwmGWDRBandwidthOptimizer::optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps)
+const int CGwmGWDRBandwidthOptimizer::optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps, double step)
 {
     size_t nDim = mBandwidths.size();
     gsl_multimin_fminimizer* minimizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex2rand, nDim);
-    gsl_vector* target = gsl_vector_alloc(nDim);
-    gsl_vector* step = gsl_vector_alloc(nDim);
+    gsl_vector* targets = gsl_vector_alloc(nDim);
+    gsl_vector* steps = gsl_vector_alloc(nDim);
     for (size_t m = 0; m < nDim; m++)
     {
         double target_value = mBandwidths[m]->adaptive() ? mBandwidths[m]->bandwidth() / double(featureCount) : mBandwidths[m]->bandwidth();
-        gsl_vector_set(target, m, target_value);
-        gsl_vector_set(step, m, 0.01);
+        gsl_vector_set(targets, m, target_value);
+        gsl_vector_set(steps, m, step);
     }
     Parameter params = { instance, &mBandwidths, featureCount };
     gsl_multimin_function function = { criterion_function, nDim, &params };
     double criterion = DBL_MAX;
-    int status = gsl_multimin_fminimizer_set(minimizer, &function, target, step);
+    int status = gsl_multimin_fminimizer_set(minimizer, &function, targets, steps);
     if (status == GSL_SUCCESS)
     {
         int iter = 0;
@@ -800,7 +800,7 @@ const int CGwmGWDRBandwidthOptimizer::optimize(CGwmGWDR* instance, uword feature
         }
     }
     gsl_multimin_fminimizer_free(minimizer);
-    gsl_vector_free(target);
-    gsl_vector_free(step);
+    gsl_vector_free(targets);
+    gsl_vector_free(steps);
     return status;
 }

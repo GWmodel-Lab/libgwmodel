@@ -107,6 +107,7 @@ TEST_CASE("GWDR: basic flow with bandwidth optimization (CV)")
     algorithm.setIndependentVariables(indepVars);
     algorithm.setSpatialWeights(spatials);
     algorithm.setEnableBandwidthOptimize(true);
+    algorithm.setBandwidthOptimizeStep(0.01);
     algorithm.setBandwidthCriterionType(CGwmGWDR::CV);
     algorithm.setHasHatMatrix(true);
     REQUIRE_NOTHROW(algorithm.run());
