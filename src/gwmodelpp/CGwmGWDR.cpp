@@ -319,11 +319,10 @@ double CGwmGWDR::bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& 
                 vec w_m = bandwidths[m]->weight(d_m);
                 w = w % w_m;
             }
-            vec w_cv = w;
-            w_cv(i) = 0.0;
-            mat xtw = (mX.each_col() % w_cv).t();
+            w(i) = 0.0;
+            mat xtw = (mX.each_col() % w).t();
             mat xtwx = xtw * mX;
-            mat xtwy = mX.t() * (w_cv % mY);
+            mat xtwy = xtw * mY;
             try
             {
                 mat xtwx_inv = xtwx.i();
