@@ -98,6 +98,26 @@ public:
         mEnableBandwidthOptimize = flag;
     }
 
+    double bandwidthOptimizeEps() const
+    {
+        return mBandwidthOptimizeEps;
+    }
+
+    void setBandwidthOptimizeEps(double value)
+    {
+        mBandwidthOptimizeEps = value;
+    }
+
+    size_t bandwidthOptimizeMaxIter() const
+    {
+        return mBandwidthOptimizeMaxIter;
+    }
+
+    void setBandwidthOptimizeMaxIter(size_t value)
+    {
+        mBandwidthOptimizeMaxIter = value;
+    }
+
     BandwidthCriterionType bandwidthCriterionType() const
     {
         return mBandwidthCriterionType;
@@ -243,6 +263,8 @@ private:
     bool mEnableBandwidthOptimize = false;
     BandwidthCriterionType mBandwidthCriterionType = BandwidthCriterionType::CV;
     BandwidthCriterionCalculator mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionCVSerial;
+    double mBandwidthOptimizeEps = 1e-6;
+    size_t mBandwidthOptimizeMaxIter = 100000;
 
     bool mEnableIndepVarSelect = false;
     double mIndepVarSelectThreshold = 3.0;
