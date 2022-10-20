@@ -112,8 +112,8 @@ TEST_CASE("GWDR: basic flow with bandwidth optimization (CV)")
     REQUIRE_NOTHROW(algorithm.run());
 
     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(94, 1e-12));
-    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(119, 1e-12));
+    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(80, 1e-12));
+    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(2550816, 1e-12));
 }
 
 TEST_CASE("GWDR: basic flow with bandwidth optimization (AIC)")
@@ -157,8 +157,8 @@ TEST_CASE("GWDR: basic flow with bandwidth optimization (AIC)")
     REQUIRE_NOTHROW(algorithm.run());
 
     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(82, 1e-12));
-    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(175, 1e-12));
+    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(80, 1e-12));
+    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(189, 1e-12));
 }
 
 TEST_CASE("GWDR: basic flow with independent variable selection")

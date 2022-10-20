@@ -57,7 +57,7 @@ void CGwmGWDR::run()
             // Set Initial value
             double lower = bw->adaptive() ? nVars + 1 : sw.distance()->minDistance();
             double upper = bw->adaptive() ? nDp : sw.distance()->maxDistance();
-            if (bw->bandwidth() <= 0.0 || bw->bandwidth() >= upper)
+            if (bw->bandwidth() <= lower || bw->bandwidth() >= upper)
             {
                 bw->setBandwidth(upper * 0.618);
             }
@@ -68,7 +68,7 @@ void CGwmGWDR::run()
             bws.push_back(iter.weight<CGwmBandwidthWeight>());
         }
         CGwmGWDRBandwidthOptimizer optimizer(bws);
-        int status = optimizer.optimize(this, mSourceLayer->featureCount(), 100000, 1e-8);
+        int status = optimizer.optimize(this, mSourceLayer->featureCount(), mBandwidthOptimizeMaxIter, mBandwidthOptimizeEps);
         if (status)
         {
             throw runtime_error("[CGwmGWDR::run] Bandwidth optimization invoke failed.");
@@ -319,17 +319,18 @@ double CGwmGWDR::bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& 
                 vec w_m = bandwidths[m]->weight(d_m);
                 w = w % w_m;
             }
-            w(i) = 0.0;
-            mat ws(1, nVar, arma::fill::ones);
-            mat xtw = (mX %(w * ws)).t();
+            vec w_cv = w;
+            w_cv(i) = 0.0;
+            mat xtw = (mX.each_col() % w_cv).t();
             mat xtwx = xtw * mX;
-            mat xtwy = mX.t() * (w % mY);
+            mat xtwy = mX.t() * (w_cv % mY);
             try
             {
                 mat xtwx_inv = xtwx.i();
                 vec beta = xtwx_inv * xtwy;
                 double yhat = as_scalar(mX.row(i) * beta);
-                cv += abs(yhat - mY(i));
+                double cv_i = mY(i) - yhat;
+                cv += cv_i * cv_i;
             }
             catch(const std::exception& e)
             {
@@ -369,7 +370,8 @@ double CGwmGWDR::bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& ban
                 mat xtwx_inv = xtwx.i();
                 vec beta = xtwx_inv * xtwy;
                 double yhat = as_scalar(mX.row(i) * beta);
-                cv_all(thread) += abs(yhat - mY(i));
+                double cv_i = abs(yhat - mY(i));
+                cv_all(thread) += cv_i * cv_i;
             }
             catch(const std::exception& e)
             {
@@ -747,14 +749,14 @@ double CGwmGWDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, voi
 const int CGwmGWDRBandwidthOptimizer::optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps)
 {
     size_t nDim = mBandwidths.size();
-    gsl_multimin_fminimizer* minimizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex, nDim);
+    gsl_multimin_fminimizer* minimizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex2rand, nDim);
     gsl_vector* target = gsl_vector_alloc(nDim);
     gsl_vector* step = gsl_vector_alloc(nDim);
     for (size_t m = 0; m < nDim; m++)
     {
         double target_value = mBandwidths[m]->adaptive() ? mBandwidths[m]->bandwidth() / double(featureCount) : mBandwidths[m]->bandwidth();
         gsl_vector_set(target, m, target_value);
-        gsl_vector_set(step, m, 0.1);
+        gsl_vector_set(step, m, 0.01);
     }
     Parameter params = { instance, &mBandwidths, featureCount };
     gsl_multimin_function function = { criterion_function, nDim, &params };
