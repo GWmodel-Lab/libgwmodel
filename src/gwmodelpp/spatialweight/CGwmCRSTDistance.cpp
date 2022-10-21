@@ -48,18 +48,18 @@ void CGwmCRSTDistance::makeParameter(initializer_list<DistParamVariant> plist)
     {
         const mat& fp = get<mat>(*(plist.begin()));
         const mat& dp = get<mat>(*(plist.begin() + 1));
-        if (fp.n_cols == 2 && dp.n_cols == 2)
+        if (fp.n_cols == 3 && dp.n_cols == 3 )
             mParameter = make_unique<Parameter>(fp, dp);
         else 
         {
             mParameter.reset(nullptr);
-            throw std::runtime_error("The dimension of data points or focus points is not 2."); 
+            throw std::runtime_error("The dimension of data points or focus points is not 3, maybe do not have timestamps."); 
         }
     }
     else
     {
         mParameter.reset(nullptr);
-        throw std::runtime_error("The number of parameters must be 2.");
+        throw std::runtime_error("The number of parameters must be 2 coordinate position with 1 timestamp.");
     }
 }
 
