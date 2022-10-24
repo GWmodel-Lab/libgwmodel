@@ -29,20 +29,20 @@ unordered_map<CGwmMGWR::BackFittingCriterionType,string> CGwmMGWR::BackFittingCr
     make_pair(CGwmMGWR::BackFittingCriterionType::dCVR, ("dCVR"))
 };
 
-GwmRegressionDiagnostic CGwmMGWR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
+GwmRegressionDiagnostic CGwmMGWR::CalcDiagnostic(const mat &x, const vec &y, const mat &S0, double RSS)
 {//诊断值
-    vec r = y - sum(betas % x, 1);
+    /*vec r = y - sum(betas % x, 1);
     double rss = sum(r % r);
     double n = (double)x.n_rows;
-    double AIC = n * log(rss / n) + n * log(2 * datum::pi) + n + shat(0);
+    double AIC =  n * log(rss / n) + n * log(2 * datum::pi) + n + shat(0);
     double AICc = n * log(rss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
     double edf = n - 2 * shat(0) + shat(1);
     double enp = 2 * shat(0) - shat(1);
     double yss = sum((y - mean(y)) % (y - mean(y)));
     double r2 = 1 - rss / yss;
     double r2_adj = 1 - (1 - r2) * (n - 1) / (edf - 1);
-    return { rss, AIC, AICc, enp, edf, r2, r2_adj };
-    /*// 诊断信息
+    return { rss, AIC, AICc, enp, edf, r2, r2_adj };*/
+    // 诊断信息
     double nDp = x.n_rows;
     double RSSg = RSS;
     double sigmaHat21 = RSSg / nDp;
@@ -64,7 +64,7 @@ GwmRegressionDiagnostic CGwmMGWR::CalcDiagnostic(const mat& x, const vec& y, con
     diagnostic.EDF = edf;
     diagnostic.RSquareAdjust = adjustRsquare;
     diagnostic.RSquare = Rsquare;
-    return diagnostic;*/
+    return diagnostic;
 }
 
 CGwmMGWR::CGwmMGWR()
@@ -83,7 +83,7 @@ void CGwmMGWR::setCanceled(bool canceled)
 GwmBasicGWRAlgorithm::OLSVar CGwmMGWR::CalOLS(const mat &x, const vec &y){
     QMap<QString,QList<int> > Coefficients;
     double nVar = mX.n_cols;
-    double np = x.n_rows;
+    double np = mSourceLayer->featureCount();
     mat xt = x.t();
     mat betahat = inv(xt * x)*xt*y;
     vec yhat = x*betahat;
@@ -184,13 +184,14 @@ void CGwmMGWR::run()
     CGwmBandwidthWeight* initBw = initBwSelector.optimize(this);
     if (!initBw)
     {
+        std::cerr << "Cannot select initial bandwidth." << '\n';
         //emit error(tr("Cannot select initial bandwidth."));
         return;
     }
     mInitSpatialWeight.setWeight(initBw);
 
     // 初始化诊断信息矩阵
-    if (mHasHatMatrix )
+    if (mHasHatMatrix)
     {
         mS0 = mat(nDp, nDp, fill::zeros);
         mSArray = cube(nDp, nDp, nVar, fill::zeros);
@@ -199,24 +200,18 @@ void CGwmMGWR::run()
 
     mBetas = regression(mX, mY);
 
-    if (mHasHatMatrix )
+    if (mHasHatMatrix)
     {
-        mat betasSE, S;
-        vec shat, qdiag;
-        mBetas = regressionHatmatrix(mX, mY, betasSE, shat, qdiag, S);
-        mDiagnostic = CalcDiagnostic(mX, mY, mBetas, shat);
-        double trS = shat(0), trStS = shat(1);
-        double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
+        mDiagnostic = CalcDiagnostic(mX, mY, mS0, mRSS0);
         vec yhat = Fitted(mX, mBetas);
         vec residual = mY - yhat;
-        vec stu_res = residual / sqrt(sigmaHat * qdiag);
         mBetasTV = mBetas / mBetasSE;
         createResultLayer({//结果及诊断信息
             make_tuple(string("%1"), mBetas, NameFormat::VarName),
             make_tuple(string("y"), mY, NameFormat::Fixed),
             make_tuple(string("yhat"), yhat, NameFormat::Fixed),
             make_tuple(string("residual"), residual, NameFormat::Fixed),
-            make_tuple(string("Stud_residual"), stu_res, NameFormat::Fixed),
+            //make_tuple(string("Stud_residual"), stu_res, NameFormat::Fixed),
             make_tuple(string("SE"), mBetasSE, NameFormat::PrefixVarName),
             make_tuple(string("TV"), mBetasTV, NameFormat::PrefixVarName),
             /*qMakePair(QString("%1"), mBetas),
@@ -253,10 +248,8 @@ void CGwmMGWR::createInitialDistanceParameter()
         });
     }
 }
-
-mat CGwmMGWR::regression(const mat &x, const vec &y)
-{
-    uword nDp = x.n_rows, nVar = x.n_cols;
+mat CGwmMGWR::regression(const mat &x, const vec &y){
+    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
     mat betas = (this->*mRegressionAll)(x, y);
 
     if (mHasHatMatrix)
@@ -328,7 +321,103 @@ mat CGwmMGWR::regression(const mat &x, const vec &y)
 
             mat S;
             betas.col(i) = (this->*mRegressionVar)(x.col(i), yi, i, S);
-            if (mHasHatMatrix )
+            if (mHasHatMatrix)
+            {
+                mat SArrayi = mSArray.slice(i);
+                mSArray.slice(i) = S * SArrayi + S - S * mS0;
+                mS0 = mS0 - SArrayi + mSArray.slice(i);
+            }
+            resid = y - Fitted(x, betas);
+        }
+        RSS1 = RSS(x, y, betas);
+        criterion = (mCriterionType == BackFittingCriterionType::CVR) ?
+                    abs(RSS1 - RSS0) :
+                    sqrt(abs(RSS1 - RSS0) / RSS1);
+        //QString criterionName = mCriterionType == BackFittingCriterionType::CVR ? "change value of RSS (CVR)" : "differential change value of RSS (dCVR)";
+        //emit message(QString("Iteration %1 the %2 is %3").arg(iteration).arg(criterionName).arg(criterion));
+        RSS0 = RSS1;
+        //emit message(QString("---- End of Iteration %1 ----").arg(iteration));
+    }
+    //emit message(QString("-------- [End] Select the Optimum Bandwidths for each Independent Varialbe --------"));
+    mRSS0 = RSS0;
+    return betas;
+};
+
+mat CGwmMGWR::regressionHatmatrixSerial(const mat &x, const vec &y,mat& betasSE, vec& shat, vec& qDiag, mat& S)
+{
+    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    mat betas = (this->*mRegressionAll)(x, y);
+
+    if (mHasHatMatrix)
+    {
+        mat idm(nVar, nVar, fill::eye);
+        for (uword i = 0; i < nVar; ++i)
+        {
+            for (uword j = 0; j < nDp ; ++j)
+            {
+                mSArray.slice(i).row(j) = x(j, i) * (idm.row(i) * mC.slice(j));
+            }
+        }
+    }
+
+    // ***********************************************************
+    // Select the optimum bandwidths for each independent variable
+    // ***********************************************************
+    //emit message(QString("-------- Select the Optimum Bandwidths for each Independent Varialbe --------"));
+    uvec bwChangeNo(nVar, fill::zeros);
+    vec resid = y - Fitted(x, betas);
+    double RSS0 = sum(resid % resid), RSS1 = DBL_MAX;
+    double criterion = DBL_MAX;
+    for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold; iteration++)
+    {
+        //emit tick(iteration - 1, mMaxIteration);
+        for (uword i = 0; i < nVar  ; i++)
+        {
+            //QString varName = i == 0 ? QStringLiteral("Intercept") : mIndepVars[i-1].name;
+            vec fi = betas.col(i) % x.col(i);
+            vec yi = resid + fi;
+            if (mBandwidthInitilize[i] != BandwidthInitilizeType::Specified)
+            {
+                //emit message(QString("Now select an optimum bandwidth for the variable: %1").arg(varName));
+                mBandwidthSizeCriterion = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
+                mBandwidthSelectionCurrentIndex = i;
+                mYi = yi;
+                mXi = mX.col(i);
+                CGwmBandwidthWeight* bwi0 = bandwidth(i);
+                bool adaptive = bwi0->adaptive();
+                CGwmBandwidthSelector mselector;
+                mselector.setBandwidth(bwi0);
+                mselector.setLower(adaptive ? mAdaptiveLower : 0.0);
+                mselector.setUpper(adaptive ? mSourceLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
+                CGwmBandwidthWeight* bwi = mselector.optimize(this);
+                double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
+                //emit message(QString("The newly selected bandwidth for variable %1 is %2 (last is %3, difference is %4)")
+                            // .arg(varName).arg(bwi1s).arg(bwi0s).arg(abs(bwi1s - bwi0s)));
+                if (abs(bwi1s - bwi0s) > mBandwidthSelectThreshold[i])
+                {
+                    bwChangeNo(i) = 0;
+                    //emit message(QString("The bandwidth for variable %1 will be continually selected in the next iteration").arg(varName));
+                }
+                else
+                {
+                    bwChangeNo(i) += 1;
+                    if (bwChangeNo(i) >= mBandwidthSelectRetryTimes)
+                    {
+                        mBandwidthInitilize[i] = BandwidthInitilizeType::Specified;
+                        //emit message(QString("The bandwidth for variable %1 seems to be converged and will be kept the same in the following iterations.").arg(varName));
+                    }
+                    else
+                    {
+                        //emit message(QString("The bandwidth for variable %1 seems to be converged for %2 times. It will be continually optimized in the next %3 times.")
+                                     //.arg(varName).arg(bwChangeNo(i)).arg(mBandwidthSelectRetryTimes - bwChangeNo(i)));
+                    }
+                }
+                mSpatialWeights[i].setWeight(bwi);
+            }
+
+            mat S;
+            betas.col(i) = (this->*mRegressionVar)(x.col(i), yi, i, S);
+            if (mHasHatMatrix)
             {
                 mat SArrayi = mSArray.slice(i);
                 mSArray.slice(i) = S * SArrayi + S - S * mS0;
@@ -349,52 +438,45 @@ mat CGwmMGWR::regression(const mat &x, const vec &y)
     mRSS0 = RSS0;
     return betas;
 }
-mat CGwmMGWR::regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
+/*
+mat CGwmMGWR::regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
 {
     uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
-    mat betas(nVar, nDp, arma::fill::zeros);
-    betasSE = mat(nVar, nDp, arma::fill::zeros);
-    qdiag = vec(nDp, arma::fill::zeros);
-    S = mat(isStoreS() ? nDp : 1, nDp, arma::fill::zeros);
-    mat rowsumSE(nDp, 1, arma::fill::ones);
-    vec s_hat1(nDp, arma::fill::zeros), s_hat2(nDp, arma::fill::zeros);
-    for (size_t i = 0; i < nDp; i++)
+    mat betas(nVar, nDp, fill::zeros);
+    betasSE = mat(nVar, nDp, fill::zeros);
+    shat = vec(2, fill::zeros);
+    qDiag = vec(nDp, fill::zeros);
+    S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
+    for (uword i = 0; i < nDp; i++)
     {
-        vec w(nDp, arma::fill::ones);
-        for (auto&& sw : mSpatialWeights)
-        {
-            vec w_m = sw.weightVector(i);
-            w = w % w_m;
-        }
-        mat ws(1, nVar, arma::fill::ones);
-        mat xtw = trans(x %(w * ws));
+        vec w = mSpatialWeight.weightVector(i);
+        mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
-        mat xtwy = trans(x) * (w % y);
+        mat xtwy = xtw * y;
         try
         {
-            mat xtwx_inv = xtwx.i();
+            mat xtwx_inv = inv_sympd(xtwx);
             betas.col(i) = xtwx_inv * xtwy;
-            // hatmatrix
             mat ci = xtwx_inv * xtw;
+            betasSE.col(i) = sum(ci % ci, 1);
             mat si = x.row(i) * ci;
-            betasSE.col(i) = (ci % ci) * rowsumSE;
-            s_hat1(i) = si(0, i);
-            s_hat2(i) = det(si * si.t());
-            mat onei(1, nDp, arma::fill::zeros);
-            onei(i) = 1;
-            mat p = (onei - si).t();
-            qdiag += p % p;
+            shat(0) += si(0, i);
+            shat(1) += det(si * si.t());
+            vec p = - si.t();
+            p(i) += 1.0;
+            qDiag += p % p;
             S.row(isStoreS() ? i : 0) = si;
         }
-        catch(const std::exception& e)
+        catch (std::exception e)
         {
-            std::cerr << e.what() << '\n';
+            throw e;
         }
     }
-    shat = {sum(s_hat1), sum(s_hat2)};
     betasSE = betasSE.t();
     return betas.t();
 }
+*/
+
 bool CGwmMGWR::isValid()
 {
     if (mIndepVars.size() < 1)
@@ -636,7 +718,8 @@ void CGwmMGWR::createResultLayer(initializer_list<CreateResultLayerDataItem> ite
 
 mat CGwmMGWR::regressionAllSerial(const mat& x, const vec& y)
 {
-    int nDp = x.n_rows, nVar = x.n_cols;
+    //int nDp = x.n_rows, nVar = x.n_cols;
+    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
     if (mHasHatMatrix )
     {
@@ -657,7 +740,7 @@ mat CGwmMGWR::regressionAllSerial(const mat& x, const vec& y)
                 mS0.row(i) = si;
                 mC.slice(i) = ci;
             } catch (exception e) {
-                //emit error(e.what());
+                std::cerr << e.what() << '\n';
             }
         }
         mBetasSE = betasSE.t();
@@ -675,6 +758,7 @@ mat CGwmMGWR::regressionAllSerial(const mat& x, const vec& y)
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
             } catch (exception e) {
+                std::cerr << e.what() << '\n';
                 //emit error(e.what());
             }
         }
@@ -684,7 +768,7 @@ mat CGwmMGWR::regressionAllSerial(const mat& x, const vec& y)
 #ifdef ENABLE_OPENMP
 mat CGwmMGWR::regressionAllOmp(const mat &x, const vec &y)
 {
-    int nDp = x.n_rows, nVar = x.n_cols;
+    int nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
     if (mHasHatMatrix )
     {
@@ -706,6 +790,7 @@ mat CGwmMGWR::regressionAllOmp(const mat &x, const vec &y)
                     mS0.row(i) = si;
                     mC.slice(i) = ci;
                 } catch (exception e) {
+                    std::cerr << e.what() << '\n';
                     //emit error(e.what());
                 }
         }
@@ -725,6 +810,7 @@ mat CGwmMGWR::regressionAllOmp(const mat &x, const vec &y)
                     mat xtwx_inv = inv_sympd(xtwx);
                     betas.col(i) = xtwx_inv * xtwy;
                 } catch (exception e) {
+                    std::cerr << e.what() << '\n';
                     //emit error(e.what());
                 }
         }
@@ -734,7 +820,7 @@ mat CGwmMGWR::regressionAllOmp(const mat &x, const vec &y)
 #endif
 vec CGwmMGWR::regressionVarSerial(const vec &x, const vec &y, const int var, mat &S)
 {
-    int nDp = x.n_rows;
+    int nDp = mSourceLayer->featureCount();
     mat betas(1, nDp, fill::zeros);
     if (mHasHatMatrix )
     {
@@ -754,6 +840,7 @@ vec CGwmMGWR::regressionVarSerial(const vec &x, const vec &y, const int var, mat
                 mat si = x(i) * ci;
                 S.row(i) = si;
             } catch (exception e) {
+                std::cerr << e.what() << '\n';
                 //emit error(e.what());
             }
         }
@@ -771,6 +858,7 @@ vec CGwmMGWR::regressionVarSerial(const vec &x, const vec &y, const int var, mat
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
             } catch (exception e) {
+                std::cerr << e.what() << '\n';
                 //emit error(e.what());
             }
         }
@@ -780,7 +868,7 @@ vec CGwmMGWR::regressionVarSerial(const vec &x, const vec &y, const int var, mat
 #ifdef ENABLE_OPENMP
 vec CGwmMGWR::regressionVarOmp(const vec &x, const vec &y, const int var, mat &S)
 {
-    int nDp = x.n_rows;
+    int nDp = mSourceLayer->featureCount();
     mat betas(1, nDp, fill::zeros);
     if (mHasHatMatrix)
     {
@@ -801,6 +889,7 @@ vec CGwmMGWR::regressionVarOmp(const vec &x, const vec &y, const int var, mat &S
                     mat si = x(i) * ci;
                     S.row(i) = si;
                 } catch (exception e) {
+                    std::cerr << e.what() << '\n';
                     //emit error(e.what());
                 }
         }
@@ -819,6 +908,7 @@ vec CGwmMGWR::regressionVarOmp(const vec &x, const vec &y, const int var, mat &S
                     mat xtwx_inv = inv_sympd(xtwx);
                     betas.col(i) = xtwx_inv * xtwy;
                 } catch (exception e) {
+                    std::cerr << e.what() << '\n';
                     //emit error(e.what());
                 }
         }
@@ -828,7 +918,7 @@ vec CGwmMGWR::regressionVarOmp(const vec &x, const vec &y, const int var, mat &S
 #endif
 double CGwmMGWR::mBandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
-    uword nDp = mDataPoints.n_rows;
+    uword nDp = mSourceLayer->featureCount();
     vec shat(2, fill::zeros);
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
@@ -846,8 +936,9 @@ double CGwmMGWR::mBandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwid
             double res = mY(i) - det(mX.row(i) * beta);
             cv += res * res;
         }
-        catch (...)
+        catch (exception e)
         {
+            std::cerr << e.what() << '\n';
             return DBL_MAX;
         }
     }
@@ -856,13 +947,16 @@ double CGwmMGWR::mBandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwid
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(cv);
 //    emit message(msg);
-    return cv;
-    //else return DBL_MAX;
+    if (isfinite(cv))
+    {
+        return cv;
+    }
+    else return DBL_MAX;
 }
 #ifdef ENABLE_OPENMP
 double CGwmMGWR::mBandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
-    int nDp = mDataPoints.n_rows;
+    int nDp = mSourceLayer->featureCount();
     vec shat(2, fill::zeros);
     vec cv_all(mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -885,8 +979,9 @@ double CGwmMGWR::mBandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthW
                 double res = mY(i) - det(mX.row(i) * beta);
                 cv_all(thread) += res * res;
             }
-            catch (...)
+            catch (exception e)
             {
+                std::cerr << e.what() << '\n';
                 flag = false;
             }
         }
@@ -905,7 +1000,7 @@ double CGwmMGWR::mBandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthW
 #endif
 double CGwmMGWR::mBandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
-    uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
+    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp ; i++)
@@ -926,6 +1021,7 @@ double CGwmMGWR::mBandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwi
         }
         catch (std::exception e)
         {
+            std::cerr << e.what() << '\n';
             return DBL_MAX;
         }
     }
@@ -935,13 +1031,16 @@ double CGwmMGWR::mBandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwi
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(value);
 //    emit message(msg);
-    return value;
-    //else return DBL_MAX;
+    if (isfinite(value))
+    {
+        return value;
+    }
+    else return DBL_MAX;
 }
 #ifdef ENABLE_OPENMP
 double CGwmMGWR::mBandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
-    int nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
+    int nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
     mat betas(nVar, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -965,8 +1064,9 @@ double CGwmMGWR::mBandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidth
                 shat_all(0, thread) += si(0, i);
                 shat_all(1, thread) += det(si * si.t());
             }
-            catch (...)
+            catch (exception e)
             {
+                std::cerr << e.what() << '\n';
                 flag = false;
             }
         }
@@ -988,7 +1088,7 @@ double CGwmMGWR::mBandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidth
 double CGwmMGWR::mBandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
-    uword nDp = mDataPoints.n_rows;
+    uword nDp = mSourceLayer->featureCount();
     vec shat(2, fill::zeros);
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
@@ -1006,8 +1106,9 @@ double CGwmMGWR::mBandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwid
             double res = mYi(i) - det(mXi(i) * beta);
             cv += res * res;
         }
-        catch (...)
+        catch (exception e)
         {
+            std::cerr << e.what() << '\n';
             return DBL_MAX;
         }
     }
@@ -1016,14 +1117,17 @@ double CGwmMGWR::mBandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwid
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(cv);
 //    emit message(msg);
-    return cv;
-    //else return DBL_MAX;
+    if (isfinite(cv))
+    {
+        return cv;
+    }
+    else return DBL_MAX;
 }
 #ifdef ENABLE_OPENMP
 double CGwmMGWR::mBandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
-    int nDp = mDataPoints.n_rows;
+    int nDp = mSourceLayer->featureCount();
     vec shat(2, fill::zeros);
     vec cv_all(mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -1046,8 +1150,9 @@ double CGwmMGWR::mBandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthW
                 double res = mYi(i) - det(mXi(i) * beta);
                 cv_all(thread) += res * res;
             }
-            catch (...)
+            catch (exception e)
             {
+                std::cerr << e.what() << '\n';
                 flag = false;
             }
         }
@@ -1067,7 +1172,7 @@ double CGwmMGWR::mBandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthW
 double CGwmMGWR::mBandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
-    uword nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
+    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
     mat betas(1, nDp, fill::zeros);
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp ; i++)
@@ -1088,6 +1193,7 @@ double CGwmMGWR::mBandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwi
         }
         catch (std::exception e)
         {
+            std::cerr << e.what() << '\n';
             return DBL_MAX;
         }
     }
@@ -1097,14 +1203,17 @@ double CGwmMGWR::mBandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwi
 //            .arg(bandwidthWeight->bandwidth())
 //            .arg(value);
 //    emit message(msg);
-    return value;
-    //else return DBL_MAX;
+    if (isfinite(value))
+    {
+        return value;
+    }
+    else return DBL_MAX;
 }
 #ifdef ENABLE_OPENMP
 double CGwmMGWR::mBandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
-    int nDp = mDataPoints.n_rows, nVar = mIndepVars.size() + 1;
+    int nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
     mat betas(1, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -1130,6 +1239,7 @@ double CGwmMGWR::mBandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidth
             }
             catch (std::exception e)
             {
+                std::cerr << e.what() << '\n';
                 flag = false;
             }
         }

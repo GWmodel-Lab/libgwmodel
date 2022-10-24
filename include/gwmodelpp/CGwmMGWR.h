@@ -77,7 +77,7 @@ private:
         return mHasHatMatrix && (mSourceLayer->featureCount() < 8192);
     }
 
-    static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
+    static GwmRegressionDiagnostic CalcDiagnostic(const mat &x, const vec &y, const mat &S0, double RSS);
 
 public:
     CGwmMGWR();
@@ -161,7 +161,7 @@ public:     // IRegressionAnalysis interface
 
     mat regression(const mat &x, const vec &y) override;
 
-    mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
+    mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S); 
 
 
 public:     // IParallelalbe interface
@@ -173,13 +173,13 @@ public:     // IParallelalbe interface
 public:     // IOpenmpParallelable interface
     void setOmpThreadNum(const int threadNum) override;
 
-    void setCanceled(bool canceled);
+    //void setCanceled(bool canceled);
 
 
 
 protected:
-    void initPoints();
-    void initXY(mat& x, mat& y, const GwmVariable& depVar, const vector<GwmVariable>& indepVars);
+    //void initPoints();
+    //void initXY(mat& x, mat& y, const GwmVariable& depVar, const vector<GwmVariable>& indepVars);
     virtual void setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmVariable& depVar, const vector<GwmVariable>& indepVars);
 
     CGwmBandwidthWeight* bandwidth(int i)
@@ -188,7 +188,7 @@ protected:
     }
     mat regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
     {
-        return (this->*mRegressionHatmatrixFunction)(x, y, betasSE, shat, qdiag, S);
+        return (this->*mRegressionHatmatrixFunction)(x, y, betasSE, shat, qdiag,S);
     }
     mat regressionAllSerial(const mat& x, const vec& y);
 
@@ -247,7 +247,7 @@ private:
     vector<double> mBandwidthSelectThreshold;
     uword mBandwidthSelectRetryTimes = 5;
     int mMaxIteration = 500;
-    BackFittingCriterionType mCriterionType = BackFittingCriterionType::CVR;
+    BackFittingCriterionType mCriterionType = BackFittingCriterionType::dCVR;
     double mCriterionThreshold = 1e-6;
     int mAdaptiveLower = 10;
 
@@ -374,7 +374,13 @@ inline vector<CGwmMGWR::BandwidthSelectionCriterionType> CGwmMGWR::bandwidthSele
 
 inline void CGwmMGWR::setBandwidthSelectionApproach(const vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach)
 {
-    mBandwidthSelectionApproach = bandwidthSelectionApproach;
+    if(bandwidthSelectionApproach.size()==mIndepVars.size()+1){
+        mBandwidthSelectionApproach = bandwidthSelectionApproach;
+    }
+    else{
+
+    }
+    
 }
 
 inline vector<CGwmMGWR::BandwidthInitilizeType> CGwmMGWR::bandwidthInitilize() const
@@ -384,7 +390,13 @@ inline vector<CGwmMGWR::BandwidthInitilizeType> CGwmMGWR::bandwidthInitilize() c
 
 inline void CGwmMGWR::setBandwidthInitilize(const vector<BandwidthInitilizeType> &bandwidthInitilize)
 {
-    mBandwidthInitilize = bandwidthInitilize;
+    if(bandwidthInitilize.size()==mIndepVars.size()+1){
+        mBandwidthInitilize = bandwidthInitilize;
+    }
+    else{
+
+    }
+    
 }
 
 inline vector<double> CGwmMGWR::bandwidthSelectThreshold() const
