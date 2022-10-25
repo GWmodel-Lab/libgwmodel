@@ -44,16 +44,13 @@ public:
         PrefixVarName,
         SuffixVariable
     };
-    //GwmBasicGWRAlgorithm::OLSVar mOLSVar;
 
-    //GwmBasicGWRAlgorithm::OLSVar CalOLS(const mat &x, const vec &y);
 
 
     typedef double (CGwmMGWR::*BandwidthSizeCriterionFunction)(CGwmBandwidthWeight*);
     typedef mat (CGwmMGWR::*RegressionAllFunction)(const arma::mat&, const arma::vec&);
     typedef vec (CGwmMGWR::*RegressionVarFunction)(const arma::vec&, const arma::vec&, int, mat&);
     typedef mat (CGwmMGWR::*RegressionHatmatrixCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
-    //typedef pair<string, const mat> CreateResultLayerDataItem;
     typedef tuple<string, mat, NameFormat> CreateResultLayerDataItem;
 private:
     static vec Fitted(const mat& x, const mat& betas)
@@ -79,17 +76,16 @@ private:
 
     static GwmRegressionDiagnostic CalcDiagnostic(const mat &x, const vec &y, const mat &S0, double RSS);
 
+    void setInitSpatialWeight(const CGwmSpatialWeight &spatialWeight)
+    {
+        mInitSpatialWeight = spatialWeight;
+    }
+
 public:
     CGwmMGWR();
 
 public:
     void run() override;
-
-    bool mOLS = true;
-    bool OLS() const;
-    void setOLS(bool value);
-
-    //GwmBasicGWRAlgorithm::OLSVar getOLSVar() const;
 
     vector<BandwidthInitilizeType> bandwidthInitilize() const;
     void setBandwidthInitilize(const vector<BandwidthInitilizeType> &bandwidthInitilize);
@@ -173,13 +169,8 @@ public:     // IParallelalbe interface
 public:     // IOpenmpParallelable interface
     void setOmpThreadNum(const int threadNum) override;
 
-    //void setCanceled(bool canceled);
-
-
 
 protected:
-    //void initPoints();
-    //void initXY(mat& x, mat& y, const GwmVariable& depVar, const vector<GwmVariable>& indepVars);
     virtual void setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmVariable& depVar, const vector<GwmVariable>& indepVars);
 
     CGwmBandwidthWeight* bandwidth(int i)
@@ -225,7 +216,6 @@ protected:
 protected:
     CGwmBandwidthSelector mselector;
 private:
-    //QgsVectorLayer* mRegressionLayer = nullptr;
     mat mDataPoints;
     mat mRegressionPoints;
 
@@ -378,9 +368,8 @@ inline void CGwmMGWR::setBandwidthSelectionApproach(const vector<BandwidthSelect
         mBandwidthSelectionApproach = bandwidthSelectionApproach;
     }
     else{
-
-    }
-    
+        std::cerr <<"bandwidthSelectionApproach size do not match indepvars" << '\n';
+    }  
 }
 
 inline vector<CGwmMGWR::BandwidthInitilizeType> CGwmMGWR::bandwidthInitilize() const
@@ -394,9 +383,8 @@ inline void CGwmMGWR::setBandwidthInitilize(const vector<BandwidthInitilizeType>
         mBandwidthInitilize = bandwidthInitilize;
     }
     else{
-
-    }
-    
+        std::cerr <<"BandwidthInitilize size do not match indepvars" << '\n';
+    }   
 }
 
 inline vector<double> CGwmMGWR::bandwidthSelectThreshold() const
@@ -443,20 +431,6 @@ inline void CGwmMGWR::setOmpThreadNum(const int threadNum)
     mOmpThreadNum = threadNum;
 }
 
-inline bool CGwmMGWR::OLS() const
-{
-    return mOLS;
-}
-/*
-inline GwmBasicGWRAlgorithm::OLSVar CGwmMGWR::getOLSVar() const
-{
-    return mOLSVar;
-}
-*/
-inline void CGwmMGWR::setOLS(bool value)
-{
-    mOLS = value;
-}
 
 
 #endif // GWMMULTISCALEGWRTASKTHREAD_H

@@ -17,15 +17,7 @@
 using namespace std;
 using namespace arma;
 
-// vector<int> variables2indices(vector<GwmVariable> variables)
-// {
-//     vector<int> index(variables.size());
-//     std::transform(variables.begin(), variables.end(), index.begin(), [](const GwmVariable& v) -> int
-//     {
-//         return v.index;
-//     });
-//     return index;
-// }
+
 TEST_CASE("MGWR: basic flow")
 {
     mat londonhp100_coord, londonhp100_data;
@@ -58,7 +50,6 @@ TEST_CASE("MGWR: basic flow")
 
     GwmVariable purchase(0, true, "PURCHASE");
     GwmVariable floorsz(1, true, "FLOORSZ");
-    //GwmVariable unemploy(2, true, "UNEMPLOY");
     GwmVariable prof(3, true, "PROF");
     vector<GwmVariable> indepVars = { floorsz, prof };
 
@@ -68,11 +59,9 @@ TEST_CASE("MGWR: basic flow")
     algorithm.setIndependentVariables(indepVars);
     algorithm.setSpatialWeights(spatials);
     algorithm.setHasHatMatrix(true);
-    //algorithm.setCriterionType(CGwmMGWR::BackFittingCriterionType::dCVR);
     algorithm.setPreditorCentered(preditorCentered);
     algorithm.setBandwidthInitilize(bandwidthInitialize);
     algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
-    //algorithm.setBandwidthSelectRetryTimes(5);
     algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
     REQUIRE_NOTHROW(algorithm.run());
 
@@ -119,7 +108,6 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with AIC")
 
     GwmVariable purchase(0, true, "PURCHASE");
     GwmVariable floorsz(1, true, "FLOORSZ");
-    //GwmVariable unemploy(2, true, "UNEMPLOY");
     GwmVariable prof(3, true, "PROF");
     vector<GwmVariable> indepVars = { floorsz, prof };
 
@@ -181,7 +169,6 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with CV")
 
     GwmVariable purchase(0, true, "PURCHASE");
     GwmVariable floorsz(1, true, "FLOORSZ");
-    //GwmVariable unemploy(2, true, "UNEMPLOY");
     GwmVariable prof(3, true, "PROF");
     vector<GwmVariable> indepVars = { floorsz, prof };
 
@@ -242,7 +229,6 @@ TEST_CASE("MGWR: basic flow with CVR")
 
     GwmVariable purchase(0, true, "PURCHASE");
     GwmVariable floorsz(1, true, "FLOORSZ");
-    //GwmVariable unemploy(2, true, "UNEMPLOY");
     GwmVariable prof(3, true, "PROF");
     vector<GwmVariable> indepVars = { floorsz, prof };
 
@@ -305,7 +291,6 @@ TEST_CASE("MGWR: basic flow (multithread)")
 
     GwmVariable purchase(0, true, "PURCHASE");
     GwmVariable floorsz(1, true, "FLOORSZ");
-    //GwmVariable unemploy(2, true, "UNEMPLOY");
     GwmVariable prof(3, true, "PROF");
     vector<GwmVariable> indepVars = { floorsz, prof };
 
