@@ -42,3 +42,10 @@ add_test(
     NAME testGWDR 
     COMMAND $<TARGET_FILE:testGWDR> --success
 )
+
+add_executable(testMGWR MGWR.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testMGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2)
+add_test(
+    NAME testMGWR 
+    COMMAND $<TARGET_FILE:testMGWR> --success
+)

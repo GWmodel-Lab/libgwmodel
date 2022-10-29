@@ -51,11 +51,13 @@ set(SOURCES_CXX
     gwmodelpp/CGwmSimpleLayer.cpp
     gwmodelpp/CGwmSpatialAlgorithm.cpp
     gwmodelpp/CGwmSpatialMonoscaleAlgorithm.cpp
+    gwmodelpp/CGwmSpatialMultiscaleAlgorithm.cpp
     gwmodelpp/CGwmGWRBase.cpp
     gwmodelpp/CGwmGWRBasic.cpp
     gwmodelpp/CGwmGWSS.cpp
     gwmodelpp/CGwmGWPCA.cpp
     gwmodelpp/CGwmGWDR.cpp
+    gwmodelpp/CGwmMGWR.cpp
 )
 
 set(SOURCES_C
@@ -78,11 +80,13 @@ set(HEADERS_CXX
     ../include/gwmodelpp/CGwmSimpleLayer.h
     ../include/gwmodelpp/CGwmSpatialAlgorithm.h
     ../include/gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h
+    ../include/gwmodelpp/CGwmSpatialMultiscaleAlgorithm.h
     ../include/gwmodelpp/CGwmGWRBase.h
     ../include/gwmodelpp/CGwmGWRBasic.h
     ../include/gwmodelpp/CGwmGWSS.h
     ../include/gwmodelpp/CGwmGWPCA.h
     ../include/gwmodelpp/CGwmGWDR.h
+    ../include/gwmodelpp/CGwmMGWR.h
 )
 
 set(HEADERS_C
