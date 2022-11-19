@@ -38,7 +38,7 @@ bool read_londonhp100temporal(mat& coords, mat& data, vector<string>& fields)
     dataHeader(1) = "FLOORSZ";
     dataHeader(2) = "UNEMPLOY";
     dataHeader(3) = "PROF";
-    bool data_loaded = data.load(arma::csv_name(string(SAMPLE_DATA_DIR) + "/londonhp100temdata.csv", dataHeader));
+    bool data_loaded = data.load(arma::csv_name(string(SAMPLE_DATA_DIR) + "/londonhp100data.csv", dataHeader));
 
     if (coords_loaded && data_loaded)
     {

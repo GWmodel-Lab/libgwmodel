@@ -42,6 +42,14 @@ public:
 
     CGwmCRSTDistance(const CGwmCRSTDistance& distance);
 
+    virtual CGwmDistance * clone() override
+    {
+        return new CGwmCRSTDistance(*this);
+    }
+
+
+    DistanceType type() override { return DistanceType::CRSTDistance; }
+
     bool geographic() const
     {
         return mGeographic;

@@ -6,18 +6,13 @@
 #include <string>
 #include <armadillo>
 
-#include "../include/gwmodelpp/CGwmSimpleLayer.h"
-#include "../include/gwmodelpp/CGwmGTWR.h"
-#include "../include/gwmodelpp/spatialweight/CGwmCRSTDistance.h"
-#include "../include/gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
-#include "../include/gwmodelpp/spatialweight/CGwmSpatialWeight.h"
-#include "../include/gwmodelpp/GwmVariable.h"
-//#include "./gwmodelpp/CGwmSimpleLayer.h"
-//#include "./gwmodelpp/CGwmGTWR.h"
-//#include "./gwmodelpp/spatialweight/CGwmCRSTDistance.h"
-//#include "./gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
-//#include "./gwmodelpp/spatialweight/CGwmSpatialWeight.h"
-//#include "./gwmodelpp/GwmVariable.h"
+#include "gwmodelpp/CGwmSimpleLayer.h"
+#include "gwmodelpp/CGwmGTWR.h"
+#include "gwmodelpp/spatialweight/CGwmCRSTDistance.h"
+#include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
+#include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
+#include "gwmodelpp/GwmVariable.h"
+
 #include "include/londonhp100.h"
 
 using namespace std;

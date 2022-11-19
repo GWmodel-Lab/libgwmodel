@@ -118,6 +118,8 @@ public:     // Implement IGwmOpenmpParallelizable
 protected:
     bool isStoreS();
 
+    void createDistanceParameter();
+
     void createPredictionDistanceParameter();
 
     void createResultLayer(initializer_list<ResultLayerDataItem> items);
@@ -241,6 +243,20 @@ inline bool CGwmGTWR::hasHatMatrix() const
 inline void CGwmGTWR::setHasHatMatrix(const bool has)
 {
     mHasHatMatrix = has;
+}
+
+inline void CGwmGTWR::createDistanceParameter()
+{
+    if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance ||
+        mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSTDistance || 
+        mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
+    {
+        mSpatialWeight.distance()->makeParameter({
+            mSourceLayer->points(),
+            mSourceLayer->points(),
+            mSourceLayer->points()
+        });
+    }
 }
 
 #endif  // CGWMGTWR_H

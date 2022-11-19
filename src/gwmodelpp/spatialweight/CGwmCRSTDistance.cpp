@@ -44,7 +44,7 @@ CGwmCRSTDistance::CGwmCRSTDistance(const CGwmCRSTDistance &distance) : CGwmCRSDi
 
 void CGwmCRSTDistance::makeParameter(initializer_list<DistParamVariant> plist)
 {
-    if (plist.size() == 2)
+    if (plist.size() == 3)
     {
         const mat& fp = get<mat>(*(plist.begin()));
         const mat& dp = get<mat>(*(plist.begin() + 1));
