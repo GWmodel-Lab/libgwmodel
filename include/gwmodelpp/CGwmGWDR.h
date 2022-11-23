@@ -98,6 +98,36 @@ public:
         mEnableBandwidthOptimize = flag;
     }
 
+    double bandwidthOptimizeEps() const
+    {
+        return mBandwidthOptimizeEps;
+    }
+
+    void setBandwidthOptimizeEps(double value)
+    {
+        mBandwidthOptimizeEps = value;
+    }
+
+    size_t bandwidthOptimizeMaxIter() const
+    {
+        return mBandwidthOptimizeMaxIter;
+    }
+
+    void setBandwidthOptimizeMaxIter(size_t value)
+    {
+        mBandwidthOptimizeMaxIter = value;
+    }
+
+    double bandwidthOptimizeStep() const
+    {
+        return mBandwidthOptimizeStep;
+    }
+
+    void setBandwidthOptimizeStep(double value)
+    {
+        mBandwidthOptimizeStep = value;
+    }
+
     BandwidthCriterionType bandwidthCriterionType() const
     {
         return mBandwidthCriterionType;
@@ -243,6 +273,9 @@ private:
     bool mEnableBandwidthOptimize = false;
     BandwidthCriterionType mBandwidthCriterionType = BandwidthCriterionType::CV;
     BandwidthCriterionCalculator mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionCVSerial;
+    double mBandwidthOptimizeEps = 1e-6;
+    size_t mBandwidthOptimizeMaxIter = 100000;
+    double mBandwidthOptimizeStep = 0.01;
 
     bool mEnableIndepVarSelect = false;
     double mIndepVarSelectThreshold = 3.0;
@@ -272,7 +305,7 @@ public:
         mBandwidths = weights;
     }
 
-    const int optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps);
+    const int optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps, double step);
 
 private:
     vector<CGwmBandwidthWeight*> mBandwidths;

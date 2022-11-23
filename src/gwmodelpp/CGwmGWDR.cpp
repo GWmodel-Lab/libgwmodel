@@ -57,7 +57,7 @@ void CGwmGWDR::run()
             // Set Initial value
             double lower = bw->adaptive() ? nVars + 1 : sw.distance()->minDistance();
             double upper = bw->adaptive() ? nDp : sw.distance()->maxDistance();
-            if (bw->bandwidth() <= 0.0 || bw->bandwidth() >= upper)
+            if (bw->bandwidth() <= lower || bw->bandwidth() >= upper)
             {
                 bw->setBandwidth(upper * 0.618);
             }
@@ -68,7 +68,7 @@ void CGwmGWDR::run()
             bws.push_back(iter.weight<CGwmBandwidthWeight>());
         }
         CGwmGWDRBandwidthOptimizer optimizer(bws);
-        int status = optimizer.optimize(this, mSourceLayer->featureCount(), 100000, 1e-8);
+        int status = optimizer.optimize(this, mSourceLayer->featureCount(), mBandwidthOptimizeMaxIter, mBandwidthOptimizeEps, mBandwidthOptimizeStep);
         if (status)
         {
             throw runtime_error("[CGwmGWDR::run] Bandwidth optimization invoke failed.");
@@ -320,16 +320,16 @@ double CGwmGWDR::bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& 
                 w = w % w_m;
             }
             w(i) = 0.0;
-            mat ws(1, nVar, arma::fill::ones);
-            mat xtw = (mX %(w * ws)).t();
+            mat xtw = (mX.each_col() % w).t();
             mat xtwx = xtw * mX;
-            mat xtwy = mX.t() * (w % mY);
+            mat xtwy = xtw * mY;
             try
             {
                 mat xtwx_inv = xtwx.i();
                 vec beta = xtwx_inv * xtwy;
                 double yhat = as_scalar(mX.row(i) * beta);
-                cv += yhat - mY(i);
+                double cv_i = mY(i) - yhat;
+                cv += cv_i * cv_i;
             }
             catch(const std::exception& e)
             {
@@ -338,7 +338,7 @@ double CGwmGWDR::bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& 
             }
         }
     }
-    return success ? abs(cv) : DBL_MAX;
+    return success ? cv : DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -369,7 +369,8 @@ double CGwmGWDR::bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& ban
                 mat xtwx_inv = xtwx.i();
                 vec beta = xtwx_inv * xtwy;
                 double yhat = as_scalar(mX.row(i) * beta);
-                cv_all(thread) += yhat - mY(i);
+                double cv_i = abs(yhat - mY(i));
+                cv_all(thread) += cv_i * cv_i;
             }
             catch(const std::exception& e)
             {
@@ -379,7 +380,7 @@ double CGwmGWDR::bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& ban
         }
     }
     double cv = sum(cv_all);
-    return success ? abs(cv) : DBL_MAX;
+    return success ? cv : DBL_MAX;
 }
 #endif
 
@@ -694,14 +695,14 @@ void CGwmGWDR::setBandwidthCriterionType(const BandwidthCriterionType& type)
     case BandwidthCriterionType::AIC:
         mapper = {
             make_pair(ParallelType::SerialOnly, &CGwmGWDR::bandwidthCriterionAICSerial),
-            make_pair(ParallelType::OpenMP, &CGwmGWDR::bandwidthCriterionAICSerial)
+            make_pair(ParallelType::OpenMP, &CGwmGWDR::bandwidthCriterionAICOmp)
         };
         mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionAICSerial;
         break;
     default:
         mapper = {
             make_pair(ParallelType::SerialOnly, &CGwmGWDR::bandwidthCriterionCVSerial),
-            make_pair(ParallelType::OpenMP, &CGwmGWDR::bandwidthCriterionCVSerial)
+            make_pair(ParallelType::OpenMP, &CGwmGWDR::bandwidthCriterionCVOmp)
         };
         mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionCVSerial;
         break;
@@ -716,9 +717,9 @@ void CGwmGWDR::setParallelType(const ParallelType& type)
         mParallelType = type;
         switch (type) {
         case ParallelType::OpenMP:
-            mRegressionFunction = &CGwmGWDR::regressionSerial;
-            mRegressionHatmatrixFunction = &CGwmGWDR::regressionHatmatrixSerial;
-            mIndepVarCriterionFunction= &CGwmGWDR::indepVarCriterionSerial;
+            mRegressionFunction = &CGwmGWDR::regressionOmp;
+            mRegressionHatmatrixFunction = &CGwmGWDR::regressionHatmatrixOmp;
+            mIndepVarCriterionFunction= &CGwmGWDR::indepVarCriterionOmp;
             break;
         default:
             mRegressionFunction = &CGwmGWDR::regressionSerial;
@@ -744,22 +745,22 @@ double CGwmGWDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, voi
     return instance->bandwidthCriterion(bandwidths);
 }
 
-const int CGwmGWDRBandwidthOptimizer::optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps)
+const int CGwmGWDRBandwidthOptimizer::optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps, double step)
 {
     size_t nDim = mBandwidths.size();
-    gsl_multimin_fminimizer* minimizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex, nDim);
-    gsl_vector* target = gsl_vector_alloc(nDim);
-    gsl_vector* step = gsl_vector_alloc(nDim);
+    gsl_multimin_fminimizer* minimizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex2rand, nDim);
+    gsl_vector* targets = gsl_vector_alloc(nDim);
+    gsl_vector* steps = gsl_vector_alloc(nDim);
     for (size_t m = 0; m < nDim; m++)
     {
         double target_value = mBandwidths[m]->adaptive() ? mBandwidths[m]->bandwidth() / double(featureCount) : mBandwidths[m]->bandwidth();
-        gsl_vector_set(target, m, target_value);
-        gsl_vector_set(step, m, 0.1);
+        gsl_vector_set(targets, m, target_value);
+        gsl_vector_set(steps, m, step);
     }
     Parameter params = { instance, &mBandwidths, featureCount };
     gsl_multimin_function function = { criterion_function, nDim, &params };
     double criterion = DBL_MAX;
-    int status = gsl_multimin_fminimizer_set(minimizer, &function, target, step);
+    int status = gsl_multimin_fminimizer_set(minimizer, &function, targets, steps);
     if (status == GSL_SUCCESS)
     {
         int iter = 0;
@@ -799,7 +800,7 @@ const int CGwmGWDRBandwidthOptimizer::optimize(CGwmGWDR* instance, uword feature
         }
     }
     gsl_multimin_fminimizer_free(minimizer);
-    gsl_vector_free(target);
-    gsl_vector_free(step);
+    gsl_vector_free(targets);
+    gsl_vector_free(steps);
     return status;
 }
