@@ -43,16 +43,6 @@ vec CGwmGWSS::findq(const mat &x, const vec &w)
     return q;
 }
 
-CGwmGWSS::CGwmGWSS()
-{
-
-}
-
-CGwmGWSS::~CGwmGWSS()
-{
-
-}
-
 bool CGwmGWSS::isValid()
 {
     if (CGwmSpatialMonoscaleAlgorithm::isValid())

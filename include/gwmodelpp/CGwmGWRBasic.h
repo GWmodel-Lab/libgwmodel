@@ -32,6 +32,12 @@ private:
 
 public:
     CGwmGWRBasic() {}
+    CGwmGWRBasic(const mat& x, const vec& y, const mat& coords, const CGwmSpatialWeight& spatialWeight, bool hasHatMatrix = true, bool hasIntercept = true)
+        : CGwmGWRBase(x, y, spatialWeight, coords)
+    {
+        mHasHatMatrix = hasHatMatrix;
+        mHasIntercept = hasIntercept;
+    }
     ~CGwmGWRBasic() {}
 
 public:

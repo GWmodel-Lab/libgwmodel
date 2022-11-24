@@ -31,7 +31,10 @@ public:
      * 
      * @param spatialWeights 
      */
-    CGwmSpatialMultiscaleAlgorithm(const std::vector<CGwmSpatialWeight>& spatialWeights) : mSpatialWeights(spatialWeights) {}
+    CGwmSpatialMultiscaleAlgorithm(const arma::mat& coords, const std::vector<CGwmSpatialWeight>& spatialWeights) : CGwmSpatialAlgorithm(coords)
+    {
+        mSpatialWeights = spatialWeights;
+    }
 
     /**
      * @brief Destroy the CGwmSpatialMultiscaleAlgorithm object.

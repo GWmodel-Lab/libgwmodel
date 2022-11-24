@@ -54,11 +54,6 @@ GwmRegressionDiagnostic CGwmMGWR::CalcDiagnostic(const mat &x, const vec &y, con
     return diagnostic;
 }
 
-CGwmMGWR::CGwmMGWR()
-    : CGwmSpatialMultiscaleAlgorithm()
-{
-}
-
 mat CGwmMGWR::fit()
 {
     createDistanceParameter(mX.n_cols);

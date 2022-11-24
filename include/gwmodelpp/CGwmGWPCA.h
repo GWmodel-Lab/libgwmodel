@@ -23,6 +23,17 @@ public: // Constructors and Deconstructors
      * Use gwmodel_create_gwpca_algorithm() to construct an instance in shared build.
      */
     CGwmGWPCA() {}
+
+    /**
+     * @brief Construct a new CGwmGWPCA object.
+     * 
+     * Use gwmodel_create_gwpca_algorithm() to construct an instance in shared build.
+     */
+    CGwmGWPCA(const arma::mat x, const arma::mat coords, const CGwmSpatialWeight& spatialWeight)
+        : CGwmSpatialMonoscaleAlgorithm(spatialWeight, coords)
+    {
+        mX = x;
+    }
     
     /**
      * @brief Destroy the CGwmGWPCA object.

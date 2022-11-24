@@ -654,6 +654,20 @@ void CGwmGWDR::setParallelType(const ParallelType& type)
     setBandwidthCriterionType(mBandwidthCriterionType);
 }
 
+bool CGwmGWDR::isValid()
+{
+    if (CGwmSpatialAlgorithm::isValid())
+    {
+        if (!(mSpatialWeights.size() == mCoords.n_cols))
+        {
+            return false;
+        }
+
+        return true;
+    }
+    else return false;
+}
+
 double CGwmGWDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, void* params)
 {
     Parameter* p = static_cast<Parameter*>(params);

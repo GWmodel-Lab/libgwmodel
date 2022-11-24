@@ -72,7 +72,16 @@ private:
     }
 
 public:
-    CGwmMGWR();
+    CGwmMGWR() {}
+
+    CGwmMGWR(const mat& x, const vec& y, const arma::mat& coords, const std::vector<CGwmSpatialWeight>& spatialWeights)
+        : CGwmSpatialMultiscaleAlgorithm(coords, spatialWeights)
+    {
+        mX = x;
+        mY = y;
+    }
+
+    virtual ~CGwmMGWR() {}
 
 public:
 

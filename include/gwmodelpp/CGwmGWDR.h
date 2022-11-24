@@ -52,6 +52,21 @@ public:
     }
 
 public:
+    CGwmGWDR() {}
+
+    CGwmGWDR(const mat& x, const vec& y, const mat& coords, const vector<CGwmSpatialWeight>& spatialWeights, bool hasHatMatrix = true, bool hasIntercept = true)
+        : CGwmSpatialAlgorithm(coords)
+    {
+        mX = x;
+        mY = y;
+        mSpatialWeights = spatialWeights;
+        mHasHatMatrix = hasHatMatrix;
+        mHasIntercept = hasIntercept;
+    }
+
+    virtual ~CGwmGWDR() {}
+
+public:
     mat betas() const { return mBetas; }
 
     bool hasIntercept() const { return mHasIntercept; }
@@ -101,12 +116,7 @@ public:
     arma::mat s() { return mS; }
 
 public: // CGwmAlgorithm
-    void run();
-    bool isValid()
-    {
-        // [TODO]: Add actual check codes.
-        return true;
-    }
+    bool isValid() override;
 
 public: // IGwmRegressionAnalysis
     virtual arma::vec dependentVariable() const { return mY; }

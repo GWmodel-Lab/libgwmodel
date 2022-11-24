@@ -105,14 +105,25 @@ public:
      * 
      * Use gwmodel_create_gwss_algorithm() to construct an instance in shared build.
      */
-    CGwmGWSS();
+    CGwmGWSS() {}
+    
+    /**
+     * @brief Construct a new CGwmGWSS object.
+     * 
+     * Use gwmodel_create_gwss_algorithm() to construct an instance in shared build.
+     */
+    CGwmGWSS(const arma::mat x, const arma::mat coords, const CGwmSpatialWeight& spatialWeight)
+        : CGwmSpatialMonoscaleAlgorithm(spatialWeight, coords)
+    {
+        mX = x;
+    }
 
     /**
      * @brief Destroy the CGwmGWSS object.
      * 
      * Use gwmodel_create_gwss_algorithm() to destruct an instance in shared build.
      */
-    ~CGwmGWSS();
+    ~CGwmGWSS() {}
 
     /**
      * @brief Get the CGwmGWSS::mQuantile object .
