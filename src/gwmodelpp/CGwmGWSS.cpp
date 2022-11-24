@@ -43,21 +43,11 @@ vec CGwmGWSS::findq(const mat &x, const vec &w)
     return q;
 }
 
-CGwmGWSS::CGwmGWSS()
-{
-
-}
-
-CGwmGWSS::~CGwmGWSS()
-{
-
-}
-
 bool CGwmGWSS::isValid()
 {
     if (CGwmSpatialMonoscaleAlgorithm::isValid())
     {
-        if (mVariables.size() < 1)
+        if (!(mX.n_cols > 0))
             return false;
 
         return true;
@@ -68,40 +58,7 @@ bool CGwmGWSS::isValid()
 void CGwmGWSS::run()
 {
     createDistanceParameter();
-    setXY(mX, mSourceLayer, mVariables);
-    (this->*mSummaryFunction)();
-    vector<ResultLayerDataItem> resultLayerData = {
-        make_tuple(string("LM"), mLocalMean, NameFormat::PrefixVarName),
-        make_tuple(string("LSD"), mStandardDev, NameFormat::PrefixVarName),
-        make_tuple(string("LVar"), mLVar, NameFormat::PrefixVarName),
-        make_tuple(string("LSke"), mLocalSkewness, NameFormat::PrefixVarName),
-        make_tuple(string("LCV"), mLCV, NameFormat::PrefixVarName)
-    };
-    if (mQuantile)
-    {
-        resultLayerData.push_back(make_tuple(string("Median"), mLocalMedian, NameFormat::PrefixVarName));
-        resultLayerData.push_back(make_tuple(string("IQR"), mIQR, NameFormat::PrefixVarName));
-        resultLayerData.push_back(make_tuple(string("QI"), mQI, NameFormat::PrefixVarName));
-    }
-    if (mVariables.size() > 1)
-    {
-        resultLayerData.push_back(make_tuple(string("Cov"), mCovmat, NameFormat::SuffixVarNamePair));
-        resultLayerData.push_back(make_tuple(string("Corr"), mCorrmat, NameFormat::SuffixVarNamePair));
-        resultLayerData.push_back(make_tuple(string("Spearman_rho"), mSCorrmat, NameFormat::SuffixVarNamePair));
-    }
-    createResultLayer(resultLayerData);
-}
-
-void CGwmGWSS::setXY(mat& x, const CGwmSimpleLayer* layer, const vector<GwmVariable>& variables)
-{
-    uword nRp = mSourceLayer->featureCount(), nVar = variables.size();
-    arma::uvec varIndeces(nVar);
-    for (size_t i = 0; i < nVar; i++)
-    {
-        assert(variables[i].index < layer->data().n_cols);
-        varIndeces(i) = variables[i].index;
-    }
-    x = layer->data().cols(varIndeces);
+    uword nRp = mCoords.n_rows, nVar = mX.n_cols;
     mLocalMean = mat(nRp, nVar, fill::zeros);
     mStandardDev = mat(nRp, nVar, fill::zeros);
     mLocalSkewness = mat(nRp, nVar, fill::zeros);
@@ -120,13 +77,14 @@ void CGwmGWSS::setXY(mat& x, const CGwmSimpleLayer* layer, const vector<GwmVaria
         mCorrmat = mat(nRp, nCol, fill::zeros);
         mSCorrmat = mat(nRp, nCol, fill::zeros);
     }
+    (this->*mSummaryFunction)();
 }
 
 void CGwmGWSS::summarySerial()
 {
     mat rankX = mX;
     rankX.each_col([&](vec& x) { x = rank(x); });
-    uword nVar = mX.n_cols, nRp = mSourceLayer->featureCount();
+    uword nVar = mX.n_cols, nRp = mCoords.n_rows;
     uword corrSize = mIsCorrWithFirstOnly ? 1 : nVar - 1;
     for (uword i = 0; i < nRp; i++)
     {
@@ -176,7 +134,7 @@ void CGwmGWSS::summaryOmp()
 {
     mat rankX = mX;
     rankX.each_col([&](vec& x) { x = rank(x); });
-    uword nVar = mX.n_cols, nRp = mSourceLayer->featureCount();
+    uword nVar = mX.n_cols, nRp = mCoords.n_rows;
     uword corrSize = mIsCorrWithFirstOnly ? 1 : nVar - 1;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nRp; i++)
@@ -224,48 +182,6 @@ void CGwmGWSS::summaryOmp()
     
 }
 #endif
-
-void CGwmGWSS::createResultLayer(vector<ResultLayerDataItem> items)
-{
-    mat layerPoints = mSourceLayer->points();
-    uword layerFeatureCount = mSourceLayer->featureCount();
-    mat layerData(layerFeatureCount, 0);
-    vector<string> layerFields;
-    for (auto &&i : items)
-    {
-        NameFormat nf = get<2>(i);
-        mat column = get<1>(i);
-        string name = get<0>(i);
-        layerData = join_rows(layerData, column);
-        if (nf == NameFormat::PrefixVarName || nf == NameFormat::SuffixVarName)
-        {
-            for (size_t k = 0; k < column.n_cols; k++)
-            {
-                string variableName = mVariables[k].name;
-                string fieldName = (nf == NameFormat::PrefixVarName) ? (variableName + "_" + name) : (name + "_" + variableName);
-                layerFields.push_back(fieldName);
-            }
-        }
-        else if (nf == NameFormat::PrefixVarNamePair || nf == NameFormat::SuffixVarNamePair)
-        {
-            uword nVar = mVariables.size();
-            uword corrVarSize = mIsCorrWithFirstOnly ? 1 : (nVar - 1);
-            for (size_t i = 0; i < corrVarSize; i++)
-            {
-                string var1name = mVariables[i].name;
-                for (size_t j = i + 1; j < nVar; j++)
-                {
-                    string var2name = mVariables[j].name;
-                    string varNamePair = var1name + "." + var2name;
-                    string fieldName = (nf == NameFormat::PrefixVarNamePair) ? (varNamePair + "_" + name) : (name + "_" + varNamePair);
-                    layerFields.push_back(fieldName);
-                }
-            }
-        }
-    }
-    
-    mResultLayer = new CGwmSimpleLayer(layerPoints, layerData, layerFields);
-}
 
 void CGwmGWSS::setParallelType(const ParallelType &type)
 {

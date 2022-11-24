@@ -23,12 +23,22 @@ public:
     /**
      * @brief Construct a new CGwmSpatialMonoscaleAlgorithm object.
      */
-    CGwmSpatialMonoscaleAlgorithm();
+    CGwmSpatialMonoscaleAlgorithm() {}
+
+    /**
+     * @brief Construct a new CGwmSpatialMonoscaleAlgorithm object
+     * 
+     * @param spatialWeight 
+     */
+    CGwmSpatialMonoscaleAlgorithm(const CGwmSpatialWeight& spatialWeight, arma::mat coords) : CGwmSpatialAlgorithm(coords)
+    {
+        mSpatialWeight = spatialWeight;
+    }
 
     /**
      * @brief Destroy the CGwmSpatialMonoscaleAlgorithm object.
      */
-    virtual ~CGwmSpatialMonoscaleAlgorithm();
+    virtual ~CGwmSpatialMonoscaleAlgorithm() {}
 
 public:
 

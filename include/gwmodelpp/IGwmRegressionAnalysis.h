@@ -2,21 +2,21 @@
 #define IGWMREGRESSIONANALYSIS_H
 
 #include <vector>
-#include "GwmVariable.h"
+#include <armadillo>
 #include "GwmRegressionDiagnostic.h"
 
 using namespace std;
 
 struct IGwmRegressionAnalysis
 {
-    virtual GwmVariable dependentVariable() const = 0;
-    virtual void setDependentVariable(const GwmVariable& variable) = 0;
+    virtual arma::vec dependentVariable() const = 0;
+    virtual void setDependentVariable(const arma::vec& y) = 0;
 
-    virtual vector<GwmVariable> independentVariables() const = 0;
-    virtual void setIndependentVariables(const vector<GwmVariable>& variables) = 0;
+    virtual arma::mat independentVariables() const = 0;
+    virtual void setIndependentVariables(const arma::mat& x) = 0;
 
-    virtual mat regression(const mat& x, const vec& y) = 0;
-    virtual mat regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S) = 0;
+    virtual arma::mat predict(const arma::mat& locations) = 0;
+    virtual arma::mat fit() = 0;
 
     virtual GwmRegressionDiagnostic diagnostic() const = 0;
 };

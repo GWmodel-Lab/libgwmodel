@@ -25,87 +25,38 @@ public:
     }
 
 public:
-    CGwmGWRBase();
-    ~CGwmGWRBase();
+    CGwmGWRBase() {}
+
+    CGwmGWRBase(const arma::mat& x, const arma::vec& y, const CGwmSpatialWeight& spatialWeight, const arma::mat& coords) : CGwmSpatialMonoscaleAlgorithm(spatialWeight, coords)
+    {
+        mX = x;
+        mY = y;
+    }
+
+    ~CGwmGWRBase() {}
 
 public:
-    mat betas() const;
-
-    CGwmSimpleLayer* predictLayer() const;
-    void setPredictLayer(CGwmSimpleLayer* layer);
+    arma::mat betas() const { return mBetas; }
 
 public:     // Implement IGwmRegressionAnalysis
-    virtual GwmVariable dependentVariable() const;
-    virtual void setDependentVariable(const GwmVariable& variable);
+    virtual arma::vec dependentVariable() const { return mY; }
+    virtual void setDependentVariable(const arma::vec& y) { mY = y; }
 
-    virtual vector<GwmVariable> independentVariables() const;
-    virtual void setIndependentVariables(const vector<GwmVariable>& variables);
+    virtual arma::mat independentVariables() const { return mX; }
+    virtual void setIndependentVariables(const arma::mat& x) { mX = x; }
 
-    virtual GwmRegressionDiagnostic diagnostic() const;
+    virtual GwmRegressionDiagnostic diagnostic() const { return mDiagnostic; }
 
 public:
     virtual bool isValid() override;
 
-    bool hasPredictLayer();
-
-    virtual void setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmVariable& depVar, const vector<GwmVariable>& indepVars);
-
 protected:
-    CGwmSimpleLayer* mPredictLayer = nullptr;
 
-    GwmVariable mDepVar;
-    vector<GwmVariable> mIndepVars;
-
-    mat mX;
-    vec mY;
-    mat mBetas;
+    arma::mat mX;
+    arma::vec mY;
+    arma::mat mBetas;
 
     GwmRegressionDiagnostic mDiagnostic;
 };
-
-inline mat CGwmGWRBase::betas() const
-{
-    return mBetas;
-}
-
-inline CGwmSimpleLayer* CGwmGWRBase::predictLayer() const
-{
-    return mPredictLayer;
-}
-
-inline void CGwmGWRBase::setPredictLayer(CGwmSimpleLayer* layer)
-{
-    mPredictLayer = layer;
-}
-
-inline GwmVariable CGwmGWRBase::dependentVariable() const
-{
-    return mDepVar;
-}
-
-inline void CGwmGWRBase::setDependentVariable(const GwmVariable& variable)
-{
-    mDepVar = variable;
-}
-
-inline vector<GwmVariable> CGwmGWRBase::independentVariables() const
-{
-    return mIndepVars;
-}
-
-inline void CGwmGWRBase::setIndependentVariables(const vector<GwmVariable>& variables)
-{
-    mIndepVars = variables;
-}
-
-inline GwmRegressionDiagnostic CGwmGWRBase::diagnostic() const
-{
-    return mDiagnostic;
-}
-
-inline bool CGwmGWRBase::hasPredictLayer()
-{
-    return mPredictLayer != nullptr;
-}
 
 #endif  // CGWMGWRBASE_H

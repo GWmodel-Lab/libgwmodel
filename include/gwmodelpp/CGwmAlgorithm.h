@@ -21,19 +21,14 @@ public:
     /**
      * @brief Construct a new CGwmAlgorithm object.
      */
-    CGwmAlgorithm();
+    CGwmAlgorithm() {}
 
     /**
      * @brief Destroy the CGwmAlgorithm object.
      */
-    virtual ~CGwmAlgorithm();
+    virtual ~CGwmAlgorithm() {}
 
 public:
-
-    /**
-     * @brief Run the algorithm.
-     */
-    virtual void run() = 0;
 
     /**
      * @brief Check whether the algorithm's configuration is valid. 

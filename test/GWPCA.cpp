@@ -8,7 +8,6 @@
 #include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
 #include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
 #include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
-#include "gwmodelpp/GwmVariable.h"
 #include "londonhp100.h"
 
 using namespace std;
@@ -22,24 +21,16 @@ TEST_CASE("GWPCA: basic flow")
     {
         FAIL("Cannot load londonhp100 data.");
     }
-    CGwmSimpleLayer* londonhp = new CGwmSimpleLayer(londonhp100_coord, londonhp100_data, londonhp100_fields);
-    REQUIRE(londonhp->points().n_rows);
-    REQUIRE(londonhp->data().n_rows);
-    REQUIRE(londonhp->fields().size());
-    REQUIRE(londonhp->featureCount());
 
     CGwmCRSDistance distance(false);
     CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
-    GwmVariable floorsz(1, true, "FLOORSZ");
-    GwmVariable unemploy(2, true, "UNEMPLOY");
-    GwmVariable prof(3, true, "PROF");
-    vector<GwmVariable> variables = { floorsz, unemploy, prof };
+    mat x = londonhp100_data.cols(1, 3);
 
     CGwmGWPCA algorithm;
-    algorithm.setSourceLayer(londonhp);
-    algorithm.setVariables(variables);
+    algorithm.setCoords(londonhp100_coord);
+    algorithm.setVariables(x);
     algorithm.setSpatialWeight(spatial);
     algorithm.setKeepComponents(2);
     REQUIRE_NOTHROW(algorithm.run());

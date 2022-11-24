@@ -2,57 +2,64 @@
 #define CGWMVARIABLEFORWARDSELECTOR_H
 
 #include <utility>
+#include <armadillo>
 #include "IGwmVarialbeSelectable.h"
-
-using namespace std;
 
 class CGwmVariableForwardSelector
 {
 public:
-    CGwmVariableForwardSelector();
-    CGwmVariableForwardSelector(const vector<GwmVariable>& variables, double threshold);
-    ~CGwmVariableForwardSelector();
-
-    vector<GwmVariable> indepVars() const;
-    void setIndepVars(const vector<GwmVariable> &indepVars);
-
-    double threshold() const;
-    void setThreshold(double threshold);
+    static arma::uvec index2uvec(const std::vector<std::size_t>& index, bool hasIntercept)
+    {
+        std::size_t start_index = hasIntercept ? 1 : 0;
+        arma::uvec sel_indep_vars(index.size() + start_index, arma::fill::zeros);
+        for (std::size_t i = 0; i < index.size(); i++)
+        {
+            sel_indep_vars(i + start_index) = index[i];
+        }
+        return sel_indep_vars;
+    }
 
 public:
-    vector<GwmVariable> optimize(IGwmVarialbeSelectable* instance);
+    CGwmVariableForwardSelector() {}
+
+    CGwmVariableForwardSelector(const std::vector<std::size_t>& variables, double threshold) : mVariables(variables) , mThreshold(threshold) {}
+
+    ~CGwmVariableForwardSelector() {}
+
+    std::vector<std::size_t> indepVars() const
+    {
+        return mVariables;
+    }
+
+    void setIndepVars(const std::vector<std::size_t> &indepVars)
+    {
+        mVariables = indepVars;
+    }
+
+    double threshold() const
+    {
+        return mThreshold;
+    }
+
+    void setThreshold(double threshold)
+    {
+        mThreshold = threshold;
+    }
+
+public:
+    std::vector<std::size_t> optimize(IGwmVarialbeSelectable* instance);
     VariablesCriterionList indepVarsCriterion() const;
 
 private:
-    vector<GwmVariable> convertIndexToVariables(vector<int> index);
-    vector<pair<vector<int>, double> > sort(vector<pair<vector<int>, double> > models);
-    pair<vector<int>, double> select(vector<pair<vector<int>, double> > models);
+    std::vector<std::size_t> convertIndexToVariables(std::vector<std::size_t> index);
+    std::vector<std::pair<std::vector<std::size_t>, double> > sort(std::vector<std::pair<std::vector<std::size_t>, double> > models);
+    std::pair<std::vector<std::size_t>, double> select(std::vector<std::pair<std::vector<std::size_t>, double> > models);
 
 private:
-    vector<GwmVariable> mVariables;
+    std::vector<std::size_t> mVariables;
     double mThreshold;
 
-    vector<pair<vector<int>, double> > mVarsCriterion;
+    std::vector<std::pair<std::vector<std::size_t>, double> > mVarsCriterion;
 };
-
-inline vector<GwmVariable> CGwmVariableForwardSelector::indepVars() const
-{
-    return mVariables;
-}
-
-inline void CGwmVariableForwardSelector::setIndepVars(const vector<GwmVariable> &indepVars)
-{
-    mVariables = indepVars;
-}
-
-inline double CGwmVariableForwardSelector::threshold() const
-{
-    return mThreshold;
-}
-
-inline void CGwmVariableForwardSelector::setThreshold(double threshold)
-{
-    mThreshold = threshold;
-}
 
 #endif  // CGWMVARIABLEFORWARDSELECTOR_H
