@@ -27,9 +27,10 @@ TEST_CASE("BasicGWR: basic flow")
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 3);
+    mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmGWRBasic algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeight(spatial);
@@ -37,10 +38,10 @@ TEST_CASE("BasicGWR: basic flow")
     REQUIRE_NOTHROW(algorithm.fit());
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE(abs(diagnostic.AIC - 2436.60445730413) < 1e-8);
-    REQUIRE(abs(diagnostic.AICc - 2448.27206524754) < 1e-8);
-    REQUIRE(abs(diagnostic.RSquare - 0.708010632044736) < 1e-8);
-    REQUIRE(abs(diagnostic.RSquareAdjust - 0.674975341723766) < 1e-8);
+    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2436.60445730413, 1e-8));
+    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2448.27206524754, 1e-8));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.708010632044736, 1e-8));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.674975341723766, 1e-8));
 }
 
 TEST_CASE("BasicGWR: adaptive bandwidth autoselection of with CV")
@@ -57,9 +58,10 @@ TEST_CASE("BasicGWR: adaptive bandwidth autoselection of with CV")
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 3);
+    mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmGWRBasic algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeight(spatial);
@@ -88,9 +90,10 @@ TEST_CASE("BasicGWR: indepdent variable autoselection with AIC")
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 3);
+    mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmGWRBasic algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeight(spatial);
@@ -130,9 +133,10 @@ TEST_CASE("BasicGWR: multithread basic flow")
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 3);
+    mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmGWRBasic algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeight(spatial);
@@ -163,8 +167,8 @@ TEST_CASE("BasicGWR: multithread basic flow")
     REQUIRE(bw == 31.0);
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE(abs(diagnostic.AIC - 2435.8161441795) < 1e-8);
-    REQUIRE(abs(diagnostic.AICc - 2445.49629974057) < 1e-8);
-    REQUIRE(abs(diagnostic.RSquare - 0.706143867720706) < 1e-8);
-    REQUIRE(abs(diagnostic.RSquareAdjust - 0.678982114793865) < 1e-8);
+    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2435.8161441795, 1e-8));
+    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2445.49629974057, 1e-8));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.706143867720706, 1e-8));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.678982114793865, 1e-8));
 }

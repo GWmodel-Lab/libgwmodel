@@ -19,7 +19,7 @@ vector<size_t> CGwmVariableForwardSelector::optimize(IGwmVarialbeSelectable *ins
         for (int j = 0; j < restIndex.size(); j++)
         {
             curIndex.push_back(restIndex[j]);
-            double aic = instance->getCriterion(curIndex);
+            double aic = instance->getCriterion(convertIndexToVariables(curIndex));
             criterions(j) = aic;
             modelCriterions.push_back(make_pair(curIndex, aic));
             curIndex.pop_back();
@@ -29,7 +29,15 @@ vector<size_t> CGwmVariableForwardSelector::optimize(IGwmVarialbeSelectable *ins
         restIndex.erase(restIndex.begin() + iBestVar);
     }
     mVarsCriterion = sort(modelCriterions);
-    return select(mVarsCriterion).first;
+    return convertIndexToVariables(select(mVarsCriterion).first);
+}
+
+std::vector<std::size_t> CGwmVariableForwardSelector::convertIndexToVariables(std::vector<std::size_t> index)
+{
+    vector<size_t> variables;
+    for (int i : index)
+        variables.push_back(mVariables[i]);
+    return variables;
 }
 
 vector<pair<vector<size_t>, double> > CGwmVariableForwardSelector::sort(vector<pair<vector<size_t>, double> > models)
