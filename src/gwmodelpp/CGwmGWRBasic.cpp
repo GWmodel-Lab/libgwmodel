@@ -7,6 +7,7 @@
 #include <omp.h>
 #endif
 
+using namespace std;
 using namespace arma;
 
 GwmRegressionDiagnostic CGwmGWRBasic::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
@@ -24,35 +25,29 @@ GwmRegressionDiagnostic CGwmGWRBasic::CalcDiagnostic(const mat& x, const vec& y,
     return { rss, AIC, AICc, enp, edf, r2, r2_adj };
 }
 
-CGwmGWRBasic::CGwmGWRBasic()
-{
-    
-}
-
-CGwmGWRBasic::~CGwmGWRBasic()
-{
-    
-}
-
-void CGwmGWRBasic::run()
+mat CGwmGWRBasic::fit()
 {
     createDistanceParameter();
 
-    if (!hasPredictLayer() && mIsAutoselectIndepVars)
+    if (mIsAutoselectIndepVars)
     {
-        CGwmVariableForwardSelector selector(mIndepVars, mIndepVarSelectionThreshold);
-        vector<GwmVariable> selectedIndepVars = selector.optimize(this);
+        vector<size_t> indep_vars;
+        for (size_t i = (mHasIntercept ? 1 : 0); i < mX.n_cols; i++)
+        {
+            indep_vars.push_back(i);
+        }
+        CGwmVariableForwardSelector selector(indep_vars, mIndepVarSelectionThreshold);
+        vector<size_t> selectedIndepVars = selector.optimize(this);
         if (selectedIndepVars.size() > 0)
         {
-            mIndepVars = selectedIndepVars;
+            mX = mX.cols(CGwmVariableForwardSelector::index2uvec(selectedIndepVars, mHasIntercept));
             mIndepVarsSelectionCriterionList = selector.indepVarsCriterion();
         }
     }
 
-    setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
-    uword nDp = mSourceLayer->featureCount();
+    uword nDp = mCoords.n_rows;
 
-    if (!hasPredictLayer() && mIsAutoselectBandwidth)
+    if (mIsAutoselectBandwidth)
     {
         CGwmBandwidthWeight* bw0 = mSpatialWeight.weight<CGwmBandwidthWeight>();
         double lower = bw0->adaptive() ? 20 : 0.0;
@@ -66,65 +61,49 @@ void CGwmGWRBasic::run()
         }
     }
 
-    if (mHasHatMatrix)
+    mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
+    mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
+    double trS = mSHat(0), trStS = mSHat(1);
+    double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
+    mBetasSE = sqrt(sigmaHat * mBetasSE);
+    vec yhat = Fitted(mX, mBetas);
+    vec res = mY - yhat;
+    vec stu_res = res / sqrt(sigmaHat * mQDiag);
+    mat betasTV = mBetas / mBetasSE;
+    vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
+    vec dyhat2 = (mY - yhat) % (mY - yhat);
+    vec localR2 = vec(nDp, fill::zeros);
+    for (uword i = 0; i < nDp; i++)
     {
-        mat betasSE, S;
-        vec shat, qdiag;
-        mBetas = regressionHatmatrix(mX, mY, betasSE, shat, qdiag, S);
-        mDiagnostic = CalcDiagnostic(mX, mY, mBetas, shat);
-        double trS = shat(0), trStS = shat(1);
-        double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
-        betasSE = sqrt(sigmaHat * betasSE);
-        vec yhat = Fitted(mX, mBetas);
-        vec res = mY - yhat;
-        vec stu_res = res / sqrt(sigmaHat * qdiag);
-        mat betasTV = mBetas / betasSE;
-        vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
-        vec dyhat2 = (mY - yhat) % (mY - yhat);
-        vec localR2 = vec(nDp, fill::zeros);
-        for (uword i = 0; i < nDp; i++)
-        {
-            vec w = mSpatialWeight.weightVector(i);
-            double tss = sum(dybar2 % w);
-            double rss = sum(dyhat2 % w);
-            localR2(i) = (tss - rss) / tss;
-        }
-        createResultLayer({
-            make_tuple(string("%1"), mBetas, NameFormat::VarName),
-            make_tuple(string("y"), mY, NameFormat::Fixed),
-            make_tuple(string("yhat"), yhat, NameFormat::Fixed),
-            make_tuple(string("residual"), res, NameFormat::Fixed),
-            make_tuple(string("Stud_residual"), stu_res, NameFormat::Fixed),
-            make_tuple(string("SE"), betasSE, NameFormat::PrefixVarName),
-            make_tuple(string("TV"), betasTV, NameFormat::PrefixVarName),
-            make_tuple(string("localR2"), localR2, NameFormat::Fixed)
-        });
+        vec w = mSpatialWeight.weightVector(i);
+        double tss = sum(dybar2 % w);
+        double rss = sum(dyhat2 % w);
+        localR2(i) = (tss - rss) / tss;
     }
-    else
-    {
-        createPredictionDistanceParameter();
-        mBetas = regression(mX, mY);
-        createResultLayer({
-            make_tuple(string("%1"), mBetas, NameFormat::VarName)
-        });
-    }
+
+    return mBetas;
 }
 
-void CGwmGWRBasic::createPredictionDistanceParameter()
+mat CGwmGWRBasic::predict(const mat& locations)
+{
+    createPredictionDistanceParameter(locations);
+    uword nDp = mCoords.n_rows;
+    mBetas = (this->*mPredictFunction)(locations, mX, mY);
+    return mBetas;
+}
+
+void CGwmGWRBasic::createPredictionDistanceParameter(const arma::mat& locations)
 {
     if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
         mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
     {
-        mSpatialWeight.distance()->makeParameter({
-            hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points(),
-            mSourceLayer->points()
-        });
+        mSpatialWeight.distance()->makeParameter({ locations, mCoords });
     }
 }
 
-mat CGwmGWRBasic::regressionSerial(const mat& x, const vec& y)
+mat CGwmGWRBasic::predictSerial(const mat& locations, const mat& x, const vec& y)
 {
-    uword nRp = hasPredictLayer() ? mPredictLayer->featureCount() : mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nRp = locations.n_rows, nVar = x.n_cols;
     mat betas(nVar, nRp, fill::zeros);
     for (uword i = 0; i < nRp; i++)
     {
@@ -145,9 +124,9 @@ mat CGwmGWRBasic::regressionSerial(const mat& x, const vec& y)
     return betas.t();
 }
 
-mat CGwmGWRBasic::regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
+mat CGwmGWRBasic::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     betasSE = mat(nVar, nDp, fill::zeros);
     shat = vec(2, fill::zeros);
@@ -183,9 +162,9 @@ mat CGwmGWRBasic::regressionHatmatrixSerial(const mat& x, const vec& y, mat& bet
 }
 
 #ifdef ENABLE_OPENMP
-mat CGwmGWRBasic::regressionOmp(const mat& x, const vec& y)
+mat CGwmGWRBasic::predictOmp(const mat& locations, const mat& x, const vec& y)
 {
-    uword nRp = hasPredictLayer() ? mPredictLayer->featureCount() : mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nRp = locations.n_rows, nVar = x.n_cols;
     mat betas(nVar, nRp, arma::fill::zeros);
     int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
@@ -209,9 +188,9 @@ mat CGwmGWRBasic::regressionOmp(const mat& x, const vec& y)
     return betas.t();
 }
 
-mat CGwmGWRBasic::regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
+mat CGwmGWRBasic::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     betasSE = mat(nVar, nDp, fill::zeros);
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
@@ -254,7 +233,7 @@ mat CGwmGWRBasic::regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasS
 
 double CGwmGWRBasic::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwidthWeight)
 {
-    uword nDp = mSourceLayer->featureCount();
+    uword nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
@@ -286,7 +265,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwid
 
 double CGwmGWRBasic::bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwidthWeight)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
@@ -321,7 +300,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwi
 #ifdef ENABLE_OPENMP
 double CGwmGWRBasic::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthWeight)
 {
-    uword nDp = mSourceLayer->featureCount();
+    uword nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
     vec cv_all(mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -363,7 +342,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthW
 
 double CGwmGWRBasic::bandwidthSizeCriterionAICOmp(CGwmBandwidthWeight* bandwidthWeight)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -407,12 +386,11 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICOmp(CGwmBandwidthWeight* bandwidth
 }
 #endif
 
-double CGwmGWRBasic::indepVarsSelectionCriterionSerial(const vector<GwmVariable>& indepVars)
+double CGwmGWRBasic::indepVarsSelectionCriterionSerial(const vector<size_t>& indepVars)
 {
-    mat x;
-    vec y;
-    setXY(x, y, mSourceLayer, mDepVar, indepVars);
-    uword nDp = x.n_rows, nVar = x.n_cols;
+    mat x = mX.cols(CGwmVariableForwardSelector::index2uvec(indepVars, mHasIntercept));
+    vec y = mY;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
@@ -435,25 +413,16 @@ double CGwmGWRBasic::indepVarsSelectionCriterionSerial(const vector<GwmVariable>
             return DBL_MAX;
         }
     }
-    double value = CGwmGWRBase::AICc(x, y, betas.t(), shat);
-    string msg = "Model: " + mDepVar.name + " ~ ";
-    for (size_t i = 0; i < indepVars.size() - 1; i++)
-    {
-        msg += indepVars[i].name + " + ";
-    }
-    msg += indepVars.back().name;
-    msg += " (AICc Value: " + to_string(value) + ")";
-    
+    double value = CGwmGWRBase::AICc(x, y, betas.t(), shat);    
     return value;
 }
 
 #ifdef ENABLE_OPENMP
-double CGwmGWRBasic::indepVarsSelectionCriterionOmp(const vector<GwmVariable>& indepVars)
+double CGwmGWRBasic::indepVarsSelectionCriterionOmp(const vector<size_t>& indepVars)
 {
-    mat x;
-    vec y;
-    setXY(x, y, mSourceLayer, mDepVar, indepVars);
-    uword nDp = mSourceLayer->featureCount(), nVar = indepVars.size() + 1;
+    mat x = mX.cols(CGwmVariableForwardSelector::index2uvec(indepVars, mHasIntercept));
+    vec y = mY;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     mat shat(2, mOmpThreadNum, fill::zeros);
     int flag = true;
@@ -485,58 +454,12 @@ double CGwmGWRBasic::indepVarsSelectionCriterionOmp(const vector<GwmVariable>& i
     if (flag)
     {
         double value = CGwmGWRBase::AICc(x, y, betas.t(), sum(shat, 1));
-        
         return value;
     }
     else return DBL_MAX;
 }
 #endif
 
-void CGwmGWRBasic::createResultLayer(initializer_list<ResultLayerDataItem> items)
-{
-    mat layerPoints = hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points();
-    uword layerFeatureCount = layerPoints.n_rows;
-    mat layerData(layerFeatureCount, 0);
-    vector<string> layerFields;
-    for (auto &&i : items)
-    {
-        NameFormat nf = get<2>(i);
-        mat column = get<1>(i);
-        string name = get<0>(i);
-        if (nf == NameFormat::Fixed)
-        {
-            layerData = join_rows(layerData, column.col(0));
-            layerFields.push_back(name);
-        }
-        else
-        {
-            layerData = join_rows(layerData, column);
-            for (size_t k = 0; k < column.n_cols; k++)
-            {
-                string variableName = k == 0 ? "Intercept" : mIndepVars[k - 1].name;
-                string fieldName;
-                switch (nf)
-                {
-                case NameFormat::VarName:
-                    fieldName = variableName;
-                    break;
-                case NameFormat::PrefixVarName:
-                    fieldName = variableName + "_" + name;
-                    break;
-                case NameFormat::SuffixVariable:
-                    fieldName = name + "_" + variableName;
-                    break;
-                default:
-                    fieldName = variableName;
-                }
-                layerFields.push_back(fieldName);
-            }
-        }
-        
-    }
-    
-    mResultLayer = new CGwmSimpleLayer(layerPoints, layerData, layerFields);
-}
 
 void CGwmGWRBasic::setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion)
 {
@@ -568,21 +491,36 @@ void CGwmGWRBasic::setParallelType(const ParallelType& type)
         mParallelType = type;
         switch (type) {
         case ParallelType::SerialOnly:
-            mPredictFunction = &CGwmGWRBasic::regressionSerial;
-            mRegressionHatmatrixFunction = &CGwmGWRBasic::regressionHatmatrixSerial;
+            mPredictFunction = &CGwmGWRBasic::predictSerial;
+            mFitFunction = &CGwmGWRBasic::fitSerial;
             mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionSerial;
             break;
         case ParallelType::OpenMP:
-            mPredictFunction = &CGwmGWRBasic::regressionOmp;
-            mRegressionHatmatrixFunction = &CGwmGWRBasic::regressionHatmatrixOmp;
+            mPredictFunction = &CGwmGWRBasic::predictOmp;
+            mFitFunction = &CGwmGWRBasic::fitOmp;
             mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionOmp;
             break;
         default:
-            mPredictFunction = &CGwmGWRBasic::regressionSerial;
-            mRegressionHatmatrixFunction = &CGwmGWRBasic::regressionHatmatrixSerial;
+            mPredictFunction = &CGwmGWRBasic::predictSerial;
+            mFitFunction = &CGwmGWRBasic::fitSerial;
             mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionSerial;
             break;
         }
     }
     setBandwidthSelectionCriterion(mBandwidthSelectionCriterion);
+}
+
+bool CGwmGWRBasic::isValid()
+{
+    if (CGwmGWRBase::isValid())
+    {
+        double bw = mSpatialWeight.weight<CGwmBandwidthWeight>()->bandwidth();
+        if (!(bw > 0))
+        {
+            return false;
+        }
+
+        return true;
+    }
+    else return false;
 }

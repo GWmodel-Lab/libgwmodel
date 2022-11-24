@@ -15,14 +15,6 @@ class CGwmGWPCA: public CGwmSpatialMonoscaleAlgorithm, public IGwmMultivariableA
 private:
     typedef mat (CGwmGWPCA::*Solver)(const mat&, cube&, mat&);
 
-    enum NameFormat
-    {
-        Fixed,
-        PrefixCompName
-    };
-
-    typedef tuple<string, mat, NameFormat> ResultLayerDataItem;
-
 public: // Constructors and Deconstructors
 
     /**
@@ -30,86 +22,66 @@ public: // Constructors and Deconstructors
      * 
      * Use gwmodel_create_gwpca_algorithm() to construct an instance in shared build.
      */
-    CGwmGWPCA();
+    CGwmGWPCA() {}
     
     /**
      * @brief Destroy the CGwmGWPCA object.
      * 
      * Use gwmodel_delete_gwpca_algorithm() to destory an instance in shared build.
      */
-    virtual ~CGwmGWPCA();
+    virtual ~CGwmGWPCA() {}
 
     /**
      * @brief Get the number of Kept Components.
      * 
      * @return int Number of Kept Components.
      */
-    int keepComponents();
+    int keepComponents() { return mK; }
 
     /**
      * @brief Set the number of Kept Components object.
      * 
      * @param k Number of Kept Components.
      */
-    void setKeepComponents(int k);
+    void setKeepComponents(int k) { mK = k; }
 
     /**
      * @brief Get the Local Principle Values matrix.
      * 
      * @return mat Local Principle Values matrix.
      */
-    mat localPV();
+    mat localPV() { return mLocalPV; }
 
     /**
      * @brief Get the Loadings matrix.
      * 
      * @return mat Loadings matrix.
      */
-    cube loadings();
+    cube loadings() { return mLoadings; }
 
     /**
      * @brief Get the Standard deviation matrix.
      * 
      * @return mat Standard deviation matrix.
      */
-    mat sdev();
+    mat sdev() { return mSDev; }
 
     /**
      * @brief Get the Scores matrix.
      * 
      * @return mat Scores matrix.
      */
-    cube scores();
+    cube scores() { return mScores; }
 
 public: // IGwmMultivariableAnalysis
-    virtual vector<GwmVariable> variables() const;
-    virtual void setVariables(const vector<GwmVariable>& variables);
+    virtual mat variables() const { return mX; }
+    virtual void setVariables(const mat& x) { mX = x; }
+    virtual void run();
 
 public: // GwmAlgorithm
-    virtual void run();
     virtual bool isValid();
 
 private:
-
-    /**
-     * @brief Create a Result Layer object.
-     * 
-     * @param items Result Layer objects.
-     */
-    void createResultLayer(vector<ResultLayerDataItem> items);
-
-private:
-
-    /**
-     * @brief Set CGwmGWPCA::mX according to layer and variables. 
-     * If there are \f$n\f$ features in layer and \f$k\f$ elements in variables, this function will set matrix x to the shape \f$ n \times k \f$.
-     * Its element in location \f$ (i,j) \f$ will equal to the value of i-th feature's j-th variable. 
-     * 
-     * @param x Reference of CGwmGWSS::mX or other matrix to store value of variables.
-     * @param layer Pointer to source data layer. 
-     * @param variables Vector of variables.
-     */
-    void setX(mat& x, const CGwmSimpleLayer* layer, const vector<GwmVariable>& variables);
 
     /**
      * @brief Function to carry out PCA.
@@ -145,7 +117,6 @@ private:
     void wpca(const mat& x, const vec& w, mat& V, vec & d);
 
 private:    // Algorithm Parameters
-    vector<GwmVariable> mVariables;
     int mK = 2;  //< Number of components to be kept.
     // bool mRobust = false;
 
@@ -154,7 +125,7 @@ private:    // Algorithm Results
     cube mLoadings;             //< Loadings for each component.
     mat mSDev;                  //< Standard Deviation.
     cube mScores;               //< Scores for each variable.
-    vector<string> mWinner;     //< Winner variable at each sample.
+    uvec mWinner;               //< Winner variable at each sample.
 
 private:    // Algorithm Runtime Variables
     mat mX;
@@ -162,45 +133,5 @@ private:    // Algorithm Runtime Variables
 
     Solver mSolver = &CGwmGWPCA::solveSerial;
 };
-
-inline int CGwmGWPCA::keepComponents()
-{
-    return mK;
-}
-
-inline void CGwmGWPCA::setKeepComponents(int k)
-{
-    mK = k;
-}
-
-inline mat CGwmGWPCA::localPV()
-{
-    return mLocalPV;
-}
-
-inline cube CGwmGWPCA::loadings()
-{
-    return mLoadings;
-}
-
-inline mat CGwmGWPCA::sdev()
-{
-    return mSDev;
-}
-
-inline cube CGwmGWPCA::scores()
-{
-    return mScores;
-}
-
-inline vector<GwmVariable> CGwmGWPCA::variables() const
-{
-    return mVariables;
-}
-
-inline void CGwmGWPCA::setVariables(const vector<GwmVariable>& variables)
-{
-    mVariables = variables;
-}
 
 #endif  // CGWMGWPCA_H

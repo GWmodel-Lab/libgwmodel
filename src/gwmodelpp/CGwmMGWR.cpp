@@ -3,11 +3,9 @@
 #include <omp.h>
 #endif
 #include <exception>
-#include "gwmodel.h"
 #include <spatialweight/CGwmCRSDistance.h>
 #include "CGwmBandwidthSelector.h"
 #include "CGwmVariableForwardSelector.h"
-#include <assert.h>
 
 using namespace std;
 
@@ -61,11 +59,11 @@ CGwmMGWR::CGwmMGWR()
 {
 }
 
-void CGwmMGWR::run()
+mat CGwmMGWR::fit()
 {
-    createDistanceParameter(mIndepVars.size() + 1);
+    createDistanceParameter(mX.n_cols);
     createInitialDistanceParameter();
-    setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
+    
     uword nDp = mX.n_rows, nVar = mX.n_cols;
 
     // ********************************
@@ -96,7 +94,7 @@ void CGwmMGWR::run()
             bool adaptive = bw0->adaptive();
             mselector.setBandwidth(bw0);
             mselector.setLower(adaptive ? mAdaptiveLower : 0.0);
-            mselector.setUpper(adaptive ? mSourceLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
+            mselector.setUpper(adaptive ? mCoords.n_rows : mSpatialWeights[i].distance()->maxDistance());
             CGwmBandwidthWeight* bw = mselector.optimize(this);
             if (bw)
             {
@@ -113,12 +111,11 @@ void CGwmMGWR::run()
     CGwmBandwidthSelector initBwSelector;
     initBwSelector.setBandwidth(bw0);
     initBwSelector.setLower(adaptive ? mAdaptiveLower : 0.0);
-    initBwSelector.setUpper(adaptive ? mSourceLayer->featureCount() : mSpatialWeights[0].distance()->maxDistance());
+    initBwSelector.setUpper(adaptive ? mCoords.n_rows : mSpatialWeights[0].distance()->maxDistance());
     CGwmBandwidthWeight* initBw = initBwSelector.optimize(this);
     if (!initBw)
     {
-        std::cerr << "Cannot select initial bandwidth." << '\n';
-        return;
+        throw std::runtime_error("Cannot select initial bandwidth.");
     }
     mInitSpatialWeight.setWeight(initBw);
 
@@ -130,30 +127,14 @@ void CGwmMGWR::run()
         mC = cube(nVar, nDp, nDp, fill::zeros);
     }
 
-    mBetas = regression(mX, mY);
+    mBetas = backfitting(mX, mY);
 
-    if (mHasHatMatrix)
-    {
-        mDiagnostic = CalcDiagnostic(mX, mY, mS0, mRSS0);
-        vec yhat = Fitted(mX, mBetas);
-        vec residual = mY - yhat;
-        mBetasTV = mBetas / mBetasSE;
-        createResultLayer({//结果及诊断信息
-            make_tuple(string("%1"), mBetas, NameFormat::VarName),
-            make_tuple(string("y"), mY, NameFormat::Fixed),
-            make_tuple(string("yhat"), yhat, NameFormat::Fixed),
-            make_tuple(string("residual"), residual, NameFormat::Fixed),
-            make_tuple(string("SE"), mBetasSE, NameFormat::PrefixVarName),
-            make_tuple(string("TV"), mBetasTV, NameFormat::PrefixVarName),
+    mDiagnostic = CalcDiagnostic(mX, mY, mS0, mRSS0);
+    vec yhat = Fitted(mX, mBetas);
+    vec residual = mY - yhat;
+    mBetasTV = mBetas / mBetasSE;
 
-        });
-    }
-    else
-    {
-        createResultLayer({
-            make_tuple(string("%1"), mBetas, NameFormat::VarName)
-        });
-    }
+    return mBetas;
 }
 
 void CGwmMGWR::createInitialDistanceParameter()
@@ -161,97 +142,14 @@ void CGwmMGWR::createInitialDistanceParameter()
     if (mInitSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
         mInitSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
     {
-        mInitSpatialWeight.distance()->makeParameter({
-            mSourceLayer->points(),
-            mSourceLayer->points()
-        });
+        mInitSpatialWeight.distance()->makeParameter({ mCoords, mCoords });
     }
 }
-mat CGwmMGWR::regression(const mat &x, const vec &y){
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
-    mat betas = (this->*mRegressionAll)(x, y);
 
-    if (mHasHatMatrix)
-    {
-        mat idm(nVar, nVar, fill::eye);
-        for (uword i = 0; i < nVar; ++i)
-        {
-            for (uword j = 0; j < nDp ; ++j)
-            {
-                mSArray.slice(i).row(j) = x(j, i) * (idm.row(i) * mC.slice(j));
-            }
-        }
-    }
-
-    // ***********************************************************
-    // Select the optimum bandwidths for each independent variable
-    // ***********************************************************
-    uvec bwChangeNo(nVar, fill::zeros);
-    vec resid = y - Fitted(x, betas);
-    double RSS0 = sum(resid % resid), RSS1 = DBL_MAX;
-    double criterion = DBL_MAX;
-    for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold; iteration++)
-    {
-        for (uword i = 0; i < nVar  ; i++)
-        {
-            vec fi = betas.col(i) % x.col(i);
-            vec yi = resid + fi;
-            if (mBandwidthInitilize[i] != BandwidthInitilizeType::Specified)
-            {
-                mBandwidthSizeCriterion = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
-                mBandwidthSelectionCurrentIndex = i;
-                mYi = yi;
-                mXi = mX.col(i);
-                CGwmBandwidthWeight* bwi0 = bandwidth(i);
-                bool adaptive = bwi0->adaptive();
-                CGwmBandwidthSelector mselector;
-                mselector.setBandwidth(bwi0);
-                mselector.setLower(adaptive ? mAdaptiveLower : 0.0);
-                mselector.setUpper(adaptive ? mSourceLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
-                CGwmBandwidthWeight* bwi = mselector.optimize(this);
-                double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
-                if (abs(bwi1s - bwi0s) > mBandwidthSelectThreshold[i])
-                {
-                    bwChangeNo(i) = 0;
-                }
-                else
-                {
-                    bwChangeNo(i) += 1;
-                    if (bwChangeNo(i) >= mBandwidthSelectRetryTimes)
-                    {
-                        mBandwidthInitilize[i] = BandwidthInitilizeType::Specified;
-                    }
-                    else
-                    {
-                    }
-                }
-                mSpatialWeights[i].setWeight(bwi);
-            }
-
-            mat S;
-            betas.col(i) = (this->*mRegressionVar)(x.col(i), yi, i, S);
-            if (mHasHatMatrix)
-            {
-                mat SArrayi = mSArray.slice(i);
-                mSArray.slice(i) = S * SArrayi + S - S * mS0;
-                mS0 = mS0 - SArrayi + mSArray.slice(i);
-            }
-            resid = y - Fitted(x, betas);
-        }
-        RSS1 = RSS(x, y, betas);
-        criterion = (mCriterionType == BackFittingCriterionType::CVR) ?
-                    abs(RSS1 - RSS0) :
-                    sqrt(abs(RSS1 - RSS0) / RSS1);
-        RSS0 = RSS1;
-    }
-    mRSS0 = RSS0;
-    return betas;
-};
-
-mat CGwmMGWR::regressionHatmatrixSerial(const mat &x, const vec &y,mat& betasSE, vec& shat, vec& qDiag, mat& S)
+mat CGwmMGWR::backfitting(const mat &x, const vec &y)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
-    mat betas = (this->*mRegressionAll)(x, y);
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
+    mat betas = (this->*mFitAll)(x, y);
 
     if (mHasHatMatrix)
     {
@@ -289,7 +187,7 @@ mat CGwmMGWR::regressionHatmatrixSerial(const mat &x, const vec &y,mat& betasSE,
                 CGwmBandwidthSelector mselector;
                 mselector.setBandwidth(bwi0);
                 mselector.setLower(adaptive ? mAdaptiveLower : 0.0);
-                mselector.setUpper(adaptive ? mSourceLayer->featureCount() : mSpatialWeights[i].distance()->maxDistance());
+                mselector.setUpper(adaptive ? mCoords.n_rows : mSpatialWeights[i].distance()->maxDistance());
                 CGwmBandwidthWeight* bwi = mselector.optimize(this);
                 double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
                 if (abs(bwi1s - bwi0s) > mBandwidthSelectThreshold[i])
@@ -311,7 +209,7 @@ mat CGwmMGWR::regressionHatmatrixSerial(const mat &x, const vec &y,mat& betasSE,
             }
 
             mat S;
-            betas.col(i) = (this->*mRegressionVar)(x.col(i), yi, i, S);
+            betas.col(i) = (this->*mFitVar)(x.col(i), yi, i, S);
             if (mHasHatMatrix)
             {
                 mat SArrayi = mSArray.slice(i);
@@ -333,10 +231,10 @@ mat CGwmMGWR::regressionHatmatrixSerial(const mat &x, const vec &y,mat& betasSE,
 
 bool CGwmMGWR::isValid()
 {
-    if (mIndepVars.size() < 1)
+    if (!(mX.n_cols > 0))
         return false;
 
-    int nVar = mIndepVars.size() + 1;
+    int nVar = mX.n_cols;
 
     if (mSpatialWeights.size() != nVar)
         return false;
@@ -374,68 +272,9 @@ bool CGwmMGWR::isValid()
     return true;
 }
 
-void CGwmMGWR::setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmVariable& depVar, const vector<GwmVariable>& indepVars)
+mat CGwmMGWR::fitAllSerial(const mat& x, const vec& y)
 {
-    uword nDp = layer->featureCount(), nVar = indepVars.size() + 1;
-    arma::uvec indepVarIndeces(indepVars.size());
-    for (size_t i = 0; i < indepVars.size(); i++)
-    {
-        assert(indepVars[i].index < layer->data().n_cols);
-        indepVarIndeces(i) = indepVars[i].index;
-    }
-    x = join_rows(mat(nDp, 1, arma::fill::ones), layer->data().cols(indepVarIndeces));
-    y = layer->data().col(depVar.index);
-}
-void CGwmMGWR::createResultLayer(initializer_list<CreateResultLayerDataItem> items)
-{//输出结果图层
-    mat layerPoints = mSourceLayer->points();
-    uword layerFeatureCount = layerPoints.n_rows;
-    mat layerData(layerFeatureCount, 0);
-    vector<string> layerFields;
-    for (auto &&i : items)
-    {
-        NameFormat nf = get<2>(i);
-        mat column = get<1>(i);
-        string name = get<0>(i);
-        if (nf == NameFormat::Fixed)
-        {
-            layerData = join_rows(layerData, column.col(0));
-            layerFields.push_back(name);
-        }
-        else
-        {
-            layerData = join_rows(layerData, column);
-            for (size_t k = 0; k < column.n_cols; k++)
-            {
-                string variableName = k == 0 ? "Intercept" : mIndepVars[k - 1].name;
-                string fieldName;
-                switch (nf)
-                {
-                case NameFormat::VarName:
-                    fieldName = variableName;
-                    break;
-                case NameFormat::PrefixVarName:
-                    fieldName = variableName + "_" + name;
-                    break;
-                case NameFormat::SuffixVariable:
-                    fieldName = name + "_" + variableName;
-                    break;
-                default:
-                    fieldName = variableName;
-                }
-                layerFields.push_back(fieldName);
-            }
-        }
-        
-    }
-    
-    mResultLayer = new CGwmSimpleLayer(layerPoints, layerData, layerFields);
-}
-
-
-mat CGwmMGWR::regressionAllSerial(const mat& x, const vec& y)
-{
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     if (mHasHatMatrix )
     {
@@ -481,9 +320,9 @@ mat CGwmMGWR::regressionAllSerial(const mat& x, const vec& y)
     return betas.t();
 }
 #ifdef ENABLE_OPENMP
-mat CGwmMGWR::regressionAllOmp(const mat &x, const vec &y)
+mat CGwmMGWR::fitAllOmp(const mat &x, const vec &y)
 {
-    int nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    int nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     if (mHasHatMatrix )
     {
@@ -531,9 +370,9 @@ mat CGwmMGWR::regressionAllOmp(const mat &x, const vec &y)
     return betas.t();
 }
 #endif
-vec CGwmMGWR::regressionVarSerial(const vec &x, const vec &y, const int var, mat &S)
+vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const int var, mat &S)
 {
-    int nDp = mSourceLayer->featureCount();
+    int nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
     if (mHasHatMatrix )
     {
@@ -577,9 +416,9 @@ vec CGwmMGWR::regressionVarSerial(const vec &x, const vec &y, const int var, mat
     return betas.t();
 }
 #ifdef ENABLE_OPENMP
-vec CGwmMGWR::regressionVarOmp(const vec &x, const vec &y, const int var, mat &S)
+vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const int var, mat &S)
 {
-    int nDp = mSourceLayer->featureCount();
+    int nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
     if (mHasHatMatrix)
     {
@@ -625,9 +464,9 @@ vec CGwmMGWR::regressionVarOmp(const vec &x, const vec &y, const int var, mat &S
     return betas.t();
 }
 #endif
-double CGwmMGWR::mBandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::bandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
-    uword nDp = mSourceLayer->featureCount();
+    uword nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
@@ -658,9 +497,9 @@ double CGwmMGWR::mBandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwid
     else return DBL_MAX;
 }
 #ifdef ENABLE_OPENMP
-double CGwmMGWR::mBandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::bandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
-    int nDp = mSourceLayer->featureCount();
+    int nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
     vec cv_all(mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -697,9 +536,9 @@ double CGwmMGWR::mBandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthW
     else return DBL_MAX;
 }
 #endif
-double CGwmMGWR::mBandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::bandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp ; i++)
@@ -732,9 +571,9 @@ double CGwmMGWR::mBandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwi
     else return DBL_MAX;
 }
 #ifdef ENABLE_OPENMP
-double CGwmMGWR::mBandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::bandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
-    int nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    int nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -774,10 +613,10 @@ double CGwmMGWR::mBandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidth
     else return DBL_MAX;
 }
 #endif
-double CGwmMGWR::mBandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::bandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
-    uword nDp = mSourceLayer->featureCount();
+    uword nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
@@ -808,10 +647,10 @@ double CGwmMGWR::mBandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwid
     else return DBL_MAX;
 }
 #ifdef ENABLE_OPENMP
-double CGwmMGWR::mBandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
-    int nDp = mSourceLayer->featureCount();
+    int nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
     vec cv_all(mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -848,10 +687,10 @@ double CGwmMGWR::mBandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthW
     else return DBL_MAX;
 }
 #endif
-double CGwmMGWR::mBandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(1, nDp, fill::zeros);
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp ; i++)
@@ -884,10 +723,10 @@ double CGwmMGWR::mBandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwi
     else return DBL_MAX;
 }
 #ifdef ENABLE_OPENMP
-double CGwmMGWR::mBandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmMGWR::bandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
-    int nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    int nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(1, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -932,18 +771,18 @@ CGwmMGWR::BandwidthSizeCriterionFunction CGwmMGWR::bandwidthSizeCriterionAll(CGw
 {
     unordered_map<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> > mapper = {
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
-            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::mBandwidthSizeCriterionAllCVSerial),
+            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::bandwidthSizeCriterionAllCVSerial),
         #ifdef ENABLE_OPENMP
-            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::mBandwidthSizeCriterionAllCVOmp),
+            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::bandwidthSizeCriterionAllCVOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &CGwmMGWR::mBandwidthSizeCriterionAllCVSerial)
+            std::make_pair(ParallelType::CUDA, &CGwmMGWR::bandwidthSizeCriterionAllCVSerial)
         }),
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
-            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::mBandwidthSizeCriterionAllAICSerial),
+            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::bandwidthSizeCriterionAllAICSerial),
         #ifdef ENABLE_OPENMP
-            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::mBandwidthSizeCriterionAllAICOmp),
+            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::bandwidthSizeCriterionAllAICOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &CGwmMGWR::mBandwidthSizeCriterionAllAICSerial)
+            std::make_pair(ParallelType::CUDA, &CGwmMGWR::bandwidthSizeCriterionAllAICSerial)
         })
     };
     return mapper[type][mParallelType];
@@ -953,18 +792,18 @@ CGwmMGWR::BandwidthSizeCriterionFunction CGwmMGWR::bandwidthSizeCriterionVar(CGw
 {
     unordered_map<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> > mapper = {
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
-            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::mBandwidthSizeCriterionVarCVSerial),
+            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::bandwidthSizeCriterionVarCVSerial),
         #ifdef ENABLE_OPENMP
-            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::mBandwidthSizeCriterionVarCVOmp),
+            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::bandwidthSizeCriterionVarCVOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &CGwmMGWR::mBandwidthSizeCriterionVarCVSerial)
+            std::make_pair(ParallelType::CUDA, &CGwmMGWR::bandwidthSizeCriterionVarCVSerial)
         }),
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
-            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::mBandwidthSizeCriterionVarAICSerial),
+            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::bandwidthSizeCriterionVarAICSerial),
         #ifdef ENABLE_OPENMP
-            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::mBandwidthSizeCriterionVarAICOmp),
+            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::bandwidthSizeCriterionVarAICOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &CGwmMGWR::mBandwidthSizeCriterionVarAICSerial)
+            std::make_pair(ParallelType::CUDA, &CGwmMGWR::bandwidthSizeCriterionVarAICSerial)
         })
     };
     return mapper[type][mParallelType];
@@ -977,13 +816,13 @@ void CGwmMGWR::setParallelType(const ParallelType &type)
         mParallelType = type;
         switch (type) {
         case ParallelType::SerialOnly:
-            mRegressionAll = &CGwmMGWR::regressionAllSerial;
-            mRegressionVar = &CGwmMGWR::regressionVarSerial;
+            mFitAll = &CGwmMGWR::fitAllSerial;
+            mFitVar = &CGwmMGWR::fitVarSerial;
             break;
 #ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
-            mRegressionAll = &CGwmMGWR::regressionAllOmp;
-            mRegressionVar = &CGwmMGWR::regressionVarOmp;
+            mFitAll = &CGwmMGWR::fitAllOmp;
+            mFitVar = &CGwmMGWR::fitVarOmp;
             break;
 #endif
 //        case IParallelalbe::ParallelType::CUDA:
@@ -1003,4 +842,24 @@ void CGwmMGWR::setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights
     {
         setInitSpatialWeight(spatialWeights[0]);
     }
+}
+
+void CGwmMGWR::setBandwidthSelectionApproach(const vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach)
+{
+    if(bandwidthSelectionApproach.size() == mX.n_cols){
+        mBandwidthSelectionApproach = bandwidthSelectionApproach;
+    }
+    else{
+        std::cerr <<"bandwidthSelectionApproach size do not match indepvars" << '\n';
+    }  
+}
+
+void CGwmMGWR::setBandwidthInitilize(const vector<BandwidthInitilizeType> &bandwidthInitilize)
+{
+    if(bandwidthInitilize.size() == mX.n_cols){
+        mBandwidthInitilize = bandwidthInitilize;
+    }
+    else{
+        std::cerr <<"BandwidthInitilize size do not match indepvars" << '\n';
+    }   
 }

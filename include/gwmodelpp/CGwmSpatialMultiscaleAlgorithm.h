@@ -2,6 +2,7 @@
 #define CGWMSPATIALMULTISCALEALGORITHM_H
 
 #include "CGwmSpatialAlgorithm.h"
+#include <vector>
 #include "spatialweight/CGwmSpatialWeight.h"
 
 /**
@@ -23,12 +24,19 @@ public:
     /**
      * @brief Construct a new CGwmSpatialMultiscaleAlgorithm object.
      */
-    CGwmSpatialMultiscaleAlgorithm();
+    CGwmSpatialMultiscaleAlgorithm() {}
+
+    /**
+     * @brief Construct a new CGwmSpatialMultiscaleAlgorithm object
+     * 
+     * @param spatialWeights 
+     */
+    CGwmSpatialMultiscaleAlgorithm(const std::vector<CGwmSpatialWeight>& spatialWeights) : mSpatialWeights(spatialWeights) {}
 
     /**
      * @brief Destroy the CGwmSpatialMultiscaleAlgorithm object.
      */
-    virtual ~CGwmSpatialMultiscaleAlgorithm();
+    virtual ~CGwmSpatialMultiscaleAlgorithm() {}
 
 public:
 

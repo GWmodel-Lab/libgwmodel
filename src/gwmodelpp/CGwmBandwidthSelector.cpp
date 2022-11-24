@@ -1,20 +1,5 @@
 #include "CGwmBandwidthSelector.h"
 
-CGwmBandwidthSelector::CGwmBandwidthSelector()
-{
-}
-
-CGwmBandwidthSelector::CGwmBandwidthSelector(CGwmBandwidthWeight* bandwidth, double lower, double upper)
-    : mBandwidth(bandwidth)
-    , mLower(lower)
-    , mUpper(upper)
-{
-}
-
-CGwmBandwidthSelector::~CGwmBandwidthSelector()
-{
-}
-
 CGwmBandwidthWeight* CGwmBandwidthSelector::optimize(IGwmBandwidthSelectable* instance)
 {
     CGwmBandwidthWeight* w1 = static_cast<CGwmBandwidthWeight*>(mBandwidth->clone());

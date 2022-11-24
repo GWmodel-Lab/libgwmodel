@@ -37,21 +37,11 @@ public:
     };
     static unordered_map<BackFittingCriterionType,string> BackFittingCriterionTypeNameMapper;
 
-    enum NameFormat
-    {
-        Fixed,
-        VarName,
-        PrefixVarName,
-        SuffixVariable
-    };
-
-
-
     typedef double (CGwmMGWR::*BandwidthSizeCriterionFunction)(CGwmBandwidthWeight*);
-    typedef mat (CGwmMGWR::*RegressionAllFunction)(const arma::mat&, const arma::vec&);
-    typedef vec (CGwmMGWR::*RegressionVarFunction)(const arma::vec&, const arma::vec&, int, mat&);
-    typedef mat (CGwmMGWR::*RegressionHatmatrixCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
-    typedef tuple<string, mat, NameFormat> CreateResultLayerDataItem;
+    typedef mat (CGwmMGWR::*FitAllFunction)(const arma::mat&, const arma::vec&);
+    typedef vec (CGwmMGWR::*FitVarFunction)(const arma::vec&, const arma::vec&, int, mat&);
+    typedef mat (CGwmMGWR::*FitCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
+
 private:
     static vec Fitted(const mat& x, const mat& betas)
     {
@@ -71,7 +61,7 @@ private:
     }
     bool isStoreS()
     {
-        return mHasHatMatrix && (mSourceLayer->featureCount() < 8192);
+        return mHasHatMatrix && (mCoords.n_rows < 8192);
     }
 
     static GwmRegressionDiagnostic CalcDiagnostic(const mat &x, const vec &y, const mat &S0, double RSS);
@@ -85,39 +75,38 @@ public:
     CGwmMGWR();
 
 public:
-    void run() override;
 
-    vector<BandwidthInitilizeType> bandwidthInitilize() const;
+    vector<BandwidthInitilizeType> bandwidthInitilize() const { return CGwmMGWR::mBandwidthInitilize; }
     void setBandwidthInitilize(const vector<BandwidthInitilizeType> &bandwidthInitilize);
 
-    vector<BandwidthSelectionCriterionType> bandwidthSelectionApproach() const;
+    vector<BandwidthSelectionCriterionType> bandwidthSelectionApproach() const { return CGwmMGWR::mBandwidthSelectionApproach; }
     void setBandwidthSelectionApproach(const vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach);
 
-    vector<bool> preditorCentered() const;
-    void setPreditorCentered(const vector<bool> &preditorCentered);
+    vector<bool> preditorCentered() const { return mPreditorCentered; }
+    void setPreditorCentered(const vector<bool> &preditorCentered) { mPreditorCentered = preditorCentered; }
 
-    vector<double> bandwidthSelectThreshold() const;
-    void setBandwidthSelectThreshold(const vector<double> &bandwidthSelectThreshold);
+    vector<double> bandwidthSelectThreshold() const { return mBandwidthSelectThreshold; }
+    void setBandwidthSelectThreshold(const vector<double> &bandwidthSelectThreshold) { mBandwidthSelectThreshold = bandwidthSelectThreshold; }
 
-    bool hasHatMatrix() const;
-    void setHasHatMatrix(bool hasHatMatrix);
+    bool hasHatMatrix() const { return mHasHatMatrix; }
+    void setHasHatMatrix(bool hasHatMatrix) { mHasHatMatrix = hasHatMatrix; }
 
-    int bandwidthSelectRetryTimes() const;
-    void setBandwidthSelectRetryTimes(int bandwidthSelectRetryTimes);
+    int bandwidthSelectRetryTimes() const {return mBandwidthSelectRetryTimes; }
+    void setBandwidthSelectRetryTimes(int bandwidthSelectRetryTimes) {mBandwidthSelectRetryTimes = bandwidthSelectRetryTimes; }
 
-    int maxIteration() const;
-    void setMaxIteration(int maxIteration);
+    int maxIteration() const { return mMaxIteration; }
+    void setMaxIteration(int maxIteration) { mMaxIteration = maxIteration; }
 
-    BackFittingCriterionType criterionType() const;
-    void setCriterionType(const BackFittingCriterionType &criterionType);
+    BackFittingCriterionType criterionType() const { return mCriterionType; }
+    void setCriterionType(const BackFittingCriterionType &criterionType) { mCriterionType = criterionType; }
 
-    double criterionThreshold() const;
-    void setCriterionThreshold(double criterionThreshold);
+    double criterionThreshold() const { return mCriterionThreshold; }
+    void setCriterionThreshold(double criterionThreshold) { mCriterionThreshold = criterionThreshold; }
 
-    int adaptiveLower() const;
-    void setAdaptiveLower(int adaptiveLower);
+    int adaptiveLower() const { return mAdaptiveLower; }
+    void setAdaptiveLower(int adaptiveLower) { mAdaptiveLower = adaptiveLower; }
 
-    mat betas() const;
+    mat betas() const { return mBetas; }
 
     bool hasRegressionLayer()
     {
@@ -141,93 +130,88 @@ public:     // GwmSpatialMultiscaleAlgorithm interface
 
 
 public:     // IBandwidthSizeSelectable interface
-    double getCriterion(CGwmBandwidthWeight* weight);
+    double getCriterion(CGwmBandwidthWeight* weight)
+    {
+        return (this->*mBandwidthSizeCriterion)(weight);
+    }
 
 
 public:     // IRegressionAnalysis interface
-    GwmVariable dependentVariable() const override;
+    virtual arma::vec dependentVariable() const { return mY; }
+    virtual void setDependentVariable(const arma::vec& y) { mY = y; }
 
-    void setDependentVariable(const GwmVariable &variable) override;
+    virtual arma::mat independentVariables() const { return mX; }
+    virtual void setIndependentVariables(const arma::mat& x) { mX = x; }
 
-    vector<GwmVariable> independentVariables() const override;
+    virtual GwmRegressionDiagnostic diagnostic() const { return mDiagnostic; }
 
-    void setIndependentVariables(const vector<GwmVariable> &variables) override;
+    mat predict(const mat& coords) override { return mat(); }
 
-    GwmRegressionDiagnostic diagnostic() const override;
-
-    mat regression(const mat &x, const vec &y) override;
-
-    mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S); 
-
+    mat fit() override;
 
 public:     // IParallelalbe interface
-    int parallelAbility() const override;
-    ParallelType parallelType() const override;
+    int parallelAbility() const override 
+    {
+        return ParallelType::SerialOnly
+#ifdef ENABLE_OPENMP
+            | ParallelType::OpenMP
+#endif        
+            ;
+    }
+
+    ParallelType parallelType() const override { return mParallelType; }
+
     void setParallelType(const ParallelType &type) override;
 
 
 public:     // IOpenmpParallelable interface
-    void setOmpThreadNum(const int threadNum) override;
+    void setOmpThreadNum(const int threadNum) override { mOmpThreadNum = threadNum; }
 
 
 protected:
-    virtual void setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmVariable& depVar, const vector<GwmVariable>& indepVars);
 
     CGwmBandwidthWeight* bandwidth(int i)
     {
         return static_cast<CGwmBandwidthWeight*>(mSpatialWeights[i].weight());
     }
-    mat regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
-    {
-        return (this->*mRegressionHatmatrixFunction)(x, y, betasSE, shat, qdiag,S);
-    }
-    mat regressionAllSerial(const mat& x, const vec& y);
 
-    mat regressionAllOmp(const mat& x, const vec& y);
+    mat fitAllSerial(const mat& x, const vec& y);
 
-    vec regressionVarSerial(const vec& x, const vec& y, const int var, mat& S);
+    mat fitAllOmp(const mat& x, const vec& y);
 
-    vec regressionVarOmp(const vec& x, const vec& y, const int var, mat& S);
+    vec fitVarSerial(const vec& x, const vec& y, const int var, mat& S);
 
+    vec fitVarOmp(const vec& x, const vec& y, const int var, mat& S);
 
+    mat backfitting(const mat &x, const vec &y);
 
-    double mBandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight* bandwidthWeight);
 
-    double mBandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight* bandwidthWeight);
 
-    double mBandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight* bandwidthWeight);
 
-    double mBandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight* bandwidthWeight);
 
+    double bandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight* bandwidthWeight);
 
+    double bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight* bandwidthWeight);
 
-    double mBandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight* bandwidthWeight);
 
-    double mBandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight* bandwidthWeight);
-
-    double mBandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight* bandwidthWeight);
-
-    double mBandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight* bandwidthWeight);
 
     void createInitialDistanceParameter();
 
-    void createResultLayer(initializer_list<CreateResultLayerDataItem> items);
-
 protected:
     CGwmBandwidthSelector mselector;
+
 private:
-    mat mDataPoints;
-    mat mRegressionPoints;
-
-    RegressionAllFunction mRegressionAll = &CGwmMGWR::regressionAllSerial;
-    RegressionVarFunction mRegressionVar = &CGwmMGWR::regressionVarSerial;
-    RegressionHatmatrixCalculator mRegressionHatmatrixFunction = &CGwmMGWR::regressionHatmatrixSerial;
-
-    GwmVariable mDepVar;
-    vector<GwmVariable> mIndepVars;
+    FitAllFunction mFitAll = &CGwmMGWR::fitAllSerial;
+    FitVarFunction mFitVar = &CGwmMGWR::fitVarSerial;
 
     CGwmSpatialWeight mInitSpatialWeight;
-    BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &CGwmMGWR::mBandwidthSizeCriterionAllCVSerial;
+    BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &CGwmMGWR::bandwidthSizeCriterionAllCVSerial;
     int mBandwidthSelectionCurrentIndex = 0;
 
 
@@ -267,170 +251,5 @@ private:
 public:
     static int treeChildCount;
 };
-
-inline double CGwmMGWR::getCriterion(CGwmBandwidthWeight* weight)
-{
-    return (this->*mBandwidthSizeCriterion)(weight);
-}
-
-inline GwmVariable CGwmMGWR::dependentVariable() const
-{
-    return mDepVar;
-}
-
-inline void CGwmMGWR::setDependentVariable(const GwmVariable &variable)
-{
-    mDepVar = variable;
-}
-
-inline vector<GwmVariable> CGwmMGWR::independentVariables() const
-{
-    return mIndepVars;
-}
-
-inline void CGwmMGWR::setIndependentVariables(const vector<GwmVariable> &variables)
-{
-    mIndepVars = variables;
-}
-
-inline GwmRegressionDiagnostic CGwmMGWR::diagnostic() const
-{
-    return mDiagnostic;
-}
-inline int CGwmMGWR::adaptiveLower() const
-{
-    return mAdaptiveLower;
-}
-
-inline void CGwmMGWR::setAdaptiveLower(int adaptiveLower)
-{
-    mAdaptiveLower = adaptiveLower;
-}
-
-inline double CGwmMGWR::criterionThreshold() const
-{
-    return mCriterionThreshold;
-}
-
-inline void CGwmMGWR::setCriterionThreshold(double criterionThreshold)
-{
-    mCriterionThreshold = criterionThreshold;
-}
-
-inline CGwmMGWR::BackFittingCriterionType CGwmMGWR::criterionType() const
-{
-    return mCriterionType;
-}
-
-inline void CGwmMGWR::setCriterionType(const BackFittingCriterionType &criterionType)
-{
-    mCriterionType = criterionType;
-}
-
-inline int CGwmMGWR::maxIteration() const
-{
-    return mMaxIteration;
-}
-
-inline void CGwmMGWR::setMaxIteration(int maxIteration)
-{
-    mMaxIteration = maxIteration;
-}
-
-inline int CGwmMGWR::bandwidthSelectRetryTimes() const
-{
-    return mBandwidthSelectRetryTimes;
-}
-
-inline void CGwmMGWR::setBandwidthSelectRetryTimes(int bandwidthSelectRetryTimes)
-{
-    mBandwidthSelectRetryTimes = bandwidthSelectRetryTimes;
-}
-
-inline vector<bool> CGwmMGWR::preditorCentered() const
-{
-    return mPreditorCentered;
-}
-
-inline void CGwmMGWR::setPreditorCentered(const vector<bool> &preditorCentered)
-{
-    mPreditorCentered = preditorCentered;
-}
-
-inline vector<CGwmMGWR::BandwidthSelectionCriterionType> CGwmMGWR::bandwidthSelectionApproach() const
-{
-    return CGwmMGWR::mBandwidthSelectionApproach;
-}
-
-inline void CGwmMGWR::setBandwidthSelectionApproach(const vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach)
-{
-    if(bandwidthSelectionApproach.size()==mIndepVars.size()+1){
-        mBandwidthSelectionApproach = bandwidthSelectionApproach;
-    }
-    else{
-        std::cerr <<"bandwidthSelectionApproach size do not match indepvars" << '\n';
-    }  
-}
-
-inline vector<CGwmMGWR::BandwidthInitilizeType> CGwmMGWR::bandwidthInitilize() const
-{
-    return CGwmMGWR::mBandwidthInitilize;
-}
-
-inline void CGwmMGWR::setBandwidthInitilize(const vector<BandwidthInitilizeType> &bandwidthInitilize)
-{
-    if(bandwidthInitilize.size()==mIndepVars.size()+1){
-        mBandwidthInitilize = bandwidthInitilize;
-    }
-    else{
-        std::cerr <<"BandwidthInitilize size do not match indepvars" << '\n';
-    }   
-}
-
-inline vector<double> CGwmMGWR::bandwidthSelectThreshold() const
-{
-    return mBandwidthSelectThreshold;
-}
-
-inline void CGwmMGWR::setBandwidthSelectThreshold(const vector<double> &bandwidthSelectThreshold)
-{
-    mBandwidthSelectThreshold = bandwidthSelectThreshold;
-}
-
-inline bool CGwmMGWR::hasHatMatrix() const
-{
-    return mHasHatMatrix;
-}
-
-inline void CGwmMGWR::setHasHatMatrix(bool hasHatMatrix)
-{
-    mHasHatMatrix = hasHatMatrix;
-}
-
-inline mat CGwmMGWR::betas() const
-{
-    return mBetas;
-}
-
-inline int CGwmMGWR::parallelAbility() const
-{
-    return ParallelType::SerialOnly
-        #ifdef ENABLE_OPENMP
-        | ParallelType::OpenMP
-        #endif        
-        ;
-}
-
-inline ParallelType CGwmMGWR::parallelType() const
-{
-    return mParallelType;
-}
-
-inline void CGwmMGWR::setOmpThreadNum(const int threadNum)
-{
-    mOmpThreadNum = threadNum;
-}
-
-
 
 #endif // GWMMULTISCALEGWRTASKTHREAD_H

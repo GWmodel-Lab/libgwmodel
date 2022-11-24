@@ -45,10 +45,8 @@ set(SOURCES_CXX
     gwmodelpp/spatialweight/CGwmSpatialWeight.cpp
     gwmodelpp/spatialweight/CGwmWeight.cpp
 
-    gwmodelpp/CGwmAlgorithm.cpp
     gwmodelpp/CGwmBandwidthSelector.cpp
     gwmodelpp/CGwmVariableForwardSelector.cpp
-    gwmodelpp/CGwmSimpleLayer.cpp
     gwmodelpp/CGwmSpatialAlgorithm.cpp
     gwmodelpp/CGwmSpatialMonoscaleAlgorithm.cpp
     gwmodelpp/CGwmSpatialMultiscaleAlgorithm.cpp
@@ -77,7 +75,6 @@ set(HEADERS_CXX
     ../include/gwmodelpp/CGwmAlgorithm.h
     ../include/gwmodelpp/CGwmBandwidthSelector.h
     ../include/gwmodelpp/CGwmVariableForwardSelector.h
-    ../include/gwmodelpp/CGwmSimpleLayer.h
     ../include/gwmodelpp/CGwmSpatialAlgorithm.h
     ../include/gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h
     ../include/gwmodelpp/CGwmSpatialMultiscaleAlgorithm.h

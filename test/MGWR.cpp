@@ -5,13 +5,11 @@
 #include <vector>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp/CGwmSimpleLayer.h"
 #include "gwmodelpp/CGwmMGWR.h"
 
 #include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
 #include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
 #include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
-#include "gwmodelpp/GwmVariable.h"
 #include "londonhp100.h"
 
 using namespace std;
@@ -26,12 +24,6 @@ TEST_CASE("MGWR: basic flow")
     {
         FAIL("Cannot load londonhp100 data.");
     }
-
-    CGwmSimpleLayer londonhp(londonhp100_coord, londonhp100_data, londonhp100_fields);
-    REQUIRE(londonhp.points().n_rows);
-    REQUIRE(londonhp.data().n_rows);
-    REQUIRE(londonhp.fields().size());
-    REQUIRE(londonhp.featureCount());
 
     uword nVar = 3;
     vector<CGwmSpatialWeight> spatials;
@@ -48,22 +40,19 @@ TEST_CASE("MGWR: basic flow")
         bandwidthSelectionApproach.push_back(CGwmMGWR::BandwidthSelectionCriterionType::CV);
     }
 
-    GwmVariable purchase(0, true, "PURCHASE");
-    GwmVariable floorsz(1, true, "FLOORSZ");
-    GwmVariable prof(3, true, "PROF");
-    vector<GwmVariable> indepVars = { floorsz, prof };
+    vec y = londonhp100_data.col(0);
+    mat x = londonhp100_data.cols(1, 2);
 
     CGwmMGWR algorithm;
-    algorithm.setSourceLayer(&londonhp);
-    algorithm.setDependentVariable(purchase);
-    algorithm.setIndependentVariables(indepVars);
+    algorithm.setDependentVariable(y);
+    algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
     algorithm.setHasHatMatrix(true);
     algorithm.setPreditorCentered(preditorCentered);
     algorithm.setBandwidthInitilize(bandwidthInitialize);
     algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
     algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
-    REQUIRE_NOTHROW(algorithm.run());
+    REQUIRE_NOTHROW(algorithm.fit());
 
     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
     REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(4623.78, 0.1));
@@ -85,12 +74,6 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with AIC")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    CGwmSimpleLayer londonhp(londonhp100_coord, londonhp100_data, londonhp100_fields);
-    REQUIRE(londonhp.points().n_rows);
-    REQUIRE(londonhp.data().n_rows);
-    REQUIRE(londonhp.fields().size());
-    REQUIRE(londonhp.featureCount());
-
     uword nVar = 3;
     vector<CGwmSpatialWeight> spatials;
     vector<bool> preditorCentered;
@@ -106,15 +89,12 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with AIC")
         bandwidthSelectionApproach.push_back(CGwmMGWR::BandwidthSelectionCriterionType::AIC);
     }
 
-    GwmVariable purchase(0, true, "PURCHASE");
-    GwmVariable floorsz(1, true, "FLOORSZ");
-    GwmVariable prof(3, true, "PROF");
-    vector<GwmVariable> indepVars = { floorsz, prof };
+    vec y = londonhp100_data.col(0);
+    mat x = londonhp100_data.cols(1, 2);
 
     CGwmMGWR algorithm;
-    algorithm.setSourceLayer(&londonhp);
-    algorithm.setDependentVariable(purchase);
-    algorithm.setIndependentVariables(indepVars);
+    algorithm.setDependentVariable(y);
+    algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
     algorithm.setHasHatMatrix(true);
     algorithm.setCriterionType(CGwmMGWR::BackFittingCriterionType::dCVR);
@@ -123,7 +103,7 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with AIC")
     algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
     algorithm.setBandwidthSelectRetryTimes(5);
     algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
-    REQUIRE_NOTHROW(algorithm.run());
+    REQUIRE_NOTHROW(algorithm.fit());
 
     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
     REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(45, 0.1));
@@ -146,12 +126,6 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with CV")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    CGwmSimpleLayer londonhp(londonhp100_coord, londonhp100_data, londonhp100_fields);
-    REQUIRE(londonhp.points().n_rows);
-    REQUIRE(londonhp.data().n_rows);
-    REQUIRE(londonhp.fields().size());
-    REQUIRE(londonhp.featureCount());
-
     uword nVar = 3;
     vector<CGwmSpatialWeight> spatials;
     vector<bool> preditorCentered;
@@ -167,15 +141,12 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with CV")
         bandwidthSelectionApproach.push_back(CGwmMGWR::BandwidthSelectionCriterionType::CV);
     }
 
-    GwmVariable purchase(0, true, "PURCHASE");
-    GwmVariable floorsz(1, true, "FLOORSZ");
-    GwmVariable prof(3, true, "PROF");
-    vector<GwmVariable> indepVars = { floorsz, prof };
+    vec y = londonhp100_data.col(0);
+    mat x = londonhp100_data.cols(1, 2);
 
     CGwmMGWR algorithm;
-    algorithm.setSourceLayer(&londonhp);
-    algorithm.setDependentVariable(purchase);
-    algorithm.setIndependentVariables(indepVars);
+    algorithm.setDependentVariable(y);
+    algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
     algorithm.setHasHatMatrix(true);
     algorithm.setCriterionType(CGwmMGWR::BackFittingCriterionType::dCVR);
@@ -184,7 +155,7 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with CV")
     algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
     algorithm.setBandwidthSelectRetryTimes(5);
     algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
-    REQUIRE_NOTHROW(algorithm.run());
+    REQUIRE_NOTHROW(algorithm.fit());
 
     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
     REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(35, 0.1));
@@ -206,12 +177,6 @@ TEST_CASE("MGWR: basic flow with CVR")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    CGwmSimpleLayer londonhp(londonhp100_coord, londonhp100_data, londonhp100_fields);
-    REQUIRE(londonhp.points().n_rows);
-    REQUIRE(londonhp.data().n_rows);
-    REQUIRE(londonhp.fields().size());
-    REQUIRE(londonhp.featureCount());
-
     uword nVar = 3;
     vector<CGwmSpatialWeight> spatials;
     vector<bool> preditorCentered;
@@ -227,15 +192,12 @@ TEST_CASE("MGWR: basic flow with CVR")
         bandwidthSelectionApproach.push_back(CGwmMGWR::BandwidthSelectionCriterionType::CV);
     }
 
-    GwmVariable purchase(0, true, "PURCHASE");
-    GwmVariable floorsz(1, true, "FLOORSZ");
-    GwmVariable prof(3, true, "PROF");
-    vector<GwmVariable> indepVars = { floorsz, prof };
+    vec y = londonhp100_data.col(0);
+    mat x = londonhp100_data.cols(1, 2);
 
     CGwmMGWR algorithm;
-    algorithm.setSourceLayer(&londonhp);
-    algorithm.setDependentVariable(purchase);
-    algorithm.setIndependentVariables(indepVars);
+    algorithm.setDependentVariable(y);
+    algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
     algorithm.setHasHatMatrix(true);
     algorithm.setCriterionType(CGwmMGWR::BackFittingCriterionType::CVR);
@@ -245,7 +207,7 @@ TEST_CASE("MGWR: basic flow with CVR")
     algorithm.setBandwidthSelectRetryTimes(5);
     algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
     algorithm.setParallelType(ParallelType::OpenMP);
-    REQUIRE_NOTHROW(algorithm.run());
+    REQUIRE_NOTHROW(algorithm.fit());
 
     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
     REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(4623.78, 0.1));
@@ -268,12 +230,6 @@ TEST_CASE("MGWR: basic flow (multithread)")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    CGwmSimpleLayer londonhp(londonhp100_coord, londonhp100_data, londonhp100_fields);
-    REQUIRE(londonhp.points().n_rows);
-    REQUIRE(londonhp.data().n_rows);
-    REQUIRE(londonhp.fields().size());
-    REQUIRE(londonhp.featureCount());
-
     uword nVar = 3;
     vector<CGwmSpatialWeight> spatials;
     vector<bool> preditorCentered;
@@ -289,15 +245,12 @@ TEST_CASE("MGWR: basic flow (multithread)")
         bandwidthSelectionApproach.push_back(CGwmMGWR::BandwidthSelectionCriterionType::CV);
     }
 
-    GwmVariable purchase(0, true, "PURCHASE");
-    GwmVariable floorsz(1, true, "FLOORSZ");
-    GwmVariable prof(3, true, "PROF");
-    vector<GwmVariable> indepVars = { floorsz, prof };
+    vec y = londonhp100_data.col(0);
+    mat x = londonhp100_data.cols(1, 2);
 
     CGwmMGWR algorithm;
-    algorithm.setSourceLayer(&londonhp);
-    algorithm.setDependentVariable(purchase);
-    algorithm.setIndependentVariables(indepVars);
+    algorithm.setDependentVariable(y);
+    algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
     algorithm.setHasHatMatrix(true);
     algorithm.setCriterionType(CGwmMGWR::BackFittingCriterionType::dCVR);
@@ -307,7 +260,7 @@ TEST_CASE("MGWR: basic flow (multithread)")
     algorithm.setBandwidthSelectRetryTimes(5);
     algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
     algorithm.setParallelType(ParallelType::OpenMP);
-    REQUIRE_NOTHROW(algorithm.run());
+    REQUIRE_NOTHROW(algorithm.fit());
 
     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
     REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(35, 0.1));
