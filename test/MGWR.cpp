@@ -41,9 +41,10 @@ TEST_CASE("MGWR: basic flow")
     }
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 2);
+    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmMGWR algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
@@ -90,9 +91,10 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with AIC")
     }
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 2);
+    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmMGWR algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
@@ -142,9 +144,10 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with CV")
     }
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 2);
+    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmMGWR algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
@@ -193,9 +196,10 @@ TEST_CASE("MGWR: basic flow with CVR")
     }
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 2);
+    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmMGWR algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
@@ -246,9 +250,10 @@ TEST_CASE("MGWR: basic flow (multithread)")
     }
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 2);
+    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmMGWR algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);

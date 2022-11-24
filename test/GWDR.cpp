@@ -1,12 +1,10 @@
 #define CATCH_CONFIG_MAIN
-
 #include <catch2/catch.hpp>
 
 #include <vector>
 #include <string>
 #include <armadillo>
 #include "gwmodelpp/CGwmGWDR.h"
-
 #include "gwmodelpp/spatialweight/CGwmOneDimDistance.h"
 #include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
 #include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
@@ -34,7 +32,7 @@ TEST_CASE("GWDR: basic flow")
     }
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 3);
+    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmGWDR algorithm;
     algorithm.setCoords(londonhp100_coord);
@@ -69,9 +67,10 @@ TEST_CASE("GWDR: basic flow with bandwidth optimization (CV)")
     }
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 3);
+    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmGWDR algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
@@ -105,9 +104,10 @@ TEST_CASE("GWDR: basic flow with bandwidth optimization (AIC)")
     }
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 3);
+    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmGWDR algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
@@ -140,9 +140,10 @@ TEST_CASE("GWDR: basic flow with independent variable selection")
     }
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 3);
+    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmGWDR algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
@@ -185,9 +186,10 @@ TEST_CASE("GWDR: basic flow (multithread)")
     }
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 3);
+    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmGWDR algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
@@ -241,9 +243,10 @@ TEST_CASE("GWDR: basic flow with bandwidth optimization (CV, multithread)")
     }
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 3);
+    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
     CGwmGWDR algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);

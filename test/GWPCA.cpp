@@ -29,6 +29,7 @@ TEST_CASE("GWPCA: basic flow")
     mat x = londonhp100_data.cols(1, 3);
 
     CGwmGWPCA algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setVariables(x);
     algorithm.setSpatialWeight(spatial);
     algorithm.setKeepComponents(2);

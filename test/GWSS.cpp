@@ -26,9 +26,10 @@ TEST_CASE("GWSS: basic flow")
     CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
-    mat x = londonhp100_data.cols(1, 3);
+    mat x = londonhp100_data.cols(0, 3);
 
     CGwmGWSS algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setVariables(x);
     algorithm.setSpatialWeight(spatial);
     REQUIRE_NOTHROW(algorithm.run());
@@ -110,9 +111,10 @@ TEST_CASE("GWSS: correlation with first variable only")
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 3);
+    mat x = londonhp100_data.cols(0, 3);
 
     CGwmGWSS algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setVariables(x);
     algorithm.setSpatialWeight(spatial);
     algorithm.setIsCorrWithFirstOnly(true);
@@ -145,9 +147,10 @@ TEST_CASE("GWSS: multithread basic flow")
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
     vec y = londonhp100_data.col(0);
-    mat x = londonhp100_data.cols(1, 3);
+    mat x = londonhp100_data.cols(0, 3);
 
     CGwmGWSS algorithm;
+    algorithm.setCoords(londonhp100_coord);
     algorithm.setVariables(x);
     algorithm.setSpatialWeight(spatial);
     algorithm.setParallelType(ParallelType::OpenMP);
