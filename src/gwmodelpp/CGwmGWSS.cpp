@@ -68,6 +68,25 @@ bool CGwmGWSS::isValid()
 void CGwmGWSS::run()
 {
     createDistanceParameter();
+    uword nRp = mCoords.n_rows, nVar = mX.n_cols;
+    mLocalMean = mat(nRp, nVar, fill::zeros);
+    mStandardDev = mat(nRp, nVar, fill::zeros);
+    mLocalSkewness = mat(nRp, nVar, fill::zeros);
+    mLCV = mat(nRp, nVar, fill::zeros);
+    mLVar = mat(nRp, nVar, fill::zeros);
+    if (mQuantile)
+    {
+        mLocalMedian = mat(nRp, nVar, fill::zeros);
+        mIQR = mat(nRp, nVar, fill::zeros);
+        mQI = mat(nRp, nVar, fill::zeros);
+    }
+    if (nVar > 1)
+    {
+        uword nCol = mIsCorrWithFirstOnly ? (nVar - 1) : (nVar + 1) * nVar / 2 - nVar;
+        mCovmat = mat(nRp, nCol, fill::zeros);
+        mCorrmat = mat(nRp, nCol, fill::zeros);
+        mSCorrmat = mat(nRp, nCol, fill::zeros);
+    }
     (this->*mSummaryFunction)();
 }
 
