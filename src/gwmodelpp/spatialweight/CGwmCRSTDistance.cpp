@@ -21,6 +21,27 @@ vec CGwmCRSTDistance::SpatialTemporalDistance(const rowvec& out_loc, const mat& 
     return STdists;
 }
 
+vec CGwmCRSTDistance::EuclideanDistance(const rowvec& out_loc, const mat& in_locs)
+{
+    uword N = in_locs.n_rows;
+    vec STdists(N, fill::zeros);
+    double uout = out_loc(0), vout = out_loc(1), tout=out_loc(2);
+    double Sdist,Tdist,x,y;
+    CGwmCRSTDistance temproportion;
+    for (uword j = 0; j < N; j++)
+    {
+        x=abs(in_locs(j, 0)- uout);
+        y=abs(in_locs(j, 1)- vout);
+        Sdist = x*x + y*y;
+        Tdist=in_locs(j, 2)-tout;
+        //STdists(j) = sqrt((1-mLambda)*Sdist*Sdist+ mLambda *Tdist*Tdist);
+        STdists(j) = sqrt((1-temproportion.mLambda)*Sdist+ temproportion.mLambda *Tdist*Tdist);
+    }
+    return STdists;
+    // mat diff = (in_locs.each_row() - out_loc);
+    // return sqrt(sum(diff % diff, 1));
+}
+
 CGwmCRSTDistance::CGwmCRSTDistance() : mParameter(nullptr)
 {
 
@@ -44,7 +65,7 @@ CGwmCRSTDistance::CGwmCRSTDistance(const CGwmCRSTDistance &distance) : CGwmCRSDi
 
 void CGwmCRSTDistance::makeParameter(initializer_list<DistParamVariant> plist)
 {
-    if (plist.size() == 3)
+    if (plist.size() == 2)
     {
         const mat& fp = get<mat>(*(plist.begin()));
         const mat& dp = get<mat>(*(plist.begin() + 1));
