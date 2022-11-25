@@ -34,11 +34,13 @@ class CGwmCRSTDistance : public CGwmCRSDistance
 public:
     static vec SpatialTemporalDistance(const rowvec& out_loc, const mat& in_locs);
 
+    static vec EuclideanDistance(const rowvec& out_loc, const mat& in_locs);
+
 
 public:
     CGwmCRSTDistance();
 
-    explicit CGwmCRSTDistance(bool isGeographic, double mLambda);    
+    explicit CGwmCRSTDistance(bool isGeographic, double lambda);    
 
     CGwmCRSTDistance(const CGwmCRSTDistance& distance);
 
@@ -90,6 +92,7 @@ public:
     virtual vec distance(uword focus) override;
     virtual double maxDistance() override;
     virtual double minDistance() override;
+
 
 protected:
     bool mGeographic = false;

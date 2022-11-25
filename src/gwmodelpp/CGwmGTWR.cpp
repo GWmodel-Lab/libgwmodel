@@ -119,6 +119,7 @@ void CGwmGTWR::run()
 void CGwmGTWR::createPredictionDistanceParameter()
 {
     if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
+        mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSTDistance || 
         mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
     {
         mSpatialWeight.distance()->makeParameter({

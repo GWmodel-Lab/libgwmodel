@@ -47,8 +47,9 @@ CGwmCRSTDistance::CGwmCRSTDistance() : mParameter(nullptr)
 
 }
 
-CGwmCRSTDistance::CGwmCRSTDistance(bool isGeographic, double mLambda): mParameter(nullptr), mGeographic(isGeographic)
+CGwmCRSTDistance::CGwmCRSTDistance(bool isGeographic, double lambda): mParameter(nullptr), mGeographic(isGeographic)
 {
+    mLambda=lambda;
     mCalculator = mGeographic ? &SpatialTemporalDistance : &EuclideanDistance;
 }
 

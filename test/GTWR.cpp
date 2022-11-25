@@ -45,7 +45,7 @@ TEST_CASE("GTWR: basic flow")
 
     double lambda=0.05;
     CGwmCRSTDistance distance(false,lambda);
-    CGwmBandwidthWeight bandwidth(74, true, CGwmBandwidthWeight::Gaussian);
+    CGwmBandwidthWeight bandwidth(50, true, CGwmBandwidthWeight::Gaussian);
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
     GwmVariable purchase(0, true, "PURCHASE");
@@ -63,8 +63,8 @@ TEST_CASE("GTWR: basic flow")
     REQUIRE_NOTHROW(algorithm.run());
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE(abs(diagnostic.AIC - 2442.4601876846 ) < 1e-8);
-    REQUIRE(abs(diagnostic.AICc - 2451.0253947922 ) < 1e-8);
-    REQUIRE(abs(diagnostic.RSquare - 0.68332416707988 ) < 1e-8);
-    REQUIRE(abs(diagnostic.RSquareAdjust - 0.66065045315908 ) < 1e-8);
+    REQUIRE(abs(diagnostic.AIC - 2441.907430935 ) < 1e-8);
+    REQUIRE(abs(diagnostic.AICc - 2453.1256389895 ) < 1e-8);
+    REQUIRE(abs(diagnostic.RSquare - 0.69113501943522 ) < 1e-8);
+    REQUIRE(abs(diagnostic.RSquareAdjust - 0.66028119133639 ) < 1e-8);
 }

@@ -253,7 +253,6 @@ inline void CGwmGTWR::createDistanceParameter()
     {
         mSpatialWeight.distance()->makeParameter({
             mSourceLayer->points(),
-            mSourceLayer->points(),
             mSourceLayer->points()
         });
     }
