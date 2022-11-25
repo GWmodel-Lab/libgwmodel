@@ -69,10 +69,6 @@ public:
 public:
     mat betas() const { return mBetas; }
 
-    bool hasIntercept() const { return mHasIntercept; }
-
-    void setHasIntercept(const bool has) { mHasIntercept = has; }
-
     bool hasHatMatrix() const { return mHasHatMatrix; }
 
     void setHasHatMatrix(bool flag) { mHasHatMatrix = flag; }
@@ -119,13 +115,16 @@ public: // CGwmAlgorithm
     bool isValid() override;
 
 public: // IGwmRegressionAnalysis
-    virtual arma::vec dependentVariable() const { return mY; }
-    virtual void setDependentVariable(const arma::vec& y) { mY = y; }
+    virtual arma::vec dependentVariable() const override { return mY; }
+    virtual void setDependentVariable(const arma::vec& y) override { mY = y; }
 
-    virtual arma::mat independentVariables() const { return mX; }
-    virtual void setIndependentVariables(const arma::mat& x) { mX = x; }
+    virtual arma::mat independentVariables() const override { return mX; }
+    virtual void setIndependentVariables(const arma::mat& x) override { mX = x; }
 
-    virtual GwmRegressionDiagnostic diagnostic() const { return mDiagnostic; }
+    virtual bool hasIntercept() const override { return mHasIntercept; }
+    virtual void setHasIntercept(const bool has) override { mHasIntercept = has; }
+
+    virtual GwmRegressionDiagnostic diagnostic() const override { return mDiagnostic; }
 
     virtual mat predict(const mat& locations) override { return mat(); }
 
@@ -135,6 +134,11 @@ public:  // IGwmVariableSelectable
     double getCriterion(const vector<size_t>& variables) override
     {
         return (this->*mIndepVarCriterionFunction)(variables);
+    }
+
+    std::vector<std::size_t> selectedVariables() override
+    {
+        return mSelectedIndepVars;
     }
 
 public:  // IGwmOpenmpParallelizable
@@ -192,8 +196,8 @@ private:
     vec mY;
     mat mX;
     mat mBetas;
-    bool mHasIntercept;
-    bool mHasHatMatrix;
+    bool mHasIntercept = true;
+    bool mHasHatMatrix = true;
     GwmRegressionDiagnostic mDiagnostic;
 
     PredictCalculator mPredictFunction = &CGwmGWDR::predictSerial;
@@ -210,6 +214,7 @@ private:
     double mIndepVarSelectThreshold = 3.0;
     VariablesCriterionList mIndepVarCriterionList;
     IndepVarCriterionCalculator mIndepVarCriterionFunction = &CGwmGWDR::indepVarCriterionSerial;
+    std::vector<std::size_t> mSelectedIndepVars;
 
     ParallelType mParallelType = ParallelType::SerialOnly;
     int mOmpThreadNum = 8;

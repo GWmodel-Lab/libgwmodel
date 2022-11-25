@@ -66,7 +66,7 @@ mat CGwmMGWR::fit()
     // ********************************
     mX0 = mX;
     mY0 = mY;
-    for (uword i = 1; i < nVar ; i++)
+    for (uword i = (mHasIntercept ? 1 : 0); i < nVar ; i++)
     {
         if (mPreditorCentered[i])
         {

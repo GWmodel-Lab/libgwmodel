@@ -39,13 +39,16 @@ public:
     arma::mat betas() const { return mBetas; }
 
 public:     // Implement IGwmRegressionAnalysis
-    virtual arma::vec dependentVariable() const { return mY; }
-    virtual void setDependentVariable(const arma::vec& y) { mY = y; }
+    virtual arma::vec dependentVariable() const override { return mY; }
+    virtual void setDependentVariable(const arma::vec& y) override { mY = y; }
 
-    virtual arma::mat independentVariables() const { return mX; }
-    virtual void setIndependentVariables(const arma::mat& x) { mX = x; }
+    virtual arma::mat independentVariables() const override { return mX; }
+    virtual void setIndependentVariables(const arma::mat& x) override { mX = x; }
 
-    virtual GwmRegressionDiagnostic diagnostic() const { return mDiagnostic; }
+    virtual bool hasIntercept() const override { return mHasIntercept; }
+    virtual void setHasIntercept(const bool has) override { mHasIntercept = has; }
+
+    virtual GwmRegressionDiagnostic diagnostic() const override { return mDiagnostic; }
 
 public:
     virtual bool isValid() override;
@@ -55,6 +58,7 @@ protected:
     arma::mat mX;
     arma::vec mY;
     arma::mat mBetas;
+    bool mHasIntercept = true;
 
     GwmRegressionDiagnostic mDiagnostic;
 };
