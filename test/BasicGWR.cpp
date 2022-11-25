@@ -42,6 +42,8 @@ TEST_CASE("BasicGWR: basic flow")
     REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2448.27206524754, 1e-8));
     REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.708010632044736, 1e-8));
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.674975341723766, 1e-8));
+
+    REQUIRE(algorithm.hasIntercept() == true);
 }
 
 TEST_CASE("BasicGWR: adaptive bandwidth autoselection of with CV")

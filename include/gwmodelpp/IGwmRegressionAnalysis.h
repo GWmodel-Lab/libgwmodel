@@ -14,6 +14,9 @@ struct IGwmRegressionAnalysis
 
     virtual arma::mat independentVariables() const = 0;
     virtual void setIndependentVariables(const arma::mat& x) = 0;
+    
+    virtual bool hasIntercept() const = 0;
+    virtual void setHasIntercept(const bool has) = 0;
 
     virtual arma::mat predict(const arma::mat& locations) = 0;
     virtual arma::mat fit() = 0;

@@ -61,10 +61,6 @@ public:
 
     BandwidthCriterionList bandwidthSelectionCriterionList() const { return mBandwidthSelectionCriterionList; }
 
-    bool hasIntercept() const { return mHasIntercept; }
-
-    void setHasIntercept(const bool has) { mHasIntercept = has; }
-
     bool hasHatMatrix() const { return mHasHatMatrix; }
 
     void setHasHatMatrix(const bool has) { mHasHatMatrix = has; }
@@ -149,7 +145,6 @@ protected:
     void createPredictionDistanceParameter(const arma::mat& locations);
 
 protected:
-    bool mHasIntercept = true;
     bool mHasHatMatrix = true;
     bool mHasFTest = false;
     bool mHasPredict = false;

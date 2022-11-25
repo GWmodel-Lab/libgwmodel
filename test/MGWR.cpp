@@ -64,6 +64,8 @@ TEST_CASE("MGWR: basic flow")
     REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2437.09277417389, 1e-6));
     REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.744649364494, 1e-6));
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.712344894394, 1e-6));
+
+    REQUIRE(algorithm.hasIntercept() == true);
 }
 
 TEST_CASE("MGWR: adaptive bandwidth autoselection of with AIC")

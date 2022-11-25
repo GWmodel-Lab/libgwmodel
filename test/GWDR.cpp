@@ -46,6 +46,8 @@ TEST_CASE("GWDR: basic flow")
     REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2580.754861403243, 1e-6));
     REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.898063766825, 1e-6));
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.722050880566, 1e-6));
+
+    REQUIRE(algorithm.hasIntercept() == true);
 }
 
 TEST_CASE("GWDR: basic flow with bandwidth optimization (CV)")
