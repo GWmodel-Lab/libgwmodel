@@ -39,10 +39,10 @@ mat CGwmGWDR::fit()
             indep_vars.push_back(i);
         }
         CGwmVariableForwardSelector selector(indep_vars, mIndepVarSelectThreshold);
-        vector<size_t> selectedIndepVars = selector.optimize(this);
-        if (selectedIndepVars.size() > 0)
+        mSelectedIndepVars = selector.optimize(this);
+        if (mSelectedIndepVars.size() > 0)
         {
-            mX = mX.cols(CGwmVariableForwardSelector::index2uvec(selectedIndepVars, mHasIntercept));
+            mX = mX.cols(CGwmVariableForwardSelector::index2uvec(mSelectedIndepVars, mHasIntercept));
             mIndepVarCriterionList = selector.indepVarsCriterion();
         }
     }

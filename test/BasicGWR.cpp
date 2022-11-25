@@ -117,6 +117,9 @@ TEST_CASE("BasicGWR: indepdent variable autoselection with AIC")
     REQUIRE_THAT(criterions[4].second, Catch::WithinAbs(2450.59642666509, 1e-8));
     REQUIRE_THAT(criterions[5].first, Catch::Equals(vector<size_t>({ 1, 2, 3 })));
     REQUIRE_THAT(criterions[5].second, Catch::WithinAbs(2452.80388934625, 1e-8));
+
+    vector<size_t> selectedVariables = algorithm.selectedVariables();
+    REQUIRE_THAT(selectedVariables, Catch::Equals(vector<size_t>({1, 3})));
 }
 
 TEST_CASE("BasicGWR: multithread basic flow")
@@ -162,6 +165,9 @@ TEST_CASE("BasicGWR: multithread basic flow")
     REQUIRE_THAT(criterions[4].second, Catch::WithinAbs(2450.59642666509, 1e-8));
     REQUIRE_THAT(criterions[5].first, Catch::Equals(vector<size_t>({ 1, 2, 3 })));
     REQUIRE_THAT(criterions[5].second, Catch::WithinAbs(2452.80388934625, 1e-8));
+    
+    vector<size_t> selectedVariables = algorithm.selectedVariables();
+    REQUIRE_THAT(selectedVariables, Catch::Equals(vector<size_t>({1, 3})));
 
     double bw = algorithm.spatialWeight().weight<CGwmBandwidthWeight>()->bandwidth();
     REQUIRE(bw == 31.0);

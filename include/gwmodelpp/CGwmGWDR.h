@@ -137,6 +137,11 @@ public:  // IGwmVariableSelectable
         return (this->*mIndepVarCriterionFunction)(variables);
     }
 
+    std::vector<std::size_t> selectedVariables() override
+    {
+        return mSelectedIndepVars;
+    }
+
 public:  // IGwmOpenmpParallelizable
     int parallelAbility() const
     {
@@ -210,6 +215,7 @@ private:
     double mIndepVarSelectThreshold = 3.0;
     VariablesCriterionList mIndepVarCriterionList;
     IndepVarCriterionCalculator mIndepVarCriterionFunction = &CGwmGWDR::indepVarCriterionSerial;
+    std::vector<std::size_t> mSelectedIndepVars;
 
     ParallelType mParallelType = ParallelType::SerialOnly;
     int mOmpThreadNum = 8;

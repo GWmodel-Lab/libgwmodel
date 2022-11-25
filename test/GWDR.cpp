@@ -165,6 +165,9 @@ TEST_CASE("GWDR: basic flow with independent variable selection")
     REQUIRE_THAT(criterions[4].second, Catch::WithinAbs(2452.651290897472, 1e-8));
     REQUIRE_THAT(criterions[5].first, Catch::Equals(vector<size_t>({ 1, 2, 3 })));
     REQUIRE_THAT(criterions[5].second, Catch::WithinAbs(2465.692469262322, 1e-8));
+
+    vector<size_t> selectedVariables = algorithm.selectedVariables();
+    REQUIRE_THAT(selectedVariables, Catch::Equals(vector<size_t>({1, 2})));
 }
 
 TEST_CASE("GWDR: basic flow (multithread)")
@@ -213,6 +216,9 @@ TEST_CASE("GWDR: basic flow (multithread)")
     REQUIRE_THAT(criterions[4].second, Catch::WithinAbs(2450.596426665086, 1e-8));
     REQUIRE_THAT(criterions[5].first, Catch::Equals(vector<size_t>({ 1, 2, 3 })));
     REQUIRE_THAT(criterions[5].second, Catch::WithinAbs(2452.803889346232, 1e-8));
+
+    vector<size_t> selectedVariables = algorithm.selectedVariables();
+    REQUIRE_THAT(selectedVariables, Catch::Equals(vector<size_t>({1, 3})));
 
     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
     REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(81, 1e-12));

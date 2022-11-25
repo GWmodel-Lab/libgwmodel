@@ -96,7 +96,7 @@ private:
 #endif
 
 public:     // Implement IGwmBandwidthSelectable
-    double getCriterion(CGwmBandwidthWeight* weight)
+    double getCriterion(CGwmBandwidthWeight* weight) override
     {
         return (this->*mBandwidthSelectionCriterionFunction)(weight);
     }
@@ -110,9 +110,14 @@ private:
 #endif
 
 public:     // Implement IGwmVariableSelectable
-    double getCriterion(const std::vector<size_t>& variables)
+    double getCriterion(const std::vector<size_t>& variables) override
     {
         return (this->*mIndepVarsSelectionCriterionFunction)(variables);
+    }
+
+    std::vector<std::size_t> selectedVariables() override
+    {
+        return mSelectedIndepVars;
     }
 
 private:
@@ -153,6 +158,7 @@ protected:
     double mIndepVarSelectionThreshold = 3.0;
     IndepVarsSelectCriterionCalculator mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionSerial;
     VariablesCriterionList mIndepVarsSelectionCriterionList;
+    std::vector<std::size_t> mSelectedIndepVars;
 
     bool mIsAutoselectBandwidth = false;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::AIC;
