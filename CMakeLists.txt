@@ -4,6 +4,8 @@ project(libgwmodel)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
+SET (ENABLE_OpenMP TRUE CACHE BOOL "Determines whether OpemMP support should be built")
+
 find_package(Armadillo REQUIRED)
 if(ARMADILLO_FOUND)
     add_definitions(-DARMA_USE_LAPACK -DARMA_USE_BLAS -DARMA_DONT_USE_WRAPPER)

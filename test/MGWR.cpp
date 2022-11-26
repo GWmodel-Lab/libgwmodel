@@ -226,7 +226,7 @@ TEST_CASE("MGWR: basic flow with CVR")
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.712344894394, 1e-6));
 }
 
-
+#ifdef ENABLE_OPENMP
 TEST_CASE("MGWR: basic flow (multithread)")
 {
     mat londonhp100_coord, londonhp100_data;
@@ -279,4 +279,4 @@ TEST_CASE("MGWR: basic flow (multithread)")
     REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.757377391648, 1e-6));
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.715598248202, 1e-6));
 }
-
+#endif

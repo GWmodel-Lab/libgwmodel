@@ -199,19 +199,21 @@ protected:
 
     double bandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight* bandwidthWeight);
 
-    double bandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight* bandwidthWeight);
-
     double bandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight* bandwidthWeight);
-
-    double bandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight* bandwidthWeight);
 
     double bandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight* bandwidthWeight);
 
-    double bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight* bandwidthWeight);
-
     double bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight* bandwidthWeight);
 
+#ifdef ENABLE_OPENMP
+    double bandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight* bandwidthWeight);
+
+    double bandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight* bandwidthWeight);
+
+    double bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight* bandwidthWeight);
+
     double bandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight* bandwidthWeight);
+#endif
 
     void createInitialDistanceParameter();
 

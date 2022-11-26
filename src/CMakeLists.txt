@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.12)
 
 find_package(OpenMP)
 if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
-    SET (ENABLE_OpenMP TRUE CACHE BOOL "Determines whether OpemMP support should be built")
     if(ENABLE_OpenMP)
         add_definitions(-DENABLE_OPENMP)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")

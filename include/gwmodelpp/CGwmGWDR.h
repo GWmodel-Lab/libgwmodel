@@ -176,13 +176,15 @@ protected:
     mat fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
     mat fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
 
-    double bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
-    double bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& bandwidths);
     double bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
-    double bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& bandwidths);
-
+    double bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
     double indepVarCriterionSerial(const vector<size_t>& indepVars);
+
+#ifdef ENABLE_OPENMP
+    double bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& bandwidths);
+    double bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& bandwidths);
     double indepVarCriterionOmp(const vector<size_t>& indepVars);
+#endif
 
 private:
     bool isStoreS()

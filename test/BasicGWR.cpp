@@ -124,6 +124,7 @@ TEST_CASE("BasicGWR: indepdent variable autoselection with AIC")
     REQUIRE_THAT(selectedVariables, Catch::Equals(vector<size_t>({1, 3})));
 }
 
+#ifdef ENABLE_OPENMP
 TEST_CASE("BasicGWR: multithread basic flow")
 {
     mat londonhp100_coord, londonhp100_data;
@@ -180,3 +181,4 @@ TEST_CASE("BasicGWR: multithread basic flow")
     REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.706143867720706, 1e-8));
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.678982114793865, 1e-8));
 }
+#endif

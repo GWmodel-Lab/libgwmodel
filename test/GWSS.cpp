@@ -133,6 +133,7 @@ TEST_CASE("GWSS: correlation with first variable only")
     REQUIRE(approx_equal(localcorr_q, localcorr_q0, "absdiff", 1e-8));
 }
 
+#ifdef ENABLE_OPENMP
 TEST_CASE("GWSS: multithread basic flow")
 {
     mat londonhp100_coord, londonhp100_data;
@@ -219,3 +220,4 @@ TEST_CASE("GWSS: multithread basic flow")
     mat localscorr_q = quantile(algorithm.localSCorr(), p, 0);
     REQUIRE(approx_equal(localscorr_q, localscorr_q0, "absdiff", 1e-1));
 }
+#endif

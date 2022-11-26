@@ -172,6 +172,7 @@ TEST_CASE("GWDR: basic flow with independent variable selection")
     REQUIRE_THAT(selectedVariables, Catch::Equals(vector<size_t>({1, 2})));
 }
 
+#ifdef ENABLE_OPENMP
 TEST_CASE("GWDR: basic flow (multithread)")
 {
     mat londonhp100_coord, londonhp100_data;
@@ -231,7 +232,9 @@ TEST_CASE("GWDR: basic flow (multithread)")
     REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.7249850738779454, 1e-6));
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.6912744287973307, 1e-6));
 }
+#endif
 
+#ifdef ENABLE_OPENMP
 TEST_CASE("GWDR: basic flow with bandwidth optimization (CV, multithread)")
 {
     mat londonhp100_coord, londonhp100_data;
@@ -269,3 +272,4 @@ TEST_CASE("GWDR: basic flow with bandwidth optimization (CV, multithread)")
     REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(80, 1e-12));
     // REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(2550816, 1e-12));
 }
+#endif

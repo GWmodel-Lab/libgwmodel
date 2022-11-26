@@ -5,6 +5,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Catch2 REQUIRED)
 
+if(ENABLE_OpenMP)
+    add_definitions(-DENABLE_OPENMP)
+endif()
+
+
 include_directories(
     ${LIBGWMODEL_INCLUDE_DIR}
     ${ARMADILLO_INCLUDE_DIRS}
