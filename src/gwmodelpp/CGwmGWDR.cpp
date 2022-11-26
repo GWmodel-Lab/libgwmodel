@@ -5,6 +5,10 @@
 #include <gsl/gsl_multimin.h>
 #include <gsl/gsl_errno.h>
 
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif
+
 GwmRegressionDiagnostic CGwmGWDR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
     vec r = y - sum(betas % x, 1);
