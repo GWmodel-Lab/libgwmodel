@@ -139,7 +139,7 @@ mat CGwmGWDR::predictOmp(const mat& locations, const mat& x, const vec& y)
     mat betas(nVar, nDp, arma::fill::zeros);
     bool success = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (size_t i = 0; i < nDp; i++)
+    for (int i = 0; i < nDp; i++)
     {
         if (success)
         {
@@ -228,7 +228,7 @@ mat CGwmGWDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& q
     mat qdiag_all(nDp, mOmpThreadNum, arma::fill::zeros);
     bool success = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (size_t i = 0; i < nDp; i++)
+    for (int i = 0; i < nDp; i++)
     {
         int thread = omp_get_thread_num();
         if (success)
@@ -404,7 +404,7 @@ double CGwmGWDR::bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& ba
     vec trS_all(mOmpThreadNum, arma::fill::zeros);
     bool success = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (size_t i = 0; i < nDp; i++)
+    for (int i = 0; i < nDp; i++)
     {
         int thread = omp_get_thread_num();
         if (success)
@@ -566,7 +566,7 @@ double CGwmGWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
     {
         vec trS_all(mOmpThreadNum, arma::fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (uword i = 0; i < nDp; i++)
+        for (int i = 0; i < nDp; i++)
         {
             int thread = omp_get_thread_num();
             if (success)
