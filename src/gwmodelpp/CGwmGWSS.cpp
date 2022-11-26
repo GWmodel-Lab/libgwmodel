@@ -192,9 +192,11 @@ void CGwmGWSS::setParallelType(const ParallelType &type)
         case ParallelType::SerialOnly:
             mSummaryFunction = &CGwmGWSS::summarySerial;
             break;
+#ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
             mSummaryFunction = &CGwmGWSS::summaryOmp;
             break;
+#endif
         default:
             mSummaryFunction = &CGwmGWSS::summarySerial;
             break;

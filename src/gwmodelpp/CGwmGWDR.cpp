@@ -612,25 +612,34 @@ double CGwmGWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
 void CGwmGWDR::setBandwidthCriterionType(const BandwidthCriterionType& type)
 {
     mBandwidthCriterionType = type;
-    unordered_map<ParallelType, BandwidthCriterionCalculator> mapper;
-    switch (mBandwidthCriterionType)
+    unordered_map<BandwidthCriterionType, BandwidthCriterionCalculator> mapper;
+    switch (mParallelType)
     {
-    case BandwidthCriterionType::AIC:
+    case ParallelType::SerialOnly:
         mapper = {
-            make_pair(ParallelType::SerialOnly, &CGwmGWDR::bandwidthCriterionAICSerial),
-            make_pair(ParallelType::OpenMP, &CGwmGWDR::bandwidthCriterionAICOmp)
+            make_pair(BandwidthCriterionType::AIC, &CGwmGWDR::bandwidthCriterionAICSerial),
+            make_pair(BandwidthCriterionType::CV, &CGwmGWDR::bandwidthCriterionCVSerial)
         };
         mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionAICSerial;
         break;
+#ifdef ENABLE_OPENMP
+    case ParallelType::OpenMP:
+        mapper = {
+            make_pair(BandwidthCriterionType::AIC, &CGwmGWDR::bandwidthCriterionAICOmp),
+            make_pair(BandwidthCriterionType::CV, &CGwmGWDR::bandwidthCriterionCVOmp)
+        };
+        mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionAICOmp;
+        break;
+#endif
     default:
         mapper = {
-            make_pair(ParallelType::SerialOnly, &CGwmGWDR::bandwidthCriterionCVSerial),
-            make_pair(ParallelType::OpenMP, &CGwmGWDR::bandwidthCriterionCVOmp)
+            make_pair(BandwidthCriterionType::AIC, &CGwmGWDR::bandwidthCriterionAICSerial),
+            make_pair(BandwidthCriterionType::CV, &CGwmGWDR::bandwidthCriterionCVSerial)
         };
-        mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionCVSerial;
+        mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionAICSerial;
         break;
     }
-    mBandwidthCriterionFunction = mapper[mParallelType];
+    mBandwidthCriterionFunction = mapper[mBandwidthCriterionType];
 }
 
 void CGwmGWDR::setParallelType(const ParallelType& type)
@@ -639,11 +648,18 @@ void CGwmGWDR::setParallelType(const ParallelType& type)
     {
         mParallelType = type;
         switch (type) {
+        case ParallelType::SerialOnly:
+            mPredictFunction = &CGwmGWDR::predictSerial;
+            mFitFunction = &CGwmGWDR::fitSerial;
+            mIndepVarCriterionFunction = &CGwmGWDR::indepVarCriterionSerial;
+            break;
+#ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
             mPredictFunction = &CGwmGWDR::predictOmp;
             mFitFunction = &CGwmGWDR::fitOmp;
             mIndepVarCriterionFunction= &CGwmGWDR::indepVarCriterionOmp;
             break;
+#endif
         default:
             mPredictFunction = &CGwmGWDR::predictSerial;
             mFitFunction = &CGwmGWDR::fitSerial;

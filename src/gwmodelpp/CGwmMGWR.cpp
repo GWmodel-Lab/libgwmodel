@@ -410,6 +410,7 @@ vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const int var, mat &S)
     }
     return betas.t();
 }
+
 #ifdef ENABLE_OPENMP
 vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const int var, mat &S)
 {
@@ -459,6 +460,7 @@ vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const int var, mat &S)
     return betas.t();
 }
 #endif
+
 double CGwmMGWR::bandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mCoords.n_rows;
@@ -491,6 +493,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwidt
     }
     else return DBL_MAX;
 }
+
 #ifdef ENABLE_OPENMP
 double CGwmMGWR::bandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
@@ -531,6 +534,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthWe
     else return DBL_MAX;
 }
 #endif
+
 double CGwmMGWR::bandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
@@ -565,6 +569,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwid
     }
     else return DBL_MAX;
 }
+
 #ifdef ENABLE_OPENMP
 double CGwmMGWR::bandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
@@ -608,6 +613,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthW
     else return DBL_MAX;
 }
 #endif
+
 double CGwmMGWR::bandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
@@ -641,6 +647,7 @@ double CGwmMGWR::bandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwidt
     }
     else return DBL_MAX;
 }
+
 #ifdef ENABLE_OPENMP
 double CGwmMGWR::bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
@@ -682,6 +689,7 @@ double CGwmMGWR::bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWe
     else return DBL_MAX;
 }
 #endif
+
 double CGwmMGWR::bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
@@ -717,6 +725,7 @@ double CGwmMGWR::bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwid
     }
     else return DBL_MAX;
 }
+
 #ifdef ENABLE_OPENMP
 double CGwmMGWR::bandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
@@ -825,6 +834,8 @@ void CGwmMGWR::setParallelType(const ParallelType &type)
 //            mRegressionVar = &CGwmMGWR::regressionVarOmp;
 //            break;
         default:
+            mFitAll = &CGwmMGWR::fitAllSerial;
+            mFitVar = &CGwmMGWR::fitVarSerial;
             break;
         }
     }

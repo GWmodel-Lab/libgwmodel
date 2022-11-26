@@ -335,10 +335,12 @@ private:
      */
     void summarySerial();
 
+#ifdef ENABLE_OPENMP
     /**
      * @brief Summary algorithm implemented with OpenMP.
      */
     void summaryOmp();
+#endif
 
 private:
     bool mQuantile = false;             //!< Indicator of whether calculate quantile statistics.
