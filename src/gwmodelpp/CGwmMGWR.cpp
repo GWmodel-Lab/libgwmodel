@@ -6,6 +6,7 @@
 #include <spatialweight/CGwmCRSDistance.h>
 #include "CGwmBandwidthSelector.h"
 #include "CGwmVariableForwardSelector.h"
+#include "GwmLogger.h"
 
 using namespace std;
 
@@ -289,8 +290,11 @@ mat CGwmMGWR::fitAllSerial(const mat& x, const vec& y)
                 mat si = x.row(i) * ci;
                 mS0.row(i) = si;
                 mC.slice(i) = ci;
-            } catch (exception e) {
-                std::cerr << e.what() << '\n';
+            }
+            catch (exception e)
+            {
+                GWM_LOG_ERROR(e.what());
+                throw e;
             }
         }
         mBetasSE = betasSE.t();
@@ -307,40 +311,50 @@ mat CGwmMGWR::fitAllSerial(const mat& x, const vec& y)
             {
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
-            } catch (exception e) {
-                std::cerr << e.what() << '\n';
+            }
+            catch (exception e)
+            {
+                GWM_LOG_ERROR(e.what());
+                throw e;
             }
         }
     }
     return betas.t();
 }
+
 #ifdef ENABLE_OPENMP
 mat CGwmMGWR::fitAllOmp(const mat &x, const vec &y)
 {
     int nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
+    bool success = true;
+    std::exception except;
     if (mHasHatMatrix )
     {
         mat betasSE(nVar, nDp, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-                vec w = mInitSpatialWeight.weightVector(i);
-                mat xtw = trans(x.each_col() % w);
-                mat xtwx = xtw * x;
-                mat xtwy = xtw * y;
-                try
-                {
-                    mat xtwx_inv = inv_sympd(xtwx);
-                    betas.col(i) = xtwx_inv * xtwy;
-                    mat ci = xtwx_inv * xtw;
-                    betasSE.col(i) = sum(ci % ci, 1);
-                    mat si = x.row(i) * ci;
-                    mS0.row(i) = si;
-                    mC.slice(i) = ci;
-                } catch (exception e) {
-                    std::cerr << e.what() << '\n';
-                }
+            vec w = mInitSpatialWeight.weightVector(i);
+            mat xtw = trans(x.each_col() % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                mat ci = xtwx_inv * xtw;
+                betasSE.col(i) = sum(ci % ci, 1);
+                mat si = x.row(i) * ci;
+                mS0.row(i) = si;
+                mC.slice(i) = ci;
+            }
+            catch (exception e)
+            {
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
+            }
         }
         mBetasSE = betasSE.t();
     }
@@ -349,26 +363,37 @@ mat CGwmMGWR::fitAllOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-                vec w = mInitSpatialWeight.weightVector(i);
-                mat xtw = trans(x.each_col() % w);
-                mat xtwx = xtw * x;
-                mat xtwy = xtw * y;
-                try
-                {
-                    mat xtwx_inv = inv_sympd(xtwx);
-                    betas.col(i) = xtwx_inv * xtwy;
-                } catch (exception e) {
-                    std::cerr << e.what() << '\n';
-                }
+            vec w = mInitSpatialWeight.weightVector(i);
+            mat xtw = trans(x.each_col() % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+            }
+            catch (exception e)
+            {
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
+            }
         }
+    }
+    if (!success)
+    {
+        throw except;
     }
     return betas.t();
 }
 #endif
+
 vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const int var, mat &S)
 {
     int nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
+    bool success = true;
+    std::exception except;
     if (mHasHatMatrix )
     {
         mat ci, si;
@@ -386,8 +411,12 @@ vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const int var, mat &S)
                 mat ci = xtwx_inv * xtw;
                 mat si = x(i) * ci;
                 S.row(i) = si;
-            } catch (exception e) {
-                std::cerr << e.what() << '\n';
+            }
+            catch (exception e)
+            {
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
             }
         }
     }
@@ -403,10 +432,18 @@ vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const int var, mat &S)
             {
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
-            } catch (exception e) {
-                std::cerr << e.what() << '\n';
+            }
+            catch (exception e)
+            {
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
             }
         }
+    }
+    if (!success)
+    {
+        throw except;
     }
     return betas.t();
 }
@@ -416,6 +453,8 @@ vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const int var, mat &S)
 {
     int nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
+    bool success = true;
+    std::exception except;
     if (mHasHatMatrix)
     {
         mat ci, si;
@@ -423,20 +462,24 @@ vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const int var, mat &S)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-                vec w = mSpatialWeights[var].weightVector(i);
-                mat xtw = trans(x % w);
-                mat xtwx = xtw * x;
-                mat xtwy = xtw * y;
-                try
-                {
-                    mat xtwx_inv = inv_sympd(xtwx);
-                    betas.col(i) = xtwx_inv * xtwy;
-                    mat ci = xtwx_inv * xtw;
-                    mat si = x(i) * ci;
-                    S.row(i) = si;
-                } catch (exception e) {
-                    std::cerr << e.what() << '\n';
-                }
+            vec w = mSpatialWeights[var].weightVector(i);
+            mat xtw = trans(x % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                mat ci = xtwx_inv * xtw;
+                mat si = x(i) * ci;
+                S.row(i) = si;
+            }
+            catch (exception e)
+            {
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
+            }
         }
     }
     else
@@ -444,18 +487,26 @@ vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const int var, mat &S)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < nDp; i++)
         {
-                vec w = mSpatialWeights[var].weightVector(i);
-                mat xtw = trans(x % w);
-                mat xtwx = xtw * x;
-                mat xtwy = xtw * y;
-                try
-                {
-                    mat xtwx_inv = inv_sympd(xtwx);
-                    betas.col(i) = xtwx_inv * xtwy;
-                } catch (exception e) {
-                    std::cerr << e.what() << '\n';
-                }
+            vec w = mSpatialWeights[var].weightVector(i);
+            mat xtw = trans(x % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+            }
+            catch (exception e)
+            {
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
+            }
         }
+    }
+    if (!success)
+    {
+        throw except;
     }
     return betas.t();
 }
@@ -483,15 +534,11 @@ double CGwmMGWR::bandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwidt
         }
         catch (exception e)
         {
-            std::cerr << e.what() << '\n';
+            GWM_LOG_ERROR(e.what());
             return DBL_MAX;
         }
     }
-    if (isfinite(cv))
-    {
-        return cv;
-    }
-    else return DBL_MAX;
+    return isfinite(cv) ? cv : DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -522,16 +569,12 @@ double CGwmMGWR::bandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthWe
             }
             catch (exception e)
             {
-                std::cerr << e.what() << '\n';
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
     }
-    if (flag)
-    {
-        return sum(cv_all);
-    }
-    else return DBL_MAX;
+    return flag ? sum(cv_all) : DBL_MAX;
 }
 #endif
 
@@ -556,18 +599,14 @@ double CGwmMGWR::bandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwid
             shat(0) += si(0, i);
             shat(1) += det(si * si.t());
         }
-        catch (std::exception e)
+        catch (exception e)
         {
-            std::cerr << e.what() << '\n';
+            GWM_LOG_ERROR(e.what());
             return DBL_MAX;
         }
     }
     double value = CGwmMGWR::AICc(mX, mY, betas.t(), shat);
-    if (isfinite(value))
-    {
-        return value;
-    }
-    else return DBL_MAX;
+    return isfinite(value) ? value : DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -599,7 +638,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthW
             }
             catch (exception e)
             {
-                std::cerr << e.what() << '\n';
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
@@ -637,15 +676,11 @@ double CGwmMGWR::bandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwidt
         }
         catch (exception e)
         {
-            std::cerr << e.what() << '\n';
+            GWM_LOG_ERROR(e.what());
             return DBL_MAX;
         }
     }
-    if (isfinite(cv))
-    {
-        return cv;
-    }
-    else return DBL_MAX;
+    return isfinite(cv) ? cv : DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -677,16 +712,12 @@ double CGwmMGWR::bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWe
             }
             catch (exception e)
             {
-                std::cerr << e.what() << '\n';
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
     }
-    if (flag)
-    {
-        return sum(cv_all);
-    }
-    else return DBL_MAX;
+    return flag ? sum(cv_all) : DBL_MAX;
 }
 #endif
 
@@ -712,18 +743,14 @@ double CGwmMGWR::bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwid
             shat(0) += si(0, i);
             shat(1) += det(si * si.t());
         }
-        catch (std::exception e)
+        catch (exception e)
         {
-            std::cerr << e.what() << '\n';
+            GWM_LOG_ERROR(e.what());
             return DBL_MAX;
         }
     }
     double value = CGwmMGWR::AICc(mXi, mYi, betas.t(), shat);
-    if (isfinite(value))
-    {
-        return value;
-    }
-    else return DBL_MAX;
+    return isfinite(value) ? value : DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -754,9 +781,9 @@ double CGwmMGWR::bandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidthW
                 shat_all(0, thread) += si(0, i);
                 shat_all(1, thread) += det(si * si.t());
             }
-            catch (std::exception e)
+            catch (exception e)
             {
-                std::cerr << e.what() << '\n';
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
@@ -852,11 +879,15 @@ void CGwmMGWR::setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights
 
 void CGwmMGWR::setBandwidthSelectionApproach(const vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach)
 {
-    if(bandwidthSelectionApproach.size() == mX.n_cols){
+    if (bandwidthSelectionApproach.size() == mX.n_cols)
+    {
         mBandwidthSelectionApproach = bandwidthSelectionApproach;
     }
-    else{
-        std::cerr <<"bandwidthSelectionApproach size do not match indepvars" << '\n';
+    else
+    {
+        length_error e("bandwidthSelectionApproach size do not match indepvars");
+        GWM_LOG_ERROR(e.what());
+        throw e;
     }  
 }
 
@@ -865,7 +896,10 @@ void CGwmMGWR::setBandwidthInitilize(const vector<BandwidthInitilizeType> &bandw
     if(bandwidthInitilize.size() == mX.n_cols){
         mBandwidthInitilize = bandwidthInitilize;
     }
-    else{
-        std::cerr <<"BandwidthInitilize size do not match indepvars" << '\n';
+    else
+    {
+        length_error e("BandwidthInitilize size do not match indepvars");
+        GWM_LOG_ERROR(e.what());
+        throw e;
     }   
 }

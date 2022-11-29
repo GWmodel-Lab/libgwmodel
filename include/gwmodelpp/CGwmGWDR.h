@@ -10,7 +10,6 @@
 #include "CGwmVariableForwardSelector.h"
 #include "IGwmParallelizable.h"
 
-using namespace std;
 using namespace arma;
 
 

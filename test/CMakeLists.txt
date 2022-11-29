@@ -54,3 +54,10 @@ add_test(
     NAME testMGWR 
     COMMAND $<TARGET_FILE:testMGWR> --success
 )
+
+add_executable(testLogger Logger.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testLogger PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2)
+add_test(
+    NAME testLogger 
+    COMMAND $<TARGET_FILE:testLogger> --success
+)
