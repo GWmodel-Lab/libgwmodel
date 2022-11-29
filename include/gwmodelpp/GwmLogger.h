@@ -14,10 +14,17 @@
 
 #define GWM_LOG_ERROR(MESSAGE) GwmLogger::logger((MESSAGE), GwmLogger::LogLevel::LOG_ERR, __FUNCTION__, __FILE__)
 
+/**
+ * @brief Logger. Used to pass logging messages to outer logger functions.
+ * To accept messages, set the static member logger to self-defined functions.
+ */
 class GwmLogger
 {
 public:
 
+    /**
+     * @brief Level of logs.
+     */
     enum class LogLevel
     {
         LOG_EMERG = 0, //!< The message says the system is unusable.
@@ -30,7 +37,7 @@ public:
         LOG_DEBUG = 7 //!< The message is only for debugging purposes.
     };
 
-    using Logger = std::function<void(std::string, LogLevel, std::string, std::string)>; //!< Logger type.
+    using Logger = std::function<void (std::string, LogLevel, std::string, std::string)>; //!< Logger type.
 
     static Logger logger;  //!< Logger used to print logging messages.
 
