@@ -96,6 +96,26 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${gwmodel_BINARY_DIR}/bin)
 add_library(gwmodel STATIC ${SOURCES_CXX} ${HEADERS_CXX} ${HEADERS_C})
 set_property(TARGET gwmodel PROPERTY POSITION_INDEPENDENT_CODE ON)
 
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    target_compile_options(gwmodel PRIVATE
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+        -Wall -Werror>
+    $<$<CXX_COMPILER_ID:MSVC>:
+        /W4 /WX>)
+else()
+    target_compile_options(gwmodel PRIVATE
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+        -Wall>
+    $<$<CXX_COMPILER_ID:MSVC>:
+        /W4>)
+endif()
+
+target_compile_options(gwmodel PRIVATE
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+        -Wall>
+    $<$<CXX_COMPILER_ID:MSVC>:
+        /W4>)
+
 target_link_libraries(gwmodel
     ${ARMADILLO_LIBRARIES}
     ${BLAS_LIBRARIES}
