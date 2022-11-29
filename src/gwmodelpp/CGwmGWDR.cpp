@@ -148,7 +148,7 @@ mat CGwmGWDR::predictOmp(const mat& locations, const mat& x, const vec& y)
     bool success = true;
     std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; i < nDp; i++)
+    for (int i = 0; (uword)i < nDp; i++)
     {
         if (success)
         {
@@ -245,7 +245,7 @@ mat CGwmGWDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& q
     bool success = true;
     std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; i < nDp; i++)
+    for (int i = 0; (uword)i < nDp; i++)
     {
         int thread = omp_get_thread_num();
         if (success)
@@ -429,7 +429,7 @@ double CGwmGWDR::bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& ba
     bool success = true;
     std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; i < nDp; i++)
+    for (int i = 0; (uword)i < nDp; i++)
     {
         int thread = omp_get_thread_num();
         if (success)
@@ -533,6 +533,7 @@ double CGwmGWDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
                 }
                 catch (std::exception& e)
                 {
+                    GWM_LOG_ERROR(e.what());
                     success = false;
                 }
             }
@@ -586,7 +587,7 @@ double CGwmGWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
     {
         vec trS_all(mOmpThreadNum, arma::fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (int i = 0; i < nDp; i++)
+        for (int i = 0; (uword)i < nDp; i++)
         {
             int thread = omp_get_thread_num();
             if (success)
@@ -610,6 +611,7 @@ double CGwmGWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
                 }
                 catch (std::exception& e)
                 {
+                    GWM_LOG_ERROR(e.what());
                     success = false;
                 }
             }
@@ -724,15 +726,13 @@ const int CGwmGWDRBandwidthOptimizer::optimize(CGwmGWDR* instance, uword feature
     }
     Parameter params = { instance, &mBandwidths, featureCount };
     gsl_multimin_function function = { criterion_function, nDim, &params };
-    double criterion = DBL_MAX;
     int status = gsl_multimin_fminimizer_set(minimizer, &function, targets, steps);
     if (status == GSL_SUCCESS)
     {
-        int iter = 0;
-        double size = DBL_MAX, size0 = DBL_MAX;
+        size_t iter = 0;
+        double size = DBL_MAX;
         do
         {
-            size0 = size;
             iter++;
             status = gsl_multimin_fminimizer_iterate(minimizer);
             if (status)

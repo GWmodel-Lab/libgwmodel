@@ -73,16 +73,6 @@ vec CGwmCRSDistance::SpatialDistance(const rowvec &out_loc, const mat &in_locs)
     return dists;
 }
 
-CGwmCRSDistance::CGwmCRSDistance() : mParameter(nullptr)
-{
-
-}
-
-CGwmCRSDistance::CGwmCRSDistance(bool isGeographic): mParameter(nullptr), mGeographic(isGeographic)
-{
-    mCalculator = mGeographic ? &SpatialDistance : &EuclideanDistance;
-}
-
 CGwmCRSDistance::CGwmCRSDistance(const CGwmCRSDistance &distance) : CGwmDistance(distance)
 {
     mGeographic = distance.mGeographic;

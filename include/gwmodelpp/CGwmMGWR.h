@@ -39,7 +39,7 @@ public:
 
     typedef double (CGwmMGWR::*BandwidthSizeCriterionFunction)(CGwmBandwidthWeight*);
     typedef mat (CGwmMGWR::*FitAllFunction)(const arma::mat&, const arma::vec&);
-    typedef vec (CGwmMGWR::*FitVarFunction)(const arma::vec&, const arma::vec&, int, mat&);
+    typedef vec (CGwmMGWR::*FitVarFunction)(const arma::vec&, const arma::vec&, const arma::uword, mat&);
     typedef mat (CGwmMGWR::*FitCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
 
 private:
@@ -56,7 +56,7 @@ private:
 
     static double AICc(const mat& x, const mat& y, const mat& betas, const vec& shat)
     {
-        double ss = RSS(x, y, betas), n = x.n_rows;
+        double ss = RSS(x, y, betas), n = (double)x.n_rows;
         return n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
     }
     bool isStoreS()
@@ -100,11 +100,11 @@ public:
     bool hasHatMatrix() const { return mHasHatMatrix; }
     void setHasHatMatrix(bool hasHatMatrix) { mHasHatMatrix = hasHatMatrix; }
 
-    int bandwidthSelectRetryTimes() const {return mBandwidthSelectRetryTimes; }
-    void setBandwidthSelectRetryTimes(int bandwidthSelectRetryTimes) {mBandwidthSelectRetryTimes = bandwidthSelectRetryTimes; }
+    size_t bandwidthSelectRetryTimes() const { return (size_t)mBandwidthSelectRetryTimes; }
+    void setBandwidthSelectRetryTimes(size_t bandwidthSelectRetryTimes) { mBandwidthSelectRetryTimes = (uword)bandwidthSelectRetryTimes; }
 
-    int maxIteration() const { return mMaxIteration; }
-    void setMaxIteration(int maxIteration) { mMaxIteration = maxIteration; }
+    size_t maxIteration() const { return mMaxIteration; }
+    void setMaxIteration(size_t maxIteration) { mMaxIteration = maxIteration; }
 
     BackFittingCriterionType criterionType() const { return mCriterionType; }
     void setCriterionType(const BackFittingCriterionType &criterionType) { mCriterionType = criterionType; }
@@ -157,7 +157,7 @@ public:     // IRegressionAnalysis interface
 
     virtual GwmRegressionDiagnostic diagnostic() const override { return mDiagnostic; }
 
-    mat predict(const mat& coords) override { return mat(); }
+    mat predict(const mat& locations) override { return mat(locations.n_rows, mX.n_cols, arma::fill::zeros); }
 
     mat fit() override;
 
@@ -182,7 +182,7 @@ public:     // IOpenmpParallelable interface
 
 protected:
 
-    CGwmBandwidthWeight* bandwidth(int i)
+    CGwmBandwidthWeight* bandwidth(size_t i)
     {
         return static_cast<CGwmBandwidthWeight*>(mSpatialWeights[i].weight());
     }
@@ -191,9 +191,9 @@ protected:
 
     mat fitAllOmp(const mat& x, const vec& y);
 
-    vec fitVarSerial(const vec& x, const vec& y, const int var, mat& S);
+    vec fitVarSerial(const vec& x, const vec& y, const uword var, mat& S);
 
-    vec fitVarOmp(const vec& x, const vec& y, const int var, mat& S);
+    vec fitVarOmp(const vec& x, const vec& y, const uword var, mat& S);
 
     mat backfitting(const mat &x, const vec &y);
 
@@ -217,16 +217,13 @@ protected:
 
     void createInitialDistanceParameter();
 
-protected:
-    CGwmBandwidthSelector mselector;
-
 private:
     FitAllFunction mFitAll = &CGwmMGWR::fitAllSerial;
     FitVarFunction mFitVar = &CGwmMGWR::fitVarSerial;
 
     CGwmSpatialWeight mInitSpatialWeight;
     BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &CGwmMGWR::bandwidthSizeCriterionAllCVSerial;
-    int mBandwidthSelectionCurrentIndex = 0;
+    size_t mBandwidthSelectionCurrentIndex = 0;
 
 
     vector<BandwidthInitilizeType> mBandwidthInitilize;
@@ -234,7 +231,7 @@ private:
     vector<bool> mPreditorCentered;
     vector<double> mBandwidthSelectThreshold;
     uword mBandwidthSelectRetryTimes = 5;
-    int mMaxIteration = 500;
+    size_t mMaxIteration = 500;
     BackFittingCriterionType mCriterionType = BackFittingCriterionType::dCVR;
     double mCriterionThreshold = 1e-6;
     int mAdaptiveLower = 10;

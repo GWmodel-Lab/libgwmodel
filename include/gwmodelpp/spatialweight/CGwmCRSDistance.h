@@ -73,14 +73,17 @@ private:
 
 public:
 
-    CGwmCRSDistance();
+    CGwmCRSDistance() : mGeographic(false), mParameter(nullptr) {}
 
     /**
      * @brief Construct a new CGwmCRSDistance object
      * 
      * @param isGeographic Whether the coordinate reference system is geographical.
      */
-    explicit CGwmCRSDistance(bool isGeographic);
+    explicit CGwmCRSDistance(bool isGeographic): mGeographic(isGeographic), mParameter(nullptr)
+    {
+        mCalculator = mGeographic ? &SpatialDistance : &EuclideanDistance;
+    }
 
     /**
      * @brief Copy construct a new CGwmCRSDistance object.
@@ -137,8 +140,8 @@ public:
     virtual double minDistance() override;
 
 protected:
-    bool mGeographic = false;
-    unique_ptr<Parameter> mParameter = nullptr;
+    bool mGeographic;
+    unique_ptr<Parameter> mParameter;
 
 private:
     CalculatorType mCalculator = &EuclideanDistance;

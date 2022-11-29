@@ -87,7 +87,6 @@ mat CGwmGWRBasic::fit()
 mat CGwmGWRBasic::predict(const mat& locations)
 {
     createPredictionDistanceParameter(locations);
-    uword nDp = mCoords.n_rows;
     mBetas = (this->*mPredictFunction)(locations, mX, mY);
     return mBetas;
 }
@@ -116,7 +115,7 @@ mat CGwmGWRBasic::predictSerial(const mat& locations, const mat& x, const vec& y
             mat xtwx_inv = inv_sympd(xtwx);
             betas.col(i) = xtwx_inv * xtwy;
         }
-        catch (exception e)
+        catch (const exception& e)
         {
             GWM_LOG_ERROR(e.what());
             throw e;
@@ -153,7 +152,7 @@ mat CGwmGWRBasic::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat,
             qDiag += p % p;
             S.row(isStoreS() ? i : 0) = si;
         }
-        catch (std::exception e)
+        catch (const exception& e)
         {
             GWM_LOG_ERROR(e.what());
             throw e;
@@ -168,7 +167,6 @@ mat CGwmGWRBasic::predictOmp(const mat& locations, const mat& x, const vec& y)
 {
     uword nRp = locations.n_rows, nVar = x.n_cols;
     mat betas(nVar, nRp, arma::fill::zeros);
-    int current = 0;
     bool success = true;
     std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
@@ -176,7 +174,6 @@ mat CGwmGWRBasic::predictOmp(const mat& locations, const mat& x, const vec& y)
     {
         if (success)
         {
-            int thread = omp_get_thread_num();
             vec w = mSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
             mat xtwx = xtw * x;
@@ -186,7 +183,7 @@ mat CGwmGWRBasic::predictOmp(const mat& locations, const mat& x, const vec& y)
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
             }
-            catch (exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 except = e;
@@ -209,7 +206,6 @@ mat CGwmGWRBasic::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, ve
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     mat qDiag_all(nDp, mOmpThreadNum, fill::zeros);
-    int current = 0;
     bool success = true;
     std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
@@ -236,7 +232,7 @@ mat CGwmGWRBasic::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, ve
                 qDiag_all.col(thread) += p % p;
                 S.row(isStoreS() ? i : 0) = si;
             }
-            catch (std::exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 except = e;
@@ -275,7 +271,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwid
             double res = mY(i) - det(mX.row(i) * beta);
             cv += res * res;
         }
-        catch (std::exception e)
+        catch (const exception& e)
         {
             GWM_LOG_ERROR(e.what());
             return DBL_MAX;
@@ -309,7 +305,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwi
             shat(0) += si(0, i);
             shat(1) += det(si * si.t());
         }
-        catch (std::exception e)
+        catch (const exception& e)
         {
             GWM_LOG_ERROR(e.what());
             return DBL_MAX;
@@ -352,7 +348,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthW
                 else
                     flag = false;
             }
-            catch (std::exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 flag = false;
@@ -393,7 +389,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICOmp(CGwmBandwidthWeight* bandwidth
                 shat_all(0, thread) += si(0, i);
                 shat_all(1, thread) += det(si * si.t());
             }
-            catch (std::exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 flag = false;
@@ -436,7 +432,7 @@ double CGwmGWRBasic::indepVarsSelectionCriterionSerial(const vector<size_t>& ind
             shat(0) += si(0, i);
             shat(1) += det(si * si.t());
         }
-        catch (std::exception e)
+        catch (const exception& e)
         {
             GWM_LOG_ERROR(e.what());
             return DBL_MAX;
@@ -474,7 +470,7 @@ double CGwmGWRBasic::indepVarsSelectionCriterionOmp(const vector<size_t>& indepV
                 shat(0, thread) += si(0, i);
                 shat(1, thread) += det(si * si.t());
             }
-            catch (std::exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 flag = false;
