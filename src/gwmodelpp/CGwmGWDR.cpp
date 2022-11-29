@@ -533,6 +533,7 @@ double CGwmGWDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
                 }
                 catch (std::exception& e)
                 {
+                    GWM_LOG_ERROR(e.what());
                     success = false;
                 }
             }
@@ -610,6 +611,7 @@ double CGwmGWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
                 }
                 catch (std::exception& e)
                 {
+                    GWM_LOG_ERROR(e.what());
                     success = false;
                 }
             }

@@ -125,7 +125,7 @@ public: // IGwmRegressionAnalysis
 
     virtual GwmRegressionDiagnostic diagnostic() const override { return mDiagnostic; }
 
-    virtual mat predict(const mat& locations) override { return mat(); }
+    virtual mat predict(const mat& locations) override { return mat(locations.n_rows, mX.n_cols, arma::fill::zeros); }
 
     virtual mat fit() override;
 

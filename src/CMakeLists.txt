@@ -101,20 +101,14 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
         -Wall -Werror>
     $<$<CXX_COMPILER_ID:MSVC>:
-        /W4 /WX>)
+        /W4 /wd4819 /WX>)
 else()
     target_compile_options(gwmodel PRIVATE
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
         -Wall>
     $<$<CXX_COMPILER_ID:MSVC>:
-        /W4>)
+        /W4 /wd4819>)
 endif()
-
-target_compile_options(gwmodel PRIVATE
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-        -Wall>
-    $<$<CXX_COMPILER_ID:MSVC>:
-        /W4>)
 
 target_link_libraries(gwmodel
     ${ARMADILLO_LIBRARIES}

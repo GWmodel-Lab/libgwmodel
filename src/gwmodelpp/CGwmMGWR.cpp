@@ -31,7 +31,7 @@ unordered_map<CGwmMGWR::BackFittingCriterionType,string> CGwmMGWR::BackFittingCr
 GwmRegressionDiagnostic CGwmMGWR::CalcDiagnostic(const mat &x, const vec &y, const mat &S0, double RSS)
 {
     // 诊断信息
-    double nDp = x.n_rows;
+    double nDp = (double)x.n_rows;
     double RSSg = RSS;
     double sigmaHat21 = RSSg / nDp;
     double TSS = sum((y - mean(y)) % (y - mean(y)));
@@ -88,10 +88,11 @@ mat CGwmMGWR::fit()
             mXi = mX.col(i);
             CGwmBandwidthWeight* bw0 = bandwidth(i);
             bool adaptive = bw0->adaptive();
-            mselector.setBandwidth(bw0);
-            mselector.setLower(adaptive ? mAdaptiveLower : 0.0);
-            mselector.setUpper(adaptive ? mCoords.n_rows : mSpatialWeights[i].distance()->maxDistance());
-            CGwmBandwidthWeight* bw = mselector.optimize(this);
+            CGwmBandwidthSelector selector;
+            selector.setBandwidth(bw0);
+            selector.setLower(adaptive ? mAdaptiveLower : 0.0);
+            selector.setUpper(adaptive ? mCoords.n_rows : mSpatialWeights[i].distance()->maxDistance());
+            CGwmBandwidthWeight* bw = selector.optimize(this);
             if (bw)
             {
                 mSpatialWeights[i].setWeight(bw);
@@ -180,11 +181,11 @@ mat CGwmMGWR::backfitting(const mat &x, const vec &y)
                 mXi = mX.col(i);
                 CGwmBandwidthWeight* bwi0 = bandwidth(i);
                 bool adaptive = bwi0->adaptive();
-                CGwmBandwidthSelector mselector;
-                mselector.setBandwidth(bwi0);
-                mselector.setLower(adaptive ? mAdaptiveLower : 0.0);
-                mselector.setUpper(adaptive ? mCoords.n_rows : mSpatialWeights[i].distance()->maxDistance());
-                CGwmBandwidthWeight* bwi = mselector.optimize(this);
+                CGwmBandwidthSelector selector;
+                selector.setBandwidth(bwi0);
+                selector.setLower(adaptive ? mAdaptiveLower : 0.0);
+                selector.setUpper(adaptive ? mCoords.n_rows : mSpatialWeights[i].distance()->maxDistance());
+                CGwmBandwidthWeight* bwi = selector.optimize(this);
                 double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
                 if (abs(bwi1s - bwi0s) > mBandwidthSelectThreshold[i])
                 {
@@ -325,7 +326,7 @@ mat CGwmMGWR::fitAllSerial(const mat& x, const vec& y)
 #ifdef ENABLE_OPENMP
 mat CGwmMGWR::fitAllOmp(const mat &x, const vec &y)
 {
-    int nDp = mCoords.n_rows, nVar = x.n_cols;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     bool success = true;
     std::exception except;
@@ -333,7 +334,7 @@ mat CGwmMGWR::fitAllOmp(const mat &x, const vec &y)
     {
         mat betasSE(nVar, nDp, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (int i = 0; i < nDp; i++)
+        for (int i = 0; (uword)i < nDp; i++)
         {
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
@@ -361,7 +362,7 @@ mat CGwmMGWR::fitAllOmp(const mat &x, const vec &y)
     else
     {
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (int i = 0; i < nDp; i++)
+        for (int i = 0; (uword)i < nDp; i++)
         {
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
@@ -388,17 +389,17 @@ mat CGwmMGWR::fitAllOmp(const mat &x, const vec &y)
 }
 #endif
 
-vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const int var, mat &S)
+vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const size_t var, mat &S)
 {
-    int nDp = mCoords.n_rows;
+    uword nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
     bool success = true;
     std::exception except;
-    if (mHasHatMatrix )
+    if (mHasHatMatrix)
     {
         mat ci, si;
         S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
-        for (int i = 0; i < nDp  ; i++)
+        for (int i = 0; (uword)i < nDp  ; i++)
         {
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
@@ -408,8 +409,8 @@ vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const int var, mat &S)
             {
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
-                mat ci = xtwx_inv * xtw;
-                mat si = x(i) * ci;
+                ci = xtwx_inv * xtw;
+                si = x(i) * ci;
                 S.row(i) = si;
             }
             catch (const exception& e)
@@ -422,7 +423,7 @@ vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const int var, mat &S)
     }
     else
     {
-        for (int i = 0; i < nDp  ; i++)
+        for (int i = 0; (uword)i < nDp  ; i++)
         {
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
@@ -449,9 +450,9 @@ vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const int var, mat &S)
 }
 
 #ifdef ENABLE_OPENMP
-vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const int var, mat &S)
+vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const size_t var, mat &S)
 {
-    int nDp = mCoords.n_rows;
+    uword nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
     bool success = true;
     std::exception except;
@@ -460,7 +461,7 @@ vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const int var, mat &S)
         mat ci, si;
         S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (int i = 0; i < nDp; i++)
+        for (int i = 0; (uword)i < nDp; i++)
         {
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
@@ -470,8 +471,8 @@ vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const int var, mat &S)
             {
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
-                mat ci = xtwx_inv * xtw;
-                mat si = x(i) * ci;
+                ci = xtwx_inv * xtw;
+                si = x(i) * ci;
                 S.row(i) = si;
             }
             catch (const exception& e)
@@ -485,7 +486,7 @@ vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const int var, mat &S)
     else
     {
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (int i = 0; i < nDp; i++)
+        for (int i = 0; (uword)i < nDp; i++)
         {
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
@@ -544,12 +545,12 @@ double CGwmMGWR::bandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwidt
 #ifdef ENABLE_OPENMP
 double CGwmMGWR::bandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
-    int nDp = mCoords.n_rows;
+    uword nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
     vec cv_all(mOmpThreadNum, fill::zeros);
     bool flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; i < nDp; i++)
+    for (int i = 0; (uword)i < nDp; i++)
     {
         if (flag)
         {
@@ -612,12 +613,12 @@ double CGwmMGWR::bandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwid
 #ifdef ENABLE_OPENMP
 double CGwmMGWR::bandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
-    int nDp = mCoords.n_rows, nVar = mX.n_cols;
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; i < nDp; i++)
+    for (int i = 0; (uword)i < nDp; i++)
     {
         if (flag)
         {
@@ -655,7 +656,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthW
 
 double CGwmMGWR::bandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
-    int var = mBandwidthSelectionCurrentIndex;
+    size_t var = mBandwidthSelectionCurrentIndex;
     uword nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
@@ -686,13 +687,13 @@ double CGwmMGWR::bandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwidt
 #ifdef ENABLE_OPENMP
 double CGwmMGWR::bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
-    int var = mBandwidthSelectionCurrentIndex;
-    int nDp = mCoords.n_rows;
+    size_t var = mBandwidthSelectionCurrentIndex;
+    uword nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
     vec cv_all(mOmpThreadNum, fill::zeros);
     bool flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; i < nDp; i++)
+    for (int i = 0; (uword)i < nDp; i++)
     {
         if (flag)
         {
@@ -723,7 +724,7 @@ double CGwmMGWR::bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWe
 
 double CGwmMGWR::bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
-    int var = mBandwidthSelectionCurrentIndex;
+    size_t var = mBandwidthSelectionCurrentIndex;
     uword nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
     vec shat(2, fill::zeros);
@@ -756,13 +757,13 @@ double CGwmMGWR::bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwid
 #ifdef ENABLE_OPENMP
 double CGwmMGWR::bandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
-    int var = mBandwidthSelectionCurrentIndex;
-    int nDp = mCoords.n_rows;
+    size_t var = mBandwidthSelectionCurrentIndex;
+    uword nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; i < nDp; i++)
+    for (int i = 0; (uword)i < nDp; i++)
     {
         if (flag)
         {
