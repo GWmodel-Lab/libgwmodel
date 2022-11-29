@@ -1,7 +1,7 @@
 #include "CGwmGWRBasic.h"
 #include "CGwmBandwidthSelector.h"
 #include "CGwmVariableForwardSelector.h"
-#include <assert.h>
+#include "GwmLogger.h"
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
@@ -118,6 +118,7 @@ mat CGwmGWRBasic::predictSerial(const mat& locations, const mat& x, const vec& y
         }
         catch (exception e)
         {
+            GWM_LOG_ERROR(e.what());
             throw e;
         }
     }
@@ -154,6 +155,7 @@ mat CGwmGWRBasic::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat,
         }
         catch (std::exception e)
         {
+            GWM_LOG_ERROR(e.what());
             throw e;
         }
     }
@@ -186,6 +188,7 @@ mat CGwmGWRBasic::predictOmp(const mat& locations, const mat& x, const vec& y)
             }
             catch (exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 except = e;
                 success = false;
             }
@@ -235,6 +238,7 @@ mat CGwmGWRBasic::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, ve
             }
             catch (std::exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 except = e;
                 success = false;
             }
@@ -271,8 +275,9 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwid
             double res = mY(i) - det(mX.row(i) * beta);
             cv += res * res;
         }
-        catch (...)
+        catch (std::exception e)
         {
+            GWM_LOG_ERROR(e.what());
             return DBL_MAX;
         }
     }
@@ -306,6 +311,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwi
         }
         catch (std::exception e)
         {
+            GWM_LOG_ERROR(e.what());
             return DBL_MAX;
         }
     }
@@ -346,8 +352,9 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthW
                 else
                     flag = false;
             }
-            catch (...)
+            catch (std::exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
@@ -388,6 +395,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICOmp(CGwmBandwidthWeight* bandwidth
             }
             catch (std::exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
@@ -428,8 +436,9 @@ double CGwmGWRBasic::indepVarsSelectionCriterionSerial(const vector<size_t>& ind
             shat(0) += si(0, i);
             shat(1) += det(si * si.t());
         }
-        catch (...)
+        catch (std::exception e)
         {
+            GWM_LOG_ERROR(e.what());
             return DBL_MAX;
         }
     }
@@ -465,8 +474,9 @@ double CGwmGWRBasic::indepVarsSelectionCriterionOmp(const vector<size_t>& indepV
                 shat(0, thread) += si(0, i);
                 shat(1, thread) += det(si * si.t());
             }
-            catch (...)
+            catch (std::exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }

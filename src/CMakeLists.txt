@@ -55,6 +55,7 @@ set(SOURCES_CXX
     gwmodelpp/CGwmGWPCA.cpp
     gwmodelpp/CGwmGWDR.cpp
     gwmodelpp/CGwmMGWR.cpp
+    gwmodelpp/GwmLogger.cpp
 )
 
 set(SOURCES_C
@@ -83,6 +84,7 @@ set(HEADERS_CXX
     ../include/gwmodelpp/CGwmGWPCA.h
     ../include/gwmodelpp/CGwmGWDR.h
     ../include/gwmodelpp/CGwmMGWR.h
+    ../include/gwmodelpp/GwmLogger.h
 )
 
 set(HEADERS_C

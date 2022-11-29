@@ -4,10 +4,13 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multimin.h>
 #include <gsl/gsl_errno.h>
+#include "GwmLogger.h"
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
+
+using namespace std;
 
 GwmRegressionDiagnostic CGwmGWDR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
@@ -130,6 +133,7 @@ mat CGwmGWDR::predictSerial(const mat& locations, const mat& x, const vec& y)
         }
         catch(const std::exception& e)
         {
+            GWM_LOG_ERROR(e.what());
             throw e;
         }
     }
@@ -165,6 +169,7 @@ mat CGwmGWDR::predictOmp(const mat& locations, const mat& x, const vec& y)
             }
             catch(const std::exception& e)
             {
+                GWM_LOG_ERROR(e.what());
                 except = e;
                 success = false;
             }
@@ -217,6 +222,7 @@ mat CGwmGWDR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec
         }
         catch(const std::exception& e)
         {
+            GWM_LOG_ERROR(e.what());
             throw e;
         }
     }
@@ -272,6 +278,7 @@ mat CGwmGWDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& q
             }
             catch(const std::exception& e)
             {
+                GWM_LOG_ERROR(e.what());
                 except = e;
             }
         }
@@ -317,6 +324,7 @@ double CGwmGWDR::bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& 
             }
             catch(const std::exception& e)
             {
+                GWM_LOG_ERROR(e.what());
                 success = false;
             }
         }
@@ -357,6 +365,7 @@ double CGwmGWDR::bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& ban
             }
             catch(const std::exception& e)
             {
+                GWM_LOG_ERROR(e.what());
                 except = e;
                 success = false;
             }
@@ -401,6 +410,7 @@ double CGwmGWDR::bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>&
             }
             catch(const std::exception& e)
             {
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
@@ -444,6 +454,7 @@ double CGwmGWDR::bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& ba
             }
             catch(const std::exception& e)
             {
+                GWM_LOG_ERROR(e.what());
                 except = e;
                 success = false;
             }
@@ -493,6 +504,7 @@ double CGwmGWDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
         }
         catch(const std::exception& e)
         {
+            GWM_LOG_ERROR(e.what());
             success = false;
         }
     }
@@ -565,6 +577,7 @@ double CGwmGWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
         }
         catch(const std::exception& e)
         {
+            GWM_LOG_ERROR(e.what());
             success = false;
         }
         

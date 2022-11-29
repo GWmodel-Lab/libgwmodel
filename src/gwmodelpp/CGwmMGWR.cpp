@@ -6,6 +6,7 @@
 #include <spatialweight/CGwmCRSDistance.h>
 #include "CGwmBandwidthSelector.h"
 #include "CGwmVariableForwardSelector.h"
+#include "GwmLogger.h"
 
 using namespace std;
 
@@ -292,6 +293,7 @@ mat CGwmMGWR::fitAllSerial(const mat& x, const vec& y)
             }
             catch (exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 throw e;
             }
         }
@@ -312,6 +314,7 @@ mat CGwmMGWR::fitAllSerial(const mat& x, const vec& y)
             }
             catch (exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 throw e;
             }
         }
@@ -348,6 +351,7 @@ mat CGwmMGWR::fitAllOmp(const mat &x, const vec &y)
             }
             catch (exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 except = e;
                 success = false;
             }
@@ -370,6 +374,7 @@ mat CGwmMGWR::fitAllOmp(const mat &x, const vec &y)
             }
             catch (exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 except = e;
                 success = false;
             }
@@ -409,6 +414,7 @@ vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const int var, mat &S)
             }
             catch (exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 except = e;
                 success = false;
             }
@@ -429,6 +435,7 @@ vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const int var, mat &S)
             }
             catch (exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 except = e;
                 success = false;
             }
@@ -469,6 +476,7 @@ vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const int var, mat &S)
             }
             catch (exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 except = e;
                 success = false;
             }
@@ -490,6 +498,7 @@ vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const int var, mat &S)
             }
             catch (exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 except = e;
                 success = false;
             }
@@ -525,6 +534,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwidt
         }
         catch (exception e)
         {
+            GWM_LOG_ERROR(e.what());
             return DBL_MAX;
         }
     }
@@ -559,6 +569,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthWe
             }
             catch (exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
@@ -588,8 +599,9 @@ double CGwmMGWR::bandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwid
             shat(0) += si(0, i);
             shat(1) += det(si * si.t());
         }
-        catch (std::exception e)
+        catch (exception e)
         {
+            GWM_LOG_ERROR(e.what());
             return DBL_MAX;
         }
     }
@@ -626,6 +638,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthW
             }
             catch (exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
@@ -663,6 +676,7 @@ double CGwmMGWR::bandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwidt
         }
         catch (exception e)
         {
+            GWM_LOG_ERROR(e.what());
             return DBL_MAX;
         }
     }
@@ -698,6 +712,7 @@ double CGwmMGWR::bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWe
             }
             catch (exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
@@ -728,8 +743,9 @@ double CGwmMGWR::bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwid
             shat(0) += si(0, i);
             shat(1) += det(si * si.t());
         }
-        catch (std::exception e)
+        catch (exception e)
         {
+            GWM_LOG_ERROR(e.what());
             return DBL_MAX;
         }
     }
@@ -765,8 +781,9 @@ double CGwmMGWR::bandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidthW
                 shat_all(0, thread) += si(0, i);
                 shat_all(1, thread) += det(si * si.t());
             }
-            catch (std::exception e)
+            catch (exception e)
             {
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
@@ -868,7 +885,9 @@ void CGwmMGWR::setBandwidthSelectionApproach(const vector<BandwidthSelectionCrit
     }
     else
     {
-        throw std::length_error("bandwidthSelectionApproach size do not match indepvars");
+        length_error e("bandwidthSelectionApproach size do not match indepvars");
+        GWM_LOG_ERROR(e.what());
+        throw e;
     }  
 }
 
@@ -877,7 +896,10 @@ void CGwmMGWR::setBandwidthInitilize(const vector<BandwidthInitilizeType> &bandw
     if(bandwidthInitilize.size() == mX.n_cols){
         mBandwidthInitilize = bandwidthInitilize;
     }
-    else{
-        throw std::length_error("BandwidthInitilize size do not match indepvars");
+    else
+    {
+        length_error e("BandwidthInitilize size do not match indepvars");
+        GWM_LOG_ERROR(e.what());
+        throw e;
     }   
 }
