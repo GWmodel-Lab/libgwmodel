@@ -39,7 +39,7 @@ public:
 
     typedef double (CGwmMGWR::*BandwidthSizeCriterionFunction)(CGwmBandwidthWeight*);
     typedef mat (CGwmMGWR::*FitAllFunction)(const arma::mat&, const arma::vec&);
-    typedef vec (CGwmMGWR::*FitVarFunction)(const arma::vec&, const arma::vec&, const uword, mat&);
+    typedef vec (CGwmMGWR::*FitVarFunction)(const arma::vec&, const arma::vec&, const arma::uword, mat&);
     typedef mat (CGwmMGWR::*FitCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
 
 private:

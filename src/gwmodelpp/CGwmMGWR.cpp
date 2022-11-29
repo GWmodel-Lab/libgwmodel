@@ -389,7 +389,7 @@ mat CGwmMGWR::fitAllOmp(const mat &x, const vec &y)
 }
 #endif
 
-vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const size_t var, mat &S)
+vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const uword var, mat &S)
 {
     uword nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
@@ -450,7 +450,7 @@ vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const size_t var, mat &S)
 }
 
 #ifdef ENABLE_OPENMP
-vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const size_t var, mat &S)
+vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const uword var, mat &S)
 {
     uword nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
