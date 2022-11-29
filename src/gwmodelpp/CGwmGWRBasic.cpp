@@ -167,23 +167,33 @@ mat CGwmGWRBasic::predictOmp(const mat& locations, const mat& x, const vec& y)
     uword nRp = locations.n_rows, nVar = x.n_cols;
     mat betas(nVar, nRp, arma::fill::zeros);
     int current = 0;
+    bool success = true;
+    std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nRp; i++)
     {
-        int thread = omp_get_thread_num();
-        vec w = mSpatialWeight.weightVector(i);
-        mat xtw = trans(x.each_col() % w);
-        mat xtwx = xtw * x;
-        mat xtwy = xtw * y;
-        try
+        if (success)
         {
-            mat xtwx_inv = inv_sympd(xtwx);
-            betas.col(i) = xtwx_inv * xtwy;
+            int thread = omp_get_thread_num();
+            vec w = mSpatialWeight.weightVector(i);
+            mat xtw = trans(x.each_col() % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+            }
+            catch (exception e)
+            {
+                except = e;
+                success = false;
+            }
         }
-        catch (exception e)
-        {
-            throw e;
-        }
+    }
+    if (!success)
+    {
+        throw except;
     }
     return betas.t();
 }
@@ -197,32 +207,42 @@ mat CGwmGWRBasic::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, ve
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     mat qDiag_all(nDp, mOmpThreadNum, fill::zeros);
     int current = 0;
+    bool success = true;
+    std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
-        int thread = omp_get_thread_num();
-        vec w = mSpatialWeight.weightVector(i);
-        mat xtw = trans(x.each_col() % w);
-        mat xtwx = xtw * x;
-        mat xtwy = xtw * y;
-        try
+        if (success)
         {
-            mat xtwx_inv = inv_sympd(xtwx);
-            betas.col(i) = xtwx_inv * xtwy;
-            mat ci = xtwx_inv * xtw;
-            betasSE.col(i) = sum(ci % ci, 1);
-            mat si = x.row(i) * ci;
-            shat_all(0, thread) += si(0, i);
-            shat_all(1, thread) += det(si * si.t());
-            vec p = - si.t();
-            p(i) += 1.0;
-            qDiag_all.col(thread) += p % p;
-            S.row(isStoreS() ? i : 0) = si;
+            int thread = omp_get_thread_num();
+            vec w = mSpatialWeight.weightVector(i);
+            mat xtw = trans(x.each_col() % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                mat ci = xtwx_inv * xtw;
+                betasSE.col(i) = sum(ci % ci, 1);
+                mat si = x.row(i) * ci;
+                shat_all(0, thread) += si(0, i);
+                shat_all(1, thread) += det(si * si.t());
+                vec p = - si.t();
+                p(i) += 1.0;
+                qDiag_all.col(thread) += p % p;
+                S.row(isStoreS() ? i : 0) = si;
+            }
+            catch (std::exception e)
+            {
+                except = e;
+                success = false;
+            }
         }
-        catch (std::exception e)
-        {
-            throw e;
-        }
+    }
+    if (!success)
+    {
+        throw except;
     }
     shat = sum(shat_all, 1);
     qDiag = sum(qDiag_all, 1);

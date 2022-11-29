@@ -130,7 +130,7 @@ mat CGwmGWDR::predictSerial(const mat& locations, const mat& x, const vec& y)
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            throw e;
         }
     }
     return betas.t();
@@ -142,6 +142,7 @@ mat CGwmGWDR::predictOmp(const mat& locations, const mat& x, const vec& y)
     uword nDp = locations.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
     bool success = true;
+    std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
@@ -164,9 +165,14 @@ mat CGwmGWDR::predictOmp(const mat& locations, const mat& x, const vec& y)
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << '\n';
+                except = e;
+                success = false;
             }
         }
+    }
+    if (!success)
+    {
+        throw except;
     }
     return betas.t();
 }
@@ -211,7 +217,7 @@ mat CGwmGWDR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            throw e;
         }
     }
     shat = {sum(s_hat1), sum(s_hat2)};
@@ -231,6 +237,7 @@ mat CGwmGWDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& q
     mat s_hat_all(2, mOmpThreadNum, arma::fill::zeros);
     mat qdiag_all(nDp, mOmpThreadNum, arma::fill::zeros);
     bool success = true;
+    std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
@@ -265,13 +272,13 @@ mat CGwmGWDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& q
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << '\n';
+                except = e;
             }
         }
     }
     if (!success)
     {
-        throw std::runtime_error("[CGwmGWDR::regressionHatmatrixSerial] One or more errors occurred.");
+        throw except;
     }
     shat = sum(s_hat_all, 1);
     qdiag = sum(qdiag_all, 1);
@@ -310,7 +317,6 @@ double CGwmGWDR::bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& 
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << '\n';
                 success = false;
             }
         }
@@ -324,6 +330,7 @@ double CGwmGWDR::bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& ban
     uword nDp = mCoords.n_rows, nDim = mCoords.n_cols;
     vec cv_all(mOmpThreadNum, arma::fill::zeros);
     bool success = true;
+    std::exception except;
     for (size_t i = 0; i < nDp; i++)
     {
         int thread = omp_get_thread_num();
@@ -350,10 +357,14 @@ double CGwmGWDR::bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& ban
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << '\n';
+                except = e;
                 success = false;
             }
         }
+    }
+    if (!success)
+    {
+        throw except;
     }
     double cv = sum(cv_all);
     return success ? cv : DBL_MAX;
@@ -390,7 +401,6 @@ double CGwmGWDR::bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>&
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << '\n';
                 flag = false;
             }
         }
@@ -407,6 +417,7 @@ double CGwmGWDR::bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& ba
     mat betas(nVar, nDp, arma::fill::zeros);
     vec trS_all(mOmpThreadNum, arma::fill::zeros);
     bool success = true;
+    std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < nDp; i++)
     {
@@ -433,12 +444,15 @@ double CGwmGWDR::bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& ba
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << '\n';
+                except = e;
                 success = false;
             }
         }
     }
-    if (!success) return DBL_MAX;
+    if (!success)
+    {
+        return DBL_MAX;
+    }
     double trS = sum(trS_all);
     double value = CGwmGWDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
     return isfinite(value) ? value : DBL_MAX;
@@ -479,10 +493,8 @@ double CGwmGWDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
             success = false;
         }
-        
     }
     else
     {
@@ -509,20 +521,12 @@ double CGwmGWDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
                 }
                 catch (std::exception& e)
                 {
-                    std::cerr << e.what() << '\n';
                     success = false;
                 }
             }
         }
     }
     double value = success ? CGwmGWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
-    // string msg = "Model: " + mDepVar.name + " ~ ";
-    // for (size_t i = 0; i < indepVars.size() - 1; i++)
-    // {
-    //     msg += indepVars[i].name + " + ";
-    // }
-    // msg += indepVars.back().name;
-    // msg += " (AICc Value: " + to_string(value) + ")";
     return isfinite(value) ? value : DBL_MAX;
 }
 
@@ -561,7 +565,6 @@ double CGwmGWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
             success = false;
         }
         
@@ -594,7 +597,6 @@ double CGwmGWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
                 }
                 catch (std::exception& e)
                 {
-                    std::cerr << e.what() << '\n';
                     success = false;
                 }
             }
@@ -602,13 +604,6 @@ double CGwmGWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
         trS = sum(trS_all);
     }
     double value = success ? CGwmGWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
-    // string msg = "Model: " + mDepVar.name + " ~ ";
-    // for (size_t i = 0; i < indepVars.size() - 1; i++)
-    // {
-    //     msg += indepVars[i].name + " + ";
-    // }
-    // msg += indepVars.back().name;
-    // msg += " (AICc Value: " + to_string(value) + ")";
     return isfinite(value) ? value : DBL_MAX;
 }
 #endif
