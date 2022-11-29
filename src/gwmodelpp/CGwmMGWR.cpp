@@ -230,7 +230,7 @@ bool CGwmMGWR::isValid()
     if (!(mX.n_cols > 0))
         return false;
 
-    int nVar = mX.n_cols;
+    size_t nVar = mX.n_cols;
 
     if (mSpatialWeights.size() != nVar)
         return false;
@@ -247,7 +247,7 @@ bool CGwmMGWR::isValid()
     if (mBandwidthSelectThreshold.size() != nVar)
         return false;
 
-    for (int i = 0; i < nVar; i++)
+    for (size_t i = 0; i < nVar; i++)
     {
         CGwmBandwidthWeight* bw = mSpatialWeights[i].weight<CGwmBandwidthWeight>();
         if (mBandwidthInitilize[i] == CGwmMGWR::Specified || mBandwidthInitilize[i] == CGwmMGWR::Initial)
@@ -275,7 +275,7 @@ mat CGwmMGWR::fitAllSerial(const mat& x, const vec& y)
     if (mHasHatMatrix )
     {
         mat betasSE(nVar, nDp, fill::zeros);
-        for (int i = 0; i < nDp ; i++)
+        for (int i = 0; (uword)i < nDp ; i++)
         {
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
@@ -291,7 +291,7 @@ mat CGwmMGWR::fitAllSerial(const mat& x, const vec& y)
                 mS0.row(i) = si;
                 mC.slice(i) = ci;
             }
-            catch (exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 throw e;
@@ -301,7 +301,7 @@ mat CGwmMGWR::fitAllSerial(const mat& x, const vec& y)
     }
     else
     {
-        for (int i = 0; i < nDp ; i++)
+        for (int i = 0; (uword)i < nDp ; i++)
         {
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
@@ -312,7 +312,7 @@ mat CGwmMGWR::fitAllSerial(const mat& x, const vec& y)
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
             }
-            catch (exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 throw e;
@@ -349,7 +349,7 @@ mat CGwmMGWR::fitAllOmp(const mat &x, const vec &y)
                 mS0.row(i) = si;
                 mC.slice(i) = ci;
             }
-            catch (exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 except = e;
@@ -372,7 +372,7 @@ mat CGwmMGWR::fitAllOmp(const mat &x, const vec &y)
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
             }
-            catch (exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 except = e;
@@ -412,7 +412,7 @@ vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const int var, mat &S)
                 mat si = x(i) * ci;
                 S.row(i) = si;
             }
-            catch (exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 except = e;
@@ -433,7 +433,7 @@ vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const int var, mat &S)
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
             }
-            catch (exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 except = e;
@@ -474,7 +474,7 @@ vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const int var, mat &S)
                 mat si = x(i) * ci;
                 S.row(i) = si;
             }
-            catch (exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 except = e;
@@ -496,7 +496,7 @@ vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const int var, mat &S)
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
             }
-            catch (exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 except = e;
@@ -532,7 +532,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwidt
             double res = mY(i) - det(mX.row(i) * beta);
             cv += res * res;
         }
-        catch (exception e)
+        catch (const exception& e)
         {
             GWM_LOG_ERROR(e.what());
             return DBL_MAX;
@@ -567,7 +567,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthWe
                 double res = mY(i) - det(mX.row(i) * beta);
                 cv_all(thread) += res * res;
             }
-            catch (exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 flag = false;
@@ -599,7 +599,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwid
             shat(0) += si(0, i);
             shat(1) += det(si * si.t());
         }
-        catch (exception e)
+        catch (const exception& e)
         {
             GWM_LOG_ERROR(e.what());
             return DBL_MAX;
@@ -636,7 +636,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthW
                 shat_all(0, thread) += si(0, i);
                 shat_all(1, thread) += det(si * si.t());
             }
-            catch (exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 flag = false;
@@ -674,7 +674,7 @@ double CGwmMGWR::bandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwidt
             double res = mYi(i) - det(mXi(i) * beta);
             cv += res * res;
         }
-        catch (exception e)
+        catch (const exception& e)
         {
             GWM_LOG_ERROR(e.what());
             return DBL_MAX;
@@ -710,7 +710,7 @@ double CGwmMGWR::bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWe
                 double res = mYi(i) - det(mXi(i) * beta);
                 cv_all(thread) += res * res;
             }
-            catch (exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 flag = false;
@@ -724,7 +724,7 @@ double CGwmMGWR::bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWe
 double CGwmMGWR::bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
-    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
+    uword nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp ; i++)
@@ -743,7 +743,7 @@ double CGwmMGWR::bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwid
             shat(0) += si(0, i);
             shat(1) += det(si * si.t());
         }
-        catch (exception e)
+        catch (const exception& e)
         {
             GWM_LOG_ERROR(e.what());
             return DBL_MAX;
@@ -757,7 +757,7 @@ double CGwmMGWR::bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwid
 double CGwmMGWR::bandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
-    int nDp = mCoords.n_rows, nVar = mX.n_cols;
+    int nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -781,7 +781,7 @@ double CGwmMGWR::bandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidthW
                 shat_all(0, thread) += si(0, i);
                 shat_all(1, thread) += det(si * si.t());
             }
-            catch (exception e)
+            catch (const exception& e)
             {
                 GWM_LOG_ERROR(e.what());
                 flag = false;

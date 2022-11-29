@@ -5,14 +5,14 @@
 #include <omp.h>
 #endif
 
-vec CGwmGWSS::del(vec x, int rowcount){
+vec CGwmGWSS::del(vec x, uword rowcount){
     vec res;
-    if(rowcount == 0)
-        res = x.rows(rowcount+1,x.n_rows-1);
-    else if(rowcount == x.n_rows-1)
+    if (rowcount == 0)
+        res = x.rows(rowcount + 1, x.n_rows - 1);
+    else if (rowcount == x.n_rows - 1)
         res = x.rows(0,x.n_rows-2);
     else
-        res = join_cols(x.rows(0,rowcount - 1),x.rows(rowcount+1,x.n_rows-1));
+        res = join_cols(x.rows(0,rowcount - 1),x.rows(rowcount + 1, x.n_rows - 1));
     return res;
 }
 
@@ -139,7 +139,6 @@ void CGwmGWSS::summaryOmp()
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nRp; i++)
     {
-        int thread = omp_get_thread_num();
         vec w = mSpatialWeight.weightVector(i);
         double sumw = sum(w);
         vec Wi = w / sumw;

@@ -84,7 +84,7 @@ public:
         return covwt(x1,x2,w)/sqrt(covwt(x1,x1,w)*covwt(x2,x2,w));
     }
 
-    static vec del(vec x,int rowcount);
+    static vec del(vec x, uword rowcount);
 
     static vec rank(vec x)
     {
