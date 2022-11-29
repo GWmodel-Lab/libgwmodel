@@ -24,7 +24,8 @@ void CGwmDMatDistance::makeParameter(initializer_list<DistParamVariant> plist)
 
 vec CGwmDMatDistance::distance(uword focus)
 {
-    if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
+    if (mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
+    if (focus >= mParameter->total) throw std::runtime_error("Index exceeds ranges.");
     // QFile dmat(mDMatFile);
     // if (focus < mTotal && dmat.open(QFile::QIODevice::ReadOnly))
     // {
