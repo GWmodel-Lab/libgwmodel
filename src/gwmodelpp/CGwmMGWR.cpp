@@ -167,7 +167,7 @@ mat CGwmMGWR::backfitting(const mat &x, const vec &y)
     vec resid = y - Fitted(x, betas);
     double RSS0 = sum(resid % resid), RSS1 = DBL_MAX;
     double criterion = DBL_MAX;
-    for (int iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold; iteration++)
+    for (size_t iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold; iteration++)
     {
         for (uword i = 0; i < nVar  ; i++)
         {
