@@ -35,7 +35,7 @@ vector<size_t> CGwmVariableForwardSelector::optimize(IGwmVarialbeSelectable *ins
 std::vector<std::size_t> CGwmVariableForwardSelector::convertIndexToVariables(std::vector<std::size_t> index)
 {
     vector<size_t> variables;
-    for (int i : index)
+    for (size_t i : index)
         variables.push_back(mVariables[i]);
     return variables;
 }
@@ -72,7 +72,7 @@ VariablesCriterionList CGwmVariableForwardSelector::indepVarsCriterion() const
     for (pair<vector<size_t>, double> item : mVarsCriterion)
     {
         vector<size_t> variables;
-        for (int i : item.first)
+        for (size_t i : item.first)
         {
             variables.push_back(mVariables[i]);
         }

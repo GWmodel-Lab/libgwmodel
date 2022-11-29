@@ -74,7 +74,7 @@ TEST_CASE("BasicGWR: adaptive bandwidth autoselection of with CV")
     
     REQUIRE_NOTHROW(algorithm.fit());
 
-    int bw = algorithm.spatialWeight().weight<CGwmBandwidthWeight>()->bandwidth();
+    size_t bw = (size_t)algorithm.spatialWeight().weight<CGwmBandwidthWeight>()->bandwidth();
     REQUIRE(bw == 67);
 }
 
