@@ -5,6 +5,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Catch2 REQUIRED)
 
+if(ENABLE_OpenMP)
+    add_definitions(-DENABLE_OPENMP)
+endif()
+
+
 include_directories(
     ${LIBGWMODEL_INCLUDE_DIR}
     ${ARMADILLO_INCLUDE_DIRS}
@@ -43,9 +48,23 @@ add_test(
     COMMAND $<TARGET_FILE:testGWDR> --success
 )
 
+add_executable(testMGWR MGWR.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testMGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2)
+add_test(
+    NAME testMGWR 
+    COMMAND $<TARGET_FILE:testMGWR> --success
+)
+
+add_executable(testLogger Logger.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testLogger PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2)
+add_test(
+    NAME testLogger 
+    COMMAND $<TARGET_FILE:testLogger> --success
+    
 add_executable(testRobustGWR RobustGWR.cpp ${SAMPL_LONDONHP100})
 target_link_libraries(testRobustGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2)
 add_test(
     NAME testRobustGWR
     COMMAND $<TARGET_FILE:testRobustGWR> --success
+
 )

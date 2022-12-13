@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.12)
 
 find_package(OpenMP)
 if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
-    SET (ENABLE_OpenMP TRUE CACHE BOOL "Determines whether OpemMP support should be built")
     if(ENABLE_OpenMP)
         add_definitions(-DENABLE_OPENMP)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -45,17 +44,18 @@ set(SOURCES_CXX
     gwmodelpp/spatialweight/CGwmSpatialWeight.cpp
     gwmodelpp/spatialweight/CGwmWeight.cpp
 
-    gwmodelpp/CGwmAlgorithm.cpp
     gwmodelpp/CGwmBandwidthSelector.cpp
     gwmodelpp/CGwmVariableForwardSelector.cpp
-    gwmodelpp/CGwmSimpleLayer.cpp
     gwmodelpp/CGwmSpatialAlgorithm.cpp
     gwmodelpp/CGwmSpatialMonoscaleAlgorithm.cpp
+    gwmodelpp/CGwmSpatialMultiscaleAlgorithm.cpp
     gwmodelpp/CGwmGWRBase.cpp
     gwmodelpp/CGwmGWRBasic.cpp
     gwmodelpp/CGwmGWSS.cpp
     gwmodelpp/CGwmGWPCA.cpp
     gwmodelpp/CGwmGWDR.cpp
+    gwmodelpp/CGwmMGWR.cpp
+    gwmodelpp/GwmLogger.cpp
     gwmodelpp/CGwmRobustGWR.cpp
 )
 
@@ -76,14 +76,16 @@ set(HEADERS_CXX
     ../include/gwmodelpp/CGwmAlgorithm.h
     ../include/gwmodelpp/CGwmBandwidthSelector.h
     ../include/gwmodelpp/CGwmVariableForwardSelector.h
-    ../include/gwmodelpp/CGwmSimpleLayer.h
     ../include/gwmodelpp/CGwmSpatialAlgorithm.h
     ../include/gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h
+    ../include/gwmodelpp/CGwmSpatialMultiscaleAlgorithm.h
     ../include/gwmodelpp/CGwmGWRBase.h
     ../include/gwmodelpp/CGwmGWRBasic.h
     ../include/gwmodelpp/CGwmGWSS.h
     ../include/gwmodelpp/CGwmGWPCA.h
     ../include/gwmodelpp/CGwmGWDR.h
+    ../include/gwmodelpp/CGwmMGWR.h
+    ../include/gwmodelpp/GwmLogger.h
     ../include/gwmodelpp/CGwmRobustGWR.h
 )
 
@@ -95,6 +97,20 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${gwmodel_BINARY_DIR}/bin)
 
 add_library(gwmodel STATIC ${SOURCES_CXX} ${HEADERS_CXX} ${HEADERS_C})
 set_property(TARGET gwmodel PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    target_compile_options(gwmodel PRIVATE
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+        -Wall -Werror>
+    $<$<CXX_COMPILER_ID:MSVC>:
+        /W4 /wd4819 /WX>)
+else()
+    target_compile_options(gwmodel PRIVATE
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+        -Wall>
+    $<$<CXX_COMPILER_ID:MSVC>:
+        /W4 /wd4819>)
+endif()
 
 target_link_libraries(gwmodel
     ${ARMADILLO_LIBRARIES}

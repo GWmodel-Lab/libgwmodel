@@ -10,27 +10,15 @@
 #include "CGwmVariableForwardSelector.h"
 #include "IGwmParallelizable.h"
 
-using namespace std;
 using namespace arma;
 
 
 class CGwmGWDR : public CGwmSpatialAlgorithm, public IGwmRegressionAnalysis, public IGwmVarialbeSelectable, public IGwmOpenmpParallelizable
 {
 public:
-    typedef mat (CGwmGWDR::*RegressionCalculator)(const mat&, const vec&);
+    typedef mat (CGwmGWDR::*PredictCalculator)(const mat&, const mat&, const vec&);
 
-    typedef mat (CGwmGWDR::*RegressionHatmatrixCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
-
-
-    enum NameFormat
-    {
-        Fixed,
-        VarName,
-        PrefixVarName,
-        SuffixVariable
-    };
-
-    typedef tuple<string, mat, NameFormat> ResultLayerDataItem;
+    typedef mat (CGwmGWDR::*FitCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
 
     enum BandwidthCriterionType
     {
@@ -40,7 +28,7 @@ public:
 
     typedef double (CGwmGWDR::*BandwidthCriterionCalculator)(const vector<CGwmBandwidthWeight*>&);
 
-    typedef double (CGwmGWDR::*IndepVarCriterionCalculator)(const vector<GwmVariable>&);
+    typedef double (CGwmGWDR::*IndepVarCriterionCalculator)(const vector<size_t>&);
 
 public:
     static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
@@ -63,113 +51,93 @@ public:
     }
 
 public:
-    mat betas() const
-    {
-        return mBetas;
-    }
+    CGwmGWDR() {}
 
-    bool hasHatMatrix() const
+    CGwmGWDR(const mat& x, const vec& y, const mat& coords, const vector<CGwmSpatialWeight>& spatialWeights, bool hasHatMatrix = true, bool hasIntercept = true)
+        : CGwmSpatialAlgorithm(coords)
     {
-        return mHasHatMatrix;
-    }
-
-    void setHasHatMatrix(bool flag)
-    {
-        mHasHatMatrix = flag;
-    }
-
-    vector<CGwmSpatialWeight> spatialWeights()
-    {
-        return mSpatialWeights;
-    }
-
-    void setSpatialWeights(vector<CGwmSpatialWeight> spatialWeights)
-    {
+        mX = x;
+        mY = y;
         mSpatialWeights = spatialWeights;
+        mHasHatMatrix = hasHatMatrix;
+        mHasIntercept = hasIntercept;
     }
 
-    bool enableBandwidthOptimize()
-    {
-        return mEnableBandwidthOptimize;
-    }
+    virtual ~CGwmGWDR() {}
 
-    void setEnableBandwidthOptimize(bool flag)
-    {
-        mEnableBandwidthOptimize = flag;
-    }
+public:
+    mat betas() const { return mBetas; }
 
-    BandwidthCriterionType bandwidthCriterionType() const
-    {
-        return mBandwidthCriterionType;
-    }
+    bool hasHatMatrix() const { return mHasHatMatrix; }
+
+    void setHasHatMatrix(bool flag) { mHasHatMatrix = flag; }
+
+    vector<CGwmSpatialWeight> spatialWeights() { return mSpatialWeights; }
+
+    void setSpatialWeights(vector<CGwmSpatialWeight> spatialWeights) { mSpatialWeights = spatialWeights; }
+
+    bool enableBandwidthOptimize() { return mEnableBandwidthOptimize; }
+
+    void setEnableBandwidthOptimize(bool flag) { mEnableBandwidthOptimize = flag; }
+
+    double bandwidthOptimizeEps() const { return mBandwidthOptimizeEps; }
+
+    void setBandwidthOptimizeEps(double value) { mBandwidthOptimizeEps = value; }
+
+    size_t bandwidthOptimizeMaxIter() const { return mBandwidthOptimizeMaxIter; }
+
+    void setBandwidthOptimizeMaxIter(size_t value) { mBandwidthOptimizeMaxIter = value; }
+
+    double bandwidthOptimizeStep() const { return mBandwidthOptimizeStep; }
+
+    void setBandwidthOptimizeStep(double value) { mBandwidthOptimizeStep = value; }
+
+    BandwidthCriterionType bandwidthCriterionType() const { return mBandwidthCriterionType; }
 
     void setBandwidthCriterionType(const BandwidthCriterionType& type);
 
-    bool enableIndpenVarSelect() const
-    {
-        return mEnableIndepVarSelect;
-    }
+    bool enableIndpenVarSelect() const { return mEnableIndepVarSelect; }
 
-    void setEnableIndepVarSelect(bool flag)
-    {
-        mEnableIndepVarSelect = flag;
-    }
+    void setEnableIndepVarSelect(bool flag) { mEnableIndepVarSelect = flag; }
 
-    VariablesCriterionList indepVarCriterionList() const
-    {
-        return mIndepVarCriterionList;
-    }
+    VariablesCriterionList indepVarCriterionList() const { return mIndepVarCriterionList; }
+
+    arma::mat betasSE() { return mBetasSE; }
+
+    arma::vec sHat() { return mSHat; }
+
+    arma::vec qDiag() { return mQDiag; }
+
+    arma::mat s() { return mS; }
 
 public: // CGwmAlgorithm
-    void run();
-    bool isValid()
-    {
-        // [TODO]: Add actual check codes.
-        return true;
-    }
+    bool isValid() override;
 
 public: // IGwmRegressionAnalysis
-    GwmVariable dependentVariable() const
-    {
-        return mDepVar;
-    }
+    virtual arma::vec dependentVariable() const override { return mY; }
+    virtual void setDependentVariable(const arma::vec& y) override { mY = y; }
 
-    void setDependentVariable(const GwmVariable& variable)
-    {
-        mDepVar = variable;
-    }
+    virtual arma::mat independentVariables() const override { return mX; }
+    virtual void setIndependentVariables(const arma::mat& x) override { mX = x; }
 
-    vector<GwmVariable> independentVariables() const
-    {
-        return mIndepVars;
-    }
+    virtual bool hasIntercept() const override { return mHasIntercept; }
+    virtual void setHasIntercept(const bool has) override { mHasIntercept = has; }
 
-    void setIndependentVariables(const vector<GwmVariable>& variables)
-    {
-        mIndepVars = variables;
-    }
+    virtual GwmRegressionDiagnostic diagnostic() const override { return mDiagnostic; }
 
-public:  // IRgressionAnalysis
+    virtual mat predict(const mat& locations) override { return mat(locations.n_rows, mX.n_cols, arma::fill::zeros); }
 
-    mat regression(const mat& x, const vec& y)
-    {
-        return (this->*mRegressionFunction)(x, y);
-    }
-
-    mat regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
-    {
-        return (this->*mRegressionHatmatrixFunction)(x, y, betasSE, shat, qdiag, S);
-    }
-
-    GwmRegressionDiagnostic diagnostic() const
-    {
-        return mDiagnostic;
-    }
+    virtual mat fit() override;
 
 public:  // IGwmVariableSelectable
-    double getCriterion(const vector<GwmVariable>& variables) override
+    double getCriterion(const vector<size_t>& variables) override
     {
         return (this->*mIndepVarCriterionFunction)(variables);
+    }
+
+    std::vector<std::size_t> selectedVariables() override
+    {
+        return mSelectedIndepVars;
     }
 
 public:  // IGwmOpenmpParallelizable
@@ -202,28 +170,25 @@ public:
     }
 
 protected:
-    mat regressionSerial(const mat& x, const vec& y);
-    mat regressionOmp(const mat& x, const vec& y);
-    mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
-    mat regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
+    mat predictSerial(const mat& locations, const mat& x, const vec& y);
+    mat predictOmp(const mat& locations, const mat& x, const vec& y);
+    mat fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
+    mat fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
 
-    double bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
-    double bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& bandwidths);
     double bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
+    double bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
+    double indepVarCriterionSerial(const vector<size_t>& indepVars);
+
+#ifdef ENABLE_OPENMP
     double bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& bandwidths);
-
-    double indepVarCriterionSerial(const vector<GwmVariable>& indepVars);
-    double indepVarCriterionOmp(const vector<GwmVariable>& indepVars);
-
-protected:
-    void createResultLayer(initializer_list<ResultLayerDataItem> items);
+    double bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& bandwidths);
+    double indepVarCriterionOmp(const vector<size_t>& indepVars);
+#endif
 
 private:
-    void setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmVariable& depVar, const vector<GwmVariable>& indepVars);
-
     bool isStoreS()
     {
-        return mHasHatMatrix && (mSourceLayer->featureCount() < 8192);
+        return mHasHatMatrix && (mCoords.n_rows < 8192);
     }
 
 private:
@@ -232,25 +197,33 @@ private:
     vec mY;
     mat mX;
     mat mBetas;
-    GwmVariable mDepVar;
-    vector<GwmVariable> mIndepVars;
-    bool mHasHatMatrix;
+    bool mHasIntercept = true;
+    bool mHasHatMatrix = true;
     GwmRegressionDiagnostic mDiagnostic;
 
-    RegressionCalculator mRegressionFunction = &CGwmGWDR::regressionSerial;
-    RegressionHatmatrixCalculator mRegressionHatmatrixFunction = &CGwmGWDR::regressionHatmatrixSerial;
+    PredictCalculator mPredictFunction = &CGwmGWDR::predictSerial;
+    FitCalculator mFitFunction = &CGwmGWDR::fitSerial;
 
     bool mEnableBandwidthOptimize = false;
     BandwidthCriterionType mBandwidthCriterionType = BandwidthCriterionType::CV;
     BandwidthCriterionCalculator mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionCVSerial;
+    double mBandwidthOptimizeEps = 1e-6;
+    size_t mBandwidthOptimizeMaxIter = 100000;
+    double mBandwidthOptimizeStep = 0.01;
 
     bool mEnableIndepVarSelect = false;
     double mIndepVarSelectThreshold = 3.0;
     VariablesCriterionList mIndepVarCriterionList;
     IndepVarCriterionCalculator mIndepVarCriterionFunction = &CGwmGWDR::indepVarCriterionSerial;
+    std::vector<std::size_t> mSelectedIndepVars;
 
     ParallelType mParallelType = ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
+
+    arma::mat mBetasSE;
+    arma::vec mSHat;
+    arma::vec mQDiag;
+    arma::mat mS;
 };
 
 
@@ -272,7 +245,7 @@ public:
         mBandwidths = weights;
     }
 
-    const int optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps);
+    const int optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps, double step);
 
 private:
     vector<CGwmBandwidthWeight*> mBandwidths;

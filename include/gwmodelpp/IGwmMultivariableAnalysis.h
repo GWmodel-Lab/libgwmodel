@@ -1,10 +1,7 @@
 #ifndef IGWMMULTIVARIABLEANALYSIS_H
 #define IGWMMULTIVARIABLEANALYSIS_H
 
-#include <vector>
-#include "GwmVariable.h"
-
-using namespace std;
+#include <armadillo>
 
 /**
  * @interface IGwmMultivariableAnalysis
@@ -25,14 +22,20 @@ struct IGwmMultivariableAnalysis
      * 
      * @return Vector of variables.
      */
-    virtual vector<GwmVariable> variables() const = 0;
+    virtual mat variables() const = 0;
 
     /**
      * @brief Set variables.
      * 
      * @param variables Vector of variables.
      */
-    virtual void setVariables(const vector<GwmVariable>& variables) = 0;
+    virtual void setVariables(const mat& x) = 0;
+
+    /**
+     * @brief Run analysis algorithm.
+     * 
+     */
+    virtual void run() = 0;
 };
 
 

@@ -3,33 +3,20 @@
 #include <armadillo>
 
 using namespace arma;
+using namespace std;
 
-CGwmVariableForwardSelector::CGwmVariableForwardSelector()
+vector<size_t> CGwmVariableForwardSelector::optimize(IGwmVarialbeSelectable *instance)
 {
-}
-
-CGwmVariableForwardSelector::CGwmVariableForwardSelector(const vector<GwmVariable>& variables, double threshold)
-    : mVariables(variables)
-    , mThreshold(threshold)
-{
-}
-
-CGwmVariableForwardSelector::~CGwmVariableForwardSelector()
-{
-}
-
-vector<GwmVariable> CGwmVariableForwardSelector::optimize(IGwmVarialbeSelectable *instance)
-{
-    vector<int> curIndex, restIndex;
-    for (int i = 0; i < mVariables.size(); i++)
+    vector<size_t> curIndex, restIndex;
+    for (size_t i = 0; i < mVariables.size(); i++)
     {
         restIndex.push_back(i);
     }
-    vector<pair<vector<int>, double> > modelCriterions;
-    for (int i = 0; i < mVariables.size(); i++)
+    vector<pair<vector<size_t>, double> > modelCriterions;
+    for (size_t i = 0; i < mVariables.size(); i++)
     {
         vec criterions = vec(mVariables.size() - i);
-        for (int j = 0; j < restIndex.size(); j++)
+        for (size_t j = 0; j < restIndex.size(); j++)
         {
             curIndex.push_back(restIndex[j]);
             double aic = instance->getCriterion(convertIndexToVariables(curIndex));
@@ -45,21 +32,21 @@ vector<GwmVariable> CGwmVariableForwardSelector::optimize(IGwmVarialbeSelectable
     return convertIndexToVariables(select(mVarsCriterion).first);
 }
 
-vector<GwmVariable> CGwmVariableForwardSelector::convertIndexToVariables(vector<int> index)
+std::vector<std::size_t> CGwmVariableForwardSelector::convertIndexToVariables(std::vector<std::size_t> index)
 {
-    vector<GwmVariable> variables;
-    for (int i : index)
+    vector<size_t> variables;
+    for (size_t i : index)
         variables.push_back(mVariables[i]);
     return variables;
 }
 
-vector<pair<vector<int>, double> > CGwmVariableForwardSelector::sort(vector<pair<vector<int>, double> > models)
+vector<pair<vector<size_t>, double> > CGwmVariableForwardSelector::sort(vector<pair<vector<size_t>, double> > models)
 {
     size_t tag = 0;
-    vector<int> sortIndex;
+    vector<size_t> sortIndex;
     for (size_t i = mVariables.size(); i > 0; i--)
     {
-        std::sort(models.begin() + tag, models.begin() + tag + i, [](const pair<vector<int>, double>& left, const pair<vector<int>, double>& right){
+        std::sort(models.begin() + tag, models.begin() + tag + i, [](const pair<vector<size_t>, double>& left, const pair<vector<size_t>, double>& right){
             return left.second > right.second;
         });
         tag += i;
@@ -67,7 +54,7 @@ vector<pair<vector<int>, double> > CGwmVariableForwardSelector::sort(vector<pair
     return models;
 }
 
-pair<vector<int>, double> CGwmVariableForwardSelector::select(vector<pair<vector<int>, double> > models)
+pair<vector<size_t>, double> CGwmVariableForwardSelector::select(vector<pair<vector<size_t>, double> > models)
 {
     for (size_t i = models.size() - 1; i >= 0; i--)
     {
@@ -79,13 +66,13 @@ pair<vector<int>, double> CGwmVariableForwardSelector::select(vector<pair<vector
     return models.back();
 }
 
-vector<pair<vector<GwmVariable>, double> > CGwmVariableForwardSelector::indepVarsCriterion() const
+VariablesCriterionList CGwmVariableForwardSelector::indepVarsCriterion() const
 {
-    vector<pair<vector<GwmVariable>, double> > criterions;
-    for (pair<vector<int>, double> item : mVarsCriterion)
+    VariablesCriterionList criterions;
+    for (pair<vector<size_t>, double> item : mVarsCriterion)
     {
-        vector<GwmVariable> variables;
-        for (int i : item.first)
+        vector<size_t> variables;
+        for (size_t i : item.first)
         {
             variables.push_back(mVariables[i]);
         }

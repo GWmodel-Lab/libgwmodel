@@ -2,16 +2,20 @@
 #define IGWMVARIALBESELECTABLE_H
 
 #include <vector>
-#include "GwmVariable.h"
-
-using namespace std;
 
 struct IGwmVarialbeSelectable
 {
-    virtual double getCriterion(const vector<GwmVariable>& variables) = 0;
+    virtual double getCriterion(const std::vector<std::size_t>& variables) = 0;
+
+    /**
+     * @brief Get result of vaiable selection.
+     * 
+     * @return std::vector<std::size_t> Selected variables.
+     */
+    virtual std::vector<std::size_t> selectedVariables() = 0;
 };
 
-typedef vector<pair<vector<GwmVariable>, double> > VariablesCriterionList;
+typedef std::vector<std::pair<std::vector<std::size_t>, double> > VariablesCriterionList;
 
 
 #endif  // IGWMVARIALBESELECTABLE_H

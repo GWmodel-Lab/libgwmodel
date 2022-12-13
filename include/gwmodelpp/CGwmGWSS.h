@@ -84,7 +84,7 @@ public:
         return covwt(x1,x2,w)/sqrt(covwt(x1,x1,w)*covwt(x2,x2,w));
     }
 
-    static vec del(vec x,int rowcount);
+    static vec del(vec x, uword rowcount);
 
     static vec rank(vec x)
     {
@@ -92,16 +92,6 @@ public:
         vec res = n(sort_index(x));
         return n(sort_index(res)) + 1.0;
     }
-
-    enum NameFormat
-    {
-        PrefixVarName,
-        SuffixVarName,
-        PrefixVarNamePair,
-        SuffixVarNamePair
-    };
-
-    typedef tuple<string, mat, NameFormat> ResultLayerDataItem;
 
     typedef void (CGwmGWSS::*SummaryCalculator)();
 
@@ -115,14 +105,25 @@ public:
      * 
      * Use gwmodel_create_gwss_algorithm() to construct an instance in shared build.
      */
-    CGwmGWSS();
+    CGwmGWSS() {}
+    
+    /**
+     * @brief Construct a new CGwmGWSS object.
+     * 
+     * Use gwmodel_create_gwss_algorithm() to construct an instance in shared build.
+     */
+    CGwmGWSS(const arma::mat x, const arma::mat coords, const CGwmSpatialWeight& spatialWeight)
+        : CGwmSpatialMonoscaleAlgorithm(spatialWeight, coords)
+    {
+        mX = x;
+    }
 
     /**
      * @brief Destroy the CGwmGWSS object.
      * 
      * Use gwmodel_create_gwss_algorithm() to destruct an instance in shared build.
      */
-    ~CGwmGWSS();
+    ~CGwmGWSS() {}
 
     /**
      * @brief Get the CGwmGWSS::mQuantile object .
@@ -130,14 +131,14 @@ public:
      * @return true if CGwmGWSS::mQuantile is true.
      * @return false if CGwmGWSS::mQuantile is false.
      */
-    bool quantile() const;
+    bool quantile() const { return mQuantile; }
 
     /**
      * @brief Set the CGwmGWSS::mQuantile object.
      * 
      * @param quantile The value for CGwmGWSS::mQuantile.
      */
-    void setQuantile(bool quantile);
+    void setQuantile(bool quantile) { mQuantile = quantile; }
 
     /**
      * @brief Set the CGwmGWSS::mIsCorrWithFirstOnly object.
@@ -147,14 +148,14 @@ public:
      * @return true if CGwmGWSS::mIsCorrWithFirstOnly is true.
      * @return false if CGwmGWSS::mIsCorrWithFirstOnly is false.
      */
-    bool isCorrWithFirstOnly() const;
+    bool isCorrWithFirstOnly() const { return mIsCorrWithFirstOnly; }
 
     /**
      * @brief Set the CGwmGWSS::mIsCorrWithFirstOnly object
      * 
      * @param corrWithFirstOnly The value for CGwmGWSS::mIsCorrWithFirstOnly.
      */
-    void setIsCorrWithFirstOnly(bool corrWithFirstOnly);
+    void setIsCorrWithFirstOnly(bool corrWithFirstOnly) { mIsCorrWithFirstOnly = corrWithFirstOnly; }
 
     /**
      * @brief Get the CGwmGWSS::mLocalMean object. 
@@ -288,25 +289,24 @@ public:
      */
     mat localSCorr() const { return mSCorrmat; }
 
-public:     // GwmAlgorithm interface;
-    /**
-     * @brief Run the algorithm.
-     * 
-     * Use gwmodel_run_gwss() to run this algorithm in shared build.
-     * 
-     */
-    void run() override;
-
 public:     // GwmSpatialAlgorithm interface
     bool isValid() override;
 
 public:     // IGwmMultivariableAnalysis
-    vector<GwmVariable> variables() const override;
-    void setVariables(const vector<GwmVariable>& variables) override;
+    mat variables() const override { return mX; }
+    void setVariables(const mat& x) override { mX = x; }
+    void run();
 
 public:     // IGwmParallelizable
-    int parallelAbility() const override;
-    ParallelType parallelType() const override;
+    int parallelAbility() const override
+    {
+        return ParallelType::SerialOnly
+#ifdef ENABLE_OPENMP
+            | ParallelType::OpenMP
+#endif        
+            ;
+    }
+    ParallelType parallelType() const override { return mParallelType; }
 
     /**
      * @brief Set the parallel type of this algorithm.
@@ -326,41 +326,23 @@ public:     // IGwmOpenmpParallelizable
      * 
      * @param threadNum Number of threads.
      */
-    void setOmpThreadNum(const int threadNum) override;
+    void setOmpThreadNum(const int threadNum) override { mOmpThreadNum = threadNum; }
 
 private:
-
-    /**
-     * @brief Set CGwmGWSS::mX according to layer and variables. 
-     * If there are \f$n\f$ features in layer and \f$k\f$ elements in variables, this function will set matrix x to the shape \f$ n \times k \f$.
-     * Its element in location \f$ (i,j) \f$ will equal to the value of i-th feature's j-th variable. 
-     * 
-     * @param x Reference of CGwmGWSS::mX or other matrix to store value of variables.
-     * @param layer Pointer to source data layer. 
-     * @param variables Vector of variables.
-     */
-    void setXY(mat& x, const CGwmSimpleLayer* layer, const vector<GwmVariable>& variables);
 
     /**
      * @brief Summary algorithm implemented with no parallel methods.
      */
     void summarySerial();
 
+#ifdef ENABLE_OPENMP
     /**
      * @brief Summary algorithm implemented with OpenMP.
      */
     void summaryOmp();
-
-    /**
-     * @brief Create a Result Layer object.
-     * 
-     * @param items Data used for creating result layer.
-     */
-    void createResultLayer(vector<ResultLayerDataItem> items);
+#endif
 
 private:
-    vector<GwmVariable> mVariables;     //!< Variables specified for summary.
-
     bool mQuantile = false;             //!< Indicator of whether calculate quantile statistics.
     bool mIsCorrWithFirstOnly = false;  //!< Indicator of whether calculate local correlations and covariances between the first variable and the other variables.
 
@@ -383,53 +365,5 @@ private:
     int mOmpThreadNum = 8;                                  //!< Numbers of threads to be created while paralleling.
 };
 
-inline bool CGwmGWSS::quantile() const
-{
-    return mQuantile;
-}
-
-inline void CGwmGWSS::setQuantile(bool quantile)
-{
-    mQuantile = quantile;
-}
-
-inline bool CGwmGWSS::isCorrWithFirstOnly() const
-{
-    return mIsCorrWithFirstOnly;
-}
-
-inline void CGwmGWSS::setIsCorrWithFirstOnly(bool corrWithFirstOnly)
-{
-    mIsCorrWithFirstOnly = corrWithFirstOnly;
-}
-
-inline vector<GwmVariable> CGwmGWSS::variables() const
-{
-    return mVariables;
-}
-
-inline void CGwmGWSS::setVariables(const vector<GwmVariable>& variables)
-{
-    mVariables = variables;
-}
-
-inline int CGwmGWSS::parallelAbility() const
-{
-    return ParallelType::SerialOnly
-#ifdef ENABLE_OPENMP
-        | ParallelType::OpenMP
-#endif        
-        ;
-}
-
-inline ParallelType CGwmGWSS::parallelType() const
-{
-    return mParallelType;
-}
-
-inline void CGwmGWSS::setOmpThreadNum(const int threadNum)
-{
-    mOmpThreadNum = threadNum;
-}
 
 #endif  // CGWMGWSS_H

@@ -4,6 +4,13 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multimin.h>
 #include <gsl/gsl_errno.h>
+#include "GwmLogger.h"
+
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif
+
+using namespace std;
 
 GwmRegressionDiagnostic CGwmGWDR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
@@ -20,34 +27,34 @@ GwmRegressionDiagnostic CGwmGWDR::CalcDiagnostic(const mat& x, const vec& y, con
     return { rss, AIC, AICc, enp, edf, r2, r2_adj };
 }
 
-void CGwmGWDR::run()
+mat CGwmGWDR::fit()
 {
-    uword nDp = mSourceLayer->featureCount(), nDims = mSourceLayer->points().n_cols, nVars = mSourceLayer->data().n_cols;
-
+    uword nDims = mCoords.n_cols;
+    
     // Set coordinates matrices.
     for (size_t m = 0; m < nDims; m++)
     {
-        mSpatialWeights[m].distance()->makeParameter({
-            vec(mSourceLayer->points().col(m)),
-            vec(mSourceLayer->points().col(m))
-        });
+        mSpatialWeights[m].distance()->makeParameter({ vec(mCoords.col(m)), vec(mCoords.col(m)) });
     }
 
     // Select Independent Variable
     if (mEnableIndepVarSelect)
     {
-        CGwmVariableForwardSelector selector(mIndepVars, mIndepVarSelectThreshold);
-        vector<GwmVariable> selectedIndepVars = selector.optimize(this);
-        if (selectedIndepVars.size() > 0)
+        vector<size_t> indep_vars;
+        for (size_t i = (mHasIntercept ? 1 : 0); i < mX.n_cols; i++)
         {
-            mIndepVars = selectedIndepVars;
+            indep_vars.push_back(i);
+        }
+        CGwmVariableForwardSelector selector(indep_vars, mIndepVarSelectThreshold);
+        mSelectedIndepVars = selector.optimize(this);
+        if (mSelectedIndepVars.size() > 0)
+        {
+            mX = mX.cols(CGwmVariableForwardSelector::index2uvec(mSelectedIndepVars, mHasIntercept));
             mIndepVarCriterionList = selector.indepVarsCriterion();
         }
     }
-    
 
-    // Set data matrices.
-    setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
+    uword nDp = mCoords.n_rows, nVars = mX.n_cols;
 
     if (mEnableBandwidthOptimize)
     {
@@ -57,7 +64,7 @@ void CGwmGWDR::run()
             // Set Initial value
             double lower = bw->adaptive() ? nVars + 1 : sw.distance()->minDistance();
             double upper = bw->adaptive() ? nDp : sw.distance()->maxDistance();
-            if (bw->bandwidth() <= 0.0 || bw->bandwidth() >= upper)
+            if (bw->bandwidth() <= lower || bw->bandwidth() >= upper)
             {
                 bw->setBandwidth(upper * 0.618);
             }
@@ -68,7 +75,7 @@ void CGwmGWDR::run()
             bws.push_back(iter.weight<CGwmBandwidthWeight>());
         }
         CGwmGWDRBandwidthOptimizer optimizer(bws);
-        int status = optimizer.optimize(this, mSourceLayer->featureCount(), 100000, 1e-8);
+        int status = optimizer.optimize(this, mCoords.n_rows, mBandwidthOptimizeMaxIter, mBandwidthOptimizeEps, mBandwidthOptimizeStep);
         if (status)
         {
             throw runtime_error("[CGwmGWDR::run] Bandwidth optimization invoke failed.");
@@ -76,63 +83,36 @@ void CGwmGWDR::run()
     }
     
     // Has hatmatrix
-    if (mHasHatMatrix)
+    mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
+    mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
+    double trS = mSHat(0), trStS = mSHat(1);
+    double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
+    mBetasSE = sqrt(sigmaHat * mBetasSE);
+    vec yhat = Fitted(mX, mBetas);
+    vec res = mY - yhat;
+    vec stu_res = res / sqrt(sigmaHat * mQDiag);
+    mat betasTV = mBetas / mBetasSE;
+    vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
+    vec dyhat2 = (mY - yhat) % (mY - yhat);
+    vec localR2 = vec(nDp, arma::fill::zeros);
+    for (uword i = 0; i < nDp; i++)
     {
-        mat betasSE, S;
-        vec shat, qdiag;
-        mBetas = regressionHatmatrix(mX, mY, betasSE, shat, qdiag, S);
-        mDiagnostic = CalcDiagnostic(mX, mY, mBetas, shat);
-        double trS = shat(0), trStS = shat(1);
-        double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
-        betasSE = sqrt(sigmaHat * betasSE);
-        vec yhat = Fitted(mX, mBetas);
-        vec res = mY - yhat;
-        vec stu_res = res / sqrt(sigmaHat * qdiag);
-        mat betasTV = mBetas / betasSE;
-        vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
-        vec dyhat2 = (mY - yhat) % (mY - yhat);
-        vec localR2 = vec(nDp, arma::fill::zeros);
-        for (uword i = 0; i < nDp; i++)
+        vec w(nDp, arma::fill::ones);
+        for (auto&& sw : mSpatialWeights)
         {
-            vec w(nDp, arma::fill::ones);
-            for (auto&& sw : mSpatialWeights)
-            {
-                w = w % sw.weightVector(i);
-            }
-            double tss = sum(dybar2 % w);
-            double rss = sum(dyhat2 % w);
-            localR2(i) = (tss - rss) / tss;
+            w = w % sw.weightVector(i);
         }
-        createResultLayer({
-            make_tuple(string("%1"), mBetas, NameFormat::VarName),
-            make_tuple(string("y"), mY, NameFormat::Fixed),
-            make_tuple(string("yhat"), yhat, NameFormat::Fixed),
-            make_tuple(string("residual"), res, NameFormat::Fixed),
-            make_tuple(string("Stud_residual"), stu_res, NameFormat::Fixed),
-            make_tuple(string("SE"), betasSE, NameFormat::PrefixVarName),
-            make_tuple(string("TV"), betasTV, NameFormat::PrefixVarName),
-            make_tuple(string("localR2"), localR2, NameFormat::Fixed)
-        });
+        double tss = sum(dybar2 % w);
+        double rss = sum(dyhat2 % w);
+        localR2(i) = (tss - rss) / tss;
     }
     
+    return mBetas;
 }
 
-void CGwmGWDR::setXY(mat& x, mat& y, const CGwmSimpleLayer* layer, const GwmVariable& depVar, const vector<GwmVariable>& indepVars)
+mat CGwmGWDR::predictSerial(const mat& locations, const mat& x, const vec& y)
 {
-    uword nDp = layer->featureCount(), nVar = indepVars.size() + 1;
-    arma::uvec indepVarIndeces(indepVars.size());
-    for (size_t i = 0; i < indepVars.size(); i++)
-    {
-        assert(indepVars[i].index < layer->data().n_cols);
-        indepVarIndeces(i) = indepVars[i].index;
-    }
-    x = join_rows(mat(nDp, 1, arma::fill::ones), layer->data().cols(indepVarIndeces));
-    y = layer->data().col(depVar.index);
-}
-
-mat CGwmGWDR::regressionSerial(const mat& x, const vec& y)
-{
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = locations.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
     for (size_t i = 0; i < nDp; i++)
     {
@@ -153,20 +133,22 @@ mat CGwmGWDR::regressionSerial(const mat& x, const vec& y)
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            GWM_LOG_ERROR(e.what());
+            throw e;
         }
     }
     return betas.t();
 }
 
 #ifdef ENABLE_OPENMP
-mat CGwmGWDR::regressionOmp(const mat& x, const vec& y)
+mat CGwmGWDR::predictOmp(const mat& locations, const mat& x, const vec& y)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = locations.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
     bool success = true;
+    std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (size_t i = 0; i < nDp; i++)
+    for (int i = 0; (uword)i < nDp; i++)
     {
         if (success)
         {
@@ -187,17 +169,23 @@ mat CGwmGWDR::regressionOmp(const mat& x, const vec& y)
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << '\n';
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
             }
         }
+    }
+    if (!success)
+    {
+        throw except;
     }
     return betas.t();
 }
 #endif
 
-mat CGwmGWDR::regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
+mat CGwmGWDR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
     betasSE = mat(nVar, nDp, arma::fill::zeros);
     qdiag = vec(nDp, arma::fill::zeros);
@@ -234,7 +222,8 @@ mat CGwmGWDR::regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            GWM_LOG_ERROR(e.what());
+            throw e;
         }
     }
     shat = {sum(s_hat1), sum(s_hat2)};
@@ -243,9 +232,9 @@ mat CGwmGWDR::regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE
 }
 
 #ifdef ENABLE_OPENMP
-mat CGwmGWDR::regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
+mat CGwmGWDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
     betasSE = mat(nVar, nDp, arma::fill::zeros);
     qdiag = vec(nDp, arma::fill::zeros);
@@ -254,8 +243,9 @@ mat CGwmGWDR::regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, v
     mat s_hat_all(2, mOmpThreadNum, arma::fill::zeros);
     mat qdiag_all(nDp, mOmpThreadNum, arma::fill::zeros);
     bool success = true;
+    std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (size_t i = 0; i < nDp; i++)
+    for (int i = 0; (uword)i < nDp; i++)
     {
         int thread = omp_get_thread_num();
         if (success)
@@ -288,13 +278,14 @@ mat CGwmGWDR::regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, v
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << '\n';
+                GWM_LOG_ERROR(e.what());
+                except = e;
             }
         }
     }
     if (!success)
     {
-        throw std::runtime_error("[CGwmGWDR::regressionHatmatrixSerial] One or more errors occurred.");
+        throw except;
     }
     shat = sum(s_hat_all, 1);
     qdiag = sum(qdiag_all, 1);
@@ -305,7 +296,7 @@ mat CGwmGWDR::regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, v
 
 double CGwmGWDR::bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& bandwidths)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1, nDim = mSourceLayer->points().n_cols;
+    uword nDp = mCoords.n_rows, nDim = mCoords.n_cols;
     double cv = 0.0;
     bool success = true;
     for (size_t i = 0; i < nDp; i++)
@@ -320,33 +311,34 @@ double CGwmGWDR::bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& 
                 w = w % w_m;
             }
             w(i) = 0.0;
-            mat ws(1, nVar, arma::fill::ones);
-            mat xtw = (mX %(w * ws)).t();
+            mat xtw = (mX.each_col() % w).t();
             mat xtwx = xtw * mX;
-            mat xtwy = mX.t() * (w % mY);
+            mat xtwy = xtw * mY;
             try
             {
                 mat xtwx_inv = xtwx.i();
                 vec beta = xtwx_inv * xtwy;
                 double yhat = as_scalar(mX.row(i) * beta);
-                cv += yhat - mY(i);
+                double cv_i = mY(i) - yhat;
+                cv += cv_i * cv_i;
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << '\n';
+                GWM_LOG_ERROR(e.what());
                 success = false;
             }
         }
     }
-    return success ? abs(cv) : DBL_MAX;
+    return success ? cv : DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
 double CGwmGWDR::bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& bandwidths)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1, nDim = mSourceLayer->points().n_cols;
+    uword nDp = mCoords.n_rows, nDim = mCoords.n_cols;
     vec cv_all(mOmpThreadNum, arma::fill::zeros);
     bool success = true;
+    std::exception except;
     for (size_t i = 0; i < nDp; i++)
     {
         int thread = omp_get_thread_num();
@@ -360,8 +352,7 @@ double CGwmGWDR::bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& ban
                 w = w % w_m;
             }
             w(i) = 0.0;
-            mat ws(1, nVar, arma::fill::ones);
-            mat xtw = (mX %(w * ws)).t();
+            mat xtw = (mX.each_col() % w).t();
             mat xtwx = xtw * mX;
             mat xtwy = mX.t() * (w % mY);
             try
@@ -369,23 +360,29 @@ double CGwmGWDR::bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& ban
                 mat xtwx_inv = xtwx.i();
                 vec beta = xtwx_inv * xtwy;
                 double yhat = as_scalar(mX.row(i) * beta);
-                cv_all(thread) += yhat - mY(i);
+                double cv_i = abs(yhat - mY(i));
+                cv_all(thread) += cv_i * cv_i;
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << '\n';
+                GWM_LOG_ERROR(e.what());
+                except = e;
                 success = false;
             }
         }
     }
+    if (!success)
+    {
+        throw except;
+    }
     double cv = sum(cv_all);
-    return success ? abs(cv) : DBL_MAX;
+    return success ? cv : DBL_MAX;
 }
 #endif
 
 double CGwmGWDR::bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>& bandwidths)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1, nDim = mSourceLayer->points().n_cols;
+    uword nDp = mCoords.n_rows, nDim = mCoords.n_cols, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     double trS = 0.0;
     bool flag = true;
@@ -400,8 +397,7 @@ double CGwmGWDR::bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>&
                 vec w_m = bandwidths[m]->weight(d_m);
                 w = w % w_m;
             }
-            mat ws(1, nVar, arma::fill::ones);
-            mat xtw = (mX %(w * ws)).t();
+            mat xtw = (mX.each_col() % w).t();
             mat xtwx = xtw * mX;
             mat xtwy = mX.t() * (w % mY);
             try
@@ -414,7 +410,7 @@ double CGwmGWDR::bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>&
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << '\n';
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
@@ -427,12 +423,13 @@ double CGwmGWDR::bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>&
 #ifdef ENABLE_OPENMP
 double CGwmGWDR::bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& bandwidths)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1, nDim = mSourceLayer->points().n_cols;
+    uword nDp = mCoords.n_rows, nDim = mCoords.n_cols, nVar = mX.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
     vec trS_all(mOmpThreadNum, arma::fill::zeros);
     bool success = true;
+    std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (size_t i = 0; i < nDp; i++)
+    for (int i = 0; (uword)i < nDp; i++)
     {
         int thread = omp_get_thread_num();
         if (success)
@@ -444,8 +441,7 @@ double CGwmGWDR::bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& ba
                 vec w_m = bandwidths[m]->weight(d_m);
                 w = w % w_m;
             }
-            mat ws(1, nVar, arma::fill::ones);
-            mat xtw = (mX %(w * ws)).t();
+            mat xtw = (mX.each_col() % w).t();
             mat xtwx = xtw * mX;
             mat xtwy = mX.t() * (w % mY);
             try
@@ -458,24 +454,27 @@ double CGwmGWDR::bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& ba
             }
             catch(const std::exception& e)
             {
-                std::cerr << e.what() << '\n';
+                GWM_LOG_ERROR(e.what());
+                except = e;
                 success = false;
             }
         }
     }
-    if (!success) return DBL_MAX;
+    if (!success)
+    {
+        return DBL_MAX;
+    }
     double trS = sum(trS_all);
     double value = CGwmGWDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
     return isfinite(value) ? value : DBL_MAX;
 }
 #endif
 
-double CGwmGWDR::indepVarCriterionSerial(const vector<GwmVariable>& indepVars)
+double CGwmGWDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
 {
-    mat x;
-    vec y;
-    setXY(x, y, mSourceLayer, mDepVar, indepVars);
-    uword nDp = x.n_rows, nVar = x.n_cols;
+    mat x = mX.cols(CGwmVariableForwardSelector::index2uvec(indepVars, mHasIntercept));
+    vec y = mY;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     double trS = 0.0;
     bool isGlobal = false, success = true;
@@ -505,10 +504,9 @@ double CGwmGWDR::indepVarCriterionSerial(const vector<GwmVariable>& indepVars)
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            GWM_LOG_ERROR(e.what());
             success = false;
         }
-        
     }
     else
     {
@@ -535,30 +533,22 @@ double CGwmGWDR::indepVarCriterionSerial(const vector<GwmVariable>& indepVars)
                 }
                 catch (std::exception& e)
                 {
-                    std::cerr << e.what() << '\n';
+                    GWM_LOG_ERROR(e.what());
                     success = false;
                 }
             }
         }
     }
     double value = success ? CGwmGWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
-    // string msg = "Model: " + mDepVar.name + " ~ ";
-    // for (size_t i = 0; i < indepVars.size() - 1; i++)
-    // {
-    //     msg += indepVars[i].name + " + ";
-    // }
-    // msg += indepVars.back().name;
-    // msg += " (AICc Value: " + to_string(value) + ")";
     return isfinite(value) ? value : DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
-double CGwmGWDR::indepVarCriterionOmp(const vector<GwmVariable>& indepVars)
+double CGwmGWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
 {
-    mat x;
-    vec y;
-    setXY(x, y, mSourceLayer, mDepVar, indepVars);
-    uword nDp = x.n_rows, nVar = x.n_cols;
+    mat x = mX.cols(CGwmVariableForwardSelector::index2uvec(indepVars, mHasIntercept));
+    vec y = mY;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     double trS = 0.0;
     bool isGlobal = false, success = true;
@@ -588,7 +578,7 @@ double CGwmGWDR::indepVarCriterionOmp(const vector<GwmVariable>& indepVars)
         }
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            GWM_LOG_ERROR(e.what());
             success = false;
         }
         
@@ -597,7 +587,7 @@ double CGwmGWDR::indepVarCriterionOmp(const vector<GwmVariable>& indepVars)
     {
         vec trS_all(mOmpThreadNum, arma::fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (uword i = 0; i < nDp; i++)
+        for (int i = 0; (uword)i < nDp; i++)
         {
             int thread = omp_get_thread_num();
             if (success)
@@ -621,7 +611,7 @@ double CGwmGWDR::indepVarCriterionOmp(const vector<GwmVariable>& indepVars)
                 }
                 catch (std::exception& e)
                 {
-                    std::cerr << e.what() << '\n';
+                    GWM_LOG_ERROR(e.what());
                     success = false;
                 }
             }
@@ -629,84 +619,41 @@ double CGwmGWDR::indepVarCriterionOmp(const vector<GwmVariable>& indepVars)
         trS = sum(trS_all);
     }
     double value = success ? CGwmGWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
-    // string msg = "Model: " + mDepVar.name + " ~ ";
-    // for (size_t i = 0; i < indepVars.size() - 1; i++)
-    // {
-    //     msg += indepVars[i].name + " + ";
-    // }
-    // msg += indepVars.back().name;
-    // msg += " (AICc Value: " + to_string(value) + ")";
     return isfinite(value) ? value : DBL_MAX;
 }
 #endif
 
-void CGwmGWDR::createResultLayer(initializer_list<ResultLayerDataItem> items)
-{
-    mat layerPoints = mSourceLayer->points();
-    uword layerFeatureCount = mSourceLayer->featureCount();
-    mat layerData(layerFeatureCount, 0);
-    vector<string> layerFields;
-    for (auto &&i : items)
-    {
-        NameFormat nf = get<2>(i);
-        mat column = get<1>(i);
-        string name = get<0>(i);
-        if (nf == NameFormat::Fixed)
-        {
-            layerData = join_rows(layerData, column.col(0));
-            layerFields.push_back(name);
-        }
-        else
-        {
-            layerData = join_rows(layerData, column);
-            for (size_t k = 0; k < column.n_cols; k++)
-            {
-                string variableName = k == 0 ? "Intercept" : mIndepVars[k - 1].name;
-                string fieldName;
-                switch (nf)
-                {
-                case NameFormat::VarName:
-                    fieldName = variableName;
-                    break;
-                case NameFormat::PrefixVarName:
-                    fieldName = variableName + "_" + name;
-                    break;
-                case NameFormat::SuffixVariable:
-                    fieldName = name + "_" + variableName;
-                    break;
-                default:
-                    fieldName = variableName;
-                }
-                layerFields.push_back(fieldName);
-            }
-        }
-        
-    }
-    mResultLayer = new CGwmSimpleLayer(layerPoints, layerData, layerFields);
-}
-
 void CGwmGWDR::setBandwidthCriterionType(const BandwidthCriterionType& type)
 {
     mBandwidthCriterionType = type;
-    unordered_map<ParallelType, BandwidthCriterionCalculator> mapper;
-    switch (mBandwidthCriterionType)
+    unordered_map<BandwidthCriterionType, BandwidthCriterionCalculator> mapper;
+    switch (mParallelType)
     {
-    case BandwidthCriterionType::AIC:
+    case ParallelType::SerialOnly:
         mapper = {
-            make_pair(ParallelType::SerialOnly, &CGwmGWDR::bandwidthCriterionAICSerial),
-            make_pair(ParallelType::OpenMP, &CGwmGWDR::bandwidthCriterionAICSerial)
+            make_pair(BandwidthCriterionType::AIC, &CGwmGWDR::bandwidthCriterionAICSerial),
+            make_pair(BandwidthCriterionType::CV, &CGwmGWDR::bandwidthCriterionCVSerial)
         };
         mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionAICSerial;
         break;
+#ifdef ENABLE_OPENMP
+    case ParallelType::OpenMP:
+        mapper = {
+            make_pair(BandwidthCriterionType::AIC, &CGwmGWDR::bandwidthCriterionAICOmp),
+            make_pair(BandwidthCriterionType::CV, &CGwmGWDR::bandwidthCriterionCVOmp)
+        };
+        mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionAICOmp;
+        break;
+#endif
     default:
         mapper = {
-            make_pair(ParallelType::SerialOnly, &CGwmGWDR::bandwidthCriterionCVSerial),
-            make_pair(ParallelType::OpenMP, &CGwmGWDR::bandwidthCriterionCVSerial)
+            make_pair(BandwidthCriterionType::AIC, &CGwmGWDR::bandwidthCriterionAICSerial),
+            make_pair(BandwidthCriterionType::CV, &CGwmGWDR::bandwidthCriterionCVSerial)
         };
-        mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionCVSerial;
+        mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionAICSerial;
         break;
     }
-    mBandwidthCriterionFunction = mapper[mParallelType];
+    mBandwidthCriterionFunction = mapper[mBandwidthCriterionType];
 }
 
 void CGwmGWDR::setParallelType(const ParallelType& type)
@@ -715,19 +662,40 @@ void CGwmGWDR::setParallelType(const ParallelType& type)
     {
         mParallelType = type;
         switch (type) {
-        case ParallelType::OpenMP:
-            mRegressionFunction = &CGwmGWDR::regressionSerial;
-            mRegressionHatmatrixFunction = &CGwmGWDR::regressionHatmatrixSerial;
-            mIndepVarCriterionFunction= &CGwmGWDR::indepVarCriterionSerial;
+        case ParallelType::SerialOnly:
+            mPredictFunction = &CGwmGWDR::predictSerial;
+            mFitFunction = &CGwmGWDR::fitSerial;
+            mIndepVarCriterionFunction = &CGwmGWDR::indepVarCriterionSerial;
             break;
+#ifdef ENABLE_OPENMP
+        case ParallelType::OpenMP:
+            mPredictFunction = &CGwmGWDR::predictOmp;
+            mFitFunction = &CGwmGWDR::fitOmp;
+            mIndepVarCriterionFunction= &CGwmGWDR::indepVarCriterionOmp;
+            break;
+#endif
         default:
-            mRegressionFunction = &CGwmGWDR::regressionSerial;
-            mRegressionHatmatrixFunction = &CGwmGWDR::regressionHatmatrixSerial;
+            mPredictFunction = &CGwmGWDR::predictSerial;
+            mFitFunction = &CGwmGWDR::fitSerial;
             mIndepVarCriterionFunction = &CGwmGWDR::indepVarCriterionSerial;
             break;
         }
     }
     setBandwidthCriterionType(mBandwidthCriterionType);
+}
+
+bool CGwmGWDR::isValid()
+{
+    if (CGwmSpatialAlgorithm::isValid())
+    {
+        if (!(mSpatialWeights.size() == mCoords.n_cols))
+        {
+            return false;
+        }
+
+        return true;
+    }
+    else return false;
 }
 
 double CGwmGWDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, void* params)
@@ -744,29 +712,27 @@ double CGwmGWDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, voi
     return instance->bandwidthCriterion(bandwidths);
 }
 
-const int CGwmGWDRBandwidthOptimizer::optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps)
+const int CGwmGWDRBandwidthOptimizer::optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps, double step)
 {
     size_t nDim = mBandwidths.size();
-    gsl_multimin_fminimizer* minimizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex, nDim);
-    gsl_vector* target = gsl_vector_alloc(nDim);
-    gsl_vector* step = gsl_vector_alloc(nDim);
+    gsl_multimin_fminimizer* minimizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex2rand, nDim);
+    gsl_vector* targets = gsl_vector_alloc(nDim);
+    gsl_vector* steps = gsl_vector_alloc(nDim);
     for (size_t m = 0; m < nDim; m++)
     {
         double target_value = mBandwidths[m]->adaptive() ? mBandwidths[m]->bandwidth() / double(featureCount) : mBandwidths[m]->bandwidth();
-        gsl_vector_set(target, m, target_value);
-        gsl_vector_set(step, m, 0.1);
+        gsl_vector_set(targets, m, target_value);
+        gsl_vector_set(steps, m, step);
     }
     Parameter params = { instance, &mBandwidths, featureCount };
     gsl_multimin_function function = { criterion_function, nDim, &params };
-    double criterion = DBL_MAX;
-    int status = gsl_multimin_fminimizer_set(minimizer, &function, target, step);
+    int status = gsl_multimin_fminimizer_set(minimizer, &function, targets, steps);
     if (status == GSL_SUCCESS)
     {
-        int iter = 0;
-        double size = DBL_MAX, size0 = DBL_MAX;
+        size_t iter = 0;
+        double size = DBL_MAX;
         do
         {
-            size0 = size;
             iter++;
             status = gsl_multimin_fminimizer_iterate(minimizer);
             if (status)
@@ -799,7 +765,7 @@ const int CGwmGWDRBandwidthOptimizer::optimize(CGwmGWDR* instance, uword feature
         }
     }
     gsl_multimin_fminimizer_free(minimizer);
-    gsl_vector_free(target);
-    gsl_vector_free(step);
+    gsl_vector_free(targets);
+    gsl_vector_free(steps);
     return status;
 }

@@ -26,7 +26,6 @@
 #include "gwmodelpp/CGwmAlgorithm.h"
 #include "gwmodelpp/CGwmBandwidthSelector.h"
 #include "gwmodelpp/CGwmVariableForwardSelector.h"
-#include "gwmodelpp/CGwmSimpleLayer.h"
 #include "gwmodelpp/CGwmSpatialAlgorithm.h"
 #include "gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h"
 #include "gwmodelpp/CGwmGWRBase.h"

@@ -1,12 +1,13 @@
 #include "CGwmGWRBasic.h"
 #include "CGwmBandwidthSelector.h"
 #include "CGwmVariableForwardSelector.h"
-#include <assert.h>
+#include "GwmLogger.h"
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
 
+using namespace std;
 using namespace arma;
 
 GwmRegressionDiagnostic CGwmGWRBasic::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
@@ -24,35 +25,29 @@ GwmRegressionDiagnostic CGwmGWRBasic::CalcDiagnostic(const mat& x, const vec& y,
     return { rss, AIC, AICc, enp, edf, r2, r2_adj };
 }
 
-CGwmGWRBasic::CGwmGWRBasic()
-{
-    
-}
-
-CGwmGWRBasic::~CGwmGWRBasic()
-{
-    
-}
-
-void CGwmGWRBasic::run()
+mat CGwmGWRBasic::fit()
 {
     createDistanceParameter();
 
-    if (!hasPredictLayer() && mIsAutoselectIndepVars)
+    if (mIsAutoselectIndepVars)
     {
-        CGwmVariableForwardSelector selector(mIndepVars, mIndepVarSelectionThreshold);
-        vector<GwmVariable> selectedIndepVars = selector.optimize(this);
-        if (selectedIndepVars.size() > 0)
+        vector<size_t> indep_vars;
+        for (size_t i = (mHasIntercept ? 1 : 0); i < mX.n_cols; i++)
         {
-            mIndepVars = selectedIndepVars;
+            indep_vars.push_back(i);
+        }
+        CGwmVariableForwardSelector selector(indep_vars, mIndepVarSelectionThreshold);
+        mSelectedIndepVars = selector.optimize(this);
+        if (mSelectedIndepVars.size() > 0)
+        {
+            mX = mX.cols(CGwmVariableForwardSelector::index2uvec(mSelectedIndepVars, mHasIntercept));
             mIndepVarsSelectionCriterionList = selector.indepVarsCriterion();
         }
     }
 
-    setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
-    uword nDp = mSourceLayer->featureCount();
+    uword nDp = mCoords.n_rows;
 
-    if (!hasPredictLayer() && mIsAutoselectBandwidth)
+    if (mIsAutoselectBandwidth)
     {
         CGwmBandwidthWeight* bw0 = mSpatialWeight.weight<CGwmBandwidthWeight>();
         double lower = bw0->adaptive() ? 20 : 0.0;
@@ -66,65 +61,48 @@ void CGwmGWRBasic::run()
         }
     }
 
-    if (mHasHatMatrix)
+    mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
+    mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
+    double trS = mSHat(0), trStS = mSHat(1);
+    double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
+    mBetasSE = sqrt(sigmaHat * mBetasSE);
+    vec yhat = Fitted(mX, mBetas);
+    vec res = mY - yhat;
+    vec stu_res = res / sqrt(sigmaHat * mQDiag);
+    mat betasTV = mBetas / mBetasSE;
+    vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
+    vec dyhat2 = (mY - yhat) % (mY - yhat);
+    vec localR2 = vec(nDp, fill::zeros);
+    for (uword i = 0; i < nDp; i++)
     {
-        mat betasSE, S;
-        vec shat, qdiag;
-        mBetas = regressionHatmatrix(mX, mY, betasSE, shat, qdiag, S);
-        mDiagnostic = CalcDiagnostic(mX, mY, mBetas, shat);
-        double trS = shat(0), trStS = shat(1);
-        double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
-        betasSE = sqrt(sigmaHat * betasSE);
-        vec yhat = Fitted(mX, mBetas);
-        vec res = mY - yhat;
-        vec stu_res = res / sqrt(sigmaHat * qdiag);
-        mat betasTV = mBetas / betasSE;
-        vec dybar2 = (mY - mean(mY)) % (mY - mean(mY));
-        vec dyhat2 = (mY - yhat) % (mY - yhat);
-        vec localR2 = vec(nDp, fill::zeros);
-        for (uword i = 0; i < nDp; i++)
-        {
-            vec w = mSpatialWeight.weightVector(i);
-            double tss = sum(dybar2 % w);
-            double rss = sum(dyhat2 % w);
-            localR2(i) = (tss - rss) / tss;
-        }
-        createResultLayer({
-            make_tuple(string("%1"), mBetas, NameFormat::VarName),
-            make_tuple(string("y"), mY, NameFormat::Fixed),
-            make_tuple(string("yhat"), yhat, NameFormat::Fixed),
-            make_tuple(string("residual"), res, NameFormat::Fixed),
-            make_tuple(string("Stud_residual"), stu_res, NameFormat::Fixed),
-            make_tuple(string("SE"), betasSE, NameFormat::PrefixVarName),
-            make_tuple(string("TV"), betasTV, NameFormat::PrefixVarName),
-            make_tuple(string("localR2"), localR2, NameFormat::Fixed)
-        });
+        vec w = mSpatialWeight.weightVector(i);
+        double tss = sum(dybar2 % w);
+        double rss = sum(dyhat2 % w);
+        localR2(i) = (tss - rss) / tss;
     }
-    else
-    {
-        createPredictionDistanceParameter();
-        mBetas = regression(mX, mY);
-        createResultLayer({
-            make_tuple(string("%1"), mBetas, NameFormat::VarName)
-        });
-    }
+
+    return mBetas;
 }
 
-void CGwmGWRBasic::createPredictionDistanceParameter()
+mat CGwmGWRBasic::predict(const mat& locations)
+{
+    createPredictionDistanceParameter(locations);
+    mBetas = (this->*mPredictFunction)(locations, mX, mY);
+    return mBetas;
+}
+
+void CGwmGWRBasic::createPredictionDistanceParameter(const arma::mat& locations)
 {
     if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
         mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
     {
-        mSpatialWeight.distance()->makeParameter({
-            hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points(),
-            mSourceLayer->points()
-        });
+        mSpatialWeight.distance()->makeParameter({ locations, mCoords });
     }
 }
 
-mat CGwmGWRBasic::regressionSerial(const mat& x, const vec& y)
+mat CGwmGWRBasic::predictSerial(const mat& locations, const mat& x, const vec& y)
 {
-    uword nRp = hasPredictLayer() ? mPredictLayer->featureCount() : mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nRp = locations.n_rows, nVar = x.n_cols;
     mat betas(nVar, nRp, fill::zeros);
     for (uword i = 0; i < nRp; i++)
     {
@@ -137,17 +115,18 @@ mat CGwmGWRBasic::regressionSerial(const mat& x, const vec& y)
             mat xtwx_inv = inv_sympd(xtwx);
             betas.col(i) = xtwx_inv * xtwy;
         }
-        catch (exception e)
+        catch (const exception& e)
         {
+            GWM_LOG_ERROR(e.what());
             throw e;
         }
     }
     return betas.t();
 }
 
-mat CGwmGWRBasic::regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
+mat CGwmGWRBasic::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     betasSE = mat(nVar, nDp, fill::zeros);
     shat = vec(2, fill::zeros);
@@ -173,8 +152,9 @@ mat CGwmGWRBasic::regressionHatmatrixSerial(const mat& x, const vec& y, mat& bet
             qDiag += p % p;
             S.row(isStoreS() ? i : 0) = si;
         }
-        catch (std::exception e)
+        catch (const exception& e)
         {
+            GWM_LOG_ERROR(e.what());
             throw e;
         }
     }
@@ -183,67 +163,86 @@ mat CGwmGWRBasic::regressionHatmatrixSerial(const mat& x, const vec& y, mat& bet
 }
 
 #ifdef ENABLE_OPENMP
-mat CGwmGWRBasic::regressionOmp(const mat& x, const vec& y)
+mat CGwmGWRBasic::predictOmp(const mat& locations, const mat& x, const vec& y)
 {
-    uword nRp = hasPredictLayer() ? mPredictLayer->featureCount() : mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nRp = locations.n_rows, nVar = x.n_cols;
     mat betas(nVar, nRp, arma::fill::zeros);
-    int current = 0;
+    bool success = true;
+    std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nRp; i++)
     {
-        int thread = omp_get_thread_num();
-        vec w = mSpatialWeight.weightVector(i);
-        mat xtw = trans(x.each_col() % w);
-        mat xtwx = xtw * x;
-        mat xtwy = xtw * y;
-        try
+        if (success)
         {
-            mat xtwx_inv = inv_sympd(xtwx);
-            betas.col(i) = xtwx_inv * xtwy;
+            vec w = mSpatialWeight.weightVector(i);
+            mat xtw = trans(x.each_col() % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+            }
+            catch (const exception& e)
+            {
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
+            }
         }
-        catch (exception e)
-        {
-            throw e;
-        }
+    }
+    if (!success)
+    {
+        throw except;
     }
     return betas.t();
 }
 
-mat CGwmGWRBasic::regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
+mat CGwmGWRBasic::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     betasSE = mat(nVar, nDp, fill::zeros);
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     mat qDiag_all(nDp, mOmpThreadNum, fill::zeros);
-    int current = 0;
+    bool success = true;
+    std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
-        int thread = omp_get_thread_num();
-        vec w = mSpatialWeight.weightVector(i);
-        mat xtw = trans(x.each_col() % w);
-        mat xtwx = xtw * x;
-        mat xtwy = xtw * y;
-        try
+        if (success)
         {
-            mat xtwx_inv = inv_sympd(xtwx);
-            betas.col(i) = xtwx_inv * xtwy;
-            mat ci = xtwx_inv * xtw;
-            betasSE.col(i) = sum(ci % ci, 1);
-            mat si = x.row(i) * ci;
-            shat_all(0, thread) += si(0, i);
-            shat_all(1, thread) += det(si * si.t());
-            vec p = - si.t();
-            p(i) += 1.0;
-            qDiag_all.col(thread) += p % p;
-            S.row(isStoreS() ? i : 0) = si;
+            int thread = omp_get_thread_num();
+            vec w = mSpatialWeight.weightVector(i);
+            mat xtw = trans(x.each_col() % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                mat ci = xtwx_inv * xtw;
+                betasSE.col(i) = sum(ci % ci, 1);
+                mat si = x.row(i) * ci;
+                shat_all(0, thread) += si(0, i);
+                shat_all(1, thread) += det(si * si.t());
+                vec p = - si.t();
+                p(i) += 1.0;
+                qDiag_all.col(thread) += p % p;
+                S.row(isStoreS() ? i : 0) = si;
+            }
+            catch (const exception& e)
+            {
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
+            }
         }
-        catch (std::exception e)
-        {
-            throw e;
-        }
+    }
+    if (!success)
+    {
+        throw except;
     }
     shat = sum(shat_all, 1);
     qDiag = sum(qDiag_all, 1);
@@ -254,7 +253,7 @@ mat CGwmGWRBasic::regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasS
 
 double CGwmGWRBasic::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwidthWeight)
 {
-    uword nDp = mSourceLayer->featureCount();
+    uword nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
@@ -272,8 +271,9 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwid
             double res = mY(i) - det(mX.row(i) * beta);
             cv += res * res;
         }
-        catch (...)
+        catch (const exception& e)
         {
+            GWM_LOG_ERROR(e.what());
             return DBL_MAX;
         }
     }
@@ -286,7 +286,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwid
 
 double CGwmGWRBasic::bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwidthWeight)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
@@ -305,8 +305,9 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwi
             shat(0) += si(0, i);
             shat(1) += det(si * si.t());
         }
-        catch (std::exception e)
+        catch (const exception& e)
         {
+            GWM_LOG_ERROR(e.what());
             return DBL_MAX;
         }
     }
@@ -321,7 +322,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwi
 #ifdef ENABLE_OPENMP
 double CGwmGWRBasic::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthWeight)
 {
-    uword nDp = mSourceLayer->featureCount();
+    uword nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
     vec cv_all(mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -347,8 +348,9 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthW
                 else
                     flag = false;
             }
-            catch (...)
+            catch (const exception& e)
             {
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
@@ -363,7 +365,7 @@ double CGwmGWRBasic::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthW
 
 double CGwmGWRBasic::bandwidthSizeCriterionAICOmp(CGwmBandwidthWeight* bandwidthWeight)
 {
-    uword nDp = mSourceLayer->featureCount(), nVar = mIndepVars.size() + 1;
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
@@ -387,8 +389,9 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICOmp(CGwmBandwidthWeight* bandwidth
                 shat_all(0, thread) += si(0, i);
                 shat_all(1, thread) += det(si * si.t());
             }
-            catch (std::exception e)
+            catch (const exception& e)
             {
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
@@ -407,12 +410,11 @@ double CGwmGWRBasic::bandwidthSizeCriterionAICOmp(CGwmBandwidthWeight* bandwidth
 }
 #endif
 
-double CGwmGWRBasic::indepVarsSelectionCriterionSerial(const vector<GwmVariable>& indepVars)
+double CGwmGWRBasic::indepVarsSelectionCriterionSerial(const vector<size_t>& indepVars)
 {
-    mat x;
-    vec y;
-    setXY(x, y, mSourceLayer, mDepVar, indepVars);
-    uword nDp = x.n_rows, nVar = x.n_cols;
+    mat x = mX.cols(CGwmVariableForwardSelector::index2uvec(indepVars, mHasIntercept));
+    vec y = mY;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
@@ -430,30 +432,22 @@ double CGwmGWRBasic::indepVarsSelectionCriterionSerial(const vector<GwmVariable>
             shat(0) += si(0, i);
             shat(1) += det(si * si.t());
         }
-        catch (...)
+        catch (const exception& e)
         {
+            GWM_LOG_ERROR(e.what());
             return DBL_MAX;
         }
     }
-    double value = CGwmGWRBase::AICc(x, y, betas.t(), shat);
-    string msg = "Model: " + mDepVar.name + " ~ ";
-    for (size_t i = 0; i < indepVars.size() - 1; i++)
-    {
-        msg += indepVars[i].name + " + ";
-    }
-    msg += indepVars.back().name;
-    msg += " (AICc Value: " + to_string(value) + ")";
-    
+    double value = CGwmGWRBase::AICc(x, y, betas.t(), shat);    
     return value;
 }
 
 #ifdef ENABLE_OPENMP
-double CGwmGWRBasic::indepVarsSelectionCriterionOmp(const vector<GwmVariable>& indepVars)
+double CGwmGWRBasic::indepVarsSelectionCriterionOmp(const vector<size_t>& indepVars)
 {
-    mat x;
-    vec y;
-    setXY(x, y, mSourceLayer, mDepVar, indepVars);
-    uword nDp = mSourceLayer->featureCount(), nVar = indepVars.size() + 1;
+    mat x = mX.cols(CGwmVariableForwardSelector::index2uvec(indepVars, mHasIntercept));
+    vec y = mY;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     mat shat(2, mOmpThreadNum, fill::zeros);
     int flag = true;
@@ -476,8 +470,9 @@ double CGwmGWRBasic::indepVarsSelectionCriterionOmp(const vector<GwmVariable>& i
                 shat(0, thread) += si(0, i);
                 shat(1, thread) += det(si * si.t());
             }
-            catch (...)
+            catch (const exception& e)
             {
+                GWM_LOG_ERROR(e.what());
                 flag = false;
             }
         }
@@ -485,80 +480,41 @@ double CGwmGWRBasic::indepVarsSelectionCriterionOmp(const vector<GwmVariable>& i
     if (flag)
     {
         double value = CGwmGWRBase::AICc(x, y, betas.t(), sum(shat, 1));
-        
         return value;
     }
     else return DBL_MAX;
 }
 #endif
 
-void CGwmGWRBasic::createResultLayer(initializer_list<ResultLayerDataItem> items)
-{
-    mat layerPoints = hasPredictLayer() ? mPredictLayer->points() : mSourceLayer->points();
-    uword layerFeatureCount = layerPoints.n_rows;
-    mat layerData(layerFeatureCount, 0);
-    vector<string> layerFields;
-    for (auto &&i : items)
-    {
-        NameFormat nf = get<2>(i);
-        mat column = get<1>(i);
-        string name = get<0>(i);
-        if (nf == NameFormat::Fixed)
-        {
-            layerData = join_rows(layerData, column.col(0));
-            layerFields.push_back(name);
-        }
-        else
-        {
-            layerData = join_rows(layerData, column);
-            for (size_t k = 0; k < column.n_cols; k++)
-            {
-                string variableName = k == 0 ? "Intercept" : mIndepVars[k - 1].name;
-                string fieldName;
-                switch (nf)
-                {
-                case NameFormat::VarName:
-                    fieldName = variableName;
-                    break;
-                case NameFormat::PrefixVarName:
-                    fieldName = variableName + "_" + name;
-                    break;
-                case NameFormat::SuffixVariable:
-                    fieldName = name + "_" + variableName;
-                    break;
-                default:
-                    fieldName = variableName;
-                }
-                layerFields.push_back(fieldName);
-            }
-        }
-        
-    }
-    
-    mResultLayer = new CGwmSimpleLayer(layerPoints, layerData, layerFields);
-}
 
 void CGwmGWRBasic::setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion)
 {
     mBandwidthSelectionCriterion = criterion;
-    unordered_map<ParallelType, BandwidthSelectionCriterionCalculator> mapper;
-    switch (mBandwidthSelectionCriterion)
+    unordered_map<BandwidthSelectionCriterionType, BandwidthSelectionCriterionCalculator> mapper;
+    switch (mParallelType)
     {
-    case BandwidthSelectionCriterionType::CV:
+    case ParallelType::SerialOnly:
         mapper = {
-            make_pair(ParallelType::SerialOnly, &CGwmGWRBasic::bandwidthSizeCriterionCVSerial),
-            make_pair(ParallelType::OpenMP, &CGwmGWRBasic::bandwidthSizeCriterionCVOmp)
+            make_pair(BandwidthSelectionCriterionType::CV, &CGwmGWRBasic::bandwidthSizeCriterionCVSerial),
+            make_pair(BandwidthSelectionCriterionType::AIC, &CGwmGWRBasic::bandwidthSizeCriterionAICSerial)
         };
         break;
-    case BandwidthSelectionCriterionType::AIC:
+#ifdef ENABLE_OPENMP
+    case ParallelType::OpenMP:
         mapper = {
-            make_pair(ParallelType::SerialOnly, &CGwmGWRBasic::bandwidthSizeCriterionAICSerial),
-            make_pair(ParallelType::OpenMP, &CGwmGWRBasic::bandwidthSizeCriterionAICOmp)
+            make_pair(BandwidthSelectionCriterionType::CV, &CGwmGWRBasic::bandwidthSizeCriterionCVOmp),
+            make_pair(BandwidthSelectionCriterionType::AIC, &CGwmGWRBasic::bandwidthSizeCriterionAICOmp)
         };
+        break;
+#endif
     default:
+        mapper = {
+            make_pair(BandwidthSelectionCriterionType::CV, &CGwmGWRBasic::bandwidthSizeCriterionCVSerial),
+            make_pair(BandwidthSelectionCriterionType::AIC, &CGwmGWRBasic::bandwidthSizeCriterionAICSerial)
+        };
         break;
     }
-    mBandwidthSelectionCriterionFunction = mapper[mParallelType];
+    mBandwidthSelectionCriterionFunction = mapper[mBandwidthSelectionCriterion];
 }
 
 void CGwmGWRBasic::setParallelType(const ParallelType& type)
@@ -568,21 +524,38 @@ void CGwmGWRBasic::setParallelType(const ParallelType& type)
         mParallelType = type;
         switch (type) {
         case ParallelType::SerialOnly:
-            mPredictFunction = &CGwmGWRBasic::regressionSerial;
-            mRegressionHatmatrixFunction = &CGwmGWRBasic::regressionHatmatrixSerial;
+            mPredictFunction = &CGwmGWRBasic::predictSerial;
+            mFitFunction = &CGwmGWRBasic::fitSerial;
             mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionSerial;
             break;
+#ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
-            mPredictFunction = &CGwmGWRBasic::regressionOmp;
-            mRegressionHatmatrixFunction = &CGwmGWRBasic::regressionHatmatrixOmp;
+            mPredictFunction = &CGwmGWRBasic::predictOmp;
+            mFitFunction = &CGwmGWRBasic::fitOmp;
             mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionOmp;
             break;
+#endif
         default:
-            mPredictFunction = &CGwmGWRBasic::regressionSerial;
-            mRegressionHatmatrixFunction = &CGwmGWRBasic::regressionHatmatrixSerial;
+            mPredictFunction = &CGwmGWRBasic::predictSerial;
+            mFitFunction = &CGwmGWRBasic::fitSerial;
             mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionSerial;
             break;
         }
     }
     setBandwidthSelectionCriterion(mBandwidthSelectionCriterion);
+}
+
+bool CGwmGWRBasic::isValid()
+{
+    if (CGwmGWRBase::isValid())
+    {
+        double bw = mSpatialWeight.weight<CGwmBandwidthWeight>()->bandwidth();
+        if (!(bw > 0))
+        {
+            return false;
+        }
+
+        return true;
+    }
+    else return false;
 }

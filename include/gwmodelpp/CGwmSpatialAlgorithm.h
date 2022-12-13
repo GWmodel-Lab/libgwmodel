@@ -2,7 +2,7 @@
 #define CGWMSPATIALALGORITHM_H
 
 #include "CGwmAlgorithm.h"
-#include "CGwmSimpleLayer.h"
+#include <armadillo>
 
 /**
  * @brief Abstract spatial algorithm class. 
@@ -26,51 +26,41 @@ public:
     /**
      * @brief Construct a new CGwmSpatialAlgorithm object.
      */
-    CGwmSpatialAlgorithm();
+    CGwmSpatialAlgorithm() {}
+
+    /**
+     * @brief Construct a new CGwmSpatialAlgorithm object.
+     * 
+     * @param coords Coordinates representing positions of samples.
+     */
+    CGwmSpatialAlgorithm(const arma::mat& coords) : mCoords(coords) {};
 
     /**
      * @brief Destroy the CGwmSpatialAlgorithm object.
      */
-    virtual ~CGwmSpatialAlgorithm();
+    virtual ~CGwmSpatialAlgorithm() { mCoords.clear(); }
 
 public:
 
     /**
-     * @brief Get the CGwmSpatialAlgorithm::mSourceLayer object.
+     * @brief Get Coords.
      * 
-     * @return CGwmSpatialAlgorithm::mSourceLayer.
+     * @return arma::mat 
      */
-    CGwmSimpleLayer* sourceLayer() const;
+    arma::mat coords()
+    {
+        return mCoords;
+    }
 
     /**
-     * @brief Set the CGwmSpatialAlgorithm::mSourceLayer object.
+     * @brief Set the Coords object
      * 
-     * Use gwmodel_set_gwr_source_layer() to set this property to CGwmGWRBasic in shared build.
-     * 
-     * Use gwmodel_set_gwss_source_layer() to set this property to CGwmGWSS in shared build.
-     * 
-     * @param layer Pointer to source layer.
+     * @param coords Coordinates representing positions of samples.
      */
-    void setSourceLayer(CGwmSimpleLayer* layer);
-    void setSourceLayer(const CGwmSimpleLayer& layer);
-    
-    /**
-     * @brief Get the CGwmSpatialAlgorithm::mResultLayer object .
-     * 
-     * Use gwmodel_get_gwr_result_layer() to get this property from CGwmGWRBasic in shared build.
-     * 
-     * Use gwmodel_get_gwss_result_layer() to get this property from CGwmGWSS in shared build.
-     * 
-     * @return CGwmSpatialAlgorithm::mResultLayer.
-     */
-    CGwmSimpleLayer* resultLayer() const;
-
-    /**
-     * @brief Set the CGwmSpatialAlgorithm::mResultLayer object
-     * 
-     * @param layer Pointer to result layer.
-     */
-    void setResultLayer(CGwmSimpleLayer* layer);
+    void setCoords(const arma::mat& coords)
+    {
+        mCoords = coords;
+    }
 
     /**
      * @brief Check whether the algorithm's configuration is valid. 
@@ -81,34 +71,8 @@ public:
     virtual bool isValid();
 
 protected:
-    CGwmSimpleLayer* mSourceLayer = nullptr;    //!< Pointer to source layer.
-    CGwmSimpleLayer* mResultLayer = nullptr;    //!< Pointer to result layer.
+    
+    arma::mat mCoords;
 };
-
-inline CGwmSimpleLayer* CGwmSpatialAlgorithm::sourceLayer() const
-{
-    return mSourceLayer;
-}
-
-inline void CGwmSpatialAlgorithm::setSourceLayer(CGwmSimpleLayer* layer)
-{
-    mSourceLayer = new CGwmSimpleLayer(*layer);
-}
-
-inline void CGwmSpatialAlgorithm::setSourceLayer(const CGwmSimpleLayer& layer)
-{
-    mSourceLayer = new CGwmSimpleLayer(layer);
-}
-
-inline CGwmSimpleLayer* CGwmSpatialAlgorithm::resultLayer() const
-{
-    return mResultLayer;
-}
-
-inline void CGwmSpatialAlgorithm::setResultLayer(CGwmSimpleLayer* layer)
-{
-    mResultLayer = layer;
-}
-
 
 #endif  // CGWMSPATIALALGORITHM_H
