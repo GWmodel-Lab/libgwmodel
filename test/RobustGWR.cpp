@@ -131,10 +131,10 @@ TEST_CASE("RobustGWR: adaptive bandwidth autoselection of with CV")
     REQUIRE(bw == 67);
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2441.702, 1e-3));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2448.565, 1e-3));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.6815168, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.6641687, 1e-6));
+    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2441.232, 1e-3));
+    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2449.859, 1e-3));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.6873385, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.6643629, 1e-6));
 }
 
 TEST_CASE("RobustGWR: indepdent variable autoselection with AIC")
