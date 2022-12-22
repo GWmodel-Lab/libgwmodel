@@ -10,7 +10,7 @@
 #include "IGwmVarialbeSelectable.h"
 #include "IGwmParallelizable.h"
 
-#include "spatialweight/CGwmCRSTDistance.h"
+#include "spatialweight/CGwmCRSSTDistance.h"
 
 using namespace std;
 
@@ -23,29 +23,25 @@ public:
         CV
     };
 
-    enum NameFormat
-    {
-        Fixed,
-        VarName,
-        PrefixVarName,
-        SuffixVariable
-    };
-
     static unordered_map<BandwidthSelectionCriterionType, string> BandwidthSelectionCriterionTypeNameMapper;
     
-    typedef mat (CGwmGTWR::*RegressionCalculator)(const mat&, const vec&);
-    typedef mat (CGwmGTWR::*RegressionHatmatrixCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
-
-    typedef tuple<string, mat, NameFormat> ResultLayerDataItem;
+    typedef mat (CGwmGTWR::*PredictCalculator)(const mat&, const mat&, const vec&);
+    typedef mat (CGwmGTWR::*FitCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
 
     typedef double (CGwmGTWR::*BandwidthSelectionCriterionCalculator)(CGwmBandwidthWeight*);
-    typedef double (CGwmGTWR::*IndepVarsSelectCriterionCalculator)(const vector<GwmVariable>&);
+    typedef double (CGwmGTWR::*IndepVarsSelectCriterionCalculator)(const std::vector<size_t>&);
 
 private:
     static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
 
 public:
     CGwmGTWR();
+    CGwmGTWR(const mat& x, const vec& y, const mat& coords, const CGwmSpatialWeight& spatialWeight, bool hasHatMatrix = true, bool hasIntercept = true)
+        : CGwmGWRBase(x, y, spatialWeight, coords)
+    {
+        mHasHatMatrix = hasHatMatrix;
+        mHasIntercept = hasIntercept;
+    }
     ~CGwmGTWR();
 
 private:
@@ -56,41 +52,52 @@ private:
 //    vec weightVector(uword focus);//recalculate weight using spatial temporal distance
 
 public:
-    bool isAutoselectBandwidth() const;
-    void setIsAutoselectBandwidth(bool isAutoSelect);
+    bool isAutoselectBandwidth() const { return mIsAutoselectBandwidth; }
+    void setIsAutoselectBandwidth(bool isAutoSelect) { mIsAutoselectBandwidth = isAutoSelect; }
 
-    BandwidthSelectionCriterionType bandwidthSelectionCriterion() const;
+    BandwidthSelectionCriterionType bandwidthSelectionCriterion() const { return mBandwidthSelectionCriterion; }
     void setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion);
 
-    bool isAutoselectIndepVars() const;
-    void setIsAutoselectIndepVars(bool isAutoSelect);
+    bool isAutoselectIndepVars() const { return mIsAutoselectIndepVars; }
+    void setIsAutoselectIndepVars(bool isAutoSelect) { mIsAutoselectIndepVars = isAutoSelect; }
 
-    double indepVarSelectionThreshold() const;
-    void setIndepVarSelectionThreshold(double threshold);
-    
-    VariablesCriterionList indepVarsSelectionCriterionList() const;
-    BandwidthCriterionList bandwidthSelectionCriterionList() const;
+    double indepVarSelectionThreshold() const { return mIndepVarSelectionThreshold; }
+    void setIndepVarSelectionThreshold(double threshold) { mIndepVarSelectionThreshold = threshold; }
 
-    bool hasHatMatrix() const;
-    void setHasHatMatrix(const bool has);
+    VariablesCriterionList indepVarsSelectionCriterionList() const { return mIndepVarsSelectionCriterionList; }
+    BandwidthCriterionList bandwidthSelectionCriterionList() const { return mBandwidthSelectionCriterionList; }
+
+    bool hasHatMatrix() const { return mHasHatMatrix; }
+    void setHasHatMatrix(const bool has) { mHasHatMatrix = has; }
+
+    arma::mat betasSE() { return mBetasSE; }
+    arma::vec sHat() { return mSHat; }
+    arma::vec qDiag() { return mQDiag; }
+    arma::mat s() { return mS; }
 
 public:     // Implement CGwmAlgorithm
-    void run() override;
+    bool isValid() override;
 
 public:     // Implement IGwmRegressionAnalysis
-    mat regression(const mat& x, const vec& y) override;
-    mat regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S) override;
+    mat predict(const mat& locations) override;
+
+    mat fit() override;
+
 private:
-    mat regressionSerial(const mat& x, const vec& y);
-    mat regressionHatmatrixSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+    mat predictSerial(const mat& locations, const mat& x, const vec& y);
+    mat fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
     
 #ifdef ENABLE_OPENMP
-    mat regressionOmp(const mat& x, const vec& y);
-    mat regressionHatmatrixOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+    mat predictOmp(const mat& locations, const mat& x, const vec& y);
+    mat fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
 #endif
 
 public:     // Implement IGwmBandwidthSelectable
-    double getCriterion(CGwmBandwidthWeight* weight);
+    double getCriterion(CGwmBandwidthWeight* weight) override
+    {
+        return (this->*mBandwidthSelectionCriterionFunction)(weight);
+    }
+
 private:
     double bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwidthWeight);
@@ -100,29 +107,43 @@ private:
 #endif
 
 public:     // Implement IGwmVariableSelectable
-    double getCriterion(const vector<GwmVariable>& variables);
+    double getCriterion(const std::vector<size_t>& variables) override
+    {
+        return (this->*mIndepVarsSelectionCriterionFunction)(variables);
+    }
+
+    std::vector<std::size_t> selectedVariables() override
+    {
+        return mSelectedIndepVars;
+    }
+
 private:
-    double indepVarsSelectionCriterionSerial(const vector<GwmVariable>& indepVars);
+    double indepVarsSelectionCriterionSerial(const std::vector<size_t>& indepVars);
 #ifdef ENABLE_OPENMP
-    double indepVarsSelectionCriterionOmp(const vector<GwmVariable>& indepVars);
-#endif    
+    double indepVarsSelectionCriterionOmp(const std::vector<size_t>& indepVars);
+#endif     
 
 public:     // Implement IGwmParallelizable
-    int parallelAbility() const;
-    ParallelType parallelType() const;
+    int parallelAbility() const
+    {
+        return ParallelType::SerialOnly
+#ifdef ENABLE_OPENMP
+            | ParallelType::OpenMP
+#endif        
+        ;
+    }
+
+    ParallelType parallelType() const { return mParallelType; }
+
     void setParallelType(const ParallelType& type);
 
 public:     // Implement IGwmOpenmpParallelizable
-    void setOmpThreadNum(const int threadNum);
+    void setOmpThreadNum(const int threadNum) { mOmpThreadNum = threadNum; }
 
 protected:
-    bool isStoreS();
+    bool isStoreS() { return mHasHatMatrix && (mCoords.n_rows < 8192); }
 
-    void createDistanceParameter();
-
-    void createPredictionDistanceParameter();
-
-    void createResultLayer(initializer_list<ResultLayerDataItem> items);
+    void createPredictionDistanceParameter(const arma::mat& locations);
 
 protected:
     bool mHasHatMatrix = true;
@@ -133,129 +154,24 @@ protected:
     double mIndepVarSelectionThreshold = 3.0;
     IndepVarsSelectCriterionCalculator mIndepVarsSelectionCriterionFunction = &CGwmGTWR::indepVarsSelectionCriterionSerial;
     VariablesCriterionList mIndepVarsSelectionCriterionList;
+    std::vector<std::size_t> mSelectedIndepVars;
 
     bool mIsAutoselectBandwidth = false;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::AIC;
     BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &CGwmGTWR::bandwidthSizeCriterionCVSerial;
     BandwidthCriterionList mBandwidthSelectionCriterionList;
 
-    RegressionCalculator mPredictFunction = &CGwmGTWR::regressionSerial;
-    RegressionHatmatrixCalculator mRegressionHatmatrixFunction = &CGwmGTWR::regressionHatmatrixSerial;
+    PredictCalculator mPredictFunction = &CGwmGTWR::predictSerial;
+    FitCalculator mFitFunction = &CGwmGTWR::fitSerial;
 
     ParallelType mParallelType = ParallelType::SerialOnly;
     int mOmpThreadNum = 8;
+
+    arma::mat mBetasSE;
+    arma::vec mSHat;
+    arma::vec mQDiag;
+    arma::mat mS;
+
 };
-
-inline mat CGwmGTWR::regression(const mat& x, const vec& y)
-{
-    return regressionSerial(x, y);
-}
-
-inline mat CGwmGTWR::regressionHatmatrix(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
-{
-    return regressionHatmatrixSerial(x, y, betasSE, shat, qdiag, S);
-}
-
-inline bool CGwmGTWR::isStoreS()
-{
-    return mHasHatMatrix && (mSourceLayer->featureCount() < 8192);
-}
-
-inline bool CGwmGTWR::isAutoselectBandwidth() const
-{
-    return mIsAutoselectBandwidth;
-}
-
-inline void CGwmGTWR::setIsAutoselectBandwidth(bool isAutoSelect)
-{
-    mIsAutoselectBandwidth = isAutoSelect;
-}
-
-inline bool CGwmGTWR::isAutoselectIndepVars() const
-{
-    return mIsAutoselectIndepVars;
-}
-
-inline void CGwmGTWR::setIsAutoselectIndepVars(bool isAutoSelect)
-{
-    mIsAutoselectIndepVars = isAutoSelect;
-}
-
-inline double CGwmGTWR::indepVarSelectionThreshold() const
-{
-    return mIndepVarSelectionThreshold;
-}
-
-inline void CGwmGTWR::setIndepVarSelectionThreshold(double threshold)
-{
-    mIndepVarSelectionThreshold = threshold;
-}
-
-inline CGwmGTWR::BandwidthSelectionCriterionType CGwmGTWR::bandwidthSelectionCriterion() const
-{
-    return mBandwidthSelectionCriterion;
-}
-    
-inline VariablesCriterionList CGwmGTWR::indepVarsSelectionCriterionList() const
-{
-    return mIndepVarsSelectionCriterionList;
-}
-
-inline BandwidthCriterionList CGwmGTWR::bandwidthSelectionCriterionList() const
-{
-    return mBandwidthSelectionCriterionList;
-}
-
-inline double CGwmGTWR::getCriterion(CGwmBandwidthWeight* weight)
-{
-    return (this->*mBandwidthSelectionCriterionFunction)(weight);
-}
-
-inline double CGwmGTWR::getCriterion(const vector<GwmVariable>& variables)
-{
-    return (this->*mIndepVarsSelectionCriterionFunction)(variables);
-}
-
-inline int CGwmGTWR::parallelAbility() const
-{
-    return ParallelType::SerialOnly
-#ifdef ENABLE_OPENMP
-        | ParallelType::OpenMP
-#endif        
-        ;
-}
-
-inline ParallelType CGwmGTWR::parallelType() const
-{
-    return mParallelType;
-}
-
-inline void CGwmGTWR::setOmpThreadNum(const int threadNum)
-{
-    mOmpThreadNum = threadNum;
-}
-
-inline bool CGwmGTWR::hasHatMatrix() const
-{
-    return mHasHatMatrix;
-}
-
-inline void CGwmGTWR::setHasHatMatrix(const bool has)
-{
-    mHasHatMatrix = has;
-}
-
-inline void CGwmGTWR::createDistanceParameter()
-{
-    if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance ||
-        mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSTDistance || 
-        mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
-    {
-        mSpatialWeight.distance()->makeParameter({
-            mSourceLayer->points(),
-            mSourceLayer->points()
-        });
-    }
-}
 
 #endif  // CGWMGTWR_H

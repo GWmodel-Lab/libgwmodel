@@ -45,7 +45,7 @@ set(SOURCES_CXX
     gwmodelpp/spatialweight/CGwmMinkwoskiDistance.cpp
     gwmodelpp/spatialweight/CGwmSpatialWeight.cpp
     gwmodelpp/spatialweight/CGwmWeight.cpp
-    gwmodelpp/spatialweight/CGwmCRSTDistance.cpp
+    gwmodelpp/spatialweight/CGwmCRSSTDistance.cpp
 
     gwmodelpp/CGwmBandwidthSelector.cpp
     gwmodelpp/CGwmVariableForwardSelector.cpp
@@ -66,6 +66,7 @@ set(SOURCES_CXX
     gwmodelpp/CGwmGeneralizedLinearModel.cpp
     gwmodelpp/CGwmGWRScalable.cpp
     gwmodelpp/CGwmGWRLocalCollinearity.cpp
+    gwmodelpp/CGwmRobustGWR.cpp
     gwmodelpp/CGwmGTWR.cpp
 )
 
@@ -82,7 +83,7 @@ set(HEADERS_CXX
     ../include/gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h
     ../include/gwmodelpp/spatialweight/CGwmSpatialWeight.h
     ../include/gwmodelpp/spatialweight/CGwmWeight.h
-    ../include/gwmodelpp/spatialweight/CGwmCRSTDistance.h
+    ../include/gwmodelpp/spatialweight/CGwmCRSSTDistance.h
 
     ../include/gwmodelpp/CGwmAlgorithm.h
     ../include/gwmodelpp/CGwmBandwidthSelector.h

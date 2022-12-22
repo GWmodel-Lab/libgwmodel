@@ -1,14 +1,14 @@
-#ifndef CGWMCRSTDISTANCE_H
-#define CGWMCRSTDISTANCE_H
+#ifndef CGWMCRSSTDISTANCE_H
+#define CGWMCRSSTDISTANCE_H
 
 #include "CGwmCRSDistance.h"
 
-class CGwmCRSTDistance : public CGwmCRSDistance
+class CGwmCRSSTDistance : public CGwmCRSDistance
 {
 
     /**
      * @brief Struct of parameters used in spatial distance calculating according to coordinate reference system. 
-     * Usually a pointer to object of this class is passed to CGwmCRSTDistance::distance().
+     * Usually a pointer to object of this class is passed to CGwmCRSSTDistance::distance().
      */
         struct Parameter : public CGwmDistance::Parameter
     {
@@ -38,19 +38,24 @@ public:
 
 
 public:
-    CGwmCRSTDistance();
+    CGwmCRSSTDistance();
 
-    explicit CGwmCRSTDistance(bool isGeographic, double lambda);    
+    explicit CGwmCRSSTDistance(bool isGeographic, double lambda);    
 
-    CGwmCRSTDistance(const CGwmCRSTDistance& distance);
+    /**
+     * @brief Copy construct a new CGwmCRSDistance object.
+     * 
+     * @param distance Refernce to object for copying.
+     */
+    CGwmCRSSTDistance(const CGwmCRSSTDistance& distance);
 
     virtual CGwmDistance * clone() override
     {
-        return new CGwmCRSTDistance(*this);
+        return new CGwmCRSSTDistance(*this);
     }
 
 
-    DistanceType type() override { return DistanceType::CRSTDistance; }
+    DistanceType type() override { return DistanceType::CRSSTDistance; }
 
     bool geographic() const
     {
@@ -95,8 +100,9 @@ public:
 
 
 protected:
-    bool mGeographic = false;
-    unique_ptr<Parameter> mParameter = nullptr;
+
+    unique_ptr<Parameter> mParameter;
+    bool mGeographic;
     double mLambda=0.05;
 
 private:
@@ -106,4 +112,4 @@ private:
 };
 
 
-#endif // CGWMCRSTDISTANCE_H
+#endif // CGWMCRSSTDISTANCE_H

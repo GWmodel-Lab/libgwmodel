@@ -1,16 +1,16 @@
-#include "gwmodelpp/spatialweight/CGwmCRSTDistance.h"
+#include "gwmodelpp/spatialweight/CGwmCRSSTDistance.h"
 #include <assert.h>
 
 #include <exception>
 
-vec CGwmCRSTDistance::SpatialTemporalDistance(const rowvec& out_loc, const mat& in_locs)
+vec CGwmCRSSTDistance::SpatialTemporalDistance(const rowvec& out_loc, const mat& in_locs)
 {
     uword N = in_locs.n_rows;
     vec STdists(N, fill::zeros);
     double uout = out_loc(0), vout = out_loc(1), tout=out_loc(2);
     double Sdist,Tdist;
     //double mLambda=0.05;
-    CGwmCRSTDistance temproportion;
+    CGwmCRSSTDistance temproportion;
     for (uword j = 0; j < N; j++)
     {
         Sdist = CGwmCRSDistance::SpGcdist(in_locs(j, 0), uout, in_locs(j, 1), vout);
@@ -21,13 +21,13 @@ vec CGwmCRSTDistance::SpatialTemporalDistance(const rowvec& out_loc, const mat& 
     return STdists;
 }
 
-vec CGwmCRSTDistance::EuclideanDistance(const rowvec& out_loc, const mat& in_locs)
+vec CGwmCRSSTDistance::EuclideanDistance(const rowvec& out_loc, const mat& in_locs)
 {
     uword N = in_locs.n_rows;
     vec STdists(N, fill::zeros);
     double uout = out_loc(0), vout = out_loc(1), tout=out_loc(2);
     double Sdist,Tdist,x,y;
-    CGwmCRSTDistance temproportion;
+    CGwmCRSSTDistance temproportion;
     for (uword j = 0; j < N; j++)
     {
         x=abs(in_locs(j, 0)- uout);
@@ -42,18 +42,18 @@ vec CGwmCRSTDistance::EuclideanDistance(const rowvec& out_loc, const mat& in_loc
     // return sqrt(sum(diff % diff, 1));
 }
 
-CGwmCRSTDistance::CGwmCRSTDistance() : mParameter(nullptr)
+CGwmCRSSTDistance::CGwmCRSSTDistance() : mParameter(nullptr)
 {
 
 }
 
-CGwmCRSTDistance::CGwmCRSTDistance(bool isGeographic, double lambda): mParameter(nullptr), mGeographic(isGeographic)
+CGwmCRSSTDistance::CGwmCRSSTDistance(bool isGeographic, double lambda): mParameter(nullptr), mGeographic(isGeographic)
 {
     mLambda=lambda;
     mCalculator = mGeographic ? &SpatialTemporalDistance : &EuclideanDistance;
 }
 
-CGwmCRSTDistance::CGwmCRSTDistance(const CGwmCRSTDistance &distance) : CGwmCRSDistance(distance)
+CGwmCRSSTDistance::CGwmCRSSTDistance(const CGwmCRSSTDistance &distance) : CGwmCRSDistance(distance)
 {
     mGeographic = distance.mGeographic;
     if (distance.mParameter)
@@ -64,7 +64,7 @@ CGwmCRSTDistance::CGwmCRSTDistance(const CGwmCRSTDistance &distance) : CGwmCRSDi
     }
 }
 
-void CGwmCRSTDistance::makeParameter(initializer_list<DistParamVariant> plist)
+void CGwmCRSSTDistance::makeParameter(initializer_list<DistParamVariant> plist)
 {
     if (plist.size() == 2)
     {
@@ -85,7 +85,7 @@ void CGwmCRSTDistance::makeParameter(initializer_list<DistParamVariant> plist)
     }
 }
 
-vec CGwmCRSTDistance::distance(uword focus)
+vec CGwmCRSSTDistance::distance(uword focus)
 {
     if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
 
@@ -96,7 +96,7 @@ vec CGwmCRSTDistance::distance(uword focus)
     else throw std::runtime_error("Target is out of bounds of data points.");
 }
 
-double CGwmCRSTDistance::maxDistance()
+double CGwmCRSSTDistance::maxDistance()
 {
     if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
     double maxD = 0.0;
@@ -108,7 +108,7 @@ double CGwmCRSTDistance::maxDistance()
     return maxD;
 }
 
-double CGwmCRSTDistance::minDistance()
+double CGwmCRSSTDistance::minDistance()
 {
     if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
     double minD = DBL_MAX;
