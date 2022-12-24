@@ -20,6 +20,9 @@ set(SAMPLE_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/data)
 add_definitions(-DSAMPLE_DATA_DIR="${SAMPLE_DATA_DIR}")
 set(SAMPL_LONDONHP100 ${CMAKE_CURRENT_SOURCE_DIR}/data/londonhp100.cpp)
 
+add_definitions(-DSAMPLE_DATA_DIR="${SAMPLE_DATA_DIR}")
+set(SAMPL_LONDONHP ${CMAKE_CURRENT_SOURCE_DIR}/data/londonhp.cpp)
+
 add_executable(testBasicGWR BasicGWR.cpp ${SAMPL_LONDONHP100})
 target_link_libraries(testBasicGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2)
 add_test(
@@ -67,4 +70,11 @@ target_link_libraries(testRobustGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch
 add_test(
     NAME testRobustGWR 
     COMMAND $<TARGET_FILE:testRobustGWR> --success
+)
+
+add_executable(testGGWR GGWR.cpp ${SAMPL_LONDONHP100} ${SAMPL_LONDONHP})
+target_link_libraries(testGGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2)
+add_test(
+    NAME testGGWR 
+    COMMAND $<TARGET_FILE:testGGWR> --success
 )
