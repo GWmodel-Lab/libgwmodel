@@ -78,3 +78,10 @@ add_test(
     NAME testGGWR 
     COMMAND $<TARGET_FILE:testGGWR> --success
 )
+
+add_executable(testScalableGWR ScalableGWR.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testScalableGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2)
+add_test(
+    NAME testScalableGWR 
+    COMMAND $<TARGET_FILE:testScalableGWR> --success
+)

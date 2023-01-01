@@ -62,6 +62,7 @@ set(SOURCES_CXX
     gwmodelpp/CGwmLinearModel.cpp
     gwmodelpp/CGwmPoissonModel.cpp
     gwmodelpp/CGwmGeneralizedLinearModel.cpp
+    gwmodelpp/CGwmScalableGWR.cpp
 )
 
 set(SOURCES_C
@@ -97,6 +98,7 @@ set(HEADERS_CXX
     ../include/gwmodelpp/CGwmLinearModel.h
     ../include/gwmodelpp/CGwmPoissonModel.h
     ../include/gwmodelpp/CGwmGeneralizedLinearModel.h
+    ../include/gwmodelpp/CGwmScalableGWR.h
 )
 
 set(HEADERS_C
