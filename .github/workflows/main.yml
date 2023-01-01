@@ -52,7 +52,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Install Dependencies
-        run: brew install gsl armadillo
+        run: brew install gsl armadillo catch2
       - name: CMake build and test
         run: |
           mkdir build
