@@ -117,11 +117,6 @@ public:
 
     mat betas() const { return mBetas; }
 
-    bool hasRegressionLayer()
-    {
-        return hasRegressionLayer()!= false;
-    }
-
     BandwidthSizeCriterionFunction bandwidthSizeCriterionAll(BandwidthSelectionCriterionType type);
     BandwidthSizeCriterionFunction bandwidthSizeCriterionVar(BandwidthSelectionCriterionType type);
 
