@@ -204,7 +204,7 @@ mat CGwmGGWR::fitPoissonSerial(const mat &x, const vec &y)
     uword nVar = x.n_cols;
     mat betas = mat(nVar, nRp, fill::zeros);
 
-    mat mu = (this->*mCalWtFunction)(x, y, mWtMat1);
+    vec mu = (this->*mCalWtFunction)(x, y, mWtMat1);
     mGwDev = 0.0;
     for (uword i = 0; i < nDp; i++)
     {
@@ -286,7 +286,7 @@ mat CGwmGGWR::fitPoissonOmp(const mat &x, const vec &y)
     uword nVar = x.n_cols;
     mat betas = mat(nVar, nRp, fill::zeros);
 
-    mat mu = (this->*mCalWtFunction)(x, y, mWtMat1);
+    vec mu = (this->*mCalWtFunction)(x, y, mWtMat1);
 
     mGwDev = 0.0;
     for (uword i = 0; i < nDp; i++)
@@ -570,6 +570,7 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionCVSerial(CGwmBandwidthWeight *bandwid
     double res = sum(cvsquare);
     return res;
 }
+
 #ifdef ENABLE_OPENMP
 double CGwmGGWR::bandwidthSizeGGWRCriterionCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
@@ -692,7 +693,7 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionAICOmp(CGwmBandwidthWeight *bandwidth
 }
 #endif
 
-mat CGwmGGWR::PoissonWtSerial(const mat &x, const vec &y, mat wt)
+vec CGwmGGWR::PoissonWtSerial(const mat &x, const vec &y, mat wt)
 {
     uword varn = x.n_cols;
     uword dpn = x.n_rows;
@@ -732,7 +733,7 @@ mat CGwmGGWR::PoissonWtSerial(const mat &x, const vec &y, mat wt)
 }
 
 #ifdef ENABLE_OPENMP
-mat CGwmGGWR::PoissonWtOmp(const mat &x, const vec &y, mat wt)
+vec CGwmGGWR::PoissonWtOmp(const mat &x, const vec &y, mat wt)
 {
     uword varn = x.n_cols;
     uword dpn = x.n_rows;
@@ -772,7 +773,7 @@ mat CGwmGGWR::PoissonWtOmp(const mat &x, const vec &y, mat wt)
 }
 #endif
 
-mat CGwmGGWR::BinomialWtSerial(const mat &x, const vec &y, mat wt)
+vec CGwmGGWR::BinomialWtSerial(const mat &x, const vec &y, mat wt)
 {
     uword varn = x.n_cols;
     uword dpn = x.n_rows;
@@ -813,7 +814,7 @@ mat CGwmGGWR::BinomialWtSerial(const mat &x, const vec &y, mat wt)
 }
 
 #ifdef ENABLE_OPENMP
-mat CGwmGGWR::BinomialWtOmp(const mat &x, const vec &y, mat wt)
+vec CGwmGGWR::BinomialWtOmp(const mat &x, const vec &y, mat wt)
 {
     uword varn = x.n_cols;
     uword dpn = x.n_rows;

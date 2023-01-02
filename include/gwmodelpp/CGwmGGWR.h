@@ -95,7 +95,7 @@ public:
 
     typedef double (CGwmGGWR::*BandwidthSelectCriterionFunction)(CGwmBandwidthWeight *);
     typedef mat (CGwmGGWR::*GGWRfitFunction)(const mat& x, const vec& y);
-    typedef mat (CGwmGGWR::*CalWtFunction)(const mat &x, const vec &y, mat w);
+    typedef vec (CGwmGGWR::*CalWtFunction)(const mat &x, const vec &y, mat w);
 
     typedef tuple<string, mat, NameFormat> CreateResultLayerData;
 
@@ -149,11 +149,11 @@ protected:
 #endif
     mat diag(mat a);
 
-    mat PoissonWtSerial(const mat &x, const vec &y, mat w);
-    mat BinomialWtSerial(const mat &x, const vec &y, mat w);
+    vec PoissonWtSerial(const mat &x, const vec &y, mat w);
+    vec BinomialWtSerial(const mat &x, const vec &y, mat w);
 #ifdef ENABLE_OPENMP
-    mat PoissonWtOmp(const mat &x, const vec &y, mat w);
-    mat BinomialWtOmp(const mat &x, const vec &y, mat w);
+    vec PoissonWtOmp(const mat &x, const vec &y, mat w);
+    vec BinomialWtOmp(const mat &x, const vec &y, mat w);
 #endif
     void CalGLMModel(const mat& x, const vec& y);
     // todo: QStringLiteral 用法不确定
