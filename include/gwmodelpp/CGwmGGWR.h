@@ -125,9 +125,9 @@ public: // IOpenmpParallelable interface
     void setOmpThreadNum(const int threadNum) override;
 
 public:
-    static vec gwReg(const mat &x, const vec &y, const vec &w, int focus);
+    static vec gwReg(const mat &x, const vec &y, const vec &w);
 
-    static vec gwRegHatmatrix(const mat &x, const vec &y, const vec &w, int focus, mat &ci, mat &s_ri);
+    static vec gwRegHatmatrix(const mat &x, const vec &y, const vec &w, uword focus, mat &ci, mat &s_ri);
 
     static mat dpois(mat y, mat mu);
     static mat dbinom(mat y, mat m, mat mu);
@@ -169,7 +169,7 @@ private:
 public:
     Family getFamily() const;
     double getTol() const;
-    int getMaxiter() const;
+    size_t getMaxiter() const;
 
     mat getWtMat1() const;
     mat getWtMat2() const;
@@ -179,7 +179,7 @@ public:
 
     bool setFamily(Family family);
     void setTol(double tol, string unit);
-    void setMaxiter(int maxiter);
+    void setMaxiter(size_t maxiter);
 
     void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
     BandwidthCriterionList bandwidthSelectorCriterions() const;
@@ -258,7 +258,7 @@ inline double CGwmGGWR::getTol() const
     return mTol;
 }
 
-inline int CGwmGGWR::getMaxiter() const
+inline size_t CGwmGGWR::getMaxiter() const
 {
     return mMaxiter;
 }
@@ -289,7 +289,7 @@ inline void CGwmGGWR::setTol(double tol, string unit)
     mTol = double(tol) * TolUnitDict[unit];
 }
 
-inline void CGwmGGWR::setMaxiter(int maxiter)
+inline void CGwmGGWR::setMaxiter(size_t maxiter)
 {
     mMaxiter = maxiter;
 }

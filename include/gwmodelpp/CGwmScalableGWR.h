@@ -55,7 +55,7 @@ public:
     CGwmScalableGWR(){};
     ~CGwmScalableGWR(){};
 
-    int polynomial() const { return mPolynomial; }
+    uword polynomial() const { return mPolynomial; }
 
     void setPolynomial(uword polynomial) { mPolynomial = polynomial; }
 

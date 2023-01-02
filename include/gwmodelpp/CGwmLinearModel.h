@@ -11,7 +11,7 @@ public:
     virtual mat variance(mat mu) = 0;
     virtual mat linkinv(mat eta) = 0;
     virtual vec devResids(mat y,mat mu,mat weights) = 0;
-    virtual double aic(mat y,mat n,mat mu,mat wt,double dev) = 0;
+    virtual double aic(mat y,mat n,mat mu,mat wt) = 0;
     virtual mat muEta(mat eta) = 0;
     virtual bool valideta(mat eta) = 0;
     virtual bool validmu(mat mu) = 0;

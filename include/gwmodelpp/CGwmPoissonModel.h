@@ -18,7 +18,7 @@ public:
     mat variance(mat mu) override;
     mat linkinv(mat eta) override;
     vec devResids(mat y,mat mu,mat weights) override;
-    double aic(mat y,mat n,mat mu,mat wt,double dev) override;
+    double aic(mat y,mat n,mat mu,mat wt) override;
     mat muEta(mat eta) override;
     bool valideta(mat eta) override;
     bool validmu(mat mu) override;

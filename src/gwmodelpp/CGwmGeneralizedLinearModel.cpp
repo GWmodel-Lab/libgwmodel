@@ -64,7 +64,7 @@ void CGwmGeneralizedLinearModel::fit(){
                 xadj.col(i) = mX.col(i)%w;
             }
             for (uword i = 0; i < mX.n_rows ; i++){
-                start.col(i) = CGwmGGWR::gwReg(xadj,z%w,vec(mX.n_rows,fill::ones),i);
+                start.col(i) = CGwmGGWR::gwReg(xadj, z%w, vec(mX.n_rows,fill::ones));
             }
             eta = CGwmGGWR::Fitted(mX , start.t()) ; //?不是很确定
             mu = mModel->linkinv(eta + mOffset);
@@ -99,7 +99,7 @@ void CGwmGeneralizedLinearModel::fit(){
     vec nulldevtemp = mModel->devResids(mY,wtdmu1,mWeight);
     mNullDev = sum(nulldevtemp);
     uword rank = empty? 0 : mX.n_rows;
-    mAIC = mModel->aic(mY,n,mu,mWeight,mDev) + 2.0 * rank;
+    mAIC = mModel->aic(mY,n,mu,mWeight) + 2.0 * rank;
 }
 
 

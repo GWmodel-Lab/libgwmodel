@@ -262,7 +262,7 @@ mat CGwmGGWR::fitPoissonSerial(const mat &x, const vec &y)
             try
             {
                 vec wi = mWtMat2.col(i);
-                vec gwsi = gwReg(x, myAdj, wi * mWt2, i);
+                vec gwsi = gwReg(x, myAdj, wi * mWt2);
                 betas.col(i) = gwsi;
             }
             catch (const exception& e)
@@ -360,7 +360,7 @@ mat CGwmGGWR::fitPoissonOmp(const mat &x, const vec &y)
                 try
                 {
                     vec wi = mWtMat2.col(i);
-                    vec gwsi = gwReg(x, myAdj, wi * mWt2, i);
+                    vec gwsi = gwReg(x, myAdj, wi * mWt2);
                     betas.col(i) = gwsi;
                     // emit tick(current++, nRp);
                 }
@@ -448,7 +448,7 @@ mat CGwmGGWR::fitBinomialOmp(const mat &x, const vec &y)
                 try
                 {
                     vec wi = mWtMat2.col(i);
-                    vec gwsi = gwReg(x, myAdj, wi * mWt2, i);
+                    vec gwsi = gwReg(x, myAdj, wi * mWt2);
                     mBetas.col(i) = gwsi;
                     // emit tick(current++, nRp);
                 }
@@ -520,7 +520,7 @@ mat CGwmGGWR::fitBinomialSerial(const mat &x, const vec &y)
             try
             {
                 vec wi = mWtMat2.col(i);
-                vec gwsi = gwReg(x, myAdj, wi * mWt2, i);
+                vec gwsi = gwReg(x, myAdj, wi * mWt2);
                 mBetas.col(i) = gwsi;
                 // emit tick(i, nRp);
             }
@@ -555,7 +555,7 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionCVSerial(CGwmBandwidthWeight *bandwid
     for (uword i = 0; i < n; i++)
     {
         mat wi = wt.col(i) % mWt2;
-        vec gwsi = gwReg(mX, myAdj, wi, i);
+        vec gwsi = gwReg(mX, myAdj, wi);
         mat yhatnoi = mX.row(i) * gwsi;
         if (mFamily == CGwmGGWR::Family::Poisson)
         {
@@ -595,7 +595,7 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionCVOmp(CGwmBandwidthWeight *bandwidthW
         if (true)
         {
             mat wi = wt.col(i) % mWt2;
-            vec gwsi = gwReg(mX, myAdj, wi, i);
+            vec gwsi = gwReg(mX, myAdj, wi);
             mat yhatnoi = mX.row(i) * gwsi;
             if (mFamily == CGwmGGWR::Family::Poisson)
             {
@@ -713,7 +713,7 @@ mat CGwmGGWR::PoissonWtSerial(const mat &x, const vec &y, mat wt)
         for (uword i = 0; i < dpn; i++)
         {
             vec wi = wt.col(i);
-            vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
+            vec gwsi = gwReg(x, myAdj, wi % mWt2);
             betas.col(i) = gwsi;
         }
         mat betas1 = trans(betas);
@@ -752,7 +752,7 @@ mat CGwmGGWR::PoissonWtOmp(const mat &x, const vec &y, mat wt)
         for (uword i = 0; i < dpn; i++)
         {
             vec wi = wt.col(i);
-            vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
+            vec gwsi = gwReg(x, myAdj, wi % mWt2);
             betas.col(i) = gwsi;
         }
         mat betas1 = trans(betas);
@@ -795,7 +795,7 @@ mat CGwmGGWR::BinomialWtSerial(const mat &x, const vec &y, mat wt)
         for (uword i = 0; i < dpn; i++)
         {
             vec wi = wt.col(i);
-            vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
+            vec gwsi = gwReg(x, myAdj, wi % mWt2);
             betas.col(i) = gwsi;
         }
         mat betas1 = trans(betas);
@@ -836,7 +836,7 @@ mat CGwmGGWR::BinomialWtOmp(const mat &x, const vec &y, mat wt)
         for (uword i = 0; i < dpn ; i++)
         {
             vec wi = wt.col(i);
-            vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
+            vec gwsi = gwReg(x, myAdj, wi % mWt2);
             betas.col(i) = gwsi;
         }
         mat betas1 = trans(betas);
@@ -906,7 +906,7 @@ mat CGwmGGWR::diag(mat a)
 }
 
 // GWR clalibration
-vec CGwmGGWR::gwReg(const mat &x, const vec &y, const vec &w, int focus)
+vec CGwmGGWR::gwReg(const mat &x, const vec &y, const vec &w)
 {
     mat wspan(1, x.n_cols, fill::ones);
     mat xtw = trans(x % (w * wspan));
@@ -917,7 +917,7 @@ vec CGwmGGWR::gwReg(const mat &x, const vec &y, const vec &w, int focus)
     return beta;
 }
 
-vec CGwmGGWR::gwRegHatmatrix(const mat &x, const vec &y, const vec &w, int focus, mat &ci, mat &s_ri)
+vec CGwmGGWR::gwRegHatmatrix(const mat &x, const vec &y, const vec &w, uword focus, mat &ci, mat &s_ri)
 {
     mat wspan(1, x.n_cols, fill::ones);
     mat xtw = trans(x % (w * wspan));

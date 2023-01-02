@@ -143,7 +143,7 @@ GwmRegressionDiagnostic CGwmScalableGWR::CalcDiagnostic(const mat& x, const vec&
 void CGwmScalableGWR::findDataPointNeighbours()
 {
     CGwmBandwidthWeight* bandwidth = mDpSpatialWeight.weight<CGwmBandwidthWeight>();
-    uword nDp = mCoords.n_rows, nBw = bandwidth->bandwidth() < nDp ? bandwidth->bandwidth() : nDp;
+    uword nDp = mCoords.n_rows, nBw = uword(bandwidth->bandwidth()) < nDp ? uword(bandwidth->bandwidth()) : nDp;
     if (mParameterOptimizeCriterion == BandwidthSelectionCriterionType::CV)
     {
         nBw -= 1;
@@ -175,7 +175,7 @@ mat CGwmScalableGWR::findNeighbours(const mat& points, umat &nnIndex)
     CGwmBandwidthWeight* bandwidth = mSpatialWeight.weight<CGwmBandwidthWeight>();
     uword nDp = mCoords.n_rows;
     uword nRp = points.n_rows;
-    uword nBw = bandwidth->bandwidth() < nDp ? bandwidth->bandwidth() : nDp;
+    uword nBw = uword(bandwidth->bandwidth()) < nDp ? uword(bandwidth->bandwidth()) : nDp;
     umat index(nBw, nRp, fill::zeros);
     mat dists(nBw, nRp, fill::zeros);
     for (uword i = 0; i < nRp; i++)
@@ -196,7 +196,7 @@ double scagwr_loocv_multimin_function(const gsl_vector* vars, void* params)
     vec target = { b_tilde, alpha };
     const CGwmScalableGWR::LoocvParams *p = (CGwmScalableGWR::LoocvParams*) params;
     const mat *x = p->x, *y = p->y;
-    double polynomial = p->polynomial;
+    uword polynomial = p->polynomial;
     const mat *Mx0 = p->Mx0, *My0 = p->My0;
     return CGwmScalableGWR::Loocv(target, *x, *y, polynomial, *Mx0, *My0);
 }
