@@ -48,7 +48,7 @@ public:
     /**
      * @brief Destroy the CGwmSpatialWeight object.
      */
-    ~CGwmSpatialWeight();
+    virtual ~CGwmSpatialWeight();
 
     /**
      * @brief Get the pointer to CGwmSpatialWeight::mWeight .
