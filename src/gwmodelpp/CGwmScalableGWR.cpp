@@ -295,11 +295,11 @@ mat CGwmScalableGWR::predict(const mat& locations)
     mDpSpatialWeight = mSpatialWeight;
     findDataPointNeighbours();
     CGwmBandwidthWeight* bandwidth = mSpatialWeight.weight<CGwmBandwidthWeight>();
-    arma::uword nDp = mX.n_rows, nBw = bandwidth->bandwidth();
+    arma::uword nDp = mX.n_rows, nBw = (uword)bandwidth->bandwidth();
     if (nBw >= nDp) 
     {
         nBw = nDp - 1;
-        bandwidth->setBandwidth(nBw);
+        bandwidth->setBandwidth((double)nBw);
     }
     double band0 = 0.0;
     switch (bandwidth->kernel())
@@ -441,11 +441,11 @@ mat CGwmScalableGWR::fit()
     mDpSpatialWeight = mSpatialWeight;
     findDataPointNeighbours();
     CGwmBandwidthWeight* bandwidth = mSpatialWeight.weight<CGwmBandwidthWeight>();
-    arma::uword nDp = mX.n_rows, nBw = bandwidth->bandwidth();
+    arma::uword nDp = mX.n_rows, nBw = (uword)bandwidth->bandwidth();
     if (nBw >= nDp) 
     {
         nBw = nDp - 1;
-        bandwidth->setBandwidth(nBw);
+        bandwidth->setBandwidth((double)nBw);
     }
     double band0 = 0.0;
     switch (bandwidth->kernel())
@@ -489,7 +489,7 @@ arma::mat CGwmScalableGWR::fitSerial(const arma::mat &x, const arma::vec &y)
     if (bw >= n)
     {
         bw = bw - 1;
-        bandwidth->setBandwidth(bw);
+        bandwidth->setBandwidth((double)bw);
     }
     double b = mScale, a = mPenalty;
     mat XtX = x.t() * x, XtY = x.t() * y;

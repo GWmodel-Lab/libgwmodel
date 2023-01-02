@@ -683,13 +683,12 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionAICOmp(CGwmBandwidthWeight *bandwidth
             trS(thread) += S(i, i);
         }
     }
-    double AICc;
     if (S.is_finite())
     {
         double trs = double(sum(trS));
-        AICc = -2 * mLLik + 2 * trs + 2 * trs * (trs + 1) / (n - trs - 1);
+        return -2 * mLLik + 2 * trs + 2 * trs * (trs + 1) / (n - trs - 1);
     }
-    return AICc;
+    else return DBL_MAX;
 }
 #endif
 
