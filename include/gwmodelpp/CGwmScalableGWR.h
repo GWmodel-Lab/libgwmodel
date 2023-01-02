@@ -35,16 +35,18 @@ public:
     {
         const mat* x;
         const mat* y;
-        const int bw;
-        const int polynomial;
+        const uword polynomial;
         const mat* Mx0;
         const mat* My0;
     };
 
     typedef tuple<string, mat, NameFormat> ResultLayerDataItem;
 
-    static double Loocv(const vec& target, const mat& x, const vec& y, int bw, int poly, const mat& Mx0, const mat& My0);
-    static double AICvalue(const vec& target, const mat& x, const vec& y, int bw, int poly, const mat& Mx0, const mat& My0);
+    static double Loocv(const vec& target, const mat& x, const vec& y, uword poly, const mat& Mx0, const mat& My0);
+    static double AICvalue(const vec& target, const mat& x, const vec& y, uword poly, const mat& Mx0, const mat& My0);
+
+public:
+    static size_t treeChildCount;
 
 private:
     static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
@@ -53,65 +55,57 @@ public:
     CGwmScalableGWR(){};
     ~CGwmScalableGWR(){};
 
-    //void run() override;
-    mat fit();
+    int polynomial() const { return mPolynomial; }
 
-    int polynomial() const;
-    void setPolynomial(int polynomial);
+    void setPolynomial(uword polynomial) { mPolynomial = polynomial; }
 
-    double cv() const;
-    double scale() const;
-    double penalty() const;
+    double cv() const { return mCV; }
 
-    mat predictData() const;
-    void setPredictData(const mat &locations);
+    double scale() const { return mScale; }
+
+    double penalty() const { return mPenalty; }
 
     bool hasHatMatrix() const { return mHasHatMatrix; }
 
     void setHasHatMatrix(const bool has) { mHasHatMatrix = has; }
 
-    bool hasPredict() const;
-    void setHasPredict(bool hasPredict);
+    BandwidthSelectionCriterionType parameterOptimizeCriterion() const
+    {
+        return mParameterOptimizeCriterion;
+    }
 
-    BandwidthSelectionCriterionType parameterOptimizeCriterion() const;
-    void setParameterOptimizeCriterion(const BandwidthSelectionCriterionType &parameterOptimizeCriterion);
+    void setParameterOptimizeCriterion(const BandwidthSelectionCriterionType &parameterOptimizeCriterion)
+    {
+        mParameterOptimizeCriterion = parameterOptimizeCriterion;
+    }
 
 public:     // GwmSpatialAlgorithm interface
     bool isValid() override;
 
 
 public:     // IRegressionAnalysis interface
+    mat fit() override
+    {
+        return fitSerial(mX, mY);
+    }
+
     mat predict(const mat& locations) override
     {
-        return fitSerial(mX,mY);
-    }
-    /*mat predict(const mat &x, const vec &y) override
-    {
-        return fit(x, y);
-    }*/
-
-protected:
-    bool hasPredictLayer()
-    {
-        return mHasPredict;
+        return predictSerial(locations, mX, mY);
     }
 
 private:
     void findDataPointNeighbours();
-    mat findNeighbours(const CGwmSpatialWeight& spatialWeight, umat &nnIndex);
+    mat findNeighbours(const mat& points, const CGwmSpatialWeight& spatialWeight, umat &nnIndex);
     double optimize(const mat& Mx0, const mat& My0, double& b_tilde, double& alpha);
     void prepare();
 
-    mat predictSerial(const arma::mat& x, const arma::vec& y);
     mat fitSerial(const arma::mat &x, const arma::vec &y);
-
-    //void createResultLayer(initializer_list<ResultLayerDataItem> items);
-
-    bool mHasPredict = false;
+    mat predictSerial(const mat& locations, const arma::mat& x, const arma::vec& y);
 
 private:
-    int mPolynomial = 4;
-    int mMaxIter = 500;
+    uword mPolynomial = 4;
+    size_t mMaxIter = 500;
     double mCV = 0.0;
     double mScale = 1.0;
     double mPenalty = 0.01;
@@ -120,8 +114,6 @@ private:
     vec mRegressionLayerY;
     mat mRegressionLayerX;
     
-    mat mPredictData;
-
     bool mHasHatMatrix = true;
 
     CGwmSpatialWeight mDpSpatialWeight;
@@ -139,53 +131,6 @@ private:
     mat mMy0;
     vec mShat;
     mat mBetasSE;
-public:
-    static int treeChildCount;
 };
-
-
-inline mat CGwmScalableGWR::predictData() const
-{
-    return mPredictData;
-}
-
-inline void CGwmScalableGWR::setPredictData(const mat &locations)
-{
-    mPredictData = locations;
-}
-inline void CGwmScalableGWR::setPolynomial(int polynomial)
-{
-    mPolynomial = polynomial;
-}
-
-inline double CGwmScalableGWR::penalty() const
-{
-    return mPenalty;
-}
-
-inline double CGwmScalableGWR::scale() const
-{
-    return mScale;
-}
-
-inline double CGwmScalableGWR::cv() const
-{
-    return mCV;
-}
-
-inline int CGwmScalableGWR::polynomial() const
-{
-    return mPolynomial;
-}
-
-inline CGwmScalableGWR::BandwidthSelectionCriterionType CGwmScalableGWR::parameterOptimizeCriterion() const
-{
-    return mParameterOptimizeCriterion;
-}
-
-inline void CGwmScalableGWR::setParameterOptimizeCriterion(const BandwidthSelectionCriterionType &parameterOptimizeCriterion)
-{
-    mParameterOptimizeCriterion = parameterOptimizeCriterion;
-}
 
 #endif  // CGWMScalableGWR_H
