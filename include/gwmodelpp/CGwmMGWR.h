@@ -135,7 +135,7 @@ public:     // GwmSpatialAlgorithm interface
 
 
 public:     // GwmSpatialMultiscaleAlgorithm interface
-    virtual void setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights);
+    virtual void setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights) override;
 
 
 public:     // IBandwidthSizeSelectable interface
