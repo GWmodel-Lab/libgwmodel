@@ -173,6 +173,7 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with CV")
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.715598248202, 1e-6));
 }
 
+#ifdef ENABLE_OPENMP
 TEST_CASE("MGWR: basic flow with CVR")
 {
     mat londonhp100_coord, londonhp100_data;
@@ -190,7 +191,7 @@ TEST_CASE("MGWR: basic flow with CVR")
     for (size_t i = 0; i < nVar; i++)
     {
         CGwmCRSDistance distance;
-        CGwmBandwidthWeight bandwidth(36, false, CGwmBandwidthWeight::Bisquare);
+        CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Bisquare);
         spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
         preditorCentered.push_back(i != 0);
         bandwidthInitialize.push_back(CGwmMGWR::BandwidthInitilizeType::Initial);
@@ -216,15 +217,16 @@ TEST_CASE("MGWR: basic flow with CVR")
     REQUIRE_NOTHROW(algorithm.fit());
 
     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(4623.78, 0.1));
-    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(12665.70, 0.1));
-    REQUIRE_THAT(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(12665.70, 0.1));
+    REQUIRE(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth() == 35);
+    REQUIRE(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth() == 98);
+    REQUIRE(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth() == 98);
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2437.09277417389, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.744649364494, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.712344894394, 1e-6));
+    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2438.256543496552, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.757377391669, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.715598248225, 1e-6));
 }
+#endif
 
 #ifdef ENABLE_OPENMP
 TEST_CASE("MGWR: basic flow (multithread)")

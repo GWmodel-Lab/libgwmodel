@@ -107,8 +107,9 @@ mat CGwmMGWR::fit()
     mBandwidthSizeCriterion = bandwidthSizeCriterionAll(mBandwidthSelectionApproach[0]);
     CGwmBandwidthSelector initBwSelector;
     initBwSelector.setBandwidth(bw0);
-    initBwSelector.setLower(adaptive ? mAdaptiveLower : 0.0);
-    initBwSelector.setUpper(adaptive ? mCoords.n_rows : mSpatialWeights[0].distance()->maxDistance());
+    double maxDist = mSpatialWeights[0].distance()->maxDistance();
+    initBwSelector.setLower(adaptive ? mAdaptiveLower : maxDist / 5000.0);
+    initBwSelector.setUpper(adaptive ? mCoords.n_rows : maxDist);
     CGwmBandwidthWeight* initBw = initBwSelector.optimize(this);
     if (!initBw)
     {
@@ -183,8 +184,9 @@ mat CGwmMGWR::backfitting(const mat &x, const vec &y)
                 bool adaptive = bwi0->adaptive();
                 CGwmBandwidthSelector selector;
                 selector.setBandwidth(bwi0);
-                selector.setLower(adaptive ? mAdaptiveLower : 0.0);
-                selector.setUpper(adaptive ? mCoords.n_rows : mSpatialWeights[i].distance()->maxDistance());
+                double maxDist = mSpatialWeights[i].distance()->maxDistance();
+                selector.setLower(adaptive ? mAdaptiveLower : maxDist / 5000.0);
+                selector.setUpper(adaptive ? mCoords.n_rows : maxDist);
                 CGwmBandwidthWeight* bwi = selector.optimize(this);
                 double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
                 if (abs(bwi1s - bwi0s) > mBandwidthSelectThreshold[i])
@@ -197,9 +199,6 @@ mat CGwmMGWR::backfitting(const mat &x, const vec &y)
                     if (bwChangeNo(i) >= mBandwidthSelectRetryTimes)
                     {
                         mBandwidthInitilize[i] = BandwidthInitilizeType::Specified;
-                    }
-                    else
-                    {
                     }
                 }
                 mSpatialWeights[i].setWeight(bwi);
@@ -276,7 +275,7 @@ mat CGwmMGWR::fitAllSerial(const mat& x, const vec& y)
     if (mHasHatMatrix )
     {
         mat betasSE(nVar, nDp, fill::zeros);
-        for (int i = 0; (uword)i < nDp ; i++)
+        for (uword i = 0; i < nDp ; i++)
         {
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
@@ -399,7 +398,7 @@ vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const uword var, mat &S)
     {
         mat ci, si;
         S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
-        for (int i = 0; (uword)i < nDp  ; i++)
+        for (uword i = 0; i < nDp  ; i++)
         {
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
@@ -857,10 +856,6 @@ void CGwmMGWR::setParallelType(const ParallelType &type)
             mFitVar = &CGwmMGWR::fitVarOmp;
             break;
 #endif
-//        case IParallelalbe::ParallelType::CUDA:
-//            mRegressionAll = &CGwmMGWR::regressionAllOmp;
-//            mRegressionVar = &CGwmMGWR::regressionVarOmp;
-//            break;
         default:
             mFitAll = &CGwmMGWR::fitAllSerial;
             mFitVar = &CGwmMGWR::fitVarSerial;
