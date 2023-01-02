@@ -249,7 +249,6 @@ public:
 
 private:
     vector<CGwmBandwidthWeight*> mBandwidths;
-    Parameter mParameter;
 };
 
 #endif  // CGWMGWDR_H
