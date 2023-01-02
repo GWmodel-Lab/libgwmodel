@@ -104,10 +104,6 @@ private:
     double mScale = 1.0;
     double mPenalty = 0.01;
 
-    bool hasRegressionLayerXY = false;
-    vec mRegressionLayerY;
-    mat mRegressionLayerX;
-    
     bool mHasHatMatrix = true;
 
     CGwmSpatialWeight mDpSpatialWeight;
