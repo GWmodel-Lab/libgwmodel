@@ -226,8 +226,8 @@ mat CGwmRobustGWR::robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, 
     GwmRegressionDiagnostic diagnostic;
     diagnostic = CalcDiagnostic(x, y, betas, shat);
     double trS = shat(0), trStS = shat(1);
-    double nDp = x.n_rows;
-    double sigmaHat = diagnostic.RSS / (nDp - 2 * trS + trStS);
+    uword nDp = x.n_rows;
+    double sigmaHat = diagnostic.RSS / (1.0 * nDp - 2 * trS + trStS);
     vec studentizedResidual = residual / sqrt(sigmaHat * qDiag);
 
     vec WVect(nDp, fill::zeros);

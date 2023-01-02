@@ -59,7 +59,6 @@ set(SOURCES_CXX
     gwmodelpp/CGwmRobustGWR.cpp
     gwmodelpp/CGwmGGWR.cpp
     gwmodelpp/CGwmBinomialModel.cpp
-    gwmodelpp/CGwmLinearModel.cpp
     gwmodelpp/CGwmPoissonModel.cpp
     gwmodelpp/CGwmGeneralizedLinearModel.cpp
     gwmodelpp/CGwmScalableGWR.cpp

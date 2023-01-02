@@ -39,7 +39,7 @@ mat CGwmBinomialModel::variance(mat mu){
     return mu % (1 - mu);
 }
 
-mat CGwmBinomialModel::devResids(mat y, mat mu, mat weights){
+vec CGwmBinomialModel::devResids(mat y, mat mu, mat weights){
     int n = y.n_rows;
     mat res = vec(n);
     int lmu = mu.n_elem;

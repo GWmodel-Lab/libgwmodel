@@ -14,8 +14,7 @@ CGwmGeneralizedLinearModel::CGwmGeneralizedLinearModel()
 }
 
 void CGwmGeneralizedLinearModel::fit(){
-    int nVars = mX.n_cols;
-    int nObs = mY.n_rows;
+    uword nVars = mX.n_cols, nObs = mY.n_rows;
     bool empty = (nVars == 0);
     mat coefold;
     mat eta = vec(uword(0));
@@ -41,9 +40,6 @@ void CGwmGeneralizedLinearModel::fit(){
     mMuStart = mModel->muStart();
     if(empty ){
         eta = zeros(nObs) + mOffset;
-//        if(!mModel->valideta(eta)){
-
-//        }
         mu = mModel->linkinv(eta);
         vec devtemp = mModel->devResids(mY,mu,mWeight);
         mDev = sum(devtemp);
@@ -58,25 +54,21 @@ void CGwmGeneralizedLinearModel::fit(){
         double devold = sum(devoldtemp);
         mat start = mat(nVars, mX.n_rows, fill::zeros);
         mat coef;
-        //bool boundary = false;
-        //bool conv = false;
         for(int iter = 0; iter < mMaxit ; iter++){
             mat varmu = mModel->variance(mu);
             mat muetaval = mModel->muEta(eta);
             mat z = (eta - mOffset) + (mY - mu)/muetaval;
             mat w = sqrt((mWeight % (muetaval % muetaval))/varmu);
             mat xadj = mat(mX.n_rows,mX.n_cols);
-            for (int i = 0; (uword)i < mX.n_cols ; i++){
+            for (uword i = 0; i < mX.n_cols ; i++){
                 xadj.col(i) = mX.col(i)%w;
             }
-            for (int i = 0; (uword)i < mX.n_rows ; i++){
+            for (uword i = 0; i < mX.n_rows ; i++){
                 start.col(i) = CGwmGGWR::gwReg(xadj,z%w,vec(mX.n_rows,fill::ones),i);
             }
-            mat starttrans = trans(start);
-            eta = CGwmGGWR::Fitted(mX , starttrans) ; //?不是很确定
+            eta = CGwmGGWR::Fitted(mX , start.t()) ; //?不是很确定
             mu = mModel->linkinv(eta + mOffset);
-            vec devtemp = mModel->devResids(mY,mu,mWeight);
-            mDev = sum(devtemp);
+            mDev = sum(mModel->devResids(mY,mu,mWeight));
             if (isinf(mDev) ) {
                 int ii = 1;
                 while (isinf(mDev) ) {
@@ -85,10 +77,8 @@ void CGwmGeneralizedLinearModel::fit(){
                     }
                     ii++;
                     start = (start + coefold)/2;
-                    mat starttrans = trans(start);
-                    eta = CGwmGGWR::Fitted(mX , starttrans);
-                    vec devtemp = mModel->devResids(mY,mu,mWeight);
-                    mDev = sum(devtemp);
+                    eta = CGwmGGWR::Fitted(mX , start.t());
+                    mDev = sum(mModel->devResids(mY,mu,mWeight));
                 }
             }
             if (abs(mDev - devold)/(0.1 + abs(mDev)) < mEpsilon ) {
@@ -103,13 +93,13 @@ void CGwmGeneralizedLinearModel::fit(){
     }
     vec wtdmu = (mIntercept)? sum(mWeight % mY)/sum(mWeight) : mModel->linkinv(mOffset);
     vec wtdmu1 = vec(mY.n_rows);
-    for(int i = 0; (uword)i < wtdmu1.n_rows ; i++){
+    for(uword i = 0; i < wtdmu1.n_rows ; i++){
         wtdmu1.row(i) = wtdmu;
     }
     vec nulldevtemp = mModel->devResids(mY,wtdmu1,mWeight);
     mNullDev = sum(nulldevtemp);
-    int rank = empty? 0 : mX.n_rows;
-    mAIC = mModel->aic(mY,n,mu,mWeight,mDev) + 2 * rank;
+    uword rank = empty? 0 : mX.n_rows;
+    mAIC = mModel->aic(mY,n,mu,mWeight,mDev) + 2.0 * rank;
 }
 
 

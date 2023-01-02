@@ -31,8 +31,8 @@ mat CGwmGGWR::fit()
 
     // 初始化
     // setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
-    int nVar = mX.n_cols;
-    int nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
+    uword nVar = mX.n_cols;
+    uword nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
 
     // 优选带宽
     if (mIsAutoselectBandwidth)
@@ -62,12 +62,12 @@ mat CGwmGGWR::fit()
     mWtMat2 = mat(nRp, nDp, fill::zeros);
     if (mHasRegressionData)
     {
-        for (int i = 0; i < nRp; i++)
+        for (uword i = 0; i < nRp; i++)
         {
             vec weight = mSpatialWeight.weightVector(i);
             mWtMat2.col(i) = weight;
         }
-        for (int i = 0; i < nDp; i++)
+        for (uword i = 0; i < nDp; i++)
         {
             vec weight = mSpatialWeight.weightVector(i);
             mWtMat1.col(i) = weight;
@@ -75,7 +75,7 @@ mat CGwmGGWR::fit()
     }
     else
     {
-        for (int i = 0; i < nDp; i++)
+        for (uword i = 0; i < nDp; i++)
         {
             vec weight = mSpatialWeight.weightVector(i);
             mWtMat2.col(i) = weight;
@@ -130,7 +130,7 @@ mat CGwmGGWR::fit()
             double gwDev = sum(Dev);
             vec residual2 = res % res;
             //double rss = sum(residual2);
-            for (int i = 0; i < nDp; i++)
+            for (uword i = 0; i < nDp; i++)
             {
                 mBetasSE.col(i) = sqrt(mBetasSE.col(i));
                 //            mBetasTV.col(i) = mBetas.col(i) / mBetasSE.col(i);
@@ -175,10 +175,8 @@ mat CGwmGGWR::predict(const mat& locations)
 
 void CGwmGGWR::CalGLMModel(const mat &x, const vec &y)
 {
-    int nDp = mCoords.n_rows;//, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
-    int nVar = x.n_cols;
-    // emit message(tr("Calibrating GLM model..."));
-    CGwmGeneralizedLinearModel mGlm ;//= new CGwmGeneralizedLinearModel();
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
+    CGwmGeneralizedLinearModel mGlm;
     mGlm.setX(x);
     mGlm.setY(y);
     mGlm.setFamily(mFamily);
@@ -202,13 +200,13 @@ void CGwmGGWR::CalGLMModel(const mat &x, const vec &y)
 } */
 mat CGwmGGWR::fitPoissonSerial(const mat &x, const vec &y)
 {
-    int nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
-    int nVar = x.n_cols;
+    uword nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
+    uword nVar = x.n_cols;
     mat betas = mat(nVar, nRp, fill::zeros);
 
     mat mu = (this->*mCalWtFunction)(x, y, mWtMat1);
     mGwDev = 0.0;
-    for (int i = 0; i < nDp; i++)
+    for (uword i = 0; i < nDp; i++)
     {
         if (y[i] != 0)
         {
@@ -227,7 +225,7 @@ mat CGwmGGWR::fitPoissonSerial(const mat &x, const vec &y)
     mat ci, s_ri, S(isStoreS ? nDp : 1, nDp, fill::zeros);
     if (mHasHatMatrix)
     {
-        for (int i = 0; i < nDp; i++)
+        for (uword i = 0; i < nDp; i++)
         {
             try
             {
@@ -237,7 +235,7 @@ mat CGwmGGWR::fitPoissonSerial(const mat &x, const vec &y)
                 mat invwt2 = 1.0 / mWt2;
                 S.row(isStoreS ? i : 0) = s_ri;
                 mat temp = mat(ci.n_rows, ci.n_cols);
-                for (int j = 0; (uword)j < ci.n_rows; j++)
+                for (uword j = 0; j < ci.n_rows; j++)
                 {
                     temp.row(j) = ci.row(j) % trans(invwt2);
                 }
@@ -259,7 +257,7 @@ mat CGwmGGWR::fitPoissonSerial(const mat &x, const vec &y)
     }
     else
     {
-        for (int i = 0; i < nRp; i++)
+        for (uword i = 0; i < nRp; i++)
         {
             try
             {
@@ -280,17 +278,18 @@ mat CGwmGGWR::fitPoissonSerial(const mat &x, const vec &y)
     }
     return betas;
 }
+
 #ifdef ENABLE_OPENMP
 mat CGwmGGWR::fitPoissonOmp(const mat &x, const vec &y)
 {
-    int nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
-    int nVar = x.n_cols;
+    uword nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
+    uword nVar = x.n_cols;
     mat betas = mat(nVar, nRp, fill::zeros);
 
     mat mu = (this->*mCalWtFunction)(x, y, mWtMat1);
 
     mGwDev = 0.0;
-    for (int i = 0; i < nDp; i++)
+    for (uword i = 0; i < nDp; i++)
     {
         if (y[i] != 0)
         {
@@ -312,7 +311,7 @@ mat CGwmGGWR::fitPoissonOmp(const mat &x, const vec &y)
     {
         mat shat = mat(2, mOmpThreadNum, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (int i = 0; i < nDp; i++)
+        for (int i = 0; i < (int)nDp; i++)
         {
             mat ci, s_ri;
             if (true)
@@ -354,7 +353,7 @@ mat CGwmGGWR::fitPoissonOmp(const mat &x, const vec &y)
     else
     {
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (int i = 0; i < nRp; i++)
+        for (int i = 0; i < (int)nRp; i++)
         {
             if (true)
             {
@@ -381,11 +380,12 @@ mat CGwmGGWR::fitPoissonOmp(const mat &x, const vec &y)
     return betas;
 }
 #endif
+
 #ifdef ENABLE_OPENMP
 mat CGwmGGWR::fitBinomialOmp(const mat &x, const vec &y)
 {
-    int nVar = x.n_cols;
-    int nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
+    uword nVar = x.n_cols;
+    uword nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
     //    mat S = mat(nDp,nDp);
     //    mat n = vec(mY.n_rows,fill::ones);
     mat betas = mat(nVar, nRp, fill::zeros);
@@ -403,7 +403,7 @@ mat CGwmGGWR::fitBinomialOmp(const mat &x, const vec &y)
     {
         mat shat = mat(mOmpThreadNum, 2, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (int i = 0; i < nDp; i++)
+        for (int i = 0; i < (int)nDp; i++)
         {
             mat ci, s_ri;
             if (true)
@@ -441,7 +441,7 @@ mat CGwmGGWR::fitBinomialOmp(const mat &x, const vec &y)
     else
     {
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (int i = 0; i < nRp; i++)
+        for (int i = 0; i < (int)nRp; i++)
         {
             if (true)
             {
@@ -468,10 +468,11 @@ mat CGwmGGWR::fitBinomialOmp(const mat &x, const vec &y)
     return betas;
 }
 #endif
+
 mat CGwmGGWR::fitBinomialSerial(const mat &x, const vec &y)
 {
-    int nVar = x.n_cols;
-    int nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
+    uword nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
+    uword nVar = x.n_cols;
     //    mat S = mat(nDp,nDp);
     //    mat n = vec(mY.n_rows,fill::ones);
     mat betas = mat(nVar, nRp, fill::zeros);
@@ -486,7 +487,7 @@ mat CGwmGGWR::fitBinomialSerial(const mat &x, const vec &y)
     //    mat S = mat(uword(0), uword(0));
     if (mHasHatMatrix)
     {
-        for (int i = 0; i < nDp; i++)
+        for (uword i = 0; i < nDp; i++)
         {
             try
             {
@@ -514,7 +515,7 @@ mat CGwmGGWR::fitBinomialSerial(const mat &x, const vec &y)
     }
     else
     {
-        for (int i = 0; i < nRp; i++)
+        for (uword i = 0; i < nRp; i++)
         {
             try
             {
@@ -540,10 +541,10 @@ mat CGwmGGWR::fitBinomialSerial(const mat &x, const vec &y)
 
 double CGwmGGWR::bandwidthSizeGGWRCriterionCVSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
-    int n = mCoords.n_rows;
+    uword n = mCoords.n_rows;
     vec cv = vec(n);
     mat wt = mat(n, n);
-    for (int i = 0; i < n; i++)
+    for (uword i = 0; i < n; i++)
     {
         vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -551,7 +552,7 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionCVSerial(CGwmBandwidthWeight *bandwid
         wt.col(i) = w;
     }
     (this->*mCalWtFunction)(mX, mY, wt);
-    for (int i = 0; i < n; i++)
+    for (uword i = 0; i < n; i++)
     {
         mat wi = wt.col(i) % mWt2;
         vec gwsi = gwReg(mX, myAdj, wi, i);
@@ -572,12 +573,12 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionCVSerial(CGwmBandwidthWeight *bandwid
 #ifdef ENABLE_OPENMP
 double CGwmGGWR::bandwidthSizeGGWRCriterionCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
-    int n = mCoords.n_rows;
+    uword n = mCoords.n_rows;
     vec cv = vec(n);
     mat wt = mat(n, n);
     //int current1 = 0, current2 = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < (int)n; i++)
     {
         if (true)
         {
@@ -589,7 +590,7 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionCVOmp(CGwmBandwidthWeight *bandwidthW
     }
     (this->*mCalWtFunction)(mX, mY, wt);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < (int)n; i++)
     {
         if (true)
         {
@@ -613,13 +614,14 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionCVOmp(CGwmBandwidthWeight *bandwidthW
     return res;
 }
 #endif
+
 double CGwmGGWR::bandwidthSizeGGWRCriterionAICSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
-    int n = mCoords.n_rows;
+    uword n = mCoords.n_rows;
     vec cv = vec(n);
     mat S = mat(n, n);
     mat wt = mat(n, n);
-    for (int i = 0; i < n; i++)
+    for (uword i = 0; i < n; i++)
     {
         vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
@@ -628,7 +630,7 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionAICSerial(CGwmBandwidthWeight *bandwi
 
     (this->*mCalWtFunction)(mX, mY, wt);
     vec trS = vec(1, fill::zeros);
-    for (int i = 0; i < n; i++)
+    for (uword i = 0; i < n; i++)
     {
         vec wi = wt.col(i) % mWt2;
         mat Ci = CiMat(mX, wi);
@@ -648,16 +650,17 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionAICSerial(CGwmBandwidthWeight *bandwi
     }
     return AICc;
 }
+
 #ifdef ENABLE_OPENMP
 double CGwmGGWR::bandwidthSizeGGWRCriterionAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
-    int n = mCoords.n_rows;
+    uword n = mCoords.n_rows;
     vec cv = vec(n);
     mat S = mat(n, n);
     mat wt = mat(n, n);
     //int current1 = 0, current2 = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < (int)n; i++)
     {
         if (true)
         {
@@ -669,7 +672,7 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionAICOmp(CGwmBandwidthWeight *bandwidth
     (this->*mCalWtFunction)(mX, mY, wt);
     vec trS = vec(mOmpThreadNum, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < (int)n; i++)
     {
         if (true)
         {
@@ -689,13 +692,14 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionAICOmp(CGwmBandwidthWeight *bandwidth
     return AICc;
 }
 #endif
+
 mat CGwmGGWR::PoissonWtSerial(const mat &x, const vec &y, mat wt)
 {
-    int varn = x.n_cols;
-    int dpn = x.n_rows;
+    uword varn = x.n_cols;
+    uword dpn = x.n_rows;
     mat betas = mat(varn, dpn, fill::zeros);
     mat S = mat(dpn, dpn);
-    int itCount = 0;
+    uword itCount = 0;
     double oldLLik = 0.0;
     vec mu = y + 0.1;
     vec nu = log(mu);
@@ -706,7 +710,7 @@ mat CGwmGGWR::PoissonWtSerial(const mat &x, const vec &y, mat wt)
     while (true)
     {
         myAdj = nu + (y - mu) / mu;
-        for (int i = 0; i < dpn; i++)
+        for (uword i = 0; i < dpn; i++)
         {
             vec wi = wt.col(i);
             vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
@@ -727,14 +731,15 @@ mat CGwmGGWR::PoissonWtSerial(const mat &x, const vec &y, mat wt)
     }
     return mu;
 }
+
 #ifdef ENABLE_OPENMP
 mat CGwmGGWR::PoissonWtOmp(const mat &x, const vec &y, mat wt)
 {
-    int varn = x.n_cols;
-    int dpn = x.n_rows;
+    uword varn = x.n_cols;
+    uword dpn = x.n_rows;
     mat betas = mat(varn, dpn, fill::zeros);
     mat S = mat(dpn, dpn);
-    int itCount = 0;
+    size_t itCount = 0;
     double oldLLik = 0.0;
     vec mu = y + 0.1;
     vec nu = log(mu);
@@ -744,7 +749,7 @@ mat CGwmGGWR::PoissonWtOmp(const mat &x, const vec &y, mat wt)
     while (true)
     {
         myAdj = nu + (y - mu) / mu;
-        for (int i = 0; i < dpn; i++)
+        for (uword i = 0; i < dpn; i++)
         {
             vec wi = wt.col(i);
             vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
@@ -767,14 +772,15 @@ mat CGwmGGWR::PoissonWtOmp(const mat &x, const vec &y, mat wt)
     return mu;
 }
 #endif
+
 mat CGwmGGWR::BinomialWtSerial(const mat &x, const vec &y, mat wt)
 {
-    int varn = x.n_cols;
-    int dpn = x.n_rows;
+    uword varn = x.n_cols;
+    uword dpn = x.n_rows;
     mat betas = mat(varn, dpn, fill::zeros);
     mat S = mat(dpn, dpn);
     mat n = vec(y.n_rows, fill::ones);
-    int itCount = 0;
+    uword itCount = 0;
     //    double lLik = 0.0;
     double oldLLik = 0.0;
     vec mu = vec(dpn, fill::ones) * 0.5;
@@ -786,7 +792,7 @@ mat CGwmGGWR::BinomialWtSerial(const mat &x, const vec &y, mat wt)
     {
         // 计算公式有调整
         myAdj = nu + (y - mu) / (mu % (1 - mu));
-        for (int i = 0; i < dpn; i++)
+        for (uword i = 0; i < dpn; i++)
         {
             vec wi = wt.col(i);
             vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
@@ -806,15 +812,16 @@ mat CGwmGGWR::BinomialWtSerial(const mat &x, const vec &y, mat wt)
     }
     return mu;
 }
+
 #ifdef ENABLE_OPENMP
 mat CGwmGGWR::BinomialWtOmp(const mat &x, const vec &y, mat wt)
 {
-    int varn = x.n_cols;
-    int dpn = x.n_rows;
+    uword varn = x.n_cols;
+    uword dpn = x.n_rows;
     mat betas = mat(varn, dpn, fill::zeros);
     mat S = mat(dpn, dpn);
     mat n = vec(y.n_rows, fill::ones);
-    int itCount = 0;
+    uword itCount = 0;
     //    double lLik = 0.0;
     double oldLLik = 0.0;
     vec mu = vec(dpn, fill::ones) * 0.5;
@@ -826,7 +833,7 @@ mat CGwmGGWR::BinomialWtOmp(const mat &x, const vec &y, mat wt)
     {
         // 计算公式有调整
         myAdj = nu + (y - mu) / (mu % (1 - mu));
-        for (int i = 0; i < dpn ; i++)
+        for (uword i = 0; i < dpn ; i++)
         {
             vec wi = wt.col(i);
             vec gwsi = gwReg(x, myAdj, wi % mWt2, i);
@@ -876,12 +883,12 @@ void CGwmGGWR::setParallelType(const ParallelType &type)
 
 mat CGwmGGWR::diag(mat a)
 {
-    int n = a.n_rows;
+    uword n = a.n_rows;
     mat res = mat(uword(0), uword(0));
     if (a.n_cols > 1)
     {
         res = vec(a.n_rows);
-        for (int i = 0; i < n; i++)
+        for (uword i = 0; i < n; i++)
         {
             res[i] = a.row(i)[i];
         }
@@ -890,7 +897,7 @@ mat CGwmGGWR::diag(mat a)
     {
         res = mat(a.n_rows, a.n_rows);
         mat base = eye(n, n);
-        for (int i = 0; i < n; i++)
+        for (uword i = 0; i < n; i++)
         {
             res.row(i) = a[i] * base.row(i);
         }
@@ -925,7 +932,7 @@ vec CGwmGGWR::gwRegHatmatrix(const mat &x, const vec &y, const vec &w, int focus
 
 mat CGwmGGWR::dpois(mat y, mat mu)
 {
-    int n = y.n_rows;
+    uword n = y.n_rows;
     mat res = vec(n);
     mat pdf = lgamma(y + 1);
     res = -mu + y % log(mu) - pdf;
@@ -934,7 +941,7 @@ mat CGwmGGWR::dpois(mat y, mat mu)
 
 mat CGwmGGWR::lchoose(mat n, mat k)
 {
-    int nrow = n.n_rows;
+    uword nrow = n.n_rows;
     mat res = vec(nrow);
     //    for(int i = 0;i < nrow; i++){
     //        res.row(i) = lgamma(n[i]+1) - lgamma(n[i]-k[i]+1) - lgamma(k[i]+1);
@@ -945,9 +952,9 @@ mat CGwmGGWR::lchoose(mat n, mat k)
 
 mat CGwmGGWR::dbinom(mat y, mat m, mat mu)
 {
-    int n = y.n_rows;
+    uword n = y.n_rows;
     mat res = vec(n);
-    for (int i = 0; i < n; i++)
+    for (uword i = 0; i < n; i++)
     {
         double pdf = gsl_ran_binomial_pdf(int(y[i]), mu[i], int(m[i]));
         res[i] = log(pdf);
@@ -957,9 +964,9 @@ mat CGwmGGWR::dbinom(mat y, mat m, mat mu)
 
 mat CGwmGGWR::lgammafn(mat x)
 {
-    int n = x.n_rows;
+    uword n = x.n_rows;
     mat res = vec(n, fill::zeros);
-    for (int j = 0; j < n; j++)
+    for (uword j = 0; j < n; j++)
     {
         res[j] = lgamma(x[j]);
     }

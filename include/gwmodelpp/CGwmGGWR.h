@@ -205,7 +205,7 @@ protected:
     Family mFamily;
     double mTol=1e-5;
     string mTolUnit;
-    int mMaxiter=20;
+    size_t mMaxiter=20;
 
     bool mHasHatMatrix = true;
     bool mHasRegressionData = false;
