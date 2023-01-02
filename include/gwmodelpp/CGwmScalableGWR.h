@@ -84,19 +84,13 @@ public:     // GwmSpatialAlgorithm interface
 
 
 public:     // IRegressionAnalysis interface
-    mat fit() override
-    {
-        return fitSerial(mX, mY);
-    }
+    mat fit() override;
 
-    mat predict(const mat& locations) override
-    {
-        return predictSerial(locations, mX, mY);
-    }
+    mat predict(const mat& locations) override;
 
 private:
     void findDataPointNeighbours();
-    mat findNeighbours(const mat& points, const CGwmSpatialWeight& spatialWeight, umat &nnIndex);
+    mat findNeighbours(const mat& points, umat &nnIndex);
     double optimize(const mat& Mx0, const mat& My0, double& b_tilde, double& alpha);
     void prepare();
 

@@ -168,13 +168,11 @@ void CGwmScalableGWR::findDataPointNeighbours()
         mDpNNDists = join_rows(vec(nDp, fill::zeros), trans(nnDists));
         mDpNNIndex = join_rows(linspace<uvec>(0, nDp - 1, nDp), trans(nnIndex));
     }
-
-    mDpNNDists.submat(0, 0, 2, 2).print(std::cout, "nn");
 }
 
-mat CGwmScalableGWR::findNeighbours(const mat& points, const CGwmSpatialWeight &spatialWeight, umat &nnIndex)
+mat CGwmScalableGWR::findNeighbours(const mat& points, umat &nnIndex)
 {
-    CGwmBandwidthWeight* bandwidth = spatialWeight.weight<CGwmBandwidthWeight>();
+    CGwmBandwidthWeight* bandwidth = mSpatialWeight.weight<CGwmBandwidthWeight>();
     uword nDp = mCoords.n_rows;
     uword nRp = points.n_rows;
     uword nBw = bandwidth->bandwidth() < nDp ? bandwidth->bandwidth() : nDp;
@@ -291,8 +289,52 @@ void CGwmScalableGWR::prepare()
     }
 }
 
+mat CGwmScalableGWR::predict(const mat& locations)
+{
+    createDistanceParameter();
+    mDpSpatialWeight = mSpatialWeight;
+    findDataPointNeighbours();
+    CGwmBandwidthWeight* bandwidth = mSpatialWeight.weight<CGwmBandwidthWeight>();
+    arma::uword nDp = mX.n_rows, nBw = bandwidth->bandwidth();
+    if (nBw >= nDp) 
+    {
+        nBw = nDp - 1;
+        bandwidth->setBandwidth(nBw);
+    }
+    double band0 = 0.0;
+    switch (bandwidth->kernel())
+    {
+    case CGwmBandwidthWeight::KernelFunctionType::Gaussian:
+        band0 = median(mDpNNDists.col(min<uword>(50, nBw) - 1)) / sqrt(3);
+        mG0 = exp(-pow(mDpNNDists / band0, 2));
+        break;
+    case CGwmBandwidthWeight::KernelFunctionType::Exponential:
+        band0 = median(mDpNNDists.col(min<uword>(50, nBw) - 1)) / 3;
+        mG0 = exp(-pow(mDpNNDists / band0, 2));
+        break;
+    default:
+        return mBetas;
+    }
+    prepare();
+    double b_tilde = 1.0, alpha = 0.01;
+    mCV = optimize(mMx0, mMy0, b_tilde, alpha);
+    if (mCV < DBL_MAX)
+    {
+        mScale = b_tilde * b_tilde;
+        mPenalty = alpha * alpha;
+        mBetas = predictSerial(locations, mX, mY);
+    }
+    return mBetas;
+}
+
 mat CGwmScalableGWR::predictSerial(const mat& locations, const arma::mat &x, const arma::vec &y)
 {
+    // Create Predict distance parameters
+    if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
+        mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
+    {
+        mSpatialWeight.distance()->makeParameter({ locations, mCoords });
+    }
     CGwmBandwidthWeight* bandwidth = mSpatialWeight.weight<CGwmBandwidthWeight>();
     //uword nDp = mCoords.n_rows;
     uword nRp = locations.n_rows, nVar = mX.n_cols;
@@ -300,7 +342,7 @@ mat CGwmScalableGWR::predictSerial(const mat& locations, const arma::mat &x, con
     double band0 = 0.0;
     mat G0;
     umat rpNNIndex;
-    mat rpNNDists = findNeighbours(locations, mSpatialWeight, rpNNIndex);
+    mat rpNNDists = findNeighbours(locations, rpNNIndex);
     switch (bandwidth->kernel())
     {
     case CGwmBandwidthWeight::KernelFunctionType::Gaussian:
@@ -393,18 +435,69 @@ mat CGwmScalableGWR::predictSerial(const mat& locations, const arma::mat &x, con
     return betas.t();
 }
 
+mat CGwmScalableGWR::fit()
+{
+    createDistanceParameter();
+    mDpSpatialWeight = mSpatialWeight;
+    findDataPointNeighbours();
+    CGwmBandwidthWeight* bandwidth = mSpatialWeight.weight<CGwmBandwidthWeight>();
+    arma::uword nDp = mX.n_rows, nBw = bandwidth->bandwidth();
+    if (nBw >= nDp) 
+    {
+        nBw = nDp - 1;
+        bandwidth->setBandwidth(nBw);
+    }
+    double band0 = 0.0;
+    switch (bandwidth->kernel())
+    {
+    case CGwmBandwidthWeight::KernelFunctionType::Gaussian:
+        band0 = median(mDpNNDists.col(min<uword>(50, nBw) - 1)) / sqrt(3);
+        mG0 = exp(-pow(mDpNNDists / band0, 2));
+        break;
+    case CGwmBandwidthWeight::KernelFunctionType::Exponential:
+        band0 = median(mDpNNDists.col(min<uword>(50, nBw) - 1)) / 3;
+        mG0 = exp(-pow(mDpNNDists / band0, 2));
+        break;
+    default:
+        return mBetas;
+    }
+    prepare();
+    double b_tilde = 1.0, alpha = 0.01;
+    mCV = optimize(mMx0, mMy0, b_tilde, alpha);
+    if (mCV < DBL_MAX)
+    {
+        mScale = b_tilde * b_tilde;
+        mPenalty = alpha * alpha;
+        mBetas = fitSerial(mX, mY);
+        mDiagnostic = CalcDiagnostic( mX,mY, mBetas, mShat);
+        double trS = mShat(0), trStS = mShat(1);
+        double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
+        vec yhat = sum(mX % mBetas, 1);
+        vec residual = mY - yhat;
+        mBetasSE = sqrt(sigmaHat * mBetasSE);
+        mat betasTV = mBetas / mBetasSE;
+        
+    }
+    return mBetas;
+}
+
 arma::mat CGwmScalableGWR::fitSerial(const arma::mat &x, const arma::vec &y)
 {
     CGwmBandwidthWeight* bandwidth = mSpatialWeight.weight<CGwmBandwidthWeight>();
     uword bw = (uword)bandwidth->bandwidth();
     uword n = x.n_rows, k = x.n_cols, poly1 = mPolynomial + 1;
+    if (bw >= n)
+    {
+        bw = bw - 1;
+        bandwidth->setBandwidth(bw);
+    }
     double b = mScale, a = mPenalty;
     mat XtX = x.t() * x, XtY = x.t() * y;
     mat betas(k, n, fill::zeros);
 
     double band0 = 0.0;
     umat dpNNIndex;
-    mat dpNNDists = findNeighbours(mCoords, mDpSpatialWeight, dpNNIndex);
+    mat dpNNDists = findNeighbours(mCoords, dpNNIndex);
     switch (bandwidth->kernel())
     {
     case CGwmBandwidthWeight::KernelFunctionType::Gaussian:

@@ -33,6 +33,7 @@ TEST_CASE("ScalableGWR: basic flow")
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeight(spatial);
+    algorithm.setPolynomial(4);
     algorithm.setHasHatMatrix(true);
     algorithm.setParameterOptimizeCriterion(CGwmScalableGWR::BandwidthSelectionCriterionType::CV);
     //algorithm.setPolynomial();
