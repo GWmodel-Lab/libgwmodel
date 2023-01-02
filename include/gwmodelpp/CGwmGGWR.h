@@ -67,7 +67,7 @@ struct GwmGLMDiagnostic
     }
 };
 
-class CGwmGGWR : public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmParallelizable
+class CGwmGGWR : public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmOpenmpParallelizable
 {
 public:
     enum Family
@@ -116,13 +116,13 @@ public: // IRegressionAnalysis interface
     } */
 
 public: // IParallelalbe interface
-    int parallelAbility() const;
+    int parallelAbility() const override;
 
-    ParallelType parallelType() const;
+    ParallelType parallelType() const override;
     void setParallelType(const ParallelType &type) override;
 
 public: // IOpenmpParallelable interface
-    void setOmpThreadNum(const int threadNum);
+    void setOmpThreadNum(const int threadNum) override;
 
 public:
     static vec gwReg(const mat &x, const vec &y, const vec &w, int focus);

@@ -295,7 +295,7 @@ public:     // GwmSpatialAlgorithm interface
 public:     // IGwmMultivariableAnalysis
     mat variables() const override { return mX; }
     void setVariables(const mat& x) override { mX = x; }
-    void run();
+    void run() override;
 
 public:     // IGwmParallelizable
     int parallelAbility() const override
