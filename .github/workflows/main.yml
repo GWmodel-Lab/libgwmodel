@@ -58,7 +58,7 @@ jobs:
         if: steps.cache-dep.outputs.cache-hit != 'true'
         run: |
           C:/vcpkg/vcpkg.exe integrate install
-          C:/vcpkg/vcpkg.exe install gsl:x64-windows armadillo:x64-windows catch2:x64-windows
+          C:/vcpkg/vcpkg.exe install gsl:x64-windows openblas[threads]:x64-windows armadillo:x64-windows catch2:x64-windows
       - name: CMake build and test
         run: |
           mkdir build
