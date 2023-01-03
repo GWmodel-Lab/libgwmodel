@@ -1,6 +1,6 @@
 #define CATCH_CONFIG_MAIN
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include <vector>
 #include <string>
@@ -56,14 +56,14 @@ TEST_CASE("MGWR: basic flow")
     REQUIRE_NOTHROW(algorithm.fit());
 
     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(4623.78, 0.1));
-    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(12665.70, 0.1));
-    REQUIRE_THAT(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(12665.70, 0.1));
+    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(4623.78, 0.1));
+    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(12665.70, 0.1));
+    REQUIRE_THAT(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(12665.70, 0.1));
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2437.09277417389, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.744649364494, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.712344894394, 1e-6));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2437.09277417389, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.744649364494, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.712344894394, 1e-6));
 
     REQUIRE(algorithm.hasIntercept() == true);
 }
@@ -110,14 +110,14 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with AIC")
     REQUIRE_NOTHROW(algorithm.fit());
 
     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(45, 0.1));
-    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(98, 0.1));
-    REQUIRE_THAT(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(98, 0.1));
+    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(45, 0.1));
+    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
+    REQUIRE_THAT(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2437.935218705351, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.7486787930045755, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.7118919517893492, 1e-6));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2437.935218705351, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.7486787930045755, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.7118919517893492, 1e-6));
 }
 
 
@@ -163,14 +163,14 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with CV")
     REQUIRE_NOTHROW(algorithm.fit());
 
     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(35, 0.1));
-    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(98, 0.1));
-    REQUIRE_THAT(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(98, 0.1));
+    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(35, 0.1));
+    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
+    REQUIRE_THAT(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2438.256543499568, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.757377391648, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.715598248202, 1e-6));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2438.256543499568, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.757377391648, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.715598248202, 1e-6));
 }
 
 #ifdef ENABLE_OPENMP
@@ -222,9 +222,9 @@ TEST_CASE("MGWR: basic flow with CVR")
     REQUIRE(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth() == 98);
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2438.256543496552, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.757377391669, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.715598248225, 1e-6));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2438.256543496552, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.757377391669, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.715598248225, 1e-6));
 }
 #endif
 
@@ -272,13 +272,13 @@ TEST_CASE("MGWR: basic flow (multithread)")
     REQUIRE_NOTHROW(algorithm.fit());
 
     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(35, 0.1));
-    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(98, 0.1));
-    REQUIRE_THAT(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::WithinAbs(98, 0.1));
+    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(35, 0.1));
+    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
+    REQUIRE_THAT(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2438.256543499568, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.757377391648, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.715598248202, 1e-6));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2438.256543499568, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.757377391648, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.715598248202, 1e-6));
 }
 #endif
