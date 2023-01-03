@@ -41,10 +41,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Cache Dependencies
+        id: cache-dep
+        uses: actions/cache@v3
+        with:
+          path: |
+            C:/vcpkg
+            C:/vcpkg/build/vcpkg_installed
+            !C:/vcpkg/.git
+            !C:/vcpkg/buildtrees
+            !C:/vcpkg/packages
+            !C:/vcpkg/downloads
+          key: |
+            ${{ runner.os }}-cache-key-v1
       - name: Install Vcpkg Dependencies
+        if: steps.cache-dep.outputs.cache-hit != 'true'
         run: |
-          C:\vcpkg\vcpkg.exe integrate install
-          C:\vcpkg\vcpkg.exe install gsl:x64-windows armadillo:x64-windows catch2:x64-windows
+          C:/vcpkg/vcpkg.exe integrate install
+          C:/vcpkg/vcpkg.exe install gsl:x64-windows armadillo:x64-windows catch2:x64-windows
       - name: CMake build and test
         run: |
           mkdir build
