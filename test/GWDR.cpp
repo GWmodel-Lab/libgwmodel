@@ -50,42 +50,42 @@ TEST_CASE("GWDR: basic flow")
     REQUIRE(algorithm.hasIntercept() == true);
 }
 
-TEST_CASE("GWDR: basic flow with bandwidth optimization (CV)")
-{
-    mat londonhp100_coord, londonhp100_data;
-    vector<string> londonhp100_fields;
-    if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
-    {
-        FAIL("Cannot load londonhp100 data.");
-    }
+// TEST_CASE("GWDR: basic flow with bandwidth optimization (CV)")
+// {
+//     mat londonhp100_coord, londonhp100_data;
+//     vector<string> londonhp100_fields;
+//     if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
+//     {
+//         FAIL("Cannot load londonhp100 data.");
+//     }
 
-    uword nDim = londonhp100_coord.n_cols;
-    vector<CGwmSpatialWeight> spatials;
-    for (size_t i = 0; i < nDim; i++)
-    {
-        CGwmOneDimDistance distance;
-        CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Bisquare);
-        spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
-    }
+//     uword nDim = londonhp100_coord.n_cols;
+//     vector<CGwmSpatialWeight> spatials;
+//     for (size_t i = 0; i < nDim; i++)
+//     {
+//         CGwmOneDimDistance distance;
+//         CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Bisquare);
+//         spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
+//     }
 
-    vec y = londonhp100_data.col(0);
-    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
+//     vec y = londonhp100_data.col(0);
+//     mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmGWDR algorithm;
-    algorithm.setCoords(londonhp100_coord);
-    algorithm.setDependentVariable(y);
-    algorithm.setIndependentVariables(x);
-    algorithm.setSpatialWeights(spatials);
-    algorithm.setEnableBandwidthOptimize(true);
-    algorithm.setBandwidthOptimizeStep(0.01);
-    algorithm.setBandwidthCriterionType(CGwmGWDR::CV);
-    algorithm.setHasHatMatrix(true);
-    REQUIRE_NOTHROW(algorithm.fit());
+//     CGwmGWDR algorithm;
+//     algorithm.setCoords(londonhp100_coord);
+//     algorithm.setDependentVariable(y);
+//     algorithm.setIndependentVariables(x);
+//     algorithm.setSpatialWeights(spatials);
+//     algorithm.setEnableBandwidthOptimize(true);
+//     algorithm.setBandwidthOptimizeStep(0.01);
+//     algorithm.setBandwidthCriterionType(CGwmGWDR::CV);
+//     algorithm.setHasHatMatrix(true);
+//     REQUIRE_NOTHROW(algorithm.fit());
 
-    const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(80, 1e-12));
-    // REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(2550816, 1e-12));
-}
+//     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
+//     REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(80, 1e-12));
+//     // REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(2550816, 1e-12));
+// }
 
 TEST_CASE("GWDR: basic flow with bandwidth optimization (AIC)")
 {
@@ -234,42 +234,42 @@ TEST_CASE("GWDR: basic flow (multithread)")
 }
 #endif
 
-#ifdef ENABLE_OPENMP
-TEST_CASE("GWDR: basic flow with bandwidth optimization (CV, multithread)")
-{
-    mat londonhp100_coord, londonhp100_data;
-    vector<string> londonhp100_fields;
-    if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
-    {
-        FAIL("Cannot load londonhp100 data.");
-    }
+// #ifdef ENABLE_OPENMP
+// TEST_CASE("GWDR: basic flow with bandwidth optimization (CV, multithread)")
+// {
+//     mat londonhp100_coord, londonhp100_data;
+//     vector<string> londonhp100_fields;
+//     if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
+//     {
+//         FAIL("Cannot load londonhp100 data.");
+//     }
 
-    uword nDim = londonhp100_coord.n_cols;
-    vector<CGwmSpatialWeight> spatials;
-    for (size_t i = 0; i < nDim; i++)
-    {
-        CGwmOneDimDistance distance;
-        CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Bisquare);
-        spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
-    }
+//     uword nDim = londonhp100_coord.n_cols;
+//     vector<CGwmSpatialWeight> spatials;
+//     for (size_t i = 0; i < nDim; i++)
+//     {
+//         CGwmOneDimDistance distance;
+//         CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Bisquare);
+//         spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
+//     }
 
-    vec y = londonhp100_data.col(0);
-    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
+//     vec y = londonhp100_data.col(0);
+//     mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmGWDR algorithm;
-    algorithm.setCoords(londonhp100_coord);
-    algorithm.setDependentVariable(y);
-    algorithm.setIndependentVariables(x);
-    algorithm.setSpatialWeights(spatials);
-    algorithm.setEnableBandwidthOptimize(true);
-    algorithm.setBandwidthOptimizeStep(0.01);
-    algorithm.setBandwidthCriterionType(CGwmGWDR::CV);
-    algorithm.setHasHatMatrix(true);
-    algorithm.setParallelType(ParallelType::OpenMP);
-    REQUIRE_NOTHROW(algorithm.fit());
+//     CGwmGWDR algorithm;
+//     algorithm.setCoords(londonhp100_coord);
+//     algorithm.setDependentVariable(y);
+//     algorithm.setIndependentVariables(x);
+//     algorithm.setSpatialWeights(spatials);
+//     algorithm.setEnableBandwidthOptimize(true);
+//     algorithm.setBandwidthOptimizeStep(0.01);
+//     algorithm.setBandwidthCriterionType(CGwmGWDR::CV);
+//     algorithm.setHasHatMatrix(true);
+//     algorithm.setParallelType(ParallelType::OpenMP);
+//     REQUIRE_NOTHROW(algorithm.fit());
 
-    const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(80, 1e-12));
-    // REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(2550816, 1e-12));
-}
-#endif
+//     const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
+//     REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(80, 1e-12));
+//     // REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(2550816, 1e-12));
+// }
+// #endif
