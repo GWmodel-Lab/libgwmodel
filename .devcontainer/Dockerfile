@@ -30,7 +30,7 @@ RUN mkdir armadillo && \
     cmake --install armadillo/build
 
 RUN mkdir catch2 && \
-    wget -qO- https://github.com/catchorg/Catch2/archive/refs/tags/v2.13.9.tar.gz | \
+    wget -qO- https://github.com/catchorg/Catch2/archive/refs/tags/v3.2.1.tar.gz | \
     tar -zxf- --directory=catch2 --strip-components=1 && \
     cmake -B catch2/build -S catch2 -DCMAKE_INSTALL_PREFIX=/usr . && \
     cmake --build catch2/build --config Release && \
