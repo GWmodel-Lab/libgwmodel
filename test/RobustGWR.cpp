@@ -13,9 +13,9 @@
 using namespace std;
 using namespace arma;
 
-vector<int> variables2indices(vector<size_t> variables)
+vector<size_t> variables2indices(vector<size_t> variables)
 {
-    vector<int> index(variables.size());
+    vector<size_t> index(variables.size());
     std::transform(variables.begin(), variables.end(), index.begin(), [](const size_t & v) -> int
     {
         return v;
@@ -165,17 +165,17 @@ TEST_CASE("RobustGWR: indepdent variable autoselection with AIC")
     REQUIRE_NOTHROW(algorithm.fit());
 
     VariablesCriterionList criterions = algorithm.indepVarsSelectionCriterionList();
-    REQUIRE_THAT(variables2indices(criterions[0].first), Catch::Matchers::Equals(vector<int>({ 2 })));
+    REQUIRE_THAT(variables2indices(criterions[0].first), Catch::Matchers::Equals(vector<size_t>({ 2 })));
     REQUIRE_THAT(criterions[0].second, Catch::Matchers::WithinAbs(2551.61359020599, 1e-8));
-    REQUIRE_THAT(variables2indices(criterions[1].first), Catch::Matchers::Equals(vector<int>({ 3 })));
+    REQUIRE_THAT(variables2indices(criterions[1].first), Catch::Matchers::Equals(vector<size_t>({ 3 })));
     REQUIRE_THAT(criterions[1].second, Catch::Matchers::WithinAbs(2551.30032201349, 1e-8));
-    REQUIRE_THAT(variables2indices(criterions[2].first), Catch::Matchers::Equals(vector<int>({ 1 })));
+    REQUIRE_THAT(variables2indices(criterions[2].first), Catch::Matchers::Equals(vector<size_t>({ 1 })));
     REQUIRE_THAT(criterions[2].second, Catch::Matchers::WithinAbs(2468.93236280013, 1e-8));
-    REQUIRE_THAT(variables2indices(criterions[3].first), Catch::Matchers::Equals(vector<int>({ 1, 3 })));
+    REQUIRE_THAT(variables2indices(criterions[3].first), Catch::Matchers::Equals(vector<size_t>({ 1, 3 })));
     REQUIRE_THAT(criterions[3].second, Catch::Matchers::WithinAbs(2452.86447942033, 1e-8));
-    REQUIRE_THAT(variables2indices(criterions[4].first), Catch::Matchers::Equals(vector<int>({ 1, 2 })));
+    REQUIRE_THAT(variables2indices(criterions[4].first), Catch::Matchers::Equals(vector<size_t>({ 1, 2 })));
     REQUIRE_THAT(criterions[4].second, Catch::Matchers::WithinAbs(2450.59642666509, 1e-8));
-    REQUIRE_THAT(variables2indices(criterions[5].first), Catch::Matchers::Equals(vector<int>({ 1, 2, 3 })));
+    REQUIRE_THAT(variables2indices(criterions[5].first), Catch::Matchers::Equals(vector<size_t>({ 1, 2, 3 })));
     REQUIRE_THAT(criterions[5].second, Catch::Matchers::WithinAbs(2452.80388934625, 1e-8));
 
     vector<size_t> selectedVariables = algorithm.selectedVariables();
@@ -220,17 +220,17 @@ TEST_CASE("RobustGWR: multithread basic flow")
     REQUIRE_NOTHROW(algorithm.fit());
 
     VariablesCriterionList criterions = algorithm.indepVarsSelectionCriterionList();
-    REQUIRE_THAT(variables2indices(criterions[0].first), Catch::Matchers::Equals(vector<int>({ 2 })));
+    REQUIRE_THAT(variables2indices(criterions[0].first), Catch::Matchers::Equals(vector<size_t>({ 2 })));
     REQUIRE_THAT(criterions[0].second, Catch::Matchers::WithinAbs(2551.61359020599, 1e-8));
-    REQUIRE_THAT(variables2indices(criterions[1].first), Catch::Matchers::Equals(vector<int>({ 3 })));
+    REQUIRE_THAT(variables2indices(criterions[1].first), Catch::Matchers::Equals(vector<size_t>({ 3 })));
     REQUIRE_THAT(criterions[1].second, Catch::Matchers::WithinAbs(2551.30032201349, 1e-8));
-    REQUIRE_THAT(variables2indices(criterions[2].first), Catch::Matchers::Equals(vector<int>({ 1 })));
+    REQUIRE_THAT(variables2indices(criterions[2].first), Catch::Matchers::Equals(vector<size_t>({ 1 })));
     REQUIRE_THAT(criterions[2].second, Catch::Matchers::WithinAbs(2468.93236280013, 1e-8));
-    REQUIRE_THAT(variables2indices(criterions[3].first), Catch::Matchers::Equals(vector<int>({ 1, 3 })));
+    REQUIRE_THAT(variables2indices(criterions[3].first), Catch::Matchers::Equals(vector<size_t>({ 1, 3 })));
     REQUIRE_THAT(criterions[3].second, Catch::Matchers::WithinAbs(2452.86447942033, 1e-8));
-    REQUIRE_THAT(variables2indices(criterions[4].first), Catch::Matchers::Equals(vector<int>({ 1, 2 })));
+    REQUIRE_THAT(variables2indices(criterions[4].first), Catch::Matchers::Equals(vector<size_t>({ 1, 2 })));
     REQUIRE_THAT(criterions[4].second, Catch::Matchers::WithinAbs(2450.59642666509, 1e-8));
-    REQUIRE_THAT(variables2indices(criterions[5].first), Catch::Matchers::Equals(vector<int>({ 1, 2, 3 })));
+    REQUIRE_THAT(variables2indices(criterions[5].first), Catch::Matchers::Equals(vector<size_t>({ 1, 2, 3 })));
     REQUIRE_THAT(criterions[5].second, Catch::Matchers::WithinAbs(2452.80388934625, 1e-8));
 
     vector<size_t> selectedVariables = algorithm.selectedVariables();
