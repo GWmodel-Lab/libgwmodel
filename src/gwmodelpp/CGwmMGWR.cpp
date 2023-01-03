@@ -410,7 +410,7 @@ vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const uword var, mat &S)
                 betas.col(i) = xtwx_inv * xtwy;
                 ci = xtwx_inv * xtw;
                 si = x(i) * ci;
-                S.row(i) = si;
+                S.row(mHasHatMatrix ? i : 0) = si;
             }
             catch (const exception& e)
             {
@@ -457,7 +457,6 @@ vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const uword var, mat &S)
     std::exception except;
     if (mHasHatMatrix)
     {
-        mat ci, si;
         S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; (uword)i < nDp; i++)
@@ -470,9 +469,9 @@ vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const uword var, mat &S)
             {
                 mat xtwx_inv = inv_sympd(xtwx);
                 betas.col(i) = xtwx_inv * xtwy;
-                ci = xtwx_inv * xtw;
-                si = x(i) * ci;
-                S.row(i) = si;
+                mat ci = xtwx_inv * xtw;
+                mat si = x(i) * ci;
+                S.row(mHasHatMatrix ? i : 0) = si;
             }
             catch (const exception& e)
             {
