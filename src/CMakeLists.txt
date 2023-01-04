@@ -219,3 +219,12 @@ install(TARGETS gwmodel
     RUNTIME DESTINATION bin
 )
 install(DIRECTORY ../include/ DESTINATION include)
+
+# CPACK
+
+set(CPACK_GENERATOR "DEB")
+set(CPACK_SET_DESTDIR ON)
+set(CPACK_PACKAGE_CONTACT "Yigong Hu")
+set(CPACK_DEBIAN_PACKAGE_NAME "libgwmodel-dev")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libarmadillo-dev (>= 9.900.6), catch2 (>= 3.2.1), libgsl-dev (>= 2.7.1), libopenblas-dev (>= 0.3.20)")
+include(CPack)
