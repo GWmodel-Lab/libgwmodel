@@ -1,0 +1,147 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023, GWmodel Lab
+# This file is distributed under the same license as the libgwmodel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: libgwmodel \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-04 15:01+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../api/dir_include_gwmodelpp.rst:5
+msgid "Directory gwmodelpp"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:8
+msgid "|exhale_lsh| :ref:`Parent directory <dir_include>` (``include``)"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:13
+msgid "*Directory path:* ``include/gwmodelpp``"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:16
+msgid "Subdirectories"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:18
+msgid ":ref:`dir_include_gwmodelpp_spatialweight`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:22
+msgid "Files"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:24
+msgid ":ref:`file_include_gwmodelpp_CGwmAlgorithm.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:25
+msgid ":ref:`file_include_gwmodelpp_CGwmBandwidthSelector.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:26
+msgid ":ref:`file_include_gwmodelpp_CGwmBinomialModel.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:27
+msgid ":ref:`file_include_gwmodelpp_CGwmGeneralizedLinearModel.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:28
+msgid ":ref:`file_include_gwmodelpp_CGwmGGWR.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:29
+msgid ":ref:`file_include_gwmodelpp_CGwmGWDR.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:30
+msgid ":ref:`file_include_gwmodelpp_CGwmGWPCA.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:31
+msgid ":ref:`file_include_gwmodelpp_CGwmGWRBase.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:32
+msgid ":ref:`file_include_gwmodelpp_CGwmGWRBasic.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:33
+msgid ":ref:`file_include_gwmodelpp_CGwmGWSS.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:34
+msgid ":ref:`file_include_gwmodelpp_CGwmLinearModel.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:35
+msgid ":ref:`file_include_gwmodelpp_CGwmMGWR.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:36
+msgid ":ref:`file_include_gwmodelpp_CGwmPoissonModel.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:37
+msgid ":ref:`file_include_gwmodelpp_CGwmRobustGWR.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:38
+msgid ":ref:`file_include_gwmodelpp_CGwmScalableGWR.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:39
+msgid ":ref:`file_include_gwmodelpp_CGwmSpatialAlgorithm.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:40
+msgid ":ref:`file_include_gwmodelpp_CGwmSpatialMonoscaleAlgorithm.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:41
+msgid ":ref:`file_include_gwmodelpp_CGwmSpatialMultiscaleAlgorithm.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:42
+msgid ":ref:`file_include_gwmodelpp_CGwmVariableForwardSelector.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:43
+msgid ":ref:`file_include_gwmodelpp_GwmLogger.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:44
+msgid ":ref:`file_include_gwmodelpp_GwmRegressionDiagnostic.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:45
+msgid ":ref:`file_include_gwmodelpp_IGwmBandwidthSelectable.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:46
+msgid ":ref:`file_include_gwmodelpp_IGwmMultivariableAnalysis.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:47
+msgid ":ref:`file_include_gwmodelpp_IGwmParallelizable.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:48
+msgid ":ref:`file_include_gwmodelpp_IGwmRegressionAnalysis.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:49
+msgid ":ref:`file_include_gwmodelpp_IGwmVarialbeSelectable.h`"
+msgstr ""
+

@@ -1,0 +1,81 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023, GWmodel Lab
+# This file is distributed under the same license as the libgwmodel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: libgwmodel \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-04 15:01+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:5
+msgid "File GwmLogger.h"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:7
+msgid ""
+"|exhale_lsh| :ref:`Parent directory <dir_include_gwmodelpp>` "
+"(``include/gwmodelpp``)"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:14
+msgid "Contents"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:17
+msgid "Definition (``include/gwmodelpp/GwmLogger.h``)"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:30
+msgid "Includes"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:33
+msgid "``functional``"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:35
+msgid "``string``"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:43
+msgid "Classes"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:46
+msgid ":ref:`exhale_class_classGwmLogger`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:50
+msgid "Defines"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:53
+msgid ":ref:`exhale_define_GwmLogger_8h_1a3e7277692bce66fb31ec0fafdf2c2f44`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:55
+msgid ":ref:`exhale_define_GwmLogger_8h_1aa0c46696737698397f560901beb58425`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:57
+msgid ":ref:`exhale_define_GwmLogger_8h_1a86d76dda1788cd388f5033ec6e989d9c`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:59
+msgid ":ref:`exhale_define_GwmLogger_8h_1a9a6822a722a1654fe9358651500657b2`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GwmLogger.h.rst:61
+msgid ":ref:`exhale_define_GwmLogger_8h_1a63405819e78dea96e294ff200c113a37`"
+msgstr ""
+

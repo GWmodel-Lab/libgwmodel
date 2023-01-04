@@ -1,0 +1,55 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023, GWmodel Lab
+# This file is distributed under the same license as the libgwmodel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: libgwmodel \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-04 15:01+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../api/reference.rst:3
+msgid "Library Reference"
+msgstr "库参考"
+
+#: ../../api/class_view_hierarchy.rst.include:3
+msgid "Class Hierarchy"
+msgstr "类结构"
+
+#: ../../api/file_view_hierarchy.rst.include:3
+msgid "File Hierarchy"
+msgstr "文件结构"
+
+#: ../../api/unabridged_api.rst.include:3
+msgid "Full API"
+msgstr "所有 API"
+
+#: ../../api/unabridged_api.rst.include:6
+msgid "Namespaces"
+msgstr "命名空间"
+
+#: ../../api/unabridged_api.rst.include:20
+msgid "Classes and Structs"
+msgstr "类和结构体"
+
+#: ../../api/unabridged_api.rst.include:229
+msgid "Enums"
+msgstr "枚举"
+
+#: ../../api/unabridged_api.rst.include:238
+msgid "Defines"
+msgstr "宏定义"
+
+#: ../../api/unabridged_api.rst.include:267
+msgid "Typedefs"
+msgstr "类型定义"
+

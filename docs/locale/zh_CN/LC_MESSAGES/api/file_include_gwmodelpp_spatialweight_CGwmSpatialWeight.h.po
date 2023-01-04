@@ -1,0 +1,116 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023, GWmodel Lab
+# This file is distributed under the same license as the libgwmodel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: libgwmodel \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-04 15:01+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:5
+msgid "File CGwmSpatialWeight.h"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:7
+msgid ""
+"|exhale_lsh| :ref:`Parent directory "
+"<dir_include_gwmodelpp_spatialweight>` "
+"(``include/gwmodelpp/spatialweight``)"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:14
+msgid "Contents"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:17
+msgid "Definition (``include/gwmodelpp/spatialweight/CGwmSpatialWeight.h``)"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:30
+msgid "Includes"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:33
+msgid ""
+"``CGwmBandwidthWeight.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CGwmBandwidthWeight.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:35
+msgid ""
+"``CGwmCRSDistance.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CGwmCRSDistance.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:37
+msgid ""
+"``CGwmDMatDistance.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CGwmDMatDistance.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:39
+msgid ""
+"``CGwmDistance.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CGwmDistance.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:41
+msgid ""
+"``CGwmMinkwoskiDistance.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CGwmMinkwoskiDistance.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:43
+msgid ""
+"``CGwmOneDimDistance.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CGwmOneDimDistance.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:45
+msgid ""
+"``CGwmWeight.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CGwmWeight.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:50
+msgid "Included By"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:53
+msgid ":ref:`file_include_gwmodel.h`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:55
+msgid ":ref:`file_include_gwmodelpp_CGwmSpatialMonoscaleAlgorithm.h`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:57
+msgid ":ref:`file_include_gwmodelpp_CGwmGWDR.h`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:59
+msgid ":ref:`file_include_gwmodelpp_CGwmSpatialMultiscaleAlgorithm.h`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:61
+msgid ":ref:`file_include_gwmodelpp_CGwmMGWR.h`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:67
+msgid "Classes"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h.rst:70
+msgid ":ref:`exhale_class_classCGwmSpatialWeight`"
+msgstr ""
+

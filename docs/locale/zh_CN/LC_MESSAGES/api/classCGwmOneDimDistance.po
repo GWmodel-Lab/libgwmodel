@@ -1,0 +1,81 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023, GWmodel Lab
+# This file is distributed under the same license as the libgwmodel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: libgwmodel \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-04 15:01+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../api/classCGwmOneDimDistance.rst:4
+msgid "Class CGwmOneDimDistance"
+msgstr ""
+
+#: ../../api/classCGwmOneDimDistance.rst:6
+msgid ""
+"Defined in "
+":ref:`file_include_gwmodelpp_spatialweight_CGwmOneDimDistance.h`"
+msgstr ""
+
+#: ../../api/classCGwmOneDimDistance.rst:10
+msgid "Nested Relationships"
+msgstr ""
+
+#: ../../api/classCGwmOneDimDistance.rst:14
+msgid "Nested Types"
+msgstr ""
+
+#: ../../api/classCGwmOneDimDistance.rst:16
+msgid ":ref:`exhale_struct_structCGwmOneDimDistance_1_1Parameter`"
+msgstr ""
+
+#: ../../api/classCGwmOneDimDistance.rst:20
+msgid "Inheritance Relationships"
+msgstr ""
+
+#: ../../api/classCGwmOneDimDistance.rst:23
+msgid "Base Type"
+msgstr ""
+
+#: ../../api/classCGwmOneDimDistance.rst:25
+msgid "``public CGwmDistance`` (:ref:`exhale_class_classCGwmDistance`)"
+msgstr ""
+
+#: ../../api/classCGwmOneDimDistance.rst:29
+msgid "Class Documentation"
+msgstr ""
+
+#: ../../api/classCGwmOneDimDistance.rst
+msgid "Public Functions"
+msgstr ""
+
+#: ../../api/classCGwmOneDimDistance.rst
+msgid "Parameters"
+msgstr ""
+
+#: ../../api/classCGwmOneDimDistance.rst
+msgid "Returns"
+msgstr ""
+
+#: ../../api/classCGwmOneDimDistance.rst
+msgid "Public Static Functions"
+msgstr ""
+
+#: ../../api/classCGwmOneDimDistance.rst
+msgid "Protected Attributes"
+msgstr ""
+
+#: ../../api/classCGwmOneDimDistance.rst
+msgid "Public Members"
+msgstr ""
+

@@ -12,9 +12,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
+import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+import textwrap
 
 
 # -- Project information -----------------------------------------------------
@@ -64,6 +65,8 @@ master_doc = 'index'
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
 language = None
+locale_dirs = ['locale/']
+gettext_compact = False
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -186,6 +189,13 @@ breathe_projects = {
 
 breathe_default_project = "libgwmodel"
 
+language_map = {
+    'en': 'English',
+    'zh_CN': 'Chinese'
+}
+
+doxygen_language = os.getenv('DOXYGEN_LANGUAGE', 'en')
+
 exhale_args = {
     "containmentFolder": "./api",
     "rootFileName": "reference.rst",
@@ -193,7 +203,11 @@ exhale_args = {
     "doxygenStripFromPath": "..",
     "createTreeView": True,
     "exhaleExecutesDoxygen": True,
-    "exhaleDoxygenStdin": "INPUT = ../include"
+    "exhaleDoxygenStdin": textwrap.dedent("""
+        INPUT = ../include
+        MACRO_EXPANSION = YES
+        OUTPUT_LANGUAGE = {lang}
+    """.format(lang=language_map.get(doxygen_language, 'en')))
 }
 
 primary_domain = "cpp"

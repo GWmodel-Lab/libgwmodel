@@ -1,0 +1,39 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023, GWmodel Lab
+# This file is distributed under the same license as the libgwmodel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: libgwmodel \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-04 15:01+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../api/structGwmGGWRDiagnostic.rst:4
+msgid "Struct GwmGGWRDiagnostic"
+msgstr ""
+
+#: ../../api/structGwmGGWRDiagnostic.rst:6
+msgid "Defined in :ref:`file_include_gwmodelpp_CGwmGGWR.h`"
+msgstr ""
+
+#: ../../api/structGwmGGWRDiagnostic.rst:10
+msgid "Struct Documentation"
+msgstr ""
+
+#: ../../api/structGwmGGWRDiagnostic.rst
+msgid "Public Functions"
+msgstr ""
+
+#: ../../api/structGwmGGWRDiagnostic.rst
+msgid "Public Members"
+msgstr ""
+

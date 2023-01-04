@@ -1,0 +1,153 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023, GWmodel Lab
+# This file is distributed under the same license as the libgwmodel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: libgwmodel \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-04 15:01+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../api/file_include_gwmodel.h.rst:5
+msgid "File gwmodel.h"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:7
+msgid "|exhale_lsh| :ref:`Parent directory <dir_include>` (``include``)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:13
+msgid ""
+"This file provide the headers of this library. If the library is built as"
+" a static library, this header includes all the C++ headers. If the "
+"library is built as a shared library, this header provides interface "
+"functions for the calling of C++ classes."
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:19
+msgid "Contents"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:22
+msgid "Definition (``include/gwmodel.h``)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:33
+msgid "Detailed Description"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:35
+msgid "YigongHu (hu_yigong@whu.edu.cn)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:37
+msgid "0.1.0"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:39
+msgid "2020-10-08"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:41
+msgid "Copyright (c) 2020"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:49
+msgid "Includes"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:52
+msgid ""
+"``gwmodelpp/CGwmAlgorithm.h`` "
+"(:ref:`file_include_gwmodelpp_CGwmAlgorithm.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:54
+msgid ""
+"``gwmodelpp/CGwmBandwidthSelector.h`` "
+"(:ref:`file_include_gwmodelpp_CGwmBandwidthSelector.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:56
+msgid "``gwmodelpp/CGwmGWPCA.h`` (:ref:`file_include_gwmodelpp_CGwmGWPCA.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:58
+msgid "``gwmodelpp/CGwmGWRBase.h`` (:ref:`file_include_gwmodelpp_CGwmGWRBase.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:60
+msgid ""
+"``gwmodelpp/CGwmGWRBasic.h`` "
+"(:ref:`file_include_gwmodelpp_CGwmGWRBasic.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:62
+msgid ""
+"``gwmodelpp/CGwmSpatialAlgorithm.h`` "
+"(:ref:`file_include_gwmodelpp_CGwmSpatialAlgorithm.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:64
+msgid ""
+"``gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h`` "
+"(:ref:`file_include_gwmodelpp_CGwmSpatialMonoscaleAlgorithm.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:66
+msgid ""
+"``gwmodelpp/CGwmVariableForwardSelector.h`` "
+"(:ref:`file_include_gwmodelpp_CGwmVariableForwardSelector.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:68
+msgid ""
+"``gwmodelpp/spatialweight/CGwmBandwidthWeight.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CGwmBandwidthWeight.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:70
+msgid ""
+"``gwmodelpp/spatialweight/CGwmCRSDistance.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CGwmCRSDistance.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:72
+msgid ""
+"``gwmodelpp/spatialweight/CGwmDMatDistance.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CGwmDMatDistance.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:74
+msgid ""
+"``gwmodelpp/spatialweight/CGwmDistance.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CGwmDistance.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:76
+msgid ""
+"``gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CGwmMinkwoskiDistance.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:78
+msgid ""
+"``gwmodelpp/spatialweight/CGwmSpatialWeight.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:80
+msgid ""
+"``gwmodelpp/spatialweight/CGwmWeight.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CGwmWeight.h`)"
+msgstr ""
+

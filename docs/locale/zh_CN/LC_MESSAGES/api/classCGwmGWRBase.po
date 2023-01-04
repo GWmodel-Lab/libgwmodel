@@ -1,0 +1,83 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023, GWmodel Lab
+# This file is distributed under the same license as the libgwmodel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: libgwmodel \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-04 15:01+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../api/classCGwmGWRBase.rst:4
+msgid "Class CGwmGWRBase"
+msgstr ""
+
+#: ../../api/classCGwmGWRBase.rst:6
+msgid "Defined in :ref:`file_include_gwmodelpp_CGwmGWRBase.h`"
+msgstr ""
+
+#: ../../api/classCGwmGWRBase.rst:10
+msgid "Inheritance Relationships"
+msgstr ""
+
+#: ../../api/classCGwmGWRBase.rst:13
+msgid "Base Types"
+msgstr ""
+
+#: ../../api/classCGwmGWRBase.rst:15
+msgid ""
+"``public CGwmSpatialMonoscaleAlgorithm`` "
+"(:ref:`exhale_class_classCGwmSpatialMonoscaleAlgorithm`)"
+msgstr ""
+
+#: ../../api/classCGwmGWRBase.rst:16
+msgid ""
+"``public IGwmRegressionAnalysis`` "
+"(:ref:`exhale_struct_structIGwmRegressionAnalysis`)"
+msgstr ""
+
+#: ../../api/classCGwmGWRBase.rst:20
+msgid "Derived Types"
+msgstr ""
+
+#: ../../api/classCGwmGWRBase.rst:22
+msgid "``public CGwmGGWR`` (:ref:`exhale_class_classCGwmGGWR`)"
+msgstr ""
+
+#: ../../api/classCGwmGWRBase.rst:23
+msgid "``public CGwmGWRBasic`` (:ref:`exhale_class_classCGwmGWRBasic`)"
+msgstr ""
+
+#: ../../api/classCGwmGWRBase.rst:24
+msgid "``public CGwmScalableGWR`` (:ref:`exhale_class_classCGwmScalableGWR`)"
+msgstr ""
+
+#: ../../api/classCGwmGWRBase.rst:28
+msgid "Class Documentation"
+msgstr ""
+
+#: ../../api/classCGwmGWRBase.rst
+msgid "Public Functions"
+msgstr ""
+
+#: ../../api/classCGwmGWRBase.rst
+msgid "Returns"
+msgstr ""
+
+#: ../../api/classCGwmGWRBase.rst
+msgid "Public Static Functions"
+msgstr ""
+
+#: ../../api/classCGwmGWRBase.rst
+msgid "Protected Attributes"
+msgstr ""
+

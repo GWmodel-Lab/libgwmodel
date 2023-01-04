@@ -1,0 +1,97 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023, GWmodel Lab
+# This file is distributed under the same license as the libgwmodel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: libgwmodel \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-04 15:01+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../api/classCGwmGWRBasic.rst:4
+msgid "Class CGwmGWRBasic"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst:6
+msgid "Defined in :ref:`file_include_gwmodelpp_CGwmGWRBasic.h`"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst:10
+msgid "Inheritance Relationships"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst:13
+msgid "Base Types"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst:15
+msgid "``public CGwmGWRBase`` (:ref:`exhale_class_classCGwmGWRBase`)"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst:16
+msgid ""
+"``public IGwmBandwidthSelectable`` "
+"(:ref:`exhale_struct_structIGwmBandwidthSelectable`)"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst:17
+msgid ""
+"``public IGwmVarialbeSelectable`` "
+"(:ref:`exhale_struct_structIGwmVarialbeSelectable`)"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst:18
+msgid ""
+"``public IGwmOpenmpParallelizable`` "
+"(:ref:`exhale_interface_structIGwmOpenmpParallelizable`)"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst:22
+msgid "Derived Type"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst:24
+msgid "``public CGwmRobustGWR`` (:ref:`exhale_class_classCGwmRobustGWR`)"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst:28
+msgid "Class Documentation"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst
+msgid "Public Types"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst
+msgid "Public Functions"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst
+msgid "Returns"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst
+msgid "Parameters"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst
+msgid "Public Static Attributes"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst
+msgid "Protected Functions"
+msgstr ""
+
+#: ../../api/classCGwmGWRBasic.rst
+msgid "Protected Attributes"
+msgstr ""
+
