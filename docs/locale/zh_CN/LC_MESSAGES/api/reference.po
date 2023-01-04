@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-04 15:01+0000\n"
+"POT-Creation-Date: 2023-01-04 17:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,6 +20,11 @@ msgstr ""
 #: ../../api/reference.rst:3
 msgid "Library Reference"
 msgstr "库参考"
+
+#: ../../api/page_view_hierarchy.rst.include:3
+#, fuzzy
+msgid "Page Hierarchy"
+msgstr "文件结构"
 
 #: ../../api/class_view_hierarchy.rst.include:3
 msgid "Class Hierarchy"

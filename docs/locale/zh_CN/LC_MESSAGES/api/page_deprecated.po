@@ -17,19 +17,10 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.11.0\n"
 
-#: ../../api/unabridged_orphan.rst:5
-msgid "Full API"
+#: ../../api/page_deprecated.rst:4
+msgid "弃用列表"
 msgstr ""
 
-#: ../../api/unabridged_orphan.rst:8
-msgid "Directories"
-msgstr ""
-
-#: ../../api/unabridged_orphan.rst:27
-msgid "Files"
-msgstr ""
-
-#: ../../api/unabridged_orphan.rst:206
-msgid "Pages"
+msgid "成员 CGwmGWRBasic::mHasPredict   是否有预测位置处的变量。"
 msgstr ""
 

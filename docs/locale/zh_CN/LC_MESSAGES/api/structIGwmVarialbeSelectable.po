@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-04 15:01+0000\n"
+"POT-Creation-Date: 2023-01-04 17:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -47,6 +47,10 @@ msgstr ""
 
 #: ../../api/structIGwmVarialbeSelectable.rst
 msgid "Public Functions"
+msgstr ""
+
+#: ../../api/structIGwmVarialbeSelectable.rst
+msgid "Parameters"
 msgstr ""
 
 #: ../../api/structIGwmVarialbeSelectable.rst
