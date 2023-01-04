@@ -44,12 +44,14 @@ public:
      * \~english
      * @brief Check whether the algorithm's configuration is valid. 
      * 
-     * @return `true` if the algorithm's configuration is valid, otherwise `false`.
+     * @return true if the algorithm's configuration is valid.
+     * @return false if the algorithm's configuration is invalid.
      * 
      * \~chinese
      * @brief 检查算法配置是否合法。 
      * 
-     * @return `true` 如果算法配置合法，否则 `false`。
+     * @return true 如果算法配置是合法的。
+     * @return false 如果算法配置不合法。
      */
     virtual bool isValid() = 0;
 };
