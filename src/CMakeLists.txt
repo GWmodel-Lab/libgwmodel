@@ -59,7 +59,6 @@ set(SOURCES_CXX
     gwmodelpp/CGwmRobustGWR.cpp
     gwmodelpp/CGwmGGWR.cpp
     gwmodelpp/CGwmBinomialModel.cpp
-    gwmodelpp/CGwmLinearModel.cpp
     gwmodelpp/CGwmPoissonModel.cpp
     gwmodelpp/CGwmGeneralizedLinearModel.cpp
     gwmodelpp/CGwmScalableGWR.cpp
@@ -110,18 +109,24 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${gwmodel_BINARY_DIR}/bin)
 add_library(gwmodel STATIC ${SOURCES_CXX} ${HEADERS_CXX} ${HEADERS_C})
 set_property(TARGET gwmodel PROPERTY POSITION_INDEPENDENT_CODE ON)
 
+message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
+
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
-    target_compile_options(gwmodel PRIVATE
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-        -Wall -Werror>
-    $<$<CXX_COMPILER_ID:MSVC>:
-        /W4 /wd4819 /WX>)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL Clang OR CMAKE_CXX_COMPILER_ID STREQUAL AppleClang)
+        target_compile_options(gwmodel PRIVATE -Wmost -Werror)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
+        target_compile_options(gwmodel PRIVATE /W4 /wd4819 /WX)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+        target_compile_options(gwmodel PRIVATE -Wall -Werror)
+    endif()
 else()
-    target_compile_options(gwmodel PRIVATE
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-        -Wall>
-    $<$<CXX_COMPILER_ID:MSVC>:
-        /W4 /wd4819>)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL Clang OR CMAKE_CXX_COMPILER_ID STREQUAL AppleClang)
+        target_compile_options(gwmodel PRIVATE -Wmost)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
+        target_compile_options(gwmodel PRIVATE /W4 /wd4819)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+        target_compile_options(gwmodel PRIVATE -Wall)
+    endif()
 endif()
 
 target_link_libraries(gwmodel

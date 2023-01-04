@@ -68,7 +68,7 @@ public:
      * @return true if the algorithm's configuration is valid.
      * @return false if the algorithm's configuration is invalid.
      */
-    virtual bool isValid();
+    virtual bool isValid() override;
 
 protected:
     

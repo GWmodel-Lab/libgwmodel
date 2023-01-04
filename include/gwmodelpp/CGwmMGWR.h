@@ -117,11 +117,6 @@ public:
 
     mat betas() const { return mBetas; }
 
-    bool hasRegressionLayer()
-    {
-        return hasRegressionLayer()!= false;
-    }
-
     BandwidthSizeCriterionFunction bandwidthSizeCriterionAll(BandwidthSelectionCriterionType type);
     BandwidthSizeCriterionFunction bandwidthSizeCriterionVar(BandwidthSelectionCriterionType type);
 
@@ -135,11 +130,11 @@ public:     // GwmSpatialAlgorithm interface
 
 
 public:     // GwmSpatialMultiscaleAlgorithm interface
-    virtual void setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights);
+    virtual void setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights) override;
 
 
 public:     // IBandwidthSizeSelectable interface
-    double getCriterion(CGwmBandwidthWeight* weight)
+    double getCriterion(CGwmBandwidthWeight* weight) override
     {
         return (this->*mBandwidthSizeCriterion)(weight);
     }

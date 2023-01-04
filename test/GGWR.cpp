@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_MAIN
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include <vector>
 #include <string>
@@ -40,10 +40,10 @@ TEST_CASE("GGWR: basic flow")
     REQUIRE_NOTHROW(algorithm.fit());
 
     GwmGGWRDiagnostic diagnostic = algorithm.getDiagnostic();
-    /*REQUIRE_THAT(diagnostic.RSS, Catch::WithinAbs(942063.05166298, 1e-5));
-    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(942081.2250579, 1e-5));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(942083.26379446, 1e-5));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.72696698, 1e-5));*/
+    /*REQUIRE_THAT(diagnostic.RSS, Catch::Matchers::WithinAbs(942063.05166298, 1e-5));
+    REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(942081.2250579, 1e-5));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(942083.26379446, 1e-5));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.72696698, 1e-5));*/
     
 }
 
@@ -79,10 +79,10 @@ TEST_CASE("GGWR: adaptive bandwidth autoselection of with AIC")
     REQUIRE(bw == 21);
 
     GwmGGWRDiagnostic diagnostic = algorithm.getDiagnostic();
-    /*REQUIRE_THAT(diagnostic.RSS, Catch::WithinAbs(893682.63762606, 1e-5));
-    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(893704.45041084, 1e-5));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(893707.39854274, 1e-5));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.740988819, 1e-5));*/
+    /*REQUIRE_THAT(diagnostic.RSS, Catch::Matchers::WithinAbs(893682.63762606, 1e-5));
+    REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(893704.45041084, 1e-5));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(893707.39854274, 1e-5));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.740988819, 1e-5));*/
     
 }
 
@@ -119,10 +119,10 @@ TEST_CASE("GGWR: adaptive bandwidth autoselection and with binomial")
     REQUIRE_NOTHROW(algorithm.fit());
 
     GwmGGWRDiagnostic diagnostic = algorithm.getDiagnostic();
-    REQUIRE_THAT(diagnostic.RSS, Catch::WithinAbs(149.496688455, 1e-5));
-    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(154.56992046, 1e-5));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(154.62734183, 1e-5));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.20968291, 1e-5));
+    REQUIRE_THAT(diagnostic.RSS, Catch::Matchers::WithinAbs(149.496688455, 1e-5));
+    REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(154.56992046, 1e-5));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(154.62734183, 1e-5));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.20968291, 1e-5));
   
 }
 
@@ -160,10 +160,10 @@ TEST_CASE("GGWR: multithread basic flow")
     REQUIRE(bw == 27.0);
 
     GwmGGWRDiagnostic diagnostic = algorithm.getDiagnostic();
-    /*REQUIRE_THAT(diagnostic.RSS, Catch::WithinAbs(942063.05166298, 1e-5));
-    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(942081.2250579, 1e-5));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(942083.26379446, 1e-5));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.72696698, 1e-5));*/
+    /*REQUIRE_THAT(diagnostic.RSS, Catch::Matchers::WithinAbs(942063.05166298, 1e-5));
+    REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(942081.2250579, 1e-5));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(942083.26379446, 1e-5));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.72696698, 1e-5));*/
 
 }
 #endif

@@ -55,7 +55,7 @@ protected:
     vec filtWeight(vec residual, double mse);
 
 public : // Implement IGwmParallelizable
-    void setParallelType(const ParallelType &type);
+    void setParallelType(const ParallelType &type) override;
 
 protected:
     void createPredictionDistanceParameter(const arma::mat& locations);

@@ -34,7 +34,7 @@ mat CGwmPoissonModel::variance(mat mu){
     return mu;
 }
 
-mat CGwmPoissonModel::devResids(mat y, mat mu, mat weights){
+vec CGwmPoissonModel::devResids(mat y, mat mu, mat weights){
     mat r = mu % weights;  
     if( y.min() > 0){
         r = (weights % (y % log(y/mu) - (y - mu)));
@@ -49,7 +49,7 @@ mat CGwmPoissonModel::devResids(mat y, mat mu, mat weights){
     return 2 * r;
 }
 
-double CGwmPoissonModel::aic(mat y,mat n,mat mu,mat wt,double dev){
+double CGwmPoissonModel::aic(mat y, mat n, mat mu, mat wt) {
     vec temp = CGwmGGWR::dpois(y, mu) % wt;
     return -2 * sum(temp);
 }

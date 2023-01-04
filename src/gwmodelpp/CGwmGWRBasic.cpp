@@ -541,8 +541,8 @@ void CGwmGWRBasic::setParallelType(const ParallelType& type)
             mIndepVarsSelectionCriterionFunction = &CGwmGWRBasic::indepVarsSelectionCriterionSerial;
             break;
         }
+        setBandwidthSelectionCriterion(mBandwidthSelectionCriterion);
     }
-    setBandwidthSelectionCriterion(mBandwidthSelectionCriterion);
 }
 
 bool CGwmGWRBasic::isValid()

@@ -85,12 +85,12 @@ public: // Constructors and Deconstructors
     cube scores() { return mScores; }
 
 public: // IGwmMultivariableAnalysis
-    virtual mat variables() const { return mX; }
-    virtual void setVariables(const mat& x) { mX = x; }
-    virtual void run();
+    virtual mat variables() const override { return mX; }
+    virtual void setVariables(const mat& x) override { mX = x; }
+    virtual void run() override;
 
 public: // GwmAlgorithm
-    virtual bool isValid();
+    virtual bool isValid() override;
 
 private:
 

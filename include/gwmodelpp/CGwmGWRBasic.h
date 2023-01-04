@@ -123,7 +123,7 @@ private:
 #endif    
 
 public:     // Implement IGwmParallelizable
-    int parallelAbility() const
+    int parallelAbility() const override
     {
         return ParallelType::SerialOnly
 #ifdef ENABLE_OPENMP
@@ -132,12 +132,12 @@ public:     // Implement IGwmParallelizable
         ;
     }
 
-    ParallelType parallelType() const { return mParallelType; }
+    ParallelType parallelType() const override { return mParallelType; }
 
-    void setParallelType(const ParallelType& type);
+    void setParallelType(const ParallelType& type) override;
 
 public:     // Implement IGwmOpenmpParallelizable
-    void setOmpThreadNum(const int threadNum) { mOmpThreadNum = threadNum; }
+    void setOmpThreadNum(const int threadNum) override { mOmpThreadNum = threadNum; }
 
 protected:
     bool isStoreS() { return mHasHatMatrix && (mCoords.n_rows < 8192); }

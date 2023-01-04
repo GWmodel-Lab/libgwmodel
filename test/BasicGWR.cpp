@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_MAIN
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include <vector>
 #include <string>
@@ -38,10 +38,10 @@ TEST_CASE("BasicGWR: basic flow")
     REQUIRE_NOTHROW(algorithm.fit());
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2436.60445730413, 1e-8));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2448.27206524754, 1e-8));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.708010632044736, 1e-8));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.674975341723766, 1e-8));
+    REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2436.60445730413, 1e-8));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2448.27206524754, 1e-8));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.708010632044736, 1e-8));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.674975341723766, 1e-8));
 
     REQUIRE(algorithm.hasIntercept() == true);
 }
@@ -107,21 +107,21 @@ TEST_CASE("BasicGWR: indepdent variable autoselection with AIC")
     REQUIRE_NOTHROW(algorithm.fit());
 
     VariablesCriterionList criterions = algorithm.indepVarsSelectionCriterionList();
-    REQUIRE_THAT(criterions[0].first, Catch::Equals(vector<size_t>({ 2 })));
-    REQUIRE_THAT(criterions[0].second, Catch::WithinAbs(2551.61359020599, 1e-8));
-    REQUIRE_THAT(criterions[1].first, Catch::Equals(vector<size_t>({ 3 })));
-    REQUIRE_THAT(criterions[1].second, Catch::WithinAbs(2551.30032201349, 1e-8));
-    REQUIRE_THAT(criterions[2].first, Catch::Equals(vector<size_t>({ 1 })));
-    REQUIRE_THAT(criterions[2].second, Catch::WithinAbs(2468.93236280013, 1e-8));
-    REQUIRE_THAT(criterions[3].first, Catch::Equals(vector<size_t>({ 1, 3 })));
-    REQUIRE_THAT(criterions[3].second, Catch::WithinAbs(2452.86447942033, 1e-8));
-    REQUIRE_THAT(criterions[4].first, Catch::Equals(vector<size_t>({ 1, 2 })));
-    REQUIRE_THAT(criterions[4].second, Catch::WithinAbs(2450.59642666509, 1e-8));
-    REQUIRE_THAT(criterions[5].first, Catch::Equals(vector<size_t>({ 1, 2, 3 })));
-    REQUIRE_THAT(criterions[5].second, Catch::WithinAbs(2452.80388934625, 1e-8));
+    REQUIRE_THAT(criterions[0].first, Catch::Matchers::Equals(vector<size_t>({ 2 })));
+    REQUIRE_THAT(criterions[0].second, Catch::Matchers::WithinAbs(2551.61359020599, 1e-8));
+    REQUIRE_THAT(criterions[1].first, Catch::Matchers::Equals(vector<size_t>({ 3 })));
+    REQUIRE_THAT(criterions[1].second, Catch::Matchers::WithinAbs(2551.30032201349, 1e-8));
+    REQUIRE_THAT(criterions[2].first, Catch::Matchers::Equals(vector<size_t>({ 1 })));
+    REQUIRE_THAT(criterions[2].second, Catch::Matchers::WithinAbs(2468.93236280013, 1e-8));
+    REQUIRE_THAT(criterions[3].first, Catch::Matchers::Equals(vector<size_t>({ 1, 3 })));
+    REQUIRE_THAT(criterions[3].second, Catch::Matchers::WithinAbs(2452.86447942033, 1e-8));
+    REQUIRE_THAT(criterions[4].first, Catch::Matchers::Equals(vector<size_t>({ 1, 2 })));
+    REQUIRE_THAT(criterions[4].second, Catch::Matchers::WithinAbs(2450.59642666509, 1e-8));
+    REQUIRE_THAT(criterions[5].first, Catch::Matchers::Equals(vector<size_t>({ 1, 2, 3 })));
+    REQUIRE_THAT(criterions[5].second, Catch::Matchers::WithinAbs(2452.80388934625, 1e-8));
 
     vector<size_t> selectedVariables = algorithm.selectedVariables();
-    REQUIRE_THAT(selectedVariables, Catch::Equals(vector<size_t>({1, 3})));
+    REQUIRE_THAT(selectedVariables, Catch::Matchers::Equals(vector<size_t>({1, 3})));
 }
 
 #ifdef ENABLE_OPENMP
@@ -156,29 +156,29 @@ TEST_CASE("BasicGWR: multithread basic flow")
     REQUIRE_NOTHROW(algorithm.fit());
 
     VariablesCriterionList criterions = algorithm.indepVarsSelectionCriterionList();
-    REQUIRE_THAT(criterions[0].first, Catch::Equals(vector<size_t>({ 2 })));
-    REQUIRE_THAT(criterions[0].second, Catch::WithinAbs(2551.61359020599, 1e-8));
-    REQUIRE_THAT(criterions[1].first, Catch::Equals(vector<size_t>({ 3 })));
-    REQUIRE_THAT(criterions[1].second, Catch::WithinAbs(2551.30032201349, 1e-8));
-    REQUIRE_THAT(criterions[2].first, Catch::Equals(vector<size_t>({ 1 })));
-    REQUIRE_THAT(criterions[2].second, Catch::WithinAbs(2468.93236280013, 1e-8));
-    REQUIRE_THAT(criterions[3].first, Catch::Equals(vector<size_t>({ 1, 3 })));
-    REQUIRE_THAT(criterions[3].second, Catch::WithinAbs(2452.86447942033, 1e-8));
-    REQUIRE_THAT(criterions[4].first, Catch::Equals(vector<size_t>({ 1, 2 })));
-    REQUIRE_THAT(criterions[4].second, Catch::WithinAbs(2450.59642666509, 1e-8));
-    REQUIRE_THAT(criterions[5].first, Catch::Equals(vector<size_t>({ 1, 2, 3 })));
-    REQUIRE_THAT(criterions[5].second, Catch::WithinAbs(2452.80388934625, 1e-8));
+    REQUIRE_THAT(criterions[0].first, Catch::Matchers::Equals(vector<size_t>({ 2 })));
+    REQUIRE_THAT(criterions[0].second, Catch::Matchers::WithinAbs(2551.61359020599, 1e-8));
+    REQUIRE_THAT(criterions[1].first, Catch::Matchers::Equals(vector<size_t>({ 3 })));
+    REQUIRE_THAT(criterions[1].second, Catch::Matchers::WithinAbs(2551.30032201349, 1e-8));
+    REQUIRE_THAT(criterions[2].first, Catch::Matchers::Equals(vector<size_t>({ 1 })));
+    REQUIRE_THAT(criterions[2].second, Catch::Matchers::WithinAbs(2468.93236280013, 1e-8));
+    REQUIRE_THAT(criterions[3].first, Catch::Matchers::Equals(vector<size_t>({ 1, 3 })));
+    REQUIRE_THAT(criterions[3].second, Catch::Matchers::WithinAbs(2452.86447942033, 1e-8));
+    REQUIRE_THAT(criterions[4].first, Catch::Matchers::Equals(vector<size_t>({ 1, 2 })));
+    REQUIRE_THAT(criterions[4].second, Catch::Matchers::WithinAbs(2450.59642666509, 1e-8));
+    REQUIRE_THAT(criterions[5].first, Catch::Matchers::Equals(vector<size_t>({ 1, 2, 3 })));
+    REQUIRE_THAT(criterions[5].second, Catch::Matchers::WithinAbs(2452.80388934625, 1e-8));
     
     vector<size_t> selectedVariables = algorithm.selectedVariables();
-    REQUIRE_THAT(selectedVariables, Catch::Equals(vector<size_t>({1, 3})));
+    REQUIRE_THAT(selectedVariables, Catch::Matchers::Equals(vector<size_t>({1, 3})));
 
     double bw = algorithm.spatialWeight().weight<CGwmBandwidthWeight>()->bandwidth();
     REQUIRE(bw == 31.0);
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2435.8161441795, 1e-8));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2445.49629974057, 1e-8));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.706143867720706, 1e-8));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.678982114793865, 1e-8));
+    REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2435.8161441795, 1e-8));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2445.49629974057, 1e-8));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.706143867720706, 1e-8));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.678982114793865, 1e-8));
 }
 #endif

@@ -7,25 +7,23 @@ using namespace arma;
 class CGwmLinearModel
 {
 public:
-    CGwmLinearModel();
-public:
-    virtual mat initialize() {return nullptr;};
-    virtual mat variance(mat mu) {return nullptr;};
-    virtual mat linkinv(mat eta) {return nullptr;};
-    virtual mat devResids(mat y,mat mu,mat weights) {return nullptr;};
-    virtual double aic(mat y,mat n,mat mu,mat wt,double dev) {return 0.0;};
-    virtual mat muEta(mat eta) {return nullptr;};
-    virtual bool valideta(mat eta) {return true;};
-    virtual bool validmu(mat mu) {return true;};
-    virtual mat linkfun(mat muStart) {return nullptr;};
+    virtual mat initialize() = 0;
+    virtual mat variance(mat mu) = 0;
+    virtual mat linkinv(mat eta) = 0;
+    virtual vec devResids(mat y,mat mu,mat weights) = 0;
+    virtual double aic(mat y,mat n,mat mu,mat wt) = 0;
+    virtual mat muEta(mat eta) = 0;
+    virtual bool valideta(mat eta) = 0;
+    virtual bool validmu(mat mu) = 0;
+    virtual mat linkfun(mat muStart) = 0;
 
-    virtual mat muStart() {return nullptr;};
-    virtual mat weights() {return nullptr;};
-    virtual mat getY() {return nullptr;};
+    virtual mat muStart() = 0;
+    virtual mat weights() = 0;
+    virtual mat getY() = 0;
 
-    virtual bool setMuStart(mat muStart) {return true;};
-    virtual bool setY(mat y) {return true;};
-    virtual bool setWeight(mat weight) {return true;};
+    virtual bool setMuStart(mat muStart) = 0;
+    virtual bool setY(mat y) = 0;
+    virtual bool setWeight(mat weight) = 0;
 };
 
 #endif // GWMLINEARMODEL_H

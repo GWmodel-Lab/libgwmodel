@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_MAIN
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include <vector>
 #include <string>
@@ -33,16 +33,17 @@ TEST_CASE("ScalableGWR: basic flow")
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeight(spatial);
+    algorithm.setPolynomial(4);
     algorithm.setHasHatMatrix(true);
     algorithm.setParameterOptimizeCriterion(CGwmScalableGWR::BandwidthSelectionCriterionType::CV);
     //algorithm.setPolynomial();
     REQUIRE_NOTHROW(algorithm.fit());
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2454.93832121, 1e-3));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2548.83573789, 1e-3));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.7418439605, 1e-3));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.7730231604, 1e-3));
+    REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2454.93832121, 1e-3));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2548.83573789, 1e-3));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.7418439605, 1e-3));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.7730231604, 1e-3));
 
     REQUIRE(algorithm.hasIntercept() == true);
 }
@@ -76,10 +77,10 @@ TEST_CASE("ScalableGWR:  bandwidth  of with AIC")
     REQUIRE_NOTHROW(algorithm.fit());
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    /*REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2437.3887978, 1e-3));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2445.49861419, 1e-3));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.6979320133, 1e-3));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.7211781422, 1e-3));*/
+    /*REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2437.3887978, 1e-3));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2445.49861419, 1e-3));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.6979320133, 1e-3));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.7211781422, 1e-3));*/
 
     REQUIRE(algorithm.hasIntercept() == true);
     
@@ -111,10 +112,10 @@ TEST_CASE("ScableGWR:  autoselection with CV")
     REQUIRE_NOTHROW(algorithm.fit());
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2454.93832121, 1e-3));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2548.83573789, 1e-3));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.7418439605, 1e-3));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.7730231604, 1e-3));
+    REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2454.93832121, 1e-3));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2548.83573789, 1e-3));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.7418439605, 1e-3));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.7730231604, 1e-3));
 
     REQUIRE(algorithm.hasIntercept() == true);
     

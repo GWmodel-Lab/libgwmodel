@@ -8,7 +8,7 @@ CGwmBinomialModel::CGwmBinomialModel()
 }
 
 mat CGwmBinomialModel::initialize(){
-    int nCol = mY.n_cols;
+    uword nCol = mY.n_cols;
     mat n;
     if(nCol == 1){
         n = ones(mY.n_rows);
@@ -39,12 +39,12 @@ mat CGwmBinomialModel::variance(mat mu){
     return mu % (1 - mu);
 }
 
-mat CGwmBinomialModel::devResids(mat y, mat mu, mat weights){
-    int n = y.n_rows;
+vec CGwmBinomialModel::devResids(mat y, mat mu, mat weights){
+    uword n = y.n_rows;
     mat res = vec(n);
-    int lmu = mu.n_elem;
+    uword lmu = mu.n_elem;
     if( lmu > 1){
-        for (int i = 0;i < n; i++){
+        for (uword i = 0;i < n; i++){
             double mui = mu[i];
             double yi = y[i];
             res[i] = 2 * weights[i] * (y_log_y(yi, mui) + y_log_y(1 - yi, 1 - mui));
@@ -52,7 +52,7 @@ mat CGwmBinomialModel::devResids(mat y, mat mu, mat weights){
     }
     else{
         double mui = mu[0];
-        for (int i = 0;i < n; i++){
+        for (uword i = 0;i < n; i++){
             double yi = y[i];
             res[i] = 2 * weights[i] * (y_log_y(yi, mui) + y_log_y(1 - yi, 1 - mui));
         }
@@ -60,7 +60,7 @@ mat CGwmBinomialModel::devResids(mat y, mat mu, mat weights){
     return res;
 }
 
-double CGwmBinomialModel::aic(mat y, mat n, mat mu, mat wt, double dev){
+double CGwmBinomialModel::aic(mat y, mat n, mat mu, mat wt){
     mat m;
     if(n.max() > 1){
         m = n;
@@ -68,7 +68,7 @@ double CGwmBinomialModel::aic(mat y, mat n, mat mu, mat wt, double dev){
     else
         m = wt;
     mat wi = vec(m.n_rows);
-    for(int i = 0;(uword)i < m.n_rows; i++){
+    for(uword i = 0; i < m.n_rows; i++){
         if(m[i]>0){
             wi[i] = wt[i]/m[i];
         }

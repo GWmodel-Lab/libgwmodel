@@ -141,7 +141,7 @@ public:  // IGwmVariableSelectable
     }
 
 public:  // IGwmOpenmpParallelizable
-    int parallelAbility() const
+    int parallelAbility() const override
     {
         return ParallelType::SerialOnly
         #ifdef ENABLE_OPENMP
@@ -150,14 +150,14 @@ public:  // IGwmOpenmpParallelizable
         ;
     }
     
-    ParallelType parallelType() const
+    ParallelType parallelType() const override
     {
         return mParallelType;
     }
     
-    void setParallelType(const ParallelType& type);
+    void setParallelType(const ParallelType& type) override;
 
-    void setOmpThreadNum(const int threadNum)
+    void setOmpThreadNum(const int threadNum) override
     {
         mOmpThreadNum = threadNum;
     }
@@ -249,7 +249,6 @@ public:
 
 private:
     vector<CGwmBandwidthWeight*> mBandwidths;
-    Parameter mParameter;
 };
 
 #endif  // CGWMGWDR_H
