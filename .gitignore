@@ -59,7 +59,7 @@ _deps
 .vscode
 
 ### Doxygen ###
-docs
+.doxygen
 _skbuild
 .mypy_cache
 *.egg
@@ -68,3 +68,8 @@ dist
 build
 _skbuild
 eggs
+
+### Sphinx ###
+docs/_build
+docs/api
+!docs/Makefile
