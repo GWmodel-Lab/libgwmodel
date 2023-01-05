@@ -6,10 +6,11 @@
 #include <string>
 #include <armadillo>
 
-#include "gwmodelpp/CGwmGTWR.h"
+
 #include "gwmodelpp/spatialweight/CGwmCRSSTDistance.h"
 #include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
 #include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
+#include "gwmodelpp/CGwmGTWR.h"
 
 #include "include/londonhp100.h"
 
@@ -25,8 +26,8 @@ TEST_CASE("GTWR: basic flow")
         FAIL("Cannot load londonhp100temporal data.");
     }
 
-    CGwmCRSSTDistance distance(false);
-    CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
+    CGwmCRSSTDistance distance(false,0.05);
+    CGwmBandwidthWeight bandwidth(50, true, CGwmBandwidthWeight::Gaussian);
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
     vec y = londonhp100_data.col(0);
@@ -41,10 +42,10 @@ TEST_CASE("GTWR: basic flow")
     REQUIRE_NOTHROW(algorithm.fit());
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2436.60445730413, 1e-8));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2448.27206524754, 1e-8));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.708010632044736, 1e-8));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.674975341723766, 1e-8));
+    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2441.907430935, 1e-8));
+    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2453.5153601032, 1e-8));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.67006467896073, 1e-8));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.65086284199265 , 1e-8));
 
     REQUIRE(algorithm.hasIntercept() == true);
 }
