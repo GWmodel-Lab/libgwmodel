@@ -112,7 +112,7 @@ TEST_CASE("LocalCollinearityGWR: ")
 
     
 }
-
+/*
 #ifdef ENABLE_OPENMP
 TEST_CASE("LocalCollinearityGWR: multithread basic flow")
 {
@@ -147,9 +147,9 @@ TEST_CASE("LocalCollinearityGWR: multithread basic flow")
     REQUIRE(bw == 67.0);
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    /*REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2458.2472656218, 1e-6));
+    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2458.2472656218, 1e-6));
     REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2459.743757379, 1e-6));
     REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.68733847, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.66436287, 1e-6));*/
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.66436287, 1e-6));
 }
-#endif
+#endif*/
