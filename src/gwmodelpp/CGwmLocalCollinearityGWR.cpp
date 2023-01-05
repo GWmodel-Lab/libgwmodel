@@ -169,9 +169,9 @@ void CGwmLocalCollinearityGWR::setParallelType(const ParallelType& type)
 double CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwidthWeight)
 {
     //行数
-    double n = mX.n_rows;
+    uword n = mX.n_rows;
     //列数
-    double m = mX.n_cols;
+    uword m = mX.n_cols;
     //初始化矩阵
     mat betas = mat(n,m,fill::zeros);
     vec localcn(n,fill::zeros);
