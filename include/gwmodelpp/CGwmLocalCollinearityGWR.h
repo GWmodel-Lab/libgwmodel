@@ -149,10 +149,10 @@ public:
         throw std::runtime_error("not available"); 
     }
     
-    int parallelAbility() const;
-    ParallelType parallelType() const;
-    void setParallelType(const ParallelType& type);
-    void setOmpThreadNum(const int threadNum);
+    int parallelAbility() const override;
+    ParallelType parallelType() const override;
+    void setParallelType(const ParallelType& type) override;
+    void setOmpThreadNum(const int threadNum) override;
 
 protected:
     BandwidthCriterionList mBandwidthSelectionCriterionList;
@@ -161,7 +161,7 @@ protected:
 
 
     //返回cv的函数
-    double LcrCV(double bw,int kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
+    double LcrCV(double bw,uword kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
     //ridge.lm函数
     vec ridgelm(const vec& w,double lambda);
 
@@ -191,9 +191,9 @@ public:
     RegressionCalculator mPredictFunction = &CGwmLocalCollinearityGWR::predictSerial;
     ParallelType mParallelType = ParallelType::SerialOnly;
 
-    int mOmpThreadNum = 8;
-    int mGpuId = 0;
-    int mGroupSize = 64;
+    uword mOmpThreadNum = 8;
+    uword mGpuId = 0;
+    uword mGroupSize = 64;
 };
 
 inline int CGwmLocalCollinearityGWR::parallelAbility() const

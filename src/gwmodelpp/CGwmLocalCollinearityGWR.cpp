@@ -168,12 +168,12 @@ double CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVSerial(CGwmBandwidthWei
     vec locallambda(n,fill::zeros);
     //取mX不含第一列的部分
     mat mXnot1 = mat(mX.n_rows,mX.n_cols-1,fill::zeros);
-    for(int i=0;(uword)i<mX.n_cols-1;i++)
+    for(uword i=0;i<mX.n_cols-1;i++)
     {
         mXnot1.col(i) = mX.col(i+1);
     }
     //主循环
-    for (int i = 0; i < n ; i++)
+    for (uword i = 0; i < n ; i++)
     {
         vec distvi = mSpatialWeight.distance()->distance(i);
         vec wgt = bandwidthWeight->weight(distvi);
@@ -223,9 +223,9 @@ double CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVSerial(CGwmBandwidthWei
 double CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthWeight)
 {
     //行数
-    int n = mX.n_rows;
+    uword n = mX.n_rows;
     //列数
-    int m = mX.n_cols;
+    uword m = mX.n_cols;
     //初始化矩阵
     mat betas = mat(n,m,fill::zeros);
     vec localcn(n,fill::zeros);
@@ -233,9 +233,9 @@ double CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight
     //取mX不含第一列的部分
     mat mXnot1 = mX.cols(1, mX.n_cols - 1);
     //主循环
-    int current = 0;
+    uword current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; i < n; i++)
+    for (uword i = 0; i < n; i++)
     {
         //int thread = omp_get_thread_num();
         vec distvi = mSpatialWeight.distance()->distance(i);
@@ -290,7 +290,7 @@ mat CGwmLocalCollinearityGWR::predictSerial(const mat& x, const vec& y)
     vec localcn(nRp, fill::zeros);
     vec locallambda(nRp, fill::zeros);
     vec hatrow(nRp, fill::zeros);
-    for(int i=0;(uword)i<nRp ;i++)
+    for(uword i=0;i<nRp ;i++)
     {
         vec wi =mSpatialWeight.weightVector(i);
         //计算xw
@@ -345,9 +345,9 @@ mat CGwmLocalCollinearityGWR::predictOmp(const mat& x, const vec& y)
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     //int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for(int i=0;(uword)i < nRp;i++)
+    for(uword i=0;i < nRp;i++)
     {
-        int thread = omp_get_thread_num();
+        uword thread = omp_get_thread_num();
         vec wi = mSpatialWeight.weightVector(i);
         //计算xw
         //取mX不含第一列的部分
