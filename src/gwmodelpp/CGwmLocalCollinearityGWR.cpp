@@ -245,7 +245,7 @@ double CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight
     //主循环
     uword current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (uword i = 0; i < n; i++)
+    for (int i = 0; i <(int) n; i++)
     {
         //int thread = omp_get_thread_num();
         vec distvi = mSpatialWeight.distance()->distance(i);
@@ -355,7 +355,7 @@ mat CGwmLocalCollinearityGWR::predictOmp(const mat& x, const vec& y)
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     //int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for(uword i=0;i < nRp;i++)
+    for(int i=0;i <(int)nRp;i++)
     {
         int thread = omp_get_thread_num();
         vec wi = mSpatialWeight.weightVector(i);

@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_MAIN
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include <vector>
 #include <string>
@@ -39,10 +39,10 @@ TEST_CASE("LocalCollinearityGWR: basic flow")
     REQUIRE_NOTHROW(algorithm.fit());
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    /*REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2461.565456, 1e-6));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2464.600255, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.708010632044736, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.674975341723766, 1e-6));*/
+    /*REQUIRE_THAT(diagnostic.AIC, Catch::MatchersWithinAbs(2461.565456, 1e-6));
+    REQUIRE_THAT(diagnostic.AICc, Catch::MatchersWithinAbs(2464.600255, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::MatchersWithinAbs(0.708010632044736, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::MatchersWithinAbs(0.674975341723766, 1e-6));*/
 
     REQUIRE(algorithm.hasIntercept() == true);
 }
@@ -105,10 +105,10 @@ TEST_CASE("LocalCollinearityGWR: ")
     REQUIRE_NOTHROW(algorithm.fit());
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    /*REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2461.565456, 1e-6));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2464.600255, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.708010632044736, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.674975341723766, 1e-6));*/
+    /*REQUIRE_THAT(diagnostic.AIC, Catch::MatchersWithinAbs(2461.565456, 1e-6));
+    REQUIRE_THAT(diagnostic.AICc, Catch::MatchersWithinAbs(2464.600255, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::MatchersWithinAbs(0.708010632044736, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::MatchersWithinAbs(0.674975341723766, 1e-6));*/
 
     
 }
@@ -147,9 +147,9 @@ TEST_CASE("LocalCollinearityGWR: multithread basic flow")
     REQUIRE(bw == 67.0);
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2458.2472656218, 1e-6));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2459.743757379, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.68733847, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.66436287, 1e-6));
+    REQUIRE_THAT(diagnostic.AIC, Catch::MatchersWithinAbs(2458.2472656218, 1e-6));
+    REQUIRE_THAT(diagnostic.AICc, Catch::MatchersWithinAbs(2459.743757379, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::MatchersWithinAbs(0.68733847, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::MatchersWithinAbs(0.66436287, 1e-6));
 }
 #endif*/
