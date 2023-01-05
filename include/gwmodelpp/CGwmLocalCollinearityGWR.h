@@ -1,5 +1,5 @@
 #ifndef CGWMLOCALCOLLINEARITYGWR_H
-#define GWMLOCALCOLLINEARITYGWR_H
+#define CGWMLOCALCOLLINEARITYGWR_H
 
 #include <utility>
 #include <string>
@@ -31,7 +31,7 @@ public:
     
     typedef tuple<string, mat, NameFormat> ResultLayerDataItem;
     typedef double (CGwmLocalCollinearityGWR::*BandwidthSelectionCriterionCalculator)(CGwmBandwidthWeight*);
-    typedef mat (CGwmLocalCollinearityGWR::*RegressionCalculator)(const mat&, const vec&);
+    typedef mat (CGwmLocalCollinearityGWR::*PredictCalculator)(const mat&, const vec&);
 
     static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
 
@@ -120,16 +120,16 @@ public:
 
     void setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion);
 
-    double getCriterion(CGwmBandwidthWeight* weight)
+    double getCriterion(CGwmBandwidthWeight* weight) override
     {
         return (this->*mBandwidthSelectionCriterionFunction)(weight);
     }
 
-    double getCriterion(const vector<size_t>& variables)
+    /*double getCriterion(const vector<size_t>& variables) override
     {
         throw std::runtime_error("not available"); 
 
-    }
+    }*/
 
 
 public:
@@ -168,7 +168,10 @@ protected:
 
 private:
     double bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwidthWeight);
-    
+#ifdef ENABLE_OPENMP
+    double bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthWeight);
+#endif
+
     double mLambda=0;
     bool mLambdaAdjust=false;
     double mCnThresh=30;
@@ -185,13 +188,11 @@ public:
 #ifdef ENABLE_OPENMP
     mat predictOmp(const mat& x, const vec& y);
 #endif
-#ifdef ENABLE_OPENMP
-    double bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthWeight);
-#endif
-    RegressionCalculator mPredictFunction = &CGwmLocalCollinearityGWR::predictSerial;
+
+    PredictCalculator mPredictFunction = &CGwmLocalCollinearityGWR::predictSerial;
     ParallelType mParallelType = ParallelType::SerialOnly;
 
-    uword mOmpThreadNum = 8;
+    int mOmpThreadNum = 8;
     uword mGpuId = 0;
     uword mGroupSize = 64;
 };

@@ -94,10 +94,18 @@ void CGwmLocalCollinearityGWR::setBandwidthSelectionCriterion(const BandwidthSel
     case BandwidthSelectionCriterionType::CV:
         mapper = {
             make_pair(ParallelType::SerialOnly, &CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVSerial),
+#ifdef ENABLE_OPENMP
             make_pair(ParallelType::OpenMP, &CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVOmp)
+#endif
         };
         break;
     default:
+        mapper = {
+            make_pair(ParallelType::SerialOnly, &CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVSerial),
+#ifdef ENABLE_OPENMP
+            make_pair(ParallelType::OpenMP, &CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVOmp)
+#endif
+        };
         break;
     }
     mBandwidthSelectionCriterionFunction = mapper[mParallelType];
@@ -145,9 +153,11 @@ void CGwmLocalCollinearityGWR::setParallelType(const ParallelType& type)
         case ParallelType::SerialOnly:
             mPredictFunction = &CGwmLocalCollinearityGWR::predictSerial;
             break;
+#ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
             mPredictFunction = &CGwmLocalCollinearityGWR::predictOmp;
             break;
+#endif
         default:
             mPredictFunction = &CGwmLocalCollinearityGWR::predictSerial;
             break;
@@ -347,7 +357,7 @@ mat CGwmLocalCollinearityGWR::predictOmp(const mat& x, const vec& y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for(uword i=0;i < nRp;i++)
     {
-        uword thread = omp_get_thread_num();
+        int thread = omp_get_thread_num();
         vec wi = mSpatialWeight.weightVector(i);
         //计算xw
         //取mX不含第一列的部分
