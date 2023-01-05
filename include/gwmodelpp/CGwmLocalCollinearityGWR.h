@@ -78,9 +78,9 @@ public:
     {
         return mPredictData;
     }
-    void setPredictData(mat &value)
+    void setPredictData(mat &locations)
     {
-        mPredictData = value;
+        mPredictData = locations;
     }
 
     bool lambdaAdjust() const
@@ -149,7 +149,14 @@ public:
         throw std::runtime_error("not available"); 
     }
     
-    int parallelAbility() const override;
+    int parallelAbility() const override
+    {
+        return ParallelType::SerialOnly
+#ifdef ENABLE_OPENMP
+            | ParallelType::OpenMP
+#endif        
+        ;
+    }
     ParallelType parallelType() const override;
     void setParallelType(const ParallelType& type) override;
     void setOmpThreadNum(const int threadNum) override;
@@ -197,10 +204,6 @@ public:
     uword mGroupSize = 64;
 };
 
-inline int CGwmLocalCollinearityGWR::parallelAbility() const
-{
-    return ParallelType::SerialOnly | ParallelType::OpenMP;
-}
 
 inline ParallelType CGwmLocalCollinearityGWR::parallelType() const
 {

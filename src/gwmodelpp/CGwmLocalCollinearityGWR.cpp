@@ -72,7 +72,7 @@ mat CGwmLocalCollinearityGWR::fit()
     mDiagnostic.AIC = nDp * (log(2*M_PI*s2)+1) + 2*(mDiagnostic.ENP + 1);
     mDiagnostic.AICc = nDp * (log(2*M_PI*s2)) + nDp*( (1+mDiagnostic.ENP/nDp) / (1-(mDiagnostic.ENP+2)/nDp) );
     mDiagnostic.RSquare = 1 - mDiagnostic.RSS/sum((mY - mean(mY)) % (mY - mean(mY)));
-    mDiagnostic.RSquareAdjust = 1 - (1 - mDiagnostic.RSquare)*(nDp - 1) / (mDiagnostic.EDF);
+    mDiagnostic.RSquareAdjust = 1 - (1 - mDiagnostic.RSquare)*(nDp - 1) / (mDiagnostic.EDF-1);
     // s2
     // aic 、 aicc
     //调用gwr.lcr.cv.contrib
@@ -328,7 +328,7 @@ mat CGwmLocalCollinearityGWR::predictSerial(const mat& x, const vec& y)
         }
         betas.row(i) = trans(ridgelm(wi,locallambda(i)) );
         //如果没有给regressionpoint
-        if(mHasPredict )
+        if(!mHasPredict )
         {
             mat xm = x;
             mat xtw = trans(x % (wi * wispan1));
@@ -346,7 +346,7 @@ mat CGwmLocalCollinearityGWR::predictSerial(const mat& x, const vec& y)
 #ifdef ENABLE_OPENMP
 mat CGwmLocalCollinearityGWR::predictOmp(const mat& x, const vec& y)
 {
-    uword nRp = mHasPredict? mPredictData.n_rows : mCoords.n_rows, nVar = mX.size() + 1;
+    uword nRp = mHasPredict? mPredictData.n_rows : mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nRp, nVar, fill::zeros);
     vec localcn(nRp, fill::zeros);
     vec locallambda(nRp, fill::zeros);
@@ -384,7 +384,7 @@ mat CGwmLocalCollinearityGWR::predictOmp(const mat& x, const vec& y)
         }
         betas.row(i) = trans( ridgelm(wi,locallambda(i)) );
         //如果没有给regressionpoint
-        if(mHasPredict)
+        if(!mHasPredict)
         {
             mat xm = x;
             mat xtw = trans(x % (wi * wispan1));
