@@ -28,7 +28,7 @@ unordered_map<CGwmMGWR::BackFittingCriterionType,string> CGwmMGWR::BackFittingCr
     make_pair(CGwmMGWR::BackFittingCriterionType::dCVR, ("dCVR"))
 };
 
-GwmRegressionDiagnostic CGwmMGWR::CalcDiagnostic(const mat &x, const vec &y, const mat &S0, double RSS)
+GwmRegressionDiagnostic CGwmMGWR::CalcDiagnostic(const mat &x, const vec &y, const vec &shat, double RSS)
 {
     // 诊断信息
     double nDp = (double)x.n_rows;
@@ -37,8 +37,8 @@ GwmRegressionDiagnostic CGwmMGWR::CalcDiagnostic(const mat &x, const vec &y, con
     double TSS = sum((y - mean(y)) % (y - mean(y)));
     double Rsquare = 1 - RSSg / TSS;
 
-    double trS = trace(S0);
-    double trStS = trace(S0.t() * S0);
+    double trS = shat(0);
+    double trStS = shat(1);
     double enp = 2 * trS - trStS;
     double edf = nDp - 2 * trS + trStS;
     double AICc = nDp * log(sigmaHat21) + nDp * log(2 * M_PI) + nDp * ((nDp + trS) / (nDp - 2 - trS));
@@ -127,7 +127,12 @@ mat CGwmMGWR::fit()
 
     mBetas = backfitting(mX, mY);
 
-    mDiagnostic = CalcDiagnostic(mX, mY, mS0, mRSS0);
+    // Diagnostic
+    vec shat = { 
+        mHasHatMatrix ? trace(mS0) : 0,
+        mHasHatMatrix ? trace(mS0.t() * mS0) : 0
+    };
+    mDiagnostic = CalcDiagnostic(mX, mY, shat, mRSS0);
     vec yhat = Fitted(mX, mBetas);
     vec residual = mY - yhat;
     mBetasTV = mBetas / mBetasSE;

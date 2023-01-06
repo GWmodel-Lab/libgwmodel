@@ -64,7 +64,7 @@ private:
         return mHasHatMatrix && (mCoords.n_rows < 8192);
     }
 
-    static GwmRegressionDiagnostic CalcDiagnostic(const mat &x, const vec &y, const mat &S0, double RSS);
+    static GwmRegressionDiagnostic CalcDiagnostic(const mat &x, const vec &y, const vec &shat, double RSS);
 
     void setInitSpatialWeight(const CGwmSpatialWeight &spatialWeight)
     {
