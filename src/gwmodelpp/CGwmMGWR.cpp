@@ -133,9 +133,12 @@ mat CGwmMGWR::fit()
         mHasHatMatrix ? trace(mS0.t() * mS0) : 0
     };
     mDiagnostic = CalcDiagnostic(mX, mY, shat, mRSS0);
+    if (mHasHatMatrix)
+    {
+        mBetasTV = mBetas / mBetasSE;
+    }
     vec yhat = Fitted(mX, mBetas);
     vec residual = mY - yhat;
-    mBetasTV = mBetas / mBetasSE;
 
     return mBetas;
 }
