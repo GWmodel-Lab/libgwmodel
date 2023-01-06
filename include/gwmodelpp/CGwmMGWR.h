@@ -79,6 +79,8 @@ public:
     {
         mX = x;
         mY = y;
+        if (spatialWeights.size() > 0)
+            setInitSpatialWeight(spatialWeights[0]);
     }
 
     virtual ~CGwmMGWR() {}

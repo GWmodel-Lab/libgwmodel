@@ -148,10 +148,10 @@ mat CGwmMGWR::backfitting(const mat &x, const vec &y)
 {
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas = (this->*mFitAll)(x, y);
+    mat idm = eye(nVar, nVar);
 
     if (mHasHatMatrix)
     {
-        mat idm(nVar, nVar, fill::eye);
         for (uword i = 0; i < nVar; ++i)
         {
             for (uword j = 0; j < nDp ; ++j)
@@ -208,9 +208,9 @@ mat CGwmMGWR::backfitting(const mat &x, const vec &y)
             betas.col(i) = (this->*mFitVar)(x.col(i), yi, i, S);
             if (mHasHatMatrix)
             {
-                mat SArrayi = mSArray.slice(i);
-                mSArray.slice(i) = S * SArrayi + S - S * mS0;
-                mS0 = mS0 - SArrayi + mSArray.slice(i);
+                mat SArrayi = mSArray.slice(i) - mS0;
+                mSArray.slice(i) = S * SArrayi + S;
+                mS0 = mSArray.slice(i) - SArrayi;
             }
             resid = y - Fitted(x, betas);
         }
