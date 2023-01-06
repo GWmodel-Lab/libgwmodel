@@ -68,6 +68,57 @@ TEST_CASE("MGWR: basic flow")
     REQUIRE(algorithm.hasIntercept() == true);
 }
 
+TEST_CASE("MGWR: basic flow without hat matrix")
+{
+    mat londonhp100_coord, londonhp100_data;
+    vector<string> londonhp100_fields;
+    if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
+    {
+        FAIL("Cannot load londonhp100 data.");
+    }
+
+    uword nVar = 3;
+    vector<CGwmSpatialWeight> spatials;
+    vector<bool> preditorCentered;
+    vector<CGwmMGWR::BandwidthInitilizeType> bandwidthInitialize;
+    vector<CGwmMGWR::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
+    for (size_t i = 0; i < nVar; i++)
+    {
+        CGwmCRSDistance distance;
+        CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Bisquare);
+        spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
+        preditorCentered.push_back(i != 0);
+        bandwidthInitialize.push_back(CGwmMGWR::BandwidthInitilizeType::Null);
+        bandwidthSelectionApproach.push_back(CGwmMGWR::BandwidthSelectionCriterionType::CV);
+    }
+
+    vec y = londonhp100_data.col(0);
+    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(uvec({1, 3})));
+
+    CGwmMGWR algorithm;
+    algorithm.setCoords(londonhp100_coord);
+    algorithm.setDependentVariable(y);
+    algorithm.setIndependentVariables(x);
+    algorithm.setSpatialWeights(spatials);
+    algorithm.setHasHatMatrix(false);
+    algorithm.setPreditorCentered(preditorCentered);
+    algorithm.setBandwidthInitilize(bandwidthInitialize);
+    algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
+    algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
+    REQUIRE_NOTHROW(algorithm.fit());
+
+    const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
+    REQUIRE(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth() == 35);
+    REQUIRE(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth() == 98);
+    REQUIRE(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth() == 98);
+
+    GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.757377391669, 1e-6));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.757377391669, 1e-6));
+
+    REQUIRE(algorithm.hasIntercept() == true);
+}
+
 TEST_CASE("MGWR: adaptive bandwidth autoselection of with AIC")
 {
     mat londonhp100_coord, londonhp100_data;
