@@ -48,7 +48,7 @@ public:
      * 
      * @return Spatial weight configuration object.
      */
-    vector<CGwmSpatialWeight> spatialWeights() const;
+    const vector<CGwmSpatialWeight>& spatialWeights() const;
 
     /**
      * @brief Set the spatial weight configuration.
@@ -67,7 +67,7 @@ protected:
     vector<CGwmSpatialWeight> mSpatialWeights;   //!< Spatial weight configuration.
 };
 
-inline vector<CGwmSpatialWeight> CGwmSpatialMultiscaleAlgorithm::spatialWeights() const
+inline const vector<CGwmSpatialWeight>& CGwmSpatialMultiscaleAlgorithm::spatialWeights() const
 {
     return mSpatialWeights;
 }

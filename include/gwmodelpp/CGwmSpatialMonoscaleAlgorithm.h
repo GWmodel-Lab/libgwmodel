@@ -47,7 +47,7 @@ public:
      * 
      * @return Spatial weight configuration object.
      */
-    CGwmSpatialWeight spatialWeight() const
+    const CGwmSpatialWeight& spatialWeight() const
     {
         return mSpatialWeight;
     }
