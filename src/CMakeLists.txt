@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
+if(ENABLE_OpenMP)
 find_package(OpenMP)
 if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
     if(ENABLE_OpenMP)
@@ -10,6 +11,7 @@ if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
         include_directories(${OpenMP_C_INCLUDE_DIRS} ${OpenMP_CXX_INCLUDE_DIRS})
     endif(ENABLE_OpenMP)
 endif(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
+endif()
 
 find_package(GSL REQUIRED)
 if(GSL_FOUND)
