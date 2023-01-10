@@ -5,11 +5,11 @@
 #include <vector>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp/CGwmGWRMultiscale.h"
+#include "gwmodelpp/GWRMultiscale.h"
 
-#include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
-#include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
-#include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
+#include "gwmodelpp/spatialweight/CRSDistance.h"
+#include "gwmodelpp/spatialweight/BandwidthWeight.h"
+#include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
 
 using namespace std;
@@ -27,24 +27,24 @@ TEST_CASE("MGWR: basic flow")
     }
 
     uword nVar = 3;
-    vector<CGwmSpatialWeight> spatials;
+    vector<SpatialWeight> spatials;
     vector<bool> preditorCentered;
-    vector<CGwmGWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
-    vector<CGwmGWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
+    vector<GWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
+    vector<GWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
     for (size_t i = 0; i < nVar; i++)
     {
-        CGwmCRSDistance distance;
-        CGwmBandwidthWeight bandwidth(0, false, CGwmBandwidthWeight::Bisquare);
-        spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
+        CRSDistance distance;
+        BandwidthWeight bandwidth(0, false, BandwidthWeight::Bisquare);
+        spatials.push_back(SpatialWeight(&bandwidth, &distance));
         preditorCentered.push_back(i != 0);
-        bandwidthInitialize.push_back(CGwmGWRMultiscale::BandwidthInitilizeType::Null);
-        bandwidthSelectionApproach.push_back(CGwmGWRMultiscale::BandwidthSelectionCriterionType::CV);
+        bandwidthInitialize.push_back(GWRMultiscale::BandwidthInitilizeType::Null);
+        bandwidthSelectionApproach.push_back(GWRMultiscale::BandwidthSelectionCriterionType::CV);
     }
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(uvec({1, 3})));
 
-    CGwmGWRMultiscale algorithm;
+    GWRMultiscale algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -56,12 +56,12 @@ TEST_CASE("MGWR: basic flow")
     algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
     REQUIRE_NOTHROW(algorithm.fit());
 
-    const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(4623.78, 0.1));
-    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(12665.70, 0.1));
-    REQUIRE_THAT(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(12665.70, 0.1));
+    const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
+    REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(4623.78, 0.1));
+    REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(12665.70, 0.1));
+    REQUIRE_THAT(spatialWeights[2].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(12665.70, 0.1));
 
-    GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    RegressionDiagnostic diagnostic = algorithm.diagnostic();
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2437.09277417389, 1e-6));
     REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.744649364494, 1e-6));
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.712344894394, 1e-6));
@@ -79,24 +79,24 @@ TEST_CASE("MGWR: basic flow without hat matrix")
     }
 
     uword nVar = 3;
-    vector<CGwmSpatialWeight> spatials;
+    vector<SpatialWeight> spatials;
     vector<bool> preditorCentered;
-    vector<CGwmGWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
-    vector<CGwmGWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
+    vector<GWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
+    vector<GWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
     for (size_t i = 0; i < nVar; i++)
     {
-        CGwmCRSDistance distance;
-        CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Bisquare);
-        spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
+        CRSDistance distance;
+        BandwidthWeight bandwidth(0, true, BandwidthWeight::Bisquare);
+        spatials.push_back(SpatialWeight(&bandwidth, &distance));
         preditorCentered.push_back(i != 0);
-        bandwidthInitialize.push_back(CGwmGWRMultiscale::BandwidthInitilizeType::Null);
-        bandwidthSelectionApproach.push_back(CGwmGWRMultiscale::BandwidthSelectionCriterionType::CV);
+        bandwidthInitialize.push_back(GWRMultiscale::BandwidthInitilizeType::Null);
+        bandwidthSelectionApproach.push_back(GWRMultiscale::BandwidthSelectionCriterionType::CV);
     }
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(uvec({1, 3})));
 
-    CGwmGWRMultiscale algorithm;
+    GWRMultiscale algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -108,12 +108,12 @@ TEST_CASE("MGWR: basic flow without hat matrix")
     algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
     REQUIRE_NOTHROW(algorithm.fit());
 
-    const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth() == 35);
-    REQUIRE(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth() == 98);
-    REQUIRE(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth() == 98);
+    const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
+    REQUIRE(spatialWeights[0].weight<BandwidthWeight>()->bandwidth() == 35);
+    REQUIRE(spatialWeights[1].weight<BandwidthWeight>()->bandwidth() == 98);
+    REQUIRE(spatialWeights[2].weight<BandwidthWeight>()->bandwidth() == 98);
 
-    GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    RegressionDiagnostic diagnostic = algorithm.diagnostic();
     REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.757377391669, 1e-6));
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.757377391669, 1e-6));
 
@@ -130,30 +130,30 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with AIC")
     }
 
     uword nVar = 3;
-    vector<CGwmSpatialWeight> spatials;
+    vector<SpatialWeight> spatials;
     vector<bool> preditorCentered;
-    vector<CGwmGWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
-    vector<CGwmGWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
+    vector<GWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
+    vector<GWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
     for (size_t i = 0; i < nVar; i++)
     {
-        CGwmCRSDistance distance;
-        CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Bisquare);
-        spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
+        CRSDistance distance;
+        BandwidthWeight bandwidth(36, true, BandwidthWeight::Bisquare);
+        spatials.push_back(SpatialWeight(&bandwidth, &distance));
         preditorCentered.push_back(i != 0);
-        bandwidthInitialize.push_back(CGwmGWRMultiscale::BandwidthInitilizeType::Initial);
-        bandwidthSelectionApproach.push_back(CGwmGWRMultiscale::BandwidthSelectionCriterionType::AIC);
+        bandwidthInitialize.push_back(GWRMultiscale::BandwidthInitilizeType::Initial);
+        bandwidthSelectionApproach.push_back(GWRMultiscale::BandwidthSelectionCriterionType::AIC);
     }
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(uvec({1, 3})));
 
-    CGwmGWRMultiscale algorithm;
+    GWRMultiscale algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
     algorithm.setHasHatMatrix(true);
-    algorithm.setCriterionType(CGwmGWRMultiscale::BackFittingCriterionType::dCVR);
+    algorithm.setCriterionType(GWRMultiscale::BackFittingCriterionType::dCVR);
     algorithm.setPreditorCentered(preditorCentered);
     algorithm.setBandwidthInitilize(bandwidthInitialize);
     algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
@@ -161,12 +161,12 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with AIC")
     algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
     REQUIRE_NOTHROW(algorithm.fit());
 
-    const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(45, 0.1));
-    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
-    REQUIRE_THAT(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
+    const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
+    REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(45, 0.1));
+    REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
+    REQUIRE_THAT(spatialWeights[2].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
 
-    GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    RegressionDiagnostic diagnostic = algorithm.diagnostic();
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2437.935218705351, 1e-6));
     REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.7486787930045755, 1e-6));
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.7118919517893492, 1e-6));
@@ -183,30 +183,30 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with CV")
     }
 
     uword nVar = 3;
-    vector<CGwmSpatialWeight> spatials;
+    vector<SpatialWeight> spatials;
     vector<bool> preditorCentered;
-    vector<CGwmGWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
-    vector<CGwmGWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
+    vector<GWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
+    vector<GWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
     for (size_t i = 0; i < nVar; i++)
     {
-        CGwmCRSDistance distance;
-        CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Bisquare);
-        spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
+        CRSDistance distance;
+        BandwidthWeight bandwidth(0, true, BandwidthWeight::Bisquare);
+        spatials.push_back(SpatialWeight(&bandwidth, &distance));
         preditorCentered.push_back(i != 0);
-        bandwidthInitialize.push_back(CGwmGWRMultiscale::BandwidthInitilizeType::Null);
-        bandwidthSelectionApproach.push_back(CGwmGWRMultiscale::BandwidthSelectionCriterionType::CV);
+        bandwidthInitialize.push_back(GWRMultiscale::BandwidthInitilizeType::Null);
+        bandwidthSelectionApproach.push_back(GWRMultiscale::BandwidthSelectionCriterionType::CV);
     }
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(uvec({1, 3})));
 
-    CGwmGWRMultiscale algorithm;
+    GWRMultiscale algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
     algorithm.setHasHatMatrix(true);
-    algorithm.setCriterionType(CGwmGWRMultiscale::BackFittingCriterionType::dCVR);
+    algorithm.setCriterionType(GWRMultiscale::BackFittingCriterionType::dCVR);
     algorithm.setPreditorCentered(preditorCentered);
     algorithm.setBandwidthInitilize(bandwidthInitialize);
     algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
@@ -214,12 +214,12 @@ TEST_CASE("MGWR: adaptive bandwidth autoselection of with CV")
     algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
     REQUIRE_NOTHROW(algorithm.fit());
 
-    const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(35, 0.1));
-    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
-    REQUIRE_THAT(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
+    const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
+    REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(35, 0.1));
+    REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
+    REQUIRE_THAT(spatialWeights[2].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
 
-    GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    RegressionDiagnostic diagnostic = algorithm.diagnostic();
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2438.256543499568, 1e-6));
     REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.757377391648, 1e-6));
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.715598248202, 1e-6));
@@ -236,30 +236,30 @@ TEST_CASE("MGWR: basic flow with CVR")
     }
 
     uword nVar = 3;
-    vector<CGwmSpatialWeight> spatials;
+    vector<SpatialWeight> spatials;
     vector<bool> preditorCentered;
-    vector<CGwmGWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
-    vector<CGwmGWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
+    vector<GWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
+    vector<GWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
     for (size_t i = 0; i < nVar; i++)
     {
-        CGwmCRSDistance distance;
-        CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Bisquare);
-        spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
+        CRSDistance distance;
+        BandwidthWeight bandwidth(36, true, BandwidthWeight::Bisquare);
+        spatials.push_back(SpatialWeight(&bandwidth, &distance));
         preditorCentered.push_back(i != 0);
-        bandwidthInitialize.push_back(CGwmGWRMultiscale::BandwidthInitilizeType::Initial);
-        bandwidthSelectionApproach.push_back(CGwmGWRMultiscale::BandwidthSelectionCriterionType::CV);
+        bandwidthInitialize.push_back(GWRMultiscale::BandwidthInitilizeType::Initial);
+        bandwidthSelectionApproach.push_back(GWRMultiscale::BandwidthSelectionCriterionType::CV);
     }
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(uvec({1, 3})));
 
-    CGwmGWRMultiscale algorithm;
+    GWRMultiscale algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
     algorithm.setHasHatMatrix(true);
-    algorithm.setCriterionType(CGwmGWRMultiscale::BackFittingCriterionType::CVR);
+    algorithm.setCriterionType(GWRMultiscale::BackFittingCriterionType::CVR);
     algorithm.setPreditorCentered(preditorCentered);
     algorithm.setBandwidthInitilize(bandwidthInitialize);
     algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
@@ -268,12 +268,12 @@ TEST_CASE("MGWR: basic flow with CVR")
     algorithm.setParallelType(ParallelType::OpenMP);
     REQUIRE_NOTHROW(algorithm.fit());
 
-    const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth() == 35);
-    REQUIRE(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth() == 98);
-    REQUIRE(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth() == 98);
+    const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
+    REQUIRE(spatialWeights[0].weight<BandwidthWeight>()->bandwidth() == 35);
+    REQUIRE(spatialWeights[1].weight<BandwidthWeight>()->bandwidth() == 98);
+    REQUIRE(spatialWeights[2].weight<BandwidthWeight>()->bandwidth() == 98);
 
-    GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    RegressionDiagnostic diagnostic = algorithm.diagnostic();
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2438.256543496552, 1e-6));
     REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.757377391669, 1e-6));
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.715598248225, 1e-6));
@@ -291,30 +291,30 @@ TEST_CASE("MGWR: basic flow (multithread)")
     }
 
     uword nVar = 3;
-    vector<CGwmSpatialWeight> spatials;
+    vector<SpatialWeight> spatials;
     vector<bool> preditorCentered;
-    vector<CGwmGWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
-    vector<CGwmGWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
+    vector<GWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
+    vector<GWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
     for (size_t i = 0; i < nVar; i++)
     {
-        CGwmCRSDistance distance;
-        CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Bisquare);
-        spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
+        CRSDistance distance;
+        BandwidthWeight bandwidth(0, true, BandwidthWeight::Bisquare);
+        spatials.push_back(SpatialWeight(&bandwidth, &distance));
         preditorCentered.push_back(i != 0);
-        bandwidthInitialize.push_back(CGwmGWRMultiscale::BandwidthInitilizeType::Null);
-        bandwidthSelectionApproach.push_back(CGwmGWRMultiscale::BandwidthSelectionCriterionType::CV);
+        bandwidthInitialize.push_back(GWRMultiscale::BandwidthInitilizeType::Null);
+        bandwidthSelectionApproach.push_back(GWRMultiscale::BandwidthSelectionCriterionType::CV);
     }
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(uvec({1, 3})));
 
-    CGwmGWRMultiscale algorithm;
+    GWRMultiscale algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
     algorithm.setHasHatMatrix(true);
-    algorithm.setCriterionType(CGwmGWRMultiscale::BackFittingCriterionType::dCVR);
+    algorithm.setCriterionType(GWRMultiscale::BackFittingCriterionType::dCVR);
     algorithm.setPreditorCentered(preditorCentered);
     algorithm.setBandwidthInitilize(bandwidthInitialize);
     algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
@@ -323,12 +323,12 @@ TEST_CASE("MGWR: basic flow (multithread)")
     algorithm.setParallelType(ParallelType::OpenMP);
     REQUIRE_NOTHROW(algorithm.fit());
 
-    const vector<CGwmSpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(35, 0.1));
-    REQUIRE_THAT(spatialWeights[1].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
-    REQUIRE_THAT(spatialWeights[2].weight<CGwmBandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
+    const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
+    REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(35, 0.1));
+    REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
+    REQUIRE_THAT(spatialWeights[2].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
 
-    GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    RegressionDiagnostic diagnostic = algorithm.diagnostic();
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2438.256543499568, 1e-6));
     REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.757377391648, 1e-6));
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.715598248202, 1e-6));

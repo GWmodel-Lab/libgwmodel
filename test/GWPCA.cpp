@@ -4,10 +4,10 @@
 #include <vector>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp/CGwmGWPCA.h"
-#include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
-#include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
-#include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
+#include "gwmodelpp/GWPCA.h"
+#include "gwmodelpp/spatialweight/CRSDistance.h"
+#include "gwmodelpp/spatialweight/BandwidthWeight.h"
+#include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
 
 using namespace std;
@@ -23,13 +23,13 @@ TEST_CASE("GWPCA: basic flow")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    CGwmCRSDistance distance(false);
-    CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
-    CGwmSpatialWeight spatial(&bandwidth, &distance);
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
 
     mat x = londonhp100_data.cols(1, 3);
 
-    CGwmGWPCA algorithm;
+    GWPCA algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setVariables(x);
     algorithm.setSpatialWeight(spatial);

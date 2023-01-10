@@ -5,11 +5,11 @@
 #include <vector>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp/CGwmGWRMultiscale.h"
+#include "gwmodelpp/GWRMultiscale.h"
 
-#include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
-#include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
-#include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
+#include "gwmodelpp/spatialweight/CRSDistance.h"
+#include "gwmodelpp/spatialweight/BandwidthWeight.h"
+#include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "gwmodelpp/GwmLogger.h"
 #include "londonhp100.h"
 
@@ -34,24 +34,24 @@ TEST_CASE("MGWR: basic flow")
     }
 
     uword nVar = 3;
-    vector<CGwmSpatialWeight> spatials;
+    vector<SpatialWeight> spatials;
     vector<bool> preditorCentered;
-    vector<CGwmGWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
-    vector<CGwmGWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
+    vector<GWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
+    vector<GWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
     for (size_t i = 0; i < nVar; i++)
     {
-        CGwmCRSDistance distance;
-        CGwmBandwidthWeight bandwidth(0, false, CGwmBandwidthWeight::Bisquare);
-        spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
+        CRSDistance distance;
+        BandwidthWeight bandwidth(0, false, BandwidthWeight::Bisquare);
+        spatials.push_back(SpatialWeight(&bandwidth, &distance));
         preditorCentered.push_back(i != 0);
-        bandwidthInitialize.push_back(CGwmGWRMultiscale::BandwidthInitilizeType::Null);
-        bandwidthSelectionApproach.push_back(CGwmGWRMultiscale::BandwidthSelectionCriterionType::CV);
+        bandwidthInitialize.push_back(GWRMultiscale::BandwidthInitilizeType::Null);
+        bandwidthSelectionApproach.push_back(GWRMultiscale::BandwidthSelectionCriterionType::CV);
     }
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmGWRMultiscale algorithm;
+    GWRMultiscale algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);

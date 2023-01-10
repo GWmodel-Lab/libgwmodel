@@ -15,22 +15,22 @@
 #ifndef GWMODEL_H
 #define GWMODEL_H
 
-#include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
-#include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
-#include "gwmodelpp/spatialweight/CGwmDistance.h"
-#include "gwmodelpp/spatialweight/CGwmDMatDistance.h"
-#include "gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h"
-#include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
-#include "gwmodelpp/spatialweight/CGwmWeight.h"
+#include "gwmodelpp/spatialweight/BandwidthWeight.h"
+#include "gwmodelpp/spatialweight/CRSDistance.h"
+#include "gwmodelpp/spatialweight/Distance.h"
+#include "gwmodelpp/spatialweight/DMatDistance.h"
+#include "gwmodelpp/spatialweight/MinkwoskiDistance.h"
+#include "gwmodelpp/spatialweight/SpatialWeight.h"
+#include "gwmodelpp/spatialweight/Weight.h"
 
-#include "gwmodelpp/CGwmAlgorithm.h"
-#include "gwmodelpp/CGwmBandwidthSelector.h"
-#include "gwmodelpp/CGwmVariableForwardSelector.h"
-#include "gwmodelpp/CGwmSpatialAlgorithm.h"
-#include "gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h"
-#include "gwmodelpp/CGwmGWRBase.h"
-#include "gwmodelpp/CGwmGWRBasic.h"
-#include "gwmodelpp/CGwmGWPCA.h"
-#include "gwmodelpp/CGwmGWRMultiscale.h"
+#include "gwmodelpp/Algorithm.h"
+#include "gwmodelpp/BandwidthSelector.h"
+#include "gwmodelpp/VariableForwardSelector.h"
+#include "gwmodelpp/SpatialAlgorithm.h"
+#include "gwmodelpp/SpatialMonoscaleAlgorithm.h"
+#include "gwmodelpp/GWRBase.h"
+#include "gwmodelpp/GWRBasic.h"
+#include "gwmodelpp/GWPCA.h"
+#include "gwmodelpp/GWRMultiscale.h"
 
 #endif  // GWMODEL_H

@@ -1,5 +1,5 @@
-#ifndef GWMLOGGER
-#define GWMLOGGER
+#ifndef GWMLOGGER_H
+#define GWMLOGGER_H
 
 #include <functional>
 #include <string>
@@ -62,4 +62,4 @@ public:
 
 
 
-#endif  // GWMLOGGER
+#endif  // GWMLOGGER_H

@@ -4,10 +4,10 @@
 #include <vector>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp/CGwmGWRRobust.h"
-#include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
-#include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
-#include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
+#include "gwmodelpp/GWRRobust.h"
+#include "gwmodelpp/spatialweight/CRSDistance.h"
+#include "gwmodelpp/spatialweight/BandwidthWeight.h"
+#include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
 
 using namespace std;
@@ -26,15 +26,15 @@ TEST_CASE("RobustGWR: Filtered")
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 /*
-    //CGwmSimpleLayer londonhp(londonhp100_coord, londonhp100_data, londonhp100_fields);
+    //SimpleLayer londonhp(londonhp100_coord, londonhp100_data, londonhp100_fields);
     REQUIRE(londonhp.points().n_rows);
     REQUIRE(londonhp.data().n_rows);
     REQUIRE(londonhp.fields().size());
     REQUIRE(londonhp.featureCount());
 */
-    CGwmCRSDistance distance(false);
-    CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
-    CGwmSpatialWeight spatial(&bandwidth, &distance);
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
 /*
     GwmVariable purchase(0, true, "PURCHASE");
     GwmVariable floorsz(1, true, "FLOORSZ");
@@ -42,7 +42,7 @@ TEST_CASE("RobustGWR: Filtered")
     GwmVariable prof(3, true, "PROF");
     vector<GwmVariable> indepVars = { floorsz, unemploy, prof };
 */
-    CGwmGWRRobust algorithm;
+    GWRRobust algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -51,7 +51,7 @@ TEST_CASE("RobustGWR: Filtered")
     algorithm.setFiltered(true);
     REQUIRE_NOTHROW(algorithm.fit());
 
-   /*  GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+   /*  RegressionDiagnostic diagnostic = algorithm.diagnostic();
     REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2436.60445730413, 1e-8));
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2448.27206524754, 1e-8));
     REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.708010632044736, 1e-8));
@@ -70,12 +70,12 @@ TEST_CASE("RobustGWR: noFiltered")
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
-    CGwmCRSDistance distance(false);
-    CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
-    CGwmSpatialWeight spatial(&bandwidth, &distance);
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
 
 
-    CGwmGWRRobust algorithm;
+    GWRRobust algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -84,7 +84,7 @@ TEST_CASE("RobustGWR: noFiltered")
     algorithm.setFiltered(false);
     REQUIRE_NOTHROW(algorithm.fit());
 
-    /* GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    /* RegressionDiagnostic diagnostic = algorithm.diagnostic();
     REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2436.60445730413, 1e-8));
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2448.27206524754, 1e-8));
     REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.708010632044736, 1e-8));
@@ -102,11 +102,11 @@ TEST_CASE("RobustGWR: adaptive bandwidth autoselection of with CV")
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
-    CGwmCRSDistance distance(false);
-    CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Gaussian);
-    CGwmSpatialWeight spatial(&bandwidth, &distance);
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
 
-    CGwmGWRRobust algorithm;
+    GWRRobust algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -114,14 +114,14 @@ TEST_CASE("RobustGWR: adaptive bandwidth autoselection of with CV")
     algorithm.setHasHatMatrix(true);
 
     algorithm.setIsAutoselectBandwidth(true);
-    algorithm.setBandwidthSelectionCriterion(CGwmGWRRobust::BandwidthSelectionCriterionType::CV);
+    algorithm.setBandwidthSelectionCriterion(GWRRobust::BandwidthSelectionCriterionType::CV);
     
     REQUIRE_NOTHROW(algorithm.fit());
 
-    size_t bw = (size_t)algorithm.spatialWeight().weight<CGwmBandwidthWeight>()->bandwidth();
+    size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
     REQUIRE(bw == 67);
 
-    /* GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    /* RegressionDiagnostic diagnostic = algorithm.diagnostic();
     REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2441.232, 1e-3));
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2449.859, 1e-3));
     REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.6873385, 1e-6));
@@ -139,11 +139,11 @@ TEST_CASE("RobustGWR: indepdent variable autoselection with AIC")
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
-    CGwmCRSDistance distance(false);
-    CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
-    CGwmSpatialWeight spatial(&bandwidth, &distance);
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
 
-    CGwmGWRRobust algorithm;
+    GWRRobust algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -172,7 +172,7 @@ TEST_CASE("RobustGWR: indepdent variable autoselection with AIC")
     vector<size_t> selectedVariables = algorithm.selectedVariables();
     REQUIRE_THAT(selectedVariables, Catch::Matchers::Equals(vector<size_t>({1, 3})));
 
-    /* GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    /* RegressionDiagnostic diagnostic = algorithm.diagnostic();
     REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2436.677, 1e-3));
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2445.703, 1e-3));
     REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.7021572, 1e-6));
@@ -192,18 +192,18 @@ TEST_CASE("RobustGWR: multithread basic flow")
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
-    CGwmCRSDistance distance(false);
-    CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Gaussian);
-    CGwmSpatialWeight spatial(&bandwidth, &distance);
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
 
-    CGwmGWRRobust algorithm;
+    GWRRobust algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeight(spatial);
     algorithm.setHasHatMatrix(true);
     algorithm.setIsAutoselectBandwidth(true);
-    algorithm.setBandwidthSelectionCriterion(CGwmGWRBasic::BandwidthSelectionCriterionType::CV);
+    algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::CV);
     algorithm.setIsAutoselectIndepVars(true);
     algorithm.setIndepVarSelectionThreshold(3.0);
     algorithm.setParallelType(ParallelType::OpenMP);
@@ -227,10 +227,10 @@ TEST_CASE("RobustGWR: multithread basic flow")
     vector<size_t> selectedVariables = algorithm.selectedVariables();
     REQUIRE_THAT(selectedVariables, Catch::Matchers::Equals(vector<size_t>({1, 3})));
 
-    double bw = algorithm.spatialWeight().weight<CGwmBandwidthWeight>()->bandwidth();
+    double bw = algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
     REQUIRE(bw == 31.0);
 
-    /* GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    /* RegressionDiagnostic diagnostic = algorithm.diagnostic();
     REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2435.8161441795, 1e-8));
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2445.49629974057, 1e-8));
     REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.706143867720706, 1e-8));
