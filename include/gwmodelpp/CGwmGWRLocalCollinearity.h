@@ -12,7 +12,7 @@
 #include <exception>
 
 
-class CGwmLocalCollinearityGWR : public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmOpenmpParallelizable
+class CGwmGWRLocalCollinearity : public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmOpenmpParallelizable
 {
 public:
     enum BandwidthSelectionCriterionType
@@ -29,14 +29,14 @@ public:
     };
     
     typedef std::tuple<std::string, arma::mat, NameFormat> ResultLayerDataItem;
-    typedef double (CGwmLocalCollinearityGWR::*BandwidthSelectionCriterionCalculator)(CGwmBandwidthWeight*);
-    typedef arma::mat (CGwmLocalCollinearityGWR::*PredictCalculator)(const arma::mat&, const arma::vec&);
+    typedef double (CGwmGWRLocalCollinearity::*BandwidthSelectionCriterionCalculator)(CGwmBandwidthWeight*);
+    typedef arma::mat (CGwmGWRLocalCollinearity::*PredictCalculator)(const arma::mat&, const arma::vec&);
 
     static GwmRegressionDiagnostic CalcDiagnostic(const arma::mat& x, const arma::vec& y, const arma::mat& betas, const arma::vec& shat);
 
 public:
-    CGwmLocalCollinearityGWR();
-    ~CGwmLocalCollinearityGWR();
+    CGwmGWRLocalCollinearity();
+    ~CGwmGWRLocalCollinearity();
 
 public:
     double cnThresh() const
@@ -156,7 +156,7 @@ public:
 protected:
     BandwidthCriterionList mBandwidthSelectionCriterionList;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::CV;
-    BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVSerial;
+    BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &CGwmGWRLocalCollinearity::bandwidthSizeCriterionCVSerial;
 
 
     //返回cv的函数
@@ -188,7 +188,7 @@ public:
     arma::mat predictOmp(const arma::mat& x, const arma::vec& y);
 #endif
 
-    PredictCalculator mPredictFunction = &CGwmLocalCollinearityGWR::predictSerial;
+    PredictCalculator mPredictFunction = &CGwmGWRLocalCollinearity::predictSerial;
     ParallelType mParallelType = ParallelType::SerialOnly;
 
     int mOmpThreadNum = 8;
@@ -196,17 +196,17 @@ public:
     arma::uword mGroupSize = 64;
 };
 
-inline int CGwmLocalCollinearityGWR::parallelAbility() const
+inline int CGwmGWRLocalCollinearity::parallelAbility() const
 {
     return ParallelType::SerialOnly | ParallelType::OpenMP;
 }
 
-inline ParallelType CGwmLocalCollinearityGWR::parallelType() const
+inline ParallelType CGwmGWRLocalCollinearity::parallelType() const
 {
     return mParallelType;
 }
 
-inline void CGwmLocalCollinearityGWR::setOmpThreadNum(const int threadNum)
+inline void CGwmGWRLocalCollinearity::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
 }

@@ -86,9 +86,9 @@ add_test(
     COMMAND $<TARGET_FILE:testGWRScalable> --success
 )
 
-add_executable(testLocalCollinearityGWR LocalCollinearityGWR.cpp ${SAMPL_LONDONHP100})
-target_link_libraries(testLocalCollinearityGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRLocalCollinearity GWRLocalCollinearity.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testGWRLocalCollinearity PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
-    NAME testLocalCollinearityGWR 
-    COMMAND $<TARGET_FILE:testLocalCollinearityGWR> --success
+    NAME testGWRLocalCollinearity 
+    COMMAND $<TARGET_FILE:testGWRLocalCollinearity> --success
 )
