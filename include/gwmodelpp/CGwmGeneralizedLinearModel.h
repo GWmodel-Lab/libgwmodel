@@ -3,7 +3,7 @@
 
 #include <armadillo>
 #include "CGwmLinearModel.h"
-#include "CGwmGGWR.h"
+#include "CGwmGWRGeneralized.h"
 
 
 class CGwmGeneralizedLinearModel
@@ -15,7 +15,7 @@ protected:
     arma::mat mX;
     arma::mat mY;
     arma::mat mWeight;
-    CGwmGGWR::Family mFamily;
+    CGwmGWRGeneralized::Family mFamily;
     double mEpsilon;
     int mMaxit;
     bool mIntercept;
@@ -34,7 +34,7 @@ public:
 
     bool setX(arma::mat X);
     bool setY(arma::mat Y);
-    bool setFamily(CGwmGGWR::Family family);
+    bool setFamily(CGwmGWRGeneralized::Family family);
 
     double dev();
     double nullDev();

@@ -1,4 +1,4 @@
-#include "CGwmGGWR.h"
+#include "CGwmGWRGeneralized.h"
 #include <exception>
 #include "CGwmBandwidthSelector.h"
 #include "CGwmVariableForwardSelector.h"
@@ -16,15 +16,15 @@
 using namespace arma;
 using namespace std;
 
-int CGwmGGWR::treeChildCount = 0;
+int CGwmGWRGeneralized::treeChildCount = 0;
 
-map<string, double> CGwmGGWR::TolUnitDict = {
+map<string, double> CGwmGWRGeneralized::TolUnitDict = {
     make_pair(string("e -3"), 0.001),
     make_pair(string("e -5"), 0.00001),
     make_pair(string("e -7"), 0.0000001),
     make_pair(string("e -10"), 0.0000000001)};
 
-mat CGwmGGWR::fit()
+mat CGwmGWRGeneralized::fit()
 {
     // 点位初始化
     createDistanceParameter();
@@ -110,7 +110,7 @@ mat CGwmGGWR::fit()
             vDiags(1) = AICc;
             vDiags(2) = mGwDev;
             vDiags(3) = R2;
-            mDiagnostic = GwmGGWRDiagnostic(vDiags);
+            mDiagnostic = GwmGWRGeneralizedDiagnostic(vDiags);
 
             return mBetas;
         }
@@ -146,7 +146,7 @@ mat CGwmGGWR::fit()
             vDiags(1) = AICc;
             vDiags(2) = gwDev;
             vDiags(3) = R2;
-            mDiagnostic = GwmGGWRDiagnostic(vDiags);
+            mDiagnostic = GwmGWRGeneralizedDiagnostic(vDiags);
 
             return mBetas;
         }
@@ -158,7 +158,7 @@ mat CGwmGGWR::fit()
     }
 }
 
-void CGwmGGWR::createPredictionDistanceParameter(const arma::mat &locations)
+void CGwmGWRGeneralized::createPredictionDistanceParameter(const arma::mat &locations)
 {
     if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance ||
         mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
@@ -166,14 +166,14 @@ void CGwmGGWR::createPredictionDistanceParameter(const arma::mat &locations)
         mSpatialWeight.distance()->makeParameter({locations, mCoords});
     }
 }
-mat CGwmGGWR::predict(const mat& locations)
+mat CGwmGWRGeneralized::predict(const mat& locations)
 {
     createPredictionDistanceParameter(locations);
     mBetas = (this->*mGGWRfitFunction)( mX, mY);
     return mBetas;
 }
 
-void CGwmGGWR::CalGLMModel(const mat &x, const vec &y)
+void CGwmGWRGeneralized::CalGLMModel(const mat &x, const vec &y)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     CGwmGeneralizedLinearModel mGlm;
@@ -195,10 +195,10 @@ void CGwmGGWR::CalGLMModel(const mat &x, const vec &y)
     mGLMDiagnostic = GwmGLMDiagnostic(vGLMDiags);
 }
 
-/* mat CGwmGGWR::fit(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qdiag, mat &S){
+/* mat CGwmGWRGeneralized::fit(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qdiag, mat &S){
     return (this->*mGGWRfitFunction)(x, y);
 } */
-mat CGwmGGWR::fitPoissonSerial(const mat &x, const vec &y)
+mat CGwmGWRGeneralized::fitPoissonSerial(const mat &x, const vec &y)
 {
     uword nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
     uword nVar = x.n_cols;
@@ -280,7 +280,7 @@ mat CGwmGGWR::fitPoissonSerial(const mat &x, const vec &y)
 }
 
 #ifdef ENABLE_OPENMP
-mat CGwmGGWR::fitPoissonOmp(const mat &x, const vec &y)
+mat CGwmGWRGeneralized::fitPoissonOmp(const mat &x, const vec &y)
 {
     uword nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
     uword nVar = x.n_cols;
@@ -382,7 +382,7 @@ mat CGwmGGWR::fitPoissonOmp(const mat &x, const vec &y)
 #endif
 
 #ifdef ENABLE_OPENMP
-mat CGwmGGWR::fitBinomialOmp(const mat &x, const vec &y)
+mat CGwmGWRGeneralized::fitBinomialOmp(const mat &x, const vec &y)
 {
     uword nVar = x.n_cols;
     uword nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
@@ -469,7 +469,7 @@ mat CGwmGGWR::fitBinomialOmp(const mat &x, const vec &y)
 }
 #endif
 
-mat CGwmGGWR::fitBinomialSerial(const mat &x, const vec &y)
+mat CGwmGWRGeneralized::fitBinomialSerial(const mat &x, const vec &y)
 {
     uword nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
     uword nVar = x.n_cols;
@@ -539,7 +539,7 @@ mat CGwmGGWR::fitBinomialSerial(const mat &x, const vec &y)
     return betas;
 }
 
-double CGwmGGWR::bandwidthSizeGGWRCriterionCVSerial(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmGWRGeneralized::bandwidthSizeGGWRCriterionCVSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     uword n = mCoords.n_rows;
     vec cv = vec(n);
@@ -557,7 +557,7 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionCVSerial(CGwmBandwidthWeight *bandwid
         mat wi = wt.col(i) % mWt2;
         vec gwsi = gwReg(mX, myAdj, wi);
         mat yhatnoi = mX.row(i) * gwsi;
-        if (mFamily == CGwmGGWR::Family::Poisson)
+        if (mFamily == CGwmGWRGeneralized::Family::Poisson)
         {
             cv.row(i) = mY.row(i) - exp(yhatnoi);
         }
@@ -572,7 +572,7 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionCVSerial(CGwmBandwidthWeight *bandwid
 }
 
 #ifdef ENABLE_OPENMP
-double CGwmGGWR::bandwidthSizeGGWRCriterionCVOmp(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmGWRGeneralized::bandwidthSizeGGWRCriterionCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     uword n = mCoords.n_rows;
     vec cv = vec(n);
@@ -598,7 +598,7 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionCVOmp(CGwmBandwidthWeight *bandwidthW
             mat wi = wt.col(i) % mWt2;
             vec gwsi = gwReg(mX, myAdj, wi);
             mat yhatnoi = mX.row(i) * gwsi;
-            if (mFamily == CGwmGGWR::Family::Poisson)
+            if (mFamily == CGwmGWRGeneralized::Family::Poisson)
             {
                 cv.row(i) = mY.row(i) - exp(yhatnoi);
             }
@@ -616,7 +616,7 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionCVOmp(CGwmBandwidthWeight *bandwidthW
 }
 #endif
 
-double CGwmGGWR::bandwidthSizeGGWRCriterionAICSerial(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmGWRGeneralized::bandwidthSizeGGWRCriterionAICSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     uword n = mCoords.n_rows;
     vec cv = vec(n);
@@ -653,7 +653,7 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionAICSerial(CGwmBandwidthWeight *bandwi
 }
 
 #ifdef ENABLE_OPENMP
-double CGwmGGWR::bandwidthSizeGGWRCriterionAICOmp(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmGWRGeneralized::bandwidthSizeGGWRCriterionAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     uword n = mCoords.n_rows;
     vec cv = vec(n);
@@ -693,7 +693,7 @@ double CGwmGGWR::bandwidthSizeGGWRCriterionAICOmp(CGwmBandwidthWeight *bandwidth
 }
 #endif
 
-vec CGwmGGWR::PoissonWtSerial(const mat &x, const vec &y, mat wt)
+vec CGwmGWRGeneralized::PoissonWtSerial(const mat &x, const vec &y, mat wt)
 {
     uword varn = x.n_cols;
     uword dpn = x.n_rows;
@@ -733,7 +733,7 @@ vec CGwmGGWR::PoissonWtSerial(const mat &x, const vec &y, mat wt)
 }
 
 #ifdef ENABLE_OPENMP
-vec CGwmGGWR::PoissonWtOmp(const mat &x, const vec &y, mat wt)
+vec CGwmGWRGeneralized::PoissonWtOmp(const mat &x, const vec &y, mat wt)
 {
     uword varn = x.n_cols;
     uword dpn = x.n_rows;
@@ -773,7 +773,7 @@ vec CGwmGGWR::PoissonWtOmp(const mat &x, const vec &y, mat wt)
 }
 #endif
 
-vec CGwmGGWR::BinomialWtSerial(const mat &x, const vec &y, mat wt)
+vec CGwmGWRGeneralized::BinomialWtSerial(const mat &x, const vec &y, mat wt)
 {
     uword varn = x.n_cols;
     uword dpn = x.n_rows;
@@ -814,7 +814,7 @@ vec CGwmGGWR::BinomialWtSerial(const mat &x, const vec &y, mat wt)
 }
 
 #ifdef ENABLE_OPENMP
-vec CGwmGGWR::BinomialWtOmp(const mat &x, const vec &y, mat wt)
+vec CGwmGWRGeneralized::BinomialWtOmp(const mat &x, const vec &y, mat wt)
 {
     uword varn = x.n_cols;
     uword dpn = x.n_rows;
@@ -855,23 +855,23 @@ vec CGwmGGWR::BinomialWtOmp(const mat &x, const vec &y, mat wt)
 }
 #endif
 
-void CGwmGGWR::setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
+void CGwmGWRGeneralized::setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType)
 {
     mBandwidthSelectionCriterionType = bandwidthSelectionCriterionType;
     map<pair<BandwidthSelectionCriterionType, ParallelType>, BandwidthSelectCriterionFunction> mapper = {
-        std::make_pair(make_pair(BandwidthSelectionCriterionType::CV, ParallelType::SerialOnly), &CGwmGGWR::bandwidthSizeGGWRCriterionCVSerial),
+        std::make_pair(make_pair(BandwidthSelectionCriterionType::CV, ParallelType::SerialOnly), &CGwmGWRGeneralized::bandwidthSizeGGWRCriterionCVSerial),
 #ifdef ENABLE_OPENMP
-        std::make_pair(make_pair(BandwidthSelectionCriterionType::CV, ParallelType::OpenMP), &CGwmGGWR::bandwidthSizeGGWRCriterionCVOmp),
+        std::make_pair(make_pair(BandwidthSelectionCriterionType::CV, ParallelType::OpenMP), &CGwmGWRGeneralized::bandwidthSizeGGWRCriterionCVOmp),
 #endif
-        std::make_pair(make_pair(BandwidthSelectionCriterionType::AIC, ParallelType::SerialOnly), &CGwmGGWR::bandwidthSizeGGWRCriterionAICSerial),
+        std::make_pair(make_pair(BandwidthSelectionCriterionType::AIC, ParallelType::SerialOnly), &CGwmGWRGeneralized::bandwidthSizeGGWRCriterionAICSerial),
 #ifdef ENABLE_OPENMP
-        std::make_pair(make_pair(BandwidthSelectionCriterionType::AIC, ParallelType::OpenMP), &CGwmGGWR::bandwidthSizeGGWRCriterionAICOmp),
+        std::make_pair(make_pair(BandwidthSelectionCriterionType::AIC, ParallelType::OpenMP), &CGwmGWRGeneralized::bandwidthSizeGGWRCriterionAICOmp),
 #endif
        };
     mBandwidthSelectCriterionFunction = mapper[make_pair(bandwidthSelectionCriterionType, mParallelType)];
 }
 
-void CGwmGGWR::setParallelType(const ParallelType &type)
+void CGwmGWRGeneralized::setParallelType(const ParallelType &type)
 {
     if (type & parallelAbility())
     {
@@ -881,7 +881,7 @@ void CGwmGGWR::setParallelType(const ParallelType &type)
     }
 }
 
-mat CGwmGGWR::diag(mat a)
+mat CGwmGWRGeneralized::diag(mat a)
 {
     uword n = a.n_rows;
     mat res = mat(uword(0), uword(0));
@@ -906,7 +906,7 @@ mat CGwmGGWR::diag(mat a)
 }
 
 // GWR clalibration
-vec CGwmGGWR::gwReg(const mat &x, const vec &y, const vec &w)
+vec CGwmGWRGeneralized::gwReg(const mat &x, const vec &y, const vec &w)
 {
     mat wspan(1, x.n_cols, fill::ones);
     mat xtw = trans(x % (w * wspan));
@@ -917,7 +917,7 @@ vec CGwmGGWR::gwReg(const mat &x, const vec &y, const vec &w)
     return beta;
 }
 
-vec CGwmGGWR::gwRegHatmatrix(const mat &x, const vec &y, const vec &w, uword focus, mat &ci, mat &s_ri)
+vec CGwmGWRGeneralized::gwRegHatmatrix(const mat &x, const vec &y, const vec &w, uword focus, mat &ci, mat &s_ri)
 {
     mat wspan(1, x.n_cols, fill::ones);
     mat xtw = trans(x % (w * wspan));
@@ -930,7 +930,7 @@ vec CGwmGGWR::gwRegHatmatrix(const mat &x, const vec &y, const vec &w, uword foc
     return beta;
 }
 
-mat CGwmGGWR::dpois(mat y, mat mu)
+mat CGwmGWRGeneralized::dpois(mat y, mat mu)
 {
     uword n = y.n_rows;
     mat res = vec(n);
@@ -939,7 +939,7 @@ mat CGwmGGWR::dpois(mat y, mat mu)
     return res;
 }
 
-mat CGwmGGWR::lchoose(mat n, mat k)
+mat CGwmGWRGeneralized::lchoose(mat n, mat k)
 {
     uword nrow = n.n_rows;
     mat res = vec(nrow);
@@ -950,7 +950,7 @@ mat CGwmGGWR::lchoose(mat n, mat k)
     return res;
 }
 
-mat CGwmGGWR::dbinom(mat y, mat m, mat mu)
+mat CGwmGWRGeneralized::dbinom(mat y, mat m, mat mu)
 {
     uword n = y.n_rows;
     mat res = vec(n);
@@ -962,7 +962,7 @@ mat CGwmGGWR::dbinom(mat y, mat m, mat mu)
     return res;
 }
 
-mat CGwmGGWR::lgammafn(mat x)
+mat CGwmGWRGeneralized::lgammafn(mat x)
 {
     uword n = x.n_rows;
     mat res = vec(n, fill::zeros);
@@ -973,35 +973,35 @@ mat CGwmGGWR::lgammafn(mat x)
     return res;
 }
 
-mat CGwmGGWR::CiMat(const mat &x, const vec &w)
+mat CGwmGWRGeneralized::CiMat(const mat &x, const vec &w)
 {
     return inv(trans(x) * diagmat(w) * x) * trans(x) * diagmat(w);
 }
 
-bool CGwmGGWR::setFamily(Family family)
+bool CGwmGWRGeneralized::setFamily(Family family)
 {
     mFamily = family;
     map<pair<Family, ParallelType>, GGWRfitFunction> mapper = {
-        std::make_pair(make_pair(Family::Poisson, ParallelType::SerialOnly), &CGwmGGWR::fitPoissonSerial),
+        std::make_pair(make_pair(Family::Poisson, ParallelType::SerialOnly), &CGwmGWRGeneralized::fitPoissonSerial),
 #ifdef ENABLE_OPENMP
         std::make_pair(make_pair(Family::Poisson,
                                  ParallelType::OpenMP),
-                       &CGwmGGWR::fitPoissonOmp),
+                       &CGwmGWRGeneralized::fitPoissonOmp),
 #endif
-        std::make_pair(make_pair(Family::Binomial, ParallelType::SerialOnly), &CGwmGGWR::fitBinomialSerial),
+        std::make_pair(make_pair(Family::Binomial, ParallelType::SerialOnly), &CGwmGWRGeneralized::fitBinomialSerial),
 #ifdef ENABLE_OPENMP
-        std::make_pair(make_pair(Family::Binomial, ParallelType::OpenMP), &CGwmGGWR::fitBinomialOmp),
+        std::make_pair(make_pair(Family::Binomial, ParallelType::OpenMP), &CGwmGWRGeneralized::fitBinomialOmp),
 #endif
     };
     mGGWRfitFunction = mapper[make_pair(family, mParallelType)];
     map<pair<Family, ParallelType>, CalWtFunction> mapper1 = {
-        std::make_pair(make_pair(Family::Poisson, ParallelType::SerialOnly), &CGwmGGWR::PoissonWtSerial),
+        std::make_pair(make_pair(Family::Poisson, ParallelType::SerialOnly), &CGwmGWRGeneralized::PoissonWtSerial),
 #ifdef ENABLE_OPENMP
-        std::make_pair(make_pair(Family::Poisson, ParallelType::OpenMP), &CGwmGGWR::PoissonWtOmp),
+        std::make_pair(make_pair(Family::Poisson, ParallelType::OpenMP), &CGwmGWRGeneralized::PoissonWtOmp),
 #endif
-        std::make_pair(make_pair(Family::Binomial, ParallelType::SerialOnly), &CGwmGGWR::BinomialWtSerial),
+        std::make_pair(make_pair(Family::Binomial, ParallelType::SerialOnly), &CGwmGWRGeneralized::BinomialWtSerial),
 #ifdef ENABLE_OPENMP
-        std::make_pair(make_pair(Family::Binomial, ParallelType::OpenMP), &CGwmGGWR::BinomialWtOmp),
+        std::make_pair(make_pair(Family::Binomial, ParallelType::OpenMP), &CGwmGWRGeneralized::BinomialWtOmp),
 #endif
     };
     mCalWtFunction = mapper1[make_pair(family, mParallelType)];

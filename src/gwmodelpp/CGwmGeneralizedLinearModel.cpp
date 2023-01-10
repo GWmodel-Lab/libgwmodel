@@ -2,7 +2,7 @@
 #include "CGwmPoissonModel.h"
 #include "CGwmBinomialModel.h"
 //#include "GWmodel.h"
-#include "CGwmGGWR.h"
+#include "CGwmGWRGeneralized.h"
 
 using namespace arma;
 
@@ -27,7 +27,7 @@ void CGwmGeneralizedLinearModel::fit(){
     if(mOffset.is_empty() ){
         mOffset = zeros(nObs);
     }
-    if(mFamily == CGwmGGWR::Family::Poisson){
+    if(mFamily == CGwmGWRGeneralized::Family::Poisson){
         //初始化模型
         mModel = new CGwmPoissonModel();
         mModel->setY(mY);
@@ -66,9 +66,9 @@ void CGwmGeneralizedLinearModel::fit(){
                 xadj.col(i) = mX.col(i)%w;
             }
             for (uword i = 0; i < mX.n_rows ; i++){
-                start.col(i) = CGwmGGWR::gwReg(xadj, z%w, vec(mX.n_rows,fill::ones));
+                start.col(i) = CGwmGWRGeneralized::gwReg(xadj, z%w, vec(mX.n_rows,fill::ones));
             }
-            eta = CGwmGGWR::Fitted(mX , start.t()) ; //?不是很确定
+            eta = CGwmGWRGeneralized::Fitted(mX , start.t()) ; //?不是很确定
             mu = mModel->linkinv(eta + mOffset);
             mDev = sum(mModel->devResids(mY,mu,mWeight));
             if (isinf(mDev) ) {
@@ -79,7 +79,7 @@ void CGwmGeneralizedLinearModel::fit(){
                     }
                     ii++;
                     start = (start + coefold)/2;
-                    eta = CGwmGGWR::Fitted(mX , start.t());
+                    eta = CGwmGWRGeneralized::Fitted(mX , start.t());
                     mDev = sum(mModel->devResids(mY,mu,mWeight));
                 }
             }
@@ -115,7 +115,7 @@ bool CGwmGeneralizedLinearModel::setY(mat Y){
     return true;
 }
 
-bool CGwmGeneralizedLinearModel::setFamily(CGwmGGWR::Family family){
+bool CGwmGeneralizedLinearModel::setFamily(CGwmGWRGeneralized::Family family){
     mFamily = family;
     return true;
 }
