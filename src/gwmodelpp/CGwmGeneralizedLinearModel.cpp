@@ -4,6 +4,7 @@
 //#include "GWmodel.h"
 #include "CGwmGWRGeneralized.h"
 
+using namespace std;
 using namespace arma;
 
 CGwmGeneralizedLinearModel::CGwmGeneralizedLinearModel()
