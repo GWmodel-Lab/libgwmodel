@@ -11,16 +11,16 @@
 #include "IGwmParallelizable.h"
 #include "CGwmGWRBasic.h"
 
-class CGwmRobustGWR : public CGwmGWRBasic
+class CGwmGWRRobust : public CGwmGWRBasic
 {
 private:
-    typedef arma::mat (CGwmRobustGWR::*RegressionHatmatrix)(const arma::mat &, const arma::vec &, arma::mat &, arma::vec &, arma::vec &, arma::mat &);
+    typedef arma::mat (CGwmGWRRobust::*RegressionHatmatrix)(const arma::mat &, const arma::vec &, arma::mat &, arma::vec &, arma::vec &, arma::mat &);
 
     static GwmRegressionDiagnostic CalcDiagnostic(const arma::mat &x, const arma::vec &y, const arma::mat &betas, const arma::vec &shat);
 
 public:
-    CGwmRobustGWR();
-    ~CGwmRobustGWR();
+    CGwmGWRRobust();
+    ~CGwmGWRRobust();
 
 public:
     bool filtered() const;
@@ -64,16 +64,16 @@ private:
     arma::mat mS;
     arma::vec mWeightMask;
     
-    RegressionHatmatrix mfitFunction = &CGwmRobustGWR::fitSerial;
+    RegressionHatmatrix mfitFunction = &CGwmGWRRobust::fitSerial;
     
 };
 
-inline bool CGwmRobustGWR::filtered() const
+inline bool CGwmGWRRobust::filtered() const
 {
     return mFiltered;
 }
 
-inline void CGwmRobustGWR::setFiltered(bool value)
+inline void CGwmGWRRobust::setFiltered(bool value)
 {
     if (value)
     {

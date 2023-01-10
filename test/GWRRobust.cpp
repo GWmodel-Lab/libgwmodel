@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp/CGwmRobustGWR.h"
+#include "gwmodelpp/CGwmGWRRobust.h"
 #include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
 #include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
 #include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
@@ -41,7 +41,7 @@ TEST_CASE("RobustGWR: Filtered")
     GwmVariable prof(3, true, "PROF");
     vector<GwmVariable> indepVars = { floorsz, unemploy, prof };
 */
-    CGwmRobustGWR algorithm;
+    CGwmGWRRobust algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -74,7 +74,7 @@ TEST_CASE("RobustGWR: noFiltered")
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
 
-    CGwmRobustGWR algorithm;
+    CGwmGWRRobust algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -105,7 +105,7 @@ TEST_CASE("RobustGWR: adaptive bandwidth autoselection of with CV")
     CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Gaussian);
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
-    CGwmRobustGWR algorithm;
+    CGwmGWRRobust algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -113,7 +113,7 @@ TEST_CASE("RobustGWR: adaptive bandwidth autoselection of with CV")
     algorithm.setHasHatMatrix(true);
 
     algorithm.setIsAutoselectBandwidth(true);
-    algorithm.setBandwidthSelectionCriterion(CGwmRobustGWR::BandwidthSelectionCriterionType::CV);
+    algorithm.setBandwidthSelectionCriterion(CGwmGWRRobust::BandwidthSelectionCriterionType::CV);
     
     REQUIRE_NOTHROW(algorithm.fit());
 
@@ -142,7 +142,7 @@ TEST_CASE("RobustGWR: indepdent variable autoselection with AIC")
     CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
-    CGwmRobustGWR algorithm;
+    CGwmGWRRobust algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -195,7 +195,7 @@ TEST_CASE("RobustGWR: multithread basic flow")
     CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Gaussian);
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
-    CGwmRobustGWR algorithm;
+    CGwmGWRRobust algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);

@@ -1,4 +1,4 @@
-#include "CGwmRobustGWR.h"
+#include "CGwmGWRRobust.h"
 #include "CGwmBandwidthSelector.h"
 #include "CGwmVariableForwardSelector.h"
 #include <assert.h>
@@ -11,7 +11,7 @@
 using namespace std;
 using namespace arma;
 
-GwmRegressionDiagnostic CGwmRobustGWR::CalcDiagnostic(const mat &x, const vec &y, const mat &betas, const vec &shat)
+GwmRegressionDiagnostic CGwmGWRRobust::CalcDiagnostic(const mat &x, const vec &y, const mat &betas, const vec &shat)
 {
     vec r = y - sum(betas % x, 1);
     double rss = sum(r % r);
@@ -26,15 +26,15 @@ GwmRegressionDiagnostic CGwmRobustGWR::CalcDiagnostic(const mat &x, const vec &y
     return {rss, AIC, AICc, enp, edf, r2, r2_adj};
 }
 
-CGwmRobustGWR::CGwmRobustGWR()
+CGwmGWRRobust::CGwmGWRRobust()
 {
 }
 
-CGwmRobustGWR::~CGwmRobustGWR()
+CGwmGWRRobust::~CGwmGWRRobust()
 {
 }
 
-mat CGwmRobustGWR::fit()
+mat CGwmGWRRobust::fit()
 {
     createDistanceParameter();
 
@@ -94,14 +94,14 @@ mat CGwmRobustGWR::fit()
     return mBetas;
 }
 
-mat CGwmRobustGWR::predict(const mat& locations)
+mat CGwmGWRRobust::predict(const mat& locations)
 {
     createPredictionDistanceParameter(locations);
     mBetas = (this->*mPredictFunction)(locations, mX, mY);
     return mBetas;
 }
 
-void CGwmRobustGWR::createPredictionDistanceParameter(const arma::mat& locations)
+void CGwmGWRRobust::createPredictionDistanceParameter(const arma::mat& locations)
 {
     if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
         mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
@@ -110,7 +110,7 @@ void CGwmRobustGWR::createPredictionDistanceParameter(const arma::mat& locations
     }
 }
 
-mat CGwmRobustGWR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
+mat CGwmGWRRobust::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
@@ -149,7 +149,7 @@ mat CGwmRobustGWR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat
 }
 
 #ifdef ENABLE_OPENMP
-mat CGwmRobustGWR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
+mat CGwmGWRRobust::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
@@ -203,7 +203,7 @@ mat CGwmRobustGWR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, v
 #endif
 
 
-mat CGwmRobustGWR::regressionHatmatrix(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qdiag, mat &S)
+mat CGwmGWRRobust::regressionHatmatrix(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qdiag, mat &S)
 {
     if (mFiltered)
     {
@@ -215,7 +215,7 @@ mat CGwmRobustGWR::regressionHatmatrix(const mat &x, const vec &y, mat &betasSE,
     }
 }
 
-mat CGwmRobustGWR::robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
+mat CGwmGWRRobust::robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
     mat betas = (this->*mfitFunction)(x, y, betasSE, shat, qDiag, S);
     //  ------------- 计算W.vect
@@ -250,7 +250,7 @@ mat CGwmRobustGWR::robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, 
     return betas;
 }
 
-mat CGwmRobustGWR::robustGWRCaliSecond(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
+mat CGwmGWRRobust::robustGWRCaliSecond(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
     
     double iter = 0;
@@ -284,7 +284,7 @@ mat CGwmRobustGWR::robustGWRCaliSecond(const mat &x, const vec &y, mat &betasSE,
     return betas;
 }
 
-void CGwmRobustGWR::setParallelType(const ParallelType &type)
+void CGwmGWRRobust::setParallelType(const ParallelType &type)
 {
     if (type & parallelAbility())
     {
@@ -292,21 +292,21 @@ void CGwmRobustGWR::setParallelType(const ParallelType &type)
         switch (type)
         {
         case ParallelType::SerialOnly:
-            mfitFunction = &CGwmRobustGWR::fitSerial;
+            mfitFunction = &CGwmGWRRobust::fitSerial;
             break;
 #ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
-            mfitFunction = &CGwmRobustGWR::fitOmp;
+            mfitFunction = &CGwmGWRRobust::fitOmp;
             break;
 #endif
         default:
-            mfitFunction = &CGwmRobustGWR::fitSerial;
+            mfitFunction = &CGwmGWRRobust::fitSerial;
             break;
         }
     }
 }
 
-vec CGwmRobustGWR::filtWeight(vec residual, double mse)
+vec CGwmGWRRobust::filtWeight(vec residual, double mse)
 {
     //计算residual
     vec r = abs(residual / sqrt(mse));

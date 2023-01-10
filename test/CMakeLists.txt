@@ -65,11 +65,11 @@ add_test(
     COMMAND $<TARGET_FILE:testLogger> --success
 )
 
-add_executable(testRobustGWR RobustGWR.cpp ${SAMPL_LONDONHP100})
-target_link_libraries(testRobustGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRRobust GWRRobust.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testGWRRobust PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
-    NAME testRobustGWR 
-    COMMAND $<TARGET_FILE:testRobustGWR> --success
+    NAME testGWRRobust 
+    COMMAND $<TARGET_FILE:testGWRRobust> --success
 )
 
 add_executable(testGWRGeneralized GWRGeneralized.cpp ${SAMPL_LONDONHP100} ${SAMPL_LONDONHP})

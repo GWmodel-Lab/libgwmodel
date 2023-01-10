@@ -56,7 +56,7 @@ set(SOURCES_CXX
     gwmodelpp/CGwmGWDR.cpp
     gwmodelpp/CGwmMGWR.cpp
     gwmodelpp/GwmLogger.cpp
-    gwmodelpp/CGwmRobustGWR.cpp
+    gwmodelpp/CGwmGWRRobust.cpp
     gwmodelpp/CGwmGWRGeneralized.cpp
     gwmodelpp/CGwmBinomialModel.cpp
     gwmodelpp/CGwmPoissonModel.cpp
@@ -92,7 +92,7 @@ set(HEADERS_CXX
     ../include/gwmodelpp/CGwmGWDR.h
     ../include/gwmodelpp/CGwmMGWR.h
     ../include/gwmodelpp/GwmLogger.h
-    ../include/gwmodelpp/CGwmRobustGWR.h
+    ../include/gwmodelpp/CGwmGWRRobust.h
     ../include/gwmodelpp/CGwmGWRGeneralized.h
     ../include/gwmodelpp/CGwmBinomialModel.h
     ../include/gwmodelpp/CGwmLinearModel.h
