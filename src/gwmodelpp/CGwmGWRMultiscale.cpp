@@ -1,4 +1,4 @@
-#include "CGwmMGWR.h"
+#include "CGwmGWRMultiscale.h"
 #ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
@@ -11,25 +11,25 @@
 using namespace std;
 using namespace arma;
 
-int CGwmMGWR::treeChildCount = 0;
+int CGwmGWRMultiscale::treeChildCount = 0;
 
-unordered_map<CGwmMGWR::BandwidthInitilizeType,string> CGwmMGWR::BandwidthInitilizeTypeNameMapper = {
-    make_pair(CGwmMGWR::BandwidthInitilizeType::Null, ("Not initilized, not specified")),
-    make_pair(CGwmMGWR::BandwidthInitilizeType::Initial, ("Initilized")),
-    make_pair(CGwmMGWR::BandwidthInitilizeType::Specified, ("Specified"))
+unordered_map<CGwmGWRMultiscale::BandwidthInitilizeType,string> CGwmGWRMultiscale::BandwidthInitilizeTypeNameMapper = {
+    make_pair(CGwmGWRMultiscale::BandwidthInitilizeType::Null, ("Not initilized, not specified")),
+    make_pair(CGwmGWRMultiscale::BandwidthInitilizeType::Initial, ("Initilized")),
+    make_pair(CGwmGWRMultiscale::BandwidthInitilizeType::Specified, ("Specified"))
 };
 
-unordered_map<CGwmMGWR::BandwidthSelectionCriterionType,string> CGwmMGWR::BandwidthSelectionCriterionTypeNameMapper = {
-    make_pair(CGwmMGWR::BandwidthSelectionCriterionType::CV, ("CV")),
-    make_pair(CGwmMGWR::BandwidthSelectionCriterionType::AIC, ("AIC"))
+unordered_map<CGwmGWRMultiscale::BandwidthSelectionCriterionType,string> CGwmGWRMultiscale::BandwidthSelectionCriterionTypeNameMapper = {
+    make_pair(CGwmGWRMultiscale::BandwidthSelectionCriterionType::CV, ("CV")),
+    make_pair(CGwmGWRMultiscale::BandwidthSelectionCriterionType::AIC, ("AIC"))
 };
 
-unordered_map<CGwmMGWR::BackFittingCriterionType,string> CGwmMGWR::BackFittingCriterionTypeNameMapper = {
-    make_pair(CGwmMGWR::BackFittingCriterionType::CVR, ("CVR")),
-    make_pair(CGwmMGWR::BackFittingCriterionType::dCVR, ("dCVR"))
+unordered_map<CGwmGWRMultiscale::BackFittingCriterionType,string> CGwmGWRMultiscale::BackFittingCriterionTypeNameMapper = {
+    make_pair(CGwmGWRMultiscale::BackFittingCriterionType::CVR, ("CVR")),
+    make_pair(CGwmGWRMultiscale::BackFittingCriterionType::dCVR, ("dCVR"))
 };
 
-GwmRegressionDiagnostic CGwmMGWR::CalcDiagnostic(const mat &x, const vec &y, const vec &shat, double RSS)
+GwmRegressionDiagnostic CGwmGWRMultiscale::CalcDiagnostic(const mat &x, const vec &y, const vec &shat, double RSS)
 {
     // 诊断信息
     double nDp = (double)x.n_rows;
@@ -56,7 +56,7 @@ GwmRegressionDiagnostic CGwmMGWR::CalcDiagnostic(const mat &x, const vec &y, con
     return diagnostic;
 }
 
-mat CGwmMGWR::fit()
+mat CGwmGWRMultiscale::fit()
 {
     createDistanceParameter(mX.n_cols);
     createInitialDistanceParameter();
@@ -144,7 +144,7 @@ mat CGwmMGWR::fit()
     return mBetas;
 }
 
-void CGwmMGWR::createInitialDistanceParameter()
+void CGwmGWRMultiscale::createInitialDistanceParameter()
 {//回归距离计算
     if (mInitSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
         mInitSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
@@ -153,7 +153,7 @@ void CGwmMGWR::createInitialDistanceParameter()
     }
 }
 
-mat CGwmMGWR::backfitting(const mat &x, const vec &y)
+mat CGwmGWRMultiscale::backfitting(const mat &x, const vec &y)
 {
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas = (this->*mFitAll)(x, y);
@@ -234,7 +234,7 @@ mat CGwmMGWR::backfitting(const mat &x, const vec &y)
 }
 
 
-bool CGwmMGWR::isValid()
+bool CGwmGWRMultiscale::isValid()
 {
     if (!(mX.n_cols > 0))
         return false;
@@ -259,7 +259,7 @@ bool CGwmMGWR::isValid()
     for (size_t i = 0; i < nVar; i++)
     {
         CGwmBandwidthWeight* bw = mSpatialWeights[i].weight<CGwmBandwidthWeight>();
-        if (mBandwidthInitilize[i] == CGwmMGWR::Specified || mBandwidthInitilize[i] == CGwmMGWR::Initial)
+        if (mBandwidthInitilize[i] == CGwmGWRMultiscale::Specified || mBandwidthInitilize[i] == CGwmGWRMultiscale::Initial)
         {
             if (bw->adaptive())
             {
@@ -277,7 +277,7 @@ bool CGwmMGWR::isValid()
     return true;
 }
 
-mat CGwmMGWR::fitAllSerial(const mat& x, const vec& y)
+mat CGwmGWRMultiscale::fitAllSerial(const mat& x, const vec& y)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
@@ -332,7 +332,7 @@ mat CGwmMGWR::fitAllSerial(const mat& x, const vec& y)
 }
 
 #ifdef ENABLE_OPENMP
-mat CGwmMGWR::fitAllOmp(const mat &x, const vec &y)
+mat CGwmGWRMultiscale::fitAllOmp(const mat &x, const vec &y)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
@@ -397,7 +397,7 @@ mat CGwmMGWR::fitAllOmp(const mat &x, const vec &y)
 }
 #endif
 
-vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const uword var, mat &S)
+vec CGwmGWRMultiscale::fitVarSerial(const vec &x, const vec &y, const uword var, mat &S)
 {
     uword nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
@@ -458,7 +458,7 @@ vec CGwmMGWR::fitVarSerial(const vec &x, const vec &y, const uword var, mat &S)
 }
 
 #ifdef ENABLE_OPENMP
-vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const uword var, mat &S)
+vec CGwmGWRMultiscale::fitVarOmp(const vec &x, const vec &y, const uword var, mat &S)
 {
     uword nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
@@ -520,7 +520,7 @@ vec CGwmMGWR::fitVarOmp(const vec &x, const vec &y, const uword var, mat &S)
 }
 #endif
 
-double CGwmMGWR::bandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmGWRMultiscale::bandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
@@ -550,7 +550,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight *bandwidt
 }
 
 #ifdef ENABLE_OPENMP
-double CGwmMGWR::bandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmGWRMultiscale::bandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
@@ -586,7 +586,7 @@ double CGwmMGWR::bandwidthSizeCriterionAllCVOmp(CGwmBandwidthWeight *bandwidthWe
 }
 #endif
 
-double CGwmMGWR::bandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmGWRMultiscale::bandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
@@ -613,12 +613,12 @@ double CGwmMGWR::bandwidthSizeCriterionAllAICSerial(CGwmBandwidthWeight *bandwid
             return DBL_MAX;
         }
     }
-    double value = CGwmMGWR::AICc(mX, mY, betas.t(), shat);
+    double value = CGwmGWRMultiscale::AICc(mX, mY, betas.t(), shat);
     return isfinite(value) ? value : DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
-double CGwmMGWR::bandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmGWRMultiscale::bandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
@@ -654,14 +654,14 @@ double CGwmMGWR::bandwidthSizeCriterionAllAICOmp(CGwmBandwidthWeight *bandwidthW
     if (flag)
     {
         vec shat = sum(shat_all, 1);
-        double value = CGwmMGWR::AICc(mX, mY, betas.t(), shat);
+        double value = CGwmGWRMultiscale::AICc(mX, mY, betas.t(), shat);
         return value;
     }
     else return DBL_MAX;
 }
 #endif
 
-double CGwmMGWR::bandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmGWRMultiscale::bandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     size_t var = mBandwidthSelectionCurrentIndex;
     uword nDp = mCoords.n_rows;
@@ -692,7 +692,7 @@ double CGwmMGWR::bandwidthSizeCriterionVarCVSerial(CGwmBandwidthWeight *bandwidt
 }
 
 #ifdef ENABLE_OPENMP
-double CGwmMGWR::bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmGWRMultiscale::bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     size_t var = mBandwidthSelectionCurrentIndex;
     uword nDp = mCoords.n_rows;
@@ -729,7 +729,7 @@ double CGwmMGWR::bandwidthSizeCriterionVarCVOmp(CGwmBandwidthWeight *bandwidthWe
 }
 #endif
 
-double CGwmMGWR::bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmGWRMultiscale::bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwidthWeight)
 {
     size_t var = mBandwidthSelectionCurrentIndex;
     uword nDp = mCoords.n_rows;
@@ -757,12 +757,12 @@ double CGwmMGWR::bandwidthSizeCriterionVarAICSerial(CGwmBandwidthWeight *bandwid
             return DBL_MAX;
         }
     }
-    double value = CGwmMGWR::AICc(mXi, mYi, betas.t(), shat);
+    double value = CGwmGWRMultiscale::AICc(mXi, mYi, betas.t(), shat);
     return isfinite(value) ? value : DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
-double CGwmMGWR::bandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidthWeight)
+double CGwmGWRMultiscale::bandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidthWeight)
 {
     size_t var = mBandwidthSelectionCurrentIndex;
     uword nDp = mCoords.n_rows;
@@ -799,80 +799,80 @@ double CGwmMGWR::bandwidthSizeCriterionVarAICOmp(CGwmBandwidthWeight *bandwidthW
     if (flag)
     {
         vec shat = sum(shat_all, 1);
-        double value = CGwmMGWR::AICc(mXi, mYi, betas.t(), shat);
+        double value = CGwmGWRMultiscale::AICc(mXi, mYi, betas.t(), shat);
         return value;
     }
     return DBL_MAX;
 }
 #endif
 
-CGwmMGWR::BandwidthSizeCriterionFunction CGwmMGWR::bandwidthSizeCriterionAll(CGwmMGWR::BandwidthSelectionCriterionType type)
+CGwmGWRMultiscale::BandwidthSizeCriterionFunction CGwmGWRMultiscale::bandwidthSizeCriterionAll(CGwmGWRMultiscale::BandwidthSelectionCriterionType type)
 {
     unordered_map<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> > mapper = {
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
-            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::bandwidthSizeCriterionAllCVSerial),
+            std::make_pair(ParallelType::SerialOnly, &CGwmGWRMultiscale::bandwidthSizeCriterionAllCVSerial),
         #ifdef ENABLE_OPENMP
-            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::bandwidthSizeCriterionAllCVOmp),
+            std::make_pair(ParallelType::OpenMP, &CGwmGWRMultiscale::bandwidthSizeCriterionAllCVOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &CGwmMGWR::bandwidthSizeCriterionAllCVSerial)
+            std::make_pair(ParallelType::CUDA, &CGwmGWRMultiscale::bandwidthSizeCriterionAllCVSerial)
         }),
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
-            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::bandwidthSizeCriterionAllAICSerial),
+            std::make_pair(ParallelType::SerialOnly, &CGwmGWRMultiscale::bandwidthSizeCriterionAllAICSerial),
         #ifdef ENABLE_OPENMP
-            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::bandwidthSizeCriterionAllAICOmp),
+            std::make_pair(ParallelType::OpenMP, &CGwmGWRMultiscale::bandwidthSizeCriterionAllAICOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &CGwmMGWR::bandwidthSizeCriterionAllAICSerial)
+            std::make_pair(ParallelType::CUDA, &CGwmGWRMultiscale::bandwidthSizeCriterionAllAICSerial)
         })
     };
     return mapper[type][mParallelType];
 }
 
-CGwmMGWR::BandwidthSizeCriterionFunction CGwmMGWR::bandwidthSizeCriterionVar(CGwmMGWR::BandwidthSelectionCriterionType type)
+CGwmGWRMultiscale::BandwidthSizeCriterionFunction CGwmGWRMultiscale::bandwidthSizeCriterionVar(CGwmGWRMultiscale::BandwidthSelectionCriterionType type)
 {
     unordered_map<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> > mapper = {
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
-            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::bandwidthSizeCriterionVarCVSerial),
+            std::make_pair(ParallelType::SerialOnly, &CGwmGWRMultiscale::bandwidthSizeCriterionVarCVSerial),
         #ifdef ENABLE_OPENMP
-            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::bandwidthSizeCriterionVarCVOmp),
+            std::make_pair(ParallelType::OpenMP, &CGwmGWRMultiscale::bandwidthSizeCriterionVarCVOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &CGwmMGWR::bandwidthSizeCriterionVarCVSerial)
+            std::make_pair(ParallelType::CUDA, &CGwmGWRMultiscale::bandwidthSizeCriterionVarCVSerial)
         }),
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
-            std::make_pair(ParallelType::SerialOnly, &CGwmMGWR::bandwidthSizeCriterionVarAICSerial),
+            std::make_pair(ParallelType::SerialOnly, &CGwmGWRMultiscale::bandwidthSizeCriterionVarAICSerial),
         #ifdef ENABLE_OPENMP
-            std::make_pair(ParallelType::OpenMP, &CGwmMGWR::bandwidthSizeCriterionVarAICOmp),
+            std::make_pair(ParallelType::OpenMP, &CGwmGWRMultiscale::bandwidthSizeCriterionVarAICOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &CGwmMGWR::bandwidthSizeCriterionVarAICSerial)
+            std::make_pair(ParallelType::CUDA, &CGwmGWRMultiscale::bandwidthSizeCriterionVarAICSerial)
         })
     };
     return mapper[type][mParallelType];
 }
 
-void CGwmMGWR::setParallelType(const ParallelType &type)
+void CGwmGWRMultiscale::setParallelType(const ParallelType &type)
 {
     if (parallelAbility() & type)
     {
         mParallelType = type;
         switch (type) {
         case ParallelType::SerialOnly:
-            mFitAll = &CGwmMGWR::fitAllSerial;
-            mFitVar = &CGwmMGWR::fitVarSerial;
+            mFitAll = &CGwmGWRMultiscale::fitAllSerial;
+            mFitVar = &CGwmGWRMultiscale::fitVarSerial;
             break;
 #ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
-            mFitAll = &CGwmMGWR::fitAllOmp;
-            mFitVar = &CGwmMGWR::fitVarOmp;
+            mFitAll = &CGwmGWRMultiscale::fitAllOmp;
+            mFitVar = &CGwmGWRMultiscale::fitVarOmp;
             break;
 #endif
         default:
-            mFitAll = &CGwmMGWR::fitAllSerial;
-            mFitVar = &CGwmMGWR::fitVarSerial;
+            mFitAll = &CGwmGWRMultiscale::fitAllSerial;
+            mFitVar = &CGwmGWRMultiscale::fitVarSerial;
             break;
         }
     }
 }
 
-void CGwmMGWR::setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights)
+void CGwmGWRMultiscale::setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights)
 {
     CGwmSpatialMultiscaleAlgorithm::setSpatialWeights(spatialWeights);
     if (spatialWeights.size() > 0)
@@ -881,7 +881,7 @@ void CGwmMGWR::setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights
     }
 }
 
-void CGwmMGWR::setBandwidthSelectionApproach(const vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach)
+void CGwmGWRMultiscale::setBandwidthSelectionApproach(const vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach)
 {
     if (bandwidthSelectionApproach.size() == mX.n_cols)
     {
@@ -895,7 +895,7 @@ void CGwmMGWR::setBandwidthSelectionApproach(const vector<BandwidthSelectionCrit
     }  
 }
 
-void CGwmMGWR::setBandwidthInitilize(const vector<BandwidthInitilizeType> &bandwidthInitilize)
+void CGwmGWRMultiscale::setBandwidthInitilize(const vector<BandwidthInitilizeType> &bandwidthInitilize)
 {
     if(bandwidthInitilize.size() == mX.n_cols){
         mBandwidthInitilize = bandwidthInitilize;

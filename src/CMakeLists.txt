@@ -54,7 +54,7 @@ set(SOURCES_CXX
     gwmodelpp/CGwmGWSS.cpp
     gwmodelpp/CGwmGWPCA.cpp
     gwmodelpp/CGwmGWDR.cpp
-    gwmodelpp/CGwmMGWR.cpp
+    gwmodelpp/CGwmGWRMultiscale.cpp
     gwmodelpp/GwmLogger.cpp
     gwmodelpp/CGwmGWRRobust.cpp
     gwmodelpp/CGwmGWRGeneralized.cpp
@@ -90,7 +90,7 @@ set(HEADERS_CXX
     ../include/gwmodelpp/CGwmGWSS.h
     ../include/gwmodelpp/CGwmGWPCA.h
     ../include/gwmodelpp/CGwmGWDR.h
-    ../include/gwmodelpp/CGwmMGWR.h
+    ../include/gwmodelpp/CGwmGWRMultiscale.h
     ../include/gwmodelpp/GwmLogger.h
     ../include/gwmodelpp/CGwmGWRRobust.h
     ../include/gwmodelpp/CGwmGWRGeneralized.h

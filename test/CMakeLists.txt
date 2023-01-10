@@ -51,11 +51,11 @@ add_test(
     COMMAND $<TARGET_FILE:testGWDR> --success
 )
 
-add_executable(testMGWR MGWR.cpp ${SAMPL_LONDONHP100})
-target_link_libraries(testMGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRMultiscale GWRMultiscale.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testGWRMultiscale PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
-    NAME testMGWR 
-    COMMAND $<TARGET_FILE:testMGWR> --success
+    NAME testGWRMultiscale 
+    COMMAND $<TARGET_FILE:testGWRMultiscale> --success
 )
 
 add_executable(testLogger Logger.cpp ${SAMPL_LONDONHP100})

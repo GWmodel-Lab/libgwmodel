@@ -31,6 +31,6 @@
 #include "gwmodelpp/CGwmGWRBase.h"
 #include "gwmodelpp/CGwmGWRBasic.h"
 #include "gwmodelpp/CGwmGWPCA.h"
-#include "gwmodelpp/CGwmMGWR.h"
+#include "gwmodelpp/CGwmGWRMultiscale.h"
 
 #endif  // GWMODEL_H

@@ -12,7 +12,7 @@
 #include "IGwmParallelizable.h"
 
 
-class CGwmMGWR : public CGwmSpatialMultiscaleAlgorithm, public IGwmBandwidthSelectable,public IGwmOpenmpParallelizable,public IGwmRegressionAnalysis 
+class CGwmGWRMultiscale : public CGwmSpatialMultiscaleAlgorithm, public IGwmBandwidthSelectable,public IGwmOpenmpParallelizable,public IGwmRegressionAnalysis 
 {
 public:
     enum BandwidthInitilizeType
@@ -37,10 +37,10 @@ public:
     };
     static std::unordered_map<BackFittingCriterionType,std::string> BackFittingCriterionTypeNameMapper;
 
-    typedef double (CGwmMGWR::*BandwidthSizeCriterionFunction)(CGwmBandwidthWeight*);
-    typedef arma::mat (CGwmMGWR::*FitAllFunction)(const arma::mat&, const arma::vec&);
-    typedef arma::vec (CGwmMGWR::*FitVarFunction)(const arma::vec&, const arma::vec&, const arma::uword, arma::mat&);
-    typedef arma::mat (CGwmMGWR::*FitCalculator)(const arma::mat&, const arma::vec&, arma::mat&, arma::vec&, arma::vec&, arma::mat&);
+    typedef double (CGwmGWRMultiscale::*BandwidthSizeCriterionFunction)(CGwmBandwidthWeight*);
+    typedef arma::mat (CGwmGWRMultiscale::*FitAllFunction)(const arma::mat&, const arma::vec&);
+    typedef arma::vec (CGwmGWRMultiscale::*FitVarFunction)(const arma::vec&, const arma::vec&, const arma::uword, arma::mat&);
+    typedef arma::mat (CGwmGWRMultiscale::*FitCalculator)(const arma::mat&, const arma::vec&, arma::mat&, arma::vec&, arma::vec&, arma::mat&);
 
 private:
     static arma::vec Fitted(const arma::mat& x, const arma::mat& betas)
@@ -72,9 +72,9 @@ private:
     }
 
 public:
-    CGwmMGWR() {}
+    CGwmGWRMultiscale() {}
 
-    CGwmMGWR(const arma::mat& x, const arma::vec& y, const arma::mat& coords, const std::vector<CGwmSpatialWeight>& spatialWeights)
+    CGwmGWRMultiscale(const arma::mat& x, const arma::vec& y, const arma::mat& coords, const std::vector<CGwmSpatialWeight>& spatialWeights)
         : CGwmSpatialMultiscaleAlgorithm(coords, spatialWeights)
     {
         mX = x;
@@ -83,14 +83,14 @@ public:
             setInitSpatialWeight(spatialWeights[0]);
     }
 
-    virtual ~CGwmMGWR() {}
+    virtual ~CGwmGWRMultiscale() {}
 
 public:
 
-    std::vector<BandwidthInitilizeType> bandwidthInitilize() const { return CGwmMGWR::mBandwidthInitilize; }
+    std::vector<BandwidthInitilizeType> bandwidthInitilize() const { return CGwmGWRMultiscale::mBandwidthInitilize; }
     void setBandwidthInitilize(const std::vector<BandwidthInitilizeType> &bandwidthInitilize);
 
-    std::vector<BandwidthSelectionCriterionType> bandwidthSelectionApproach() const { return CGwmMGWR::mBandwidthSelectionApproach; }
+    std::vector<BandwidthSelectionCriterionType> bandwidthSelectionApproach() const { return CGwmGWRMultiscale::mBandwidthSelectionApproach; }
     void setBandwidthSelectionApproach(const std::vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach);
 
     std::vector<bool> preditorCentered() const { return mPreditorCentered; }
@@ -215,11 +215,11 @@ protected:
     void createInitialDistanceParameter();
 
 private:
-    FitAllFunction mFitAll = &CGwmMGWR::fitAllSerial;
-    FitVarFunction mFitVar = &CGwmMGWR::fitVarSerial;
+    FitAllFunction mFitAll = &CGwmGWRMultiscale::fitAllSerial;
+    FitVarFunction mFitVar = &CGwmGWRMultiscale::fitVarSerial;
 
     CGwmSpatialWeight mInitSpatialWeight;
-    BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &CGwmMGWR::bandwidthSizeCriterionAllCVSerial;
+    BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &CGwmGWRMultiscale::bandwidthSizeCriterionAllCVSerial;
     size_t mBandwidthSelectionCurrentIndex = 0;
 
 

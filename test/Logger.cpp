@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp/CGwmMGWR.h"
+#include "gwmodelpp/CGwmGWRMultiscale.h"
 
 #include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
 #include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
@@ -35,22 +35,22 @@ TEST_CASE("MGWR: basic flow")
     uword nVar = 3;
     vector<CGwmSpatialWeight> spatials;
     vector<bool> preditorCentered;
-    vector<CGwmMGWR::BandwidthInitilizeType> bandwidthInitialize;
-    vector<CGwmMGWR::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
+    vector<CGwmGWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
+    vector<CGwmGWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
     for (size_t i = 0; i < nVar; i++)
     {
         CGwmCRSDistance distance;
         CGwmBandwidthWeight bandwidth(0, false, CGwmBandwidthWeight::Bisquare);
         spatials.push_back(CGwmSpatialWeight(&bandwidth, &distance));
         preditorCentered.push_back(i != 0);
-        bandwidthInitialize.push_back(CGwmMGWR::BandwidthInitilizeType::Null);
-        bandwidthSelectionApproach.push_back(CGwmMGWR::BandwidthSelectionCriterionType::CV);
+        bandwidthInitialize.push_back(CGwmGWRMultiscale::BandwidthInitilizeType::Null);
+        bandwidthSelectionApproach.push_back(CGwmGWRMultiscale::BandwidthSelectionCriterionType::CV);
     }
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmMGWR algorithm;
+    CGwmGWRMultiscale algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
