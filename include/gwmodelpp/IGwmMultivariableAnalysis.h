@@ -3,6 +3,9 @@
 
 #include <armadillo>
 
+namespace gwm
+{
+
 /**
  * @interface IGwmMultivariableAnalysis
  * @brief Interface for multivariable analysis. 
@@ -37,6 +40,8 @@ struct IGwmMultivariableAnalysis
      */
     virtual void run() = 0;
 };
+
+}
 
 
 #endif  // IGWMMULTIVARIABLEANALYSIS_H

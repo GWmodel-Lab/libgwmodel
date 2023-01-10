@@ -12,6 +12,9 @@
 #include <exception>
 
 
+namespace gwm
+{
+
 class CGwmGWRLocalCollinearity : public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmOpenmpParallelizable
 {
 public:
@@ -210,4 +213,7 @@ inline void CGwmGWRLocalCollinearity::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
 }
+
+}
+
 #endif  //CGWMLOCALCOLLINEARITYGWR_H

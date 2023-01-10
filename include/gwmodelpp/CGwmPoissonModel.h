@@ -3,6 +3,9 @@
 
 #include "CGwmLinearModel.h"
 
+namespace gwm
+{
+
 class CGwmPoissonModel : public CGwmLinearModel
 {
 public:
@@ -31,5 +34,7 @@ public:
     bool setY(arma::mat y) override;
     bool setWeight(arma::mat weight) override;
 };
+
+}
 
 #endif // GWMPOISSONMODEL_H

@@ -5,6 +5,9 @@
 #include <armadillo>
 #include "IGwmVarialbeSelectable.h"
 
+namespace gwm
+{
+
 class CGwmVariableForwardSelector
 {
 public:
@@ -61,5 +64,7 @@ private:
 
     std::vector<std::pair<std::vector<std::size_t>, double> > mVarsCriterion;
 };
+
+}
 
 #endif  // CGWMVARIABLEFORWARDSELECTOR_H

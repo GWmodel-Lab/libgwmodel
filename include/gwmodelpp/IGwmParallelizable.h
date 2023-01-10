@@ -1,6 +1,9 @@
 #ifndef IGWMPARALLELIZABLE_H
 #define IGWMPARALLELIZABLE_H
 
+namespace gwm
+{
+
 /**
  * @brief Define names of different parallel types.
  */
@@ -103,5 +106,7 @@ struct IGwmCudaParallelizable : public IGwmParallelizable
      */
     virtual void setGroupSize(const double size) = 0;
 };
+
+}
 
 #endif  // IGWMPARALLELIZABLE_H

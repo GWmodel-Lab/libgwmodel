@@ -9,6 +9,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 GwmRegressionDiagnostic CGwmGWRBasic::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {

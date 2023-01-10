@@ -10,6 +10,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 size_t CGwmGWRScalable::treeChildCount = 0;
 

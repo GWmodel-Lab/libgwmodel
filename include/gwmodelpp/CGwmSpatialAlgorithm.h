@@ -4,6 +4,9 @@
 #include "CGwmAlgorithm.h"
 #include <armadillo>
 
+namespace gwm
+{
+
 /**
  * @brief Abstract spatial algorithm class. 
  * This class cannot been constructed.
@@ -74,5 +77,7 @@ protected:
     
     arma::mat mCoords;
 };
+
+}
 
 #endif  // CGWMSPATIALALGORITHM_H

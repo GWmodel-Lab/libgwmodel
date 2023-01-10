@@ -9,6 +9,9 @@
 #include "IGwmParallelizable.h"
 
 
+namespace gwm
+{
+
 class CGwmGWPCA: public CGwmSpatialMonoscaleAlgorithm, public IGwmMultivariableAnalysis
 {
 private:
@@ -143,5 +146,7 @@ private:    // Algorithm Runtime Variables
 
     Solver mSolver = &CGwmGWPCA::solveSerial;
 };
+
+}
 
 #endif  // CGWMGWPCA_H

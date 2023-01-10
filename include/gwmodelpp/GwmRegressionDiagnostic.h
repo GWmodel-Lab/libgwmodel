@@ -1,6 +1,9 @@
 #ifndef GWMREGRESSIONDIAGNOSTIC_H
 #define GWMREGRESSIONDIAGNOSTIC_H
 
+namespace gwm
+{
+
 struct GwmRegressionDiagnostic
 {
     double RSS;
@@ -11,5 +14,7 @@ struct GwmRegressionDiagnostic
     double RSquare;
     double RSquareAdjust;
 };
+
+}
 
 #endif  // GWMREGRESSIONDIAGNOSTIC_H

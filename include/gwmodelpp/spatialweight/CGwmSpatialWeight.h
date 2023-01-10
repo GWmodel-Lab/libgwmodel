@@ -11,6 +11,9 @@
 #include "CGwmDMatDistance.h"
 #include "CGwmOneDimDistance.h"
 
+namespace gwm
+{
+
 /**
  * @brief A combined class of distance and weight. 
  * Instances of this class are usually constructed by providing pointers to CGwmDistance and CGwmWeight.
@@ -237,6 +240,8 @@ template<>
 inline CGwmOneDimDistance* CGwmSpatialWeight::distance<CGwmOneDimDistance>() const
 {
     return static_cast<CGwmOneDimDistance*>(mDistance);
+}
+
 }
 
 #endif // CGWMSPATIALWEIGHT_H

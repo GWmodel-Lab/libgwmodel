@@ -8,6 +8,9 @@
 #include <variant>
 
 
+namespace gwm
+{
+
 typedef std::variant<arma::mat, arma::vec, arma::uword> DistParamVariant;
 
 /**
@@ -122,6 +125,8 @@ public:
     virtual double minDistance() = 0;
 
 };
+
+}
 
 
 #endif // CGWMDISTANCE_H

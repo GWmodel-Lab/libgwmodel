@@ -10,6 +10,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 int CGwmGWRMultiscale::treeChildCount = 0;
 

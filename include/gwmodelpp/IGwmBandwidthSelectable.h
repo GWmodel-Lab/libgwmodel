@@ -3,6 +3,9 @@
 
 #include "spatialweight/CGwmBandwidthWeight.h"
 
+namespace gwm
+{
+
 struct IGwmBandwidthSelectable
 {
     virtual double getCriterion(CGwmBandwidthWeight* weight) = 0;
@@ -10,5 +13,7 @@ struct IGwmBandwidthSelectable
 
 typedef std::vector<std::pair<double, double> >  BandwidthCriterionList;
 
+
+}
 
 #endif  // IGWMBANDWIDTHSELECTABLE_H

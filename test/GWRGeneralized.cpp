@@ -13,6 +13,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 
 TEST_CASE("GGWR: basic flow")

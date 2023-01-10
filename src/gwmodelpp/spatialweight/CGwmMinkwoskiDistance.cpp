@@ -3,6 +3,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 CGwmMinkwoskiDistance::CGwmMinkwoskiDistance(double p, double theta) : CGwmCRSDistance(false)
 {

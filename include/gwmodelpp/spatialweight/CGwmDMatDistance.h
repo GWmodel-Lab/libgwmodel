@@ -5,6 +5,9 @@
 #include "CGwmDistance.h"
 
 
+namespace gwm
+{
+
 /**
  * [NOT AVALIABLE]
  */
@@ -67,6 +70,8 @@ inline std::string CGwmDMatDistance::dMatFile() const
 inline void CGwmDMatDistance::setDMatFile(const std::string &dMatFile)
 {
     mDMatFile = dMatFile;
+}
+
 }
 
 #endif // CGWMDMATDISTANCE_H

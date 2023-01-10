@@ -4,6 +4,7 @@
 
 using namespace arma;
 using namespace std;
+using namespace gwm;
 
 vector<size_t> CGwmVariableForwardSelector::optimize(IGwmVarialbeSelectable *instance)
 {

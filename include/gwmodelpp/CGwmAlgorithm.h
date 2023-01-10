@@ -1,6 +1,9 @@
 #ifndef CGWMALGORITHM_H
 #define CGWMALGORITHM_H
 
+namespace gwm
+{
+
 /**
  * @brief Abstract algorithm class.
  * This class cannot been constructed.
@@ -38,5 +41,7 @@ public:
      */
     virtual bool isValid() = 0;
 };
+
+}
 
 #endif  // CGWMALGORITHM_H

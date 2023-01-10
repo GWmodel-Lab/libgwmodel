@@ -3,6 +3,9 @@
 
 #include "CGwmLinearModel.h"
 
+namespace gwm
+{
+
 class CGwmBinomialModel : public CGwmLinearModel
 {
 public:
@@ -34,5 +37,7 @@ public:
 protected:
     double y_log_y(double y, double mu);
 };
+
+}
 
 #endif // GWMBINOMIALMODEL_H

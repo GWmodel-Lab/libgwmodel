@@ -15,6 +15,7 @@
 
 using namespace arma;
 using namespace std;
+using namespace gwm;
 
 int CGwmGWRGeneralized::treeChildCount = 0;
 

@@ -4,6 +4,9 @@
 #include <functional>
 #include <string>
 
+namespace gwm
+{
+
 #define GWM_LOGGING(MESSAGE, LEVEL) GwmLogger::logger((MESSAGE), (LEVEL), __FUNCTION__, __FILE__)
 
 #define GWM_LOG_DEBUG(MESSAGE) GwmLogger::logger((MESSAGE), GwmLogger::LogLevel::LOG_DEBUG, __FUNCTION__, __FILE__)
@@ -54,6 +57,8 @@ public:
         logger(message, level, fun_name, file_name);
     }
 };
+
+}
 
 
 

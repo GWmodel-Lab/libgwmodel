@@ -3,6 +3,9 @@
 
 #include "CGwmCRSDistance.h"
 
+namespace gwm
+{
+
 class CGwmMinkwoskiDistance : public CGwmCRSDistance
 {
 public:
@@ -70,6 +73,8 @@ inline double CGwmMinkwoskiDistance::theta() const
 inline void CGwmMinkwoskiDistance::setTheta(double theta)
 {
     mTheta = theta;
+}
+
 }
 
 #endif // CGWMMINKWOSKIDISTANCE_H

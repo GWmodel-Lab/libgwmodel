@@ -9,8 +9,10 @@
 #include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
 #include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
 #include "londonhp100.h"
+
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 TEST_CASE("ScalableGWR: basic flow")
 {

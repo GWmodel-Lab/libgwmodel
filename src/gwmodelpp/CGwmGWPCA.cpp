@@ -1,6 +1,7 @@
 #include "CGwmGWPCA.h"
 
 using namespace arma;
+using namespace gwm;
 
 void CGwmGWPCA::run()
 {

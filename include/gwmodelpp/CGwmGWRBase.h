@@ -4,6 +4,9 @@
 #include "CGwmSpatialMonoscaleAlgorithm.h"
 #include "IGwmRegressionAnalysis.h"
 
+namespace gwm
+{
+
 class CGwmGWRBase : public CGwmSpatialMonoscaleAlgorithm, public IGwmRegressionAnalysis
 {
 public:
@@ -62,5 +65,7 @@ protected:
 
     GwmRegressionDiagnostic mDiagnostic;
 };
+
+}
 
 #endif  // CGWMGWRBASE_H

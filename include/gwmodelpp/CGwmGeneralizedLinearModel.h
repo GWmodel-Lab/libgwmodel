@@ -6,6 +6,9 @@
 #include "CGwmGWRGeneralized.h"
 
 
+namespace gwm
+{
+
 class CGwmGeneralizedLinearModel
 {
 public:
@@ -53,6 +56,8 @@ inline bool CGwmGeneralizedLinearModel::isCanceled() const
 inline void CGwmGeneralizedLinearModel::setCanceled(bool newCanceled)
 {
     mIsCanceled = newCanceled;
+}
+
 }
 
 #endif // GWMGENERALIZEDLINEARMODEL_H

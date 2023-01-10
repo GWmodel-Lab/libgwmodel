@@ -10,6 +10,9 @@
 #include "IGwmVarialbeSelectable.h"
 #include "IGwmParallelizable.h"
 
+namespace gwm
+{
+
 class CGwmGWRBasic : public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmVarialbeSelectable, public IGwmOpenmpParallelizable
 {
 public:
@@ -171,5 +174,7 @@ protected:
     arma::vec mQDiag;
     arma::mat mS;
 };
+
+}
 
 #endif  // CGWMGWRBASIC_H

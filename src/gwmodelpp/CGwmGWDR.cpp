@@ -12,6 +12,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 GwmRegressionDiagnostic CGwmGWDR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {

@@ -10,7 +10,8 @@
 #include "CGwmVariableForwardSelector.h"
 #include "IGwmParallelizable.h"
 
-
+namespace gwm
+{
 
 class CGwmGWDR : public CGwmSpatialAlgorithm, public IGwmRegressionAnalysis, public IGwmVarialbeSelectable, public IGwmOpenmpParallelizable
 {
@@ -249,5 +250,7 @@ public:
 private:
     std::vector<CGwmBandwidthWeight*> mBandwidths;
 };
+
+}
 
 #endif  // CGWMGWDR_H

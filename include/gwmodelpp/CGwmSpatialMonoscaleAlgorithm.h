@@ -4,6 +4,9 @@
 #include "CGwmSpatialAlgorithm.h"
 #include "spatialweight/CGwmSpatialWeight.h"
 
+namespace gwm
+{
+
 /**
  * @brief Interface for spatial algorithm with a single bandwidth. 
  * It defines some interface commonly used in spatial algorithms:
@@ -74,5 +77,7 @@ public:
 protected:
     CGwmSpatialWeight mSpatialWeight;   //!< Spatial weight configuration.    
 };
+
+}
 
 #endif  // CGWMSPATIALMONOSCALEALGORITHM_H

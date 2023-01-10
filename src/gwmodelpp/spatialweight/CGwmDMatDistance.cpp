@@ -3,6 +3,7 @@
 
 using namespace arma;
 using namespace std;
+using namespace gwm;
 
 CGwmDMatDistance::CGwmDMatDistance(string dmatFile)
 {

@@ -6,6 +6,9 @@
 #include <armadillo>
 
 
+namespace gwm
+{
+
 /**
  * @brief Abstract base class for calculating weight from distance.
  * It defines some interface commonly used in spatial algorithms:
@@ -63,5 +66,7 @@ public:
      */
     virtual arma::vec weight(arma::vec dist) = 0;
 };
+
+}
 
 #endif // CGWMWEIGHT_H

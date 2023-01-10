@@ -16,6 +16,9 @@
 #include "CGwmBandwidthSelector.h"
 #include "CGwmBandwidthSelector.h"
 
+namespace gwm
+{
+
 struct GwmGWRGeneralizedDiagnostic
 {
     double RSS;
@@ -378,5 +381,7 @@ inline void CGwmGWRGeneralized::setOmpThreadNum(const int threadNum)
 //         break;
 //     }
 // }
+
+}
 
 #endif // CGWMGGWR_H

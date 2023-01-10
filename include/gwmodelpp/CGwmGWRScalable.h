@@ -13,6 +13,9 @@
 #include <gsl/gsl_multimin.h>
 
 
+namespace gwm
+{
+
 class CGwmGWRScalable : public CGwmGWRBase
 {
 public:
@@ -121,5 +124,7 @@ private:
     arma::vec mShat;
     arma::mat mBetasSE;
 };
+
+}
 
 #endif  // CGWMScalableGWR_H

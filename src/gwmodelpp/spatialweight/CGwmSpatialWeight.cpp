@@ -1,5 +1,7 @@
 #include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
 
+using namespace gwm;
+
 CGwmSpatialWeight::CGwmSpatialWeight()
 {
 

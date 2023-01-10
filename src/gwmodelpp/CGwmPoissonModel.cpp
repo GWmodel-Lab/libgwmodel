@@ -3,6 +3,7 @@
 #include "CGwmGWRGeneralized.h"
 
 using namespace arma;
+using namespace gwm;
 
 CGwmPoissonModel::CGwmPoissonModel()
 {

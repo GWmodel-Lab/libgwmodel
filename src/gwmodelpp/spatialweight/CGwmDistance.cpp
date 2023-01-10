@@ -2,6 +2,7 @@
 #include <assert.h>
 
 using namespace std;
+using namespace gwm;
 
 unordered_map<CGwmDistance::DistanceType, string> CGwmDistance::TypeNameMapper =
 {

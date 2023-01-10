@@ -12,6 +12,9 @@
 #include "IGwmParallelizable.h"
 
 
+namespace gwm
+{
+
 class CGwmGWRMultiscale : public CGwmSpatialMultiscaleAlgorithm, public IGwmBandwidthSelectable,public IGwmOpenmpParallelizable,public IGwmRegressionAnalysis 
 {
 public:
@@ -260,5 +263,7 @@ private:
 public:
     static int treeChildCount;
 };
+
+}
 
 #endif // GWMMULTISCALEGWRTASKTHREAD_H

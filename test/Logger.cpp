@@ -15,6 +15,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 void printer(string message, GwmLogger::LogLevel level, string fun_name, string file_name)
 {

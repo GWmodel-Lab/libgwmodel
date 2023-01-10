@@ -6,6 +6,9 @@
 #include "CGwmWeight.h"
 
 
+namespace gwm
+{
+
 /**
  * @brief Class for calculating weight with a bandwidth.
  * Users can specific bandwidth size, bandwidth type and kernel function type.
@@ -221,5 +224,7 @@ private:
     bool mAdaptive;
     KernelFunctionType mKernel;
 };
+
+}
 
 #endif // CGWMBANDWIDTHWEIGHT_H

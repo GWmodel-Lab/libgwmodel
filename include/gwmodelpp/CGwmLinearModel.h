@@ -3,6 +3,9 @@
 
 #include <armadillo>
 
+namespace gwm
+{
+
 class CGwmLinearModel
 {
 public:
@@ -24,5 +27,7 @@ public:
     virtual bool setY(arma::mat y) = 0;
     virtual bool setWeight(arma::mat weight) = 0;
 };
+
+}
 
 #endif // GWMLINEARMODEL_H

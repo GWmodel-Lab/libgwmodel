@@ -6,6 +6,7 @@
 #endif
 
 using namespace arma;
+using namespace gwm;
 
 vec CGwmGWSS::del(vec x, uword rowcount){
     vec res;

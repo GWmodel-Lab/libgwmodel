@@ -1,6 +1,7 @@
 #include "CGwmBandwidthSelector.h"
 
 using namespace std;
+using namespace gwm;
 
 CGwmBandwidthWeight* CGwmBandwidthSelector::optimize(IGwmBandwidthSelectable* instance)
 {

@@ -3,6 +3,9 @@
 
 #include "CGwmDistance.h"
 
+namespace gwm
+{
+
 /**
  * @brief Class for calculating spatial distance according to coordinate reference system.
  */
@@ -95,5 +98,7 @@ public:
 protected:
     std::unique_ptr<Parameter> mParameter = nullptr;
 };
+
+}
 
 #endif // CGWMOneDimDISTANCE_H

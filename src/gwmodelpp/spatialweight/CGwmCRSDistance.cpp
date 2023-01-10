@@ -4,6 +4,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 #define POWDI(x, i) pow(x, i)
 

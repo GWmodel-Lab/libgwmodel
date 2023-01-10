@@ -3,6 +3,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 unordered_map<CGwmBandwidthWeight::KernelFunctionType, string> CGwmBandwidthWeight::KernelFunctionTypeNameMapper = {
     std::make_pair(CGwmBandwidthWeight::KernelFunctionType::Boxcar, "Boxcar"),

@@ -6,6 +6,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 CGwmGeneralizedLinearModel::CGwmGeneralizedLinearModel()
 {

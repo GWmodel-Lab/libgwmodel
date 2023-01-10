@@ -2,6 +2,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 void CGwmSpatialMultiscaleAlgorithm::createDistanceParameter(size_t size)
 {

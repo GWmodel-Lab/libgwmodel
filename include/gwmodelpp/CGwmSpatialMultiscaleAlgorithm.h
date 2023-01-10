@@ -5,6 +5,9 @@
 #include <vector>
 #include "spatialweight/CGwmSpatialWeight.h"
 
+namespace gwm
+{
+
 /**
  * @brief Interface for spatial algorithm with a single bandwidth. 
  * It defines some interface commonly used in spatial algorithms:
@@ -75,6 +78,8 @@ inline const std::vector<CGwmSpatialWeight>& CGwmSpatialMultiscaleAlgorithm::spa
 inline void CGwmSpatialMultiscaleAlgorithm::setSpatialWeights(const std::vector<CGwmSpatialWeight> &spatialWeights)
 {
     mSpatialWeights = spatialWeights;
+}
+
 }
 
 #endif  // CGWMSPATIALMultiSCALEALGORITHM_H

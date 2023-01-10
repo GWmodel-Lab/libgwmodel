@@ -11,6 +11,9 @@
 #include "IGwmParallelizable.h"
 #include "CGwmGWRBasic.h"
 
+namespace gwm
+{
+
 class CGwmGWRRobust : public CGwmGWRBasic
 {
 private:
@@ -83,6 +86,8 @@ inline void CGwmGWRRobust::setFiltered(bool value)
     {
         this->mFiltered = false;
     }
+}
+
 }
 
 #endif // CGWMROBUSTGWR_H

@@ -7,6 +7,9 @@
 #include "IGwmBandwidthSelectable.h"
 #include "spatialweight/CGwmBandwidthWeight.h"
 
+namespace gwm
+{
+
 class CGwmBandwidthSelector
 {
 public:
@@ -64,6 +67,8 @@ inline double CGwmBandwidthSelector::upper() const
 inline void CGwmBandwidthSelector::setUpper(double upper)
 {
     mUpper = upper;
+}
+
 }
 
 #endif  // CGWMBANDWIDTHSELECTOR_H

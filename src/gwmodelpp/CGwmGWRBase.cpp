@@ -1,6 +1,8 @@
 #include "CGwmGWRBase.h"
 #include <assert.h>
 
+using namespace gwm;
+
 bool CGwmGWRBase::isValid()
 {
     if (CGwmSpatialMonoscaleAlgorithm::isValid())

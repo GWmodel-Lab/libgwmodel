@@ -3,6 +3,9 @@
 
 #include "CGwmDistance.h"
 
+namespace gwm
+{
+
 /**
  * @brief Class for calculating spatial distance according to coordinate reference system.
  */
@@ -146,5 +149,7 @@ protected:
 private:
     CalculatorType mCalculator = &EuclideanDistance;
 };
+
+}
 
 #endif // CGWMCRSDISTANCE_H

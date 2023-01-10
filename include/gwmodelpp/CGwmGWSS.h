@@ -16,6 +16,9 @@
 #include "IGwmMultivariableAnalysis.h"
 #include "IGwmParallelizable.h"
 
+namespace gwm
+{
+
 /**
  * @brief The class for Geographically Weighted Summary Statistics. 
  * Geographically Weighted Summary Statistics is an algorithm for calculating local weighted statistics. 
@@ -364,6 +367,8 @@ private:
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< Parallel type.
     int mOmpThreadNum = 8;                                  //!< Numbers of threads to be created while paralleling.
 };
+
+}
 
 
 #endif  // CGWMGWSS_H

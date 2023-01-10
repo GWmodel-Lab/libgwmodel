@@ -6,6 +6,9 @@
 #include "GwmRegressionDiagnostic.h"
 
 
+namespace gwm
+{
+
 struct IGwmRegressionAnalysis
 {
     virtual arma::vec dependentVariable() const = 0;
@@ -22,5 +25,7 @@ struct IGwmRegressionAnalysis
 
     virtual GwmRegressionDiagnostic diagnostic() const = 0;
 };
+
+}
 
 #endif  // IGWMREGRESSIONANALYSIS_H

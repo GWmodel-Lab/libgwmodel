@@ -10,6 +10,7 @@
 
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 GwmRegressionDiagnostic CGwmGWRRobust::CalcDiagnostic(const mat &x, const vec &y, const mat &betas, const vec &shat)
 {
