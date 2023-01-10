@@ -23,11 +23,11 @@ set(SAMPL_LONDONHP100 ${CMAKE_CURRENT_SOURCE_DIR}/data/londonhp100.cpp)
 add_definitions(-DSAMPLE_DATA_DIR="${SAMPLE_DATA_DIR}")
 set(SAMPL_LONDONHP ${CMAKE_CURRENT_SOURCE_DIR}/data/londonhp.cpp)
 
-add_executable(testBasicGWR BasicGWR.cpp ${SAMPL_LONDONHP100})
-target_link_libraries(testBasicGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRBasic GWRBasic.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testGWRBasic PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
-    NAME testBasicGWR 
-    COMMAND $<TARGET_FILE:testBasicGWR> --success
+    NAME testGWRBasic 
+    COMMAND $<TARGET_FILE:testGWRBasic> --success
 )
 
 add_executable(testGWSS GWSS.cpp ${SAMPL_LONDONHP100})
