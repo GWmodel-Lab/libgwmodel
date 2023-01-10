@@ -13,7 +13,7 @@
 #include <gsl/gsl_multimin.h>
 
 
-class CGwmScalableGWR : public CGwmGWRBase
+class CGwmGWRScalable : public CGwmGWRBase
 {
 public:
     enum BandwidthSelectionCriterionType
@@ -51,8 +51,8 @@ private:
     static GwmRegressionDiagnostic CalcDiagnostic(const arma::mat& x, const arma::vec& y, const arma::mat& betas, const arma::vec& shat);
 
 public:
-    CGwmScalableGWR(){};
-    ~CGwmScalableGWR(){};
+    CGwmGWRScalable(){};
+    ~CGwmGWRScalable(){};
 
     arma::uword polynomial() const { return mPolynomial; }
 

@@ -79,11 +79,11 @@ add_test(
     COMMAND $<TARGET_FILE:testGGWR> --success
 )
 
-add_executable(testScalableGWR ScalableGWR.cpp ${SAMPL_LONDONHP100})
-target_link_libraries(testScalableGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRScalable GWRScalable.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testGWRScalable PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
-    NAME testScalableGWR 
-    COMMAND $<TARGET_FILE:testScalableGWR> --success
+    NAME testGWRScalable 
+    COMMAND $<TARGET_FILE:testGWRScalable> --success
 )
 
 add_executable(testLocalCollinearityGWR LocalCollinearityGWR.cpp ${SAMPL_LONDONHP100})
