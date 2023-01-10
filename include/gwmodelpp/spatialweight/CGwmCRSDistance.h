@@ -16,8 +16,8 @@ public:
      */
     struct Parameter : public CGwmDistance::Parameter
     {
-        mat focusPoints;    //!< Matrix of focus points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
-        mat dataPoints;     //!< Matrix of data points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
+        arma::mat focusPoints;    //!< Matrix of focus points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
+        arma::mat dataPoints;     //!< Matrix of data points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
 
         /**
          * @brief Construct a new CRSDistanceParameter object.
@@ -25,7 +25,7 @@ public:
          * @param fp Reference to focus points.
          * @param dp Reference to data points.
          */
-        Parameter(const mat& fp, const mat& dp) : CGwmDistance::Parameter()
+        Parameter(const arma::mat& fp, const arma::mat& dp) : CGwmDistance::Parameter()
             , focusPoints(fp)
             , dataPoints(dp)
         {
@@ -40,20 +40,20 @@ public:
      * 
      * @param out_loc Matrix of focus point' coordinate. The shape of it must be 1x2 and the first column is longitudes, the second column is latitudes.
      * @param in_locs Matrix of data points' coordinates. The shape of it must be nx2 and the first column is longitudes, the second column is latitudes.
-     * @return vec Distance vector for out_loc.
+     * @return arma::vec Distance vector for out_loc.
      */
-    static vec SpatialDistance(const rowvec& out_loc, const mat& in_locs);
+    static arma::vec SpatialDistance(const arma::rowvec& out_loc, const arma::mat& in_locs);
 
     /**
      * @brief Calculate euclidean distance for points with geographical coordinate reference system.
      * 
      * @param out_loc Matrix of focus point' coordinate. The shape of it must be 1x2 and the first column is x-coordinate, the second column is y-coordinate.
      * @param in_locs Matrix of data points' coordinates. The shape of it must be nx2 and the first column is x-coordinate, the second column is y-coordinate.
-     * @return vec Distance vector for out_loc.
+     * @return arma::vec Distance vector for out_loc.
      */
-    static vec EuclideanDistance(const rowvec& out_loc, const mat& in_locs)
+    static arma::vec EuclideanDistance(const arma::rowvec& out_loc, const arma::mat& in_locs)
     {
-        mat diff = (in_locs.each_row() - out_loc);
+        arma::mat diff = (in_locs.each_row() - out_loc);
         return sqrt(sum(diff % diff, 1));
     }
 
@@ -69,7 +69,7 @@ public:
     static double SpGcdist(double lon1, double lon2, double lat1, double lat2);
 
 private:
-    typedef vec (*CalculatorType)(const rowvec&, const mat&);
+    typedef arma::vec (*CalculatorType)(const arma::rowvec&, const arma::mat&);
 
 public:
 
@@ -127,15 +127,15 @@ public:
      * @brief Create Parameter for Caclulating CRS Distance.
      * 
      * @param plist A list of parameters containing 2 items:
-     *  - `mat` focus points
-     *  - `mat` data points
+     *  - `arma::mat` focus points
+     *  - `arma::mat` data points
      *  .
      * 
      * @return DistanceParameter* The pointer to parameters.
      */
     virtual void makeParameter(std::initializer_list<DistParamVariant> plist) override;
 
-    virtual vec distance(uword focus) override;
+    virtual arma::vec distance(arma::uword focus) override;
     virtual double maxDistance() override;
     virtual double minDistance() override;
 

@@ -9,6 +9,7 @@
 #include "GwmLogger.h"
 
 using namespace std;
+using namespace arma;
 
 int CGwmMGWR::treeChildCount = 0;
 

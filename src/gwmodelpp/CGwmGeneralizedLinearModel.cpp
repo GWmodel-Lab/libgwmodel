@@ -4,6 +4,8 @@
 //#include "GWmodel.h"
 #include "CGwmGGWR.h"
 
+using namespace arma;
+
 CGwmGeneralizedLinearModel::CGwmGeneralizedLinearModel()
 {
     mWeight = vec(uword(0));

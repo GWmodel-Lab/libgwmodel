@@ -2,6 +2,8 @@
 //#include "GWmodel.h"
 #include "CGwmGGWR.h"
 
+using namespace arma;
+
 CGwmBinomialModel::CGwmBinomialModel()
 {
 

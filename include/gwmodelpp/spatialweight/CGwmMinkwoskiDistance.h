@@ -6,10 +6,10 @@
 class CGwmMinkwoskiDistance : public CGwmCRSDistance
 {
 public:
-    static mat CoordinateRotate(const mat& coords, double theta);
-    static vec ChessDistance(const rowvec& out_loc, const mat& in_locs);
-    static vec ManhattonDistance(const rowvec& out_loc, const mat& in_locs);
-    static vec MinkwoskiDistance(const rowvec& out_loc, const mat& in_locs, double p);
+    static arma::mat CoordinateRotate(const arma::mat& coords, double theta);
+    static arma::vec ChessDistance(const arma::rowvec& out_loc, const arma::mat& in_locs);
+    static arma::vec ManhattonDistance(const arma::rowvec& out_loc, const arma::mat& in_locs);
+    static arma::vec MinkwoskiDistance(const arma::rowvec& out_loc, const arma::mat& in_locs, double p);
 
 public:
     explicit CGwmMinkwoskiDistance(double p, double theta);
@@ -29,26 +29,26 @@ public:
     void setTheta(double theta);
 
 public:
-    virtual vec distance(uword focus) override;
+    virtual arma::vec distance(arma::uword focus) override;
 
 private:
     double mPoly;
     double mTheta;
 };
 
-inline vec CGwmMinkwoskiDistance::ChessDistance(const rowvec& out_loc, const mat& in_locs)
+inline arma::vec CGwmMinkwoskiDistance::ChessDistance(const arma::rowvec& out_loc, const arma::mat& in_locs)
 {
     return max(abs(in_locs.each_row() - out_loc), 1);
 }
 
-inline vec CGwmMinkwoskiDistance::ManhattonDistance(const rowvec& out_loc, const mat& in_locs)
+inline arma::vec CGwmMinkwoskiDistance::ManhattonDistance(const arma::rowvec& out_loc, const arma::mat& in_locs)
 {
     return sum(abs(in_locs.each_row() - out_loc), 1);
 }
 
-inline vec CGwmMinkwoskiDistance::MinkwoskiDistance(const rowvec& out_loc, const mat& in_locs, double p)
+inline arma::vec CGwmMinkwoskiDistance::MinkwoskiDistance(const arma::rowvec& out_loc, const arma::mat& in_locs, double p)
 {
-    vec temp = abs(in_locs.each_row() - out_loc);
+    arma::vec temp = abs(in_locs.each_row() - out_loc);
     return pow(sum(pow(temp, p), 1), 1.0 / p);
 }
 

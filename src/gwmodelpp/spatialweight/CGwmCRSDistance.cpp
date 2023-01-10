@@ -3,6 +3,7 @@
 #include <exception>
 
 using namespace std;
+using namespace arma;
 
 #define POWDI(x, i) pow(x, i)
 

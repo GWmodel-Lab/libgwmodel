@@ -5,7 +5,6 @@
 #include "CGwmLinearModel.h"
 #include "CGwmGGWR.h"
 
-using namespace arma;
 
 class CGwmGeneralizedLinearModel
 {
@@ -13,19 +12,19 @@ public:
     CGwmGeneralizedLinearModel();
 
 protected:
-    mat mX;
-    mat mY;
-    mat mWeight;
+    arma::mat mX;
+    arma::mat mY;
+    arma::mat mWeight;
     CGwmGGWR::Family mFamily;
     double mEpsilon;
     int mMaxit;
     bool mIntercept;
-    mat mOffset;
+    arma::mat mOffset;
     CGwmLinearModel* mModel;
 
-    mat mMuStart;
+    arma::mat mMuStart;
     double mDev;
-    mat mResiduals;
+    arma::mat mResiduals;
     double mNullDev;
     double mAIC;
     bool mIsCanceled = false;
@@ -33,8 +32,8 @@ protected:
 public:
     void fit();
 
-    bool setX(mat X);
-    bool setY(mat Y);
+    bool setX(arma::mat X);
+    bool setY(arma::mat Y);
     bool setFamily(CGwmGGWR::Family family);
 
     double dev();

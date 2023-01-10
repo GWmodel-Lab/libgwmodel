@@ -2,6 +2,7 @@
 #include "gwmodelpp/spatialweight/CGwmWeight.h"
 
 using namespace std;
+using namespace arma;
 
 unordered_map<CGwmBandwidthWeight::KernelFunctionType, string> CGwmBandwidthWeight::KernelFunctionTypeNameMapper = {
     std::make_pair(CGwmBandwidthWeight::KernelFunctionType::Boxcar, "Boxcar"),

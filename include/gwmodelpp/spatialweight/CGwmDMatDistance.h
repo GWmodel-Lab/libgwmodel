@@ -14,9 +14,9 @@ public:
 
     struct Parameter : public CGwmDistance::Parameter
     {
-        uword rowSize;
+        arma::uword rowSize;
 
-        Parameter(uword size, uword rows) : rowSize(size) 
+        Parameter(arma::uword size, arma::uword rows) : rowSize(size) 
         {
             total = rows;
         }
@@ -42,15 +42,15 @@ public:
      * @brief Create Parameter for Caclulating CRS Distance.
      * 
      * @param plist A list of parameters containing 2 items:
-     *  - `uword` size
-     *  - `uword` rows
+     *  - `arma::uword` size
+     *  - `arma::uword` rows
      *  . 
      * 
      * @return DistanceParameter* The pointer to parameters.
      */
     virtual void makeParameter(std::initializer_list<DistParamVariant> plist) override;
     
-    virtual vec distance(uword focus) override;
+    virtual arma::vec distance(arma::uword focus) override;
     virtual double maxDistance() override;
     virtual double minDistance() override;
 

@@ -31,7 +31,7 @@ struct GwmGGWRDiagnostic
         RSquare = 0.0;
     }
 
-    GwmGGWRDiagnostic(const vec &diag)
+    GwmGGWRDiagnostic(const arma::vec &diag)
     {
         AIC = diag(0);
         AICc = diag(1);
@@ -57,7 +57,7 @@ struct GwmGLMDiagnostic
         RSquare = 0.0;
     }
 
-    GwmGLMDiagnostic(const vec &diag)
+    GwmGLMDiagnostic(const arma::vec &diag)
     {
         AIC = diag(0);
         AICc = diag(1);
@@ -94,10 +94,10 @@ public:
     static void initTolUnitDict();
 
     typedef double (CGwmGGWR::*BandwidthSelectCriterionFunction)(CGwmBandwidthWeight *);
-    typedef mat (CGwmGGWR::*GGWRfitFunction)(const mat& x, const vec& y);
-    typedef vec (CGwmGGWR::*CalWtFunction)(const mat &x, const vec &y, mat w);
+    typedef arma::mat (CGwmGGWR::*GGWRfitFunction)(const arma::mat& x, const arma::vec& y);
+    typedef arma::vec (CGwmGGWR::*CalWtFunction)(const arma::mat &x, const arma::vec &y, arma::mat w);
 
-    typedef std::tuple<std::string, mat, NameFormat> CreateResultLayerData;
+    typedef std::tuple<std::string, arma::mat, NameFormat> CreateResultLayerData;
 
 public:
     CGwmGGWR(){};
@@ -125,37 +125,37 @@ public: // IOpenmpParallelable interface
     void setOmpThreadNum(const int threadNum) override;
 
 public:
-    static vec gwReg(const mat &x, const vec &y, const vec &w);
+    static arma::vec gwReg(const arma::mat &x, const arma::vec &y, const arma::vec &w);
 
-    static vec gwRegHatmatrix(const mat &x, const vec &y, const vec &w, uword focus, mat &ci, mat &s_ri);
+    static arma::vec gwRegHatmatrix(const arma::mat &x, const arma::vec &y, const arma::vec &w, arma::uword focus, arma::mat &ci, arma::mat &s_ri);
 
-    static mat dpois(mat y, mat mu);
-    static mat dbinom(mat y, mat m, mat mu);
-    static mat lchoose(mat n, mat k);
-    static mat lgammafn(mat x);
+    static arma::mat dpois(arma::mat y, arma::mat mu);
+    static arma::mat dbinom(arma::mat y, arma::mat m, arma::mat mu);
+    static arma::mat lchoose(arma::mat n, arma::mat k);
+    static arma::mat lgammafn(arma::mat x);
 
-    static mat CiMat(const mat &x, const vec &w);
+    static arma::mat CiMat(const arma::mat &x, const arma::vec &w);
 
-    mat predict(const mat& locations) override;
-    mat fit() override;
-    mat fit(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qdiag, mat &S);
+    arma::mat predict(const arma::mat& locations) override;
+    arma::mat fit() override;
+    arma::mat fit(const arma::mat &x, const arma::vec &y, arma::mat &betasSE, arma::vec &shat, arma::vec &qdiag, arma::mat &S);
 
 protected:
-    mat fitPoissonSerial(const mat& x, const vec& y);
-    mat fitBinomialSerial(const mat& x, const vec& y);
+    arma::mat fitPoissonSerial(const arma::mat& x, const arma::vec& y);
+    arma::mat fitBinomialSerial(const arma::mat& x, const arma::vec& y);
 #ifdef ENABLE_OPENMP
-    mat fitPoissonOmp(const mat& x, const vec& y);
-    mat fitBinomialOmp(const mat& x, const vec& y);
+    arma::mat fitPoissonOmp(const arma::mat& x, const arma::vec& y);
+    arma::mat fitBinomialOmp(const arma::mat& x, const arma::vec& y);
 #endif
-    mat diag(mat a);
+    arma::mat diag(arma::mat a);
 
-    vec PoissonWtSerial(const mat &x, const vec &y, mat w);
-    vec BinomialWtSerial(const mat &x, const vec &y, mat w);
+    arma::vec PoissonWtSerial(const arma::mat &x, const arma::vec &y, arma::mat w);
+    arma::vec BinomialWtSerial(const arma::mat &x, const arma::vec &y, arma::mat w);
 #ifdef ENABLE_OPENMP
-    vec PoissonWtOmp(const mat &x, const vec &y, mat w);
-    vec BinomialWtOmp(const mat &x, const vec &y, mat w);
+    arma::vec PoissonWtOmp(const arma::mat &x, const arma::vec &y, arma::mat w);
+    arma::vec BinomialWtOmp(const arma::mat &x, const arma::vec &y, arma::mat w);
 #endif
-    void CalGLMModel(const mat& x, const vec& y);
+    void CalGLMModel(const arma::mat& x, const arma::vec& y);
     // todo: QStringLiteral 用法不确定
     void createResultLayer(std::initializer_list<CreateResultLayerData> items);
 
@@ -171,8 +171,8 @@ public:
     double getTol() const;
     size_t getMaxiter() const;
 
-    mat getWtMat1() const;
-    mat getWtMat2() const;
+    arma::mat getWtMat1() const;
+    arma::mat getWtMat2() const;
 
     GwmGGWRDiagnostic getDiagnostic() const;
     GwmGLMDiagnostic getGLMDiagnostic() const;
@@ -189,8 +189,8 @@ public:
     bool autoselectBandwidth() const;
     void setIsAutoselectBandwidth(bool value);
 
-    mat regressionData() const;
-    void setRegressionData(const mat &locations);
+    arma::mat regressionData() const;
+    void setRegressionData(const arma::mat &locations);
 
     bool hasHatMatrix() const;
     void setHasHatMatrix(bool value);
@@ -210,23 +210,23 @@ protected:
     bool mHasHatMatrix = true;
     bool mHasRegressionData = false;
 
-    mat mBetasSE;
+    arma::mat mBetasSE;
 
-    vec mShat;
-    mat mS;
+    arma::vec mShat;
+    arma::mat mS;
     double mGwDev;
 
-    mat mRegressionData;
+    arma::mat mRegressionData;
 
-    mat mWtMat1;
-    mat mWtMat2;
+    arma::mat mWtMat1;
+    arma::mat mWtMat2;
 
     GwmGGWRDiagnostic mDiagnostic;
     GwmGLMDiagnostic mGLMDiagnostic;
     CreateResultLayerData mResultList;
 
-    mat mWt2;
-    mat myAdj;
+    arma::mat mWt2;
+    arma::mat myAdj;
 
     double mLLik = 0;
 
@@ -263,12 +263,12 @@ inline size_t CGwmGGWR::getMaxiter() const
     return mMaxiter;
 }
 
-inline mat CGwmGGWR::getWtMat1() const
+inline arma::mat CGwmGGWR::getWtMat1() const
 {
     return mWtMat1;
 }
 
-inline mat CGwmGGWR::getWtMat2() const
+inline arma::mat CGwmGGWR::getWtMat2() const
 {
     return mWtMat2;
 }
@@ -318,12 +318,12 @@ inline void CGwmGGWR::setHasRegressionData(bool value)
 {
     mRegressionData = value;
 }
-inline mat CGwmGGWR::regressionData() const
+inline arma::mat CGwmGGWR::regressionData() const
 {
     return mRegressionData;
 }
 
-inline void CGwmGGWR::setRegressionData(const mat &locations)
+inline void CGwmGGWR::setRegressionData(const arma::mat &locations)
 {
     mRegressionData = locations;
 }
@@ -363,7 +363,7 @@ inline void CGwmGGWR::setOmpThreadNum(const int threadNum)
     mOmpThreadNum = threadNum;
 }
 
-// inline mat CGwmGGWR::fit(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qdiag, mat &S)
+// inline arma::mat CGwmGGWR::fit(const arma::mat &x, const arma::vec &y, arma::mat &betasSE, arma::vec &shat, arma::vec &qdiag, arma::mat &S)
 // {
 //     switch (type)
 //     {

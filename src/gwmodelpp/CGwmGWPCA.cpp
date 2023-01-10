@@ -1,5 +1,7 @@
 #include "CGwmGWPCA.h"
 
+using namespace arma;
+
 void CGwmGWPCA::run()
 {
     createDistanceParameter();

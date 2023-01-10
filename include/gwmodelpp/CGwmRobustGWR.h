@@ -11,13 +11,12 @@
 #include "IGwmParallelizable.h"
 #include "CGwmGWRBasic.h"
 
-using namespace arma;
 class CGwmRobustGWR : public CGwmGWRBasic
 {
 private:
-    typedef mat (CGwmRobustGWR::*RegressionHatmatrix)(const mat &, const vec &, mat &, vec &, vec &, mat &);
+    typedef arma::mat (CGwmRobustGWR::*RegressionHatmatrix)(const arma::mat &, const arma::vec &, arma::mat &, arma::vec &, arma::vec &, arma::mat &);
 
-    static GwmRegressionDiagnostic CalcDiagnostic(const mat &x, const vec &y, const mat &betas, const vec &shat);
+    static GwmRegressionDiagnostic CalcDiagnostic(const arma::mat &x, const arma::vec &y, const arma::mat &betas, const arma::vec &shat);
 
 public:
     CGwmRobustGWR();
@@ -28,30 +27,30 @@ public:
     void setFiltered(bool value);
 
 public: // Implement IGwmRegressionAnalysis
-    //mat regression(const mat &x, const vec &y) override;
-    mat predict(const mat& locations) override;
-    mat fit() override;
-    mat regressionHatmatrix(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qdiag, mat &S);
+    //arma::mat regression(const arma::mat &x, const arma::vec &y) override;
+    arma::mat predict(const arma::mat& locations) override;
+    arma::mat fit() override;
+    arma::mat regressionHatmatrix(const arma::mat &x, const arma::vec &y, arma::mat &betasSE, arma::vec &shat, arma::vec &qdiag, arma::mat &S);
 
 private:
-    //mat regressionHatmatrixSerial(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S);
-    //mat predictSerial(const mat& locations, const mat& x, const vec& y);
-    mat fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+    //arma::mat regressionHatmatrixSerial(const arma::mat &x, const arma::vec &y, arma::mat &betasSE, arma::vec &shat, arma::vec &qDiag, arma::mat &S);
+    //arma::mat predictSerial(const arma::mat& locations, const arma::mat& x, const arma::vec& y);
+    arma::mat fitSerial(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qDiag, arma::mat& S);
        
 #ifdef ENABLE_OPENMP
-    //mat predictOmp(const mat& locations, const mat& x, const vec& y);
-    mat fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+    //arma::mat predictOmp(const arma::mat& locations, const arma::mat& x, const arma::vec& y);
+    arma::mat fitOmp(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qDiag, arma::mat& S);
 #endif
 
 public: // Implement CGwmAlgorithm
     //void run();
 
 protected:
-    mat robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S);
+    arma::mat robustGWRCaliFirst(const arma::mat &x, const arma::vec &y, arma::mat &betasSE, arma::vec &shat, arma::vec &qDiag, arma::mat &S);
     // 第二种解法
-    mat robustGWRCaliSecond(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S);
+    arma::mat robustGWRCaliSecond(const arma::mat &x, const arma::vec &y, arma::mat &betasSE, arma::vec &shat, arma::vec &qDiag, arma::mat &S);
     // 计算二次权重函数
-    vec filtWeight(vec residual, double mse);
+    arma::vec filtWeight(arma::vec residual, double mse);
 
 public : // Implement IGwmParallelizable
     void setParallelType(const ParallelType &type) override;
@@ -62,8 +61,8 @@ protected:
 private:
     bool mFiltered;
 
-    mat mS;
-    vec mWeightMask;
+    arma::mat mS;
+    arma::vec mWeightMask;
     
     RegressionHatmatrix mfitFunction = &CGwmRobustGWR::fitSerial;
     

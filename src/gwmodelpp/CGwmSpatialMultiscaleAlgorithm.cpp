@@ -1,6 +1,7 @@
 #include "CGwmSpatialMultiscaleAlgorithm.h"
 
 using namespace std;
+using namespace arma;
 
 void CGwmSpatialMultiscaleAlgorithm::createDistanceParameter(size_t size)
 {

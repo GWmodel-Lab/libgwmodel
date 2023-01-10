@@ -16,8 +16,8 @@ public:
      */
     struct Parameter : public CGwmDistance::Parameter
     {
-        vec focusPoints;    //!< Matrix of focus points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
-        vec dataPoints;     //!< Matrix of data points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
+        arma::vec focusPoints;    //!< Matrix of focus points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
+        arma::vec dataPoints;     //!< Matrix of data points' coordinates. The shape of it must be nx2 and the first column is longitudes or x-coordinate, the second column is latitudes or y-coordinate.
 
         /**
          * @brief Construct a new OneDimDistanceParameter object.
@@ -25,7 +25,7 @@ public:
          * @param fp Reference to focus points.
          * @param dp Reference to data points.
          */
-        Parameter(const vec& fp, const vec& dp) : CGwmDistance::Parameter()
+        Parameter(const arma::vec& fp, const arma::vec& dp) : CGwmDistance::Parameter()
             , focusPoints(fp)
             , dataPoints(dp)
         {
@@ -40,11 +40,11 @@ public:
      * 
      * @param out_loc Matrix of focus point' coordinate. The shape of it must be 1x2 and the first column is longitudes, the second column is latitudes.
      * @param in_locs Matrix of data points' coordinates. The shape of it must be nx2 and the first column is longitudes, the second column is latitudes.
-     * @return vec Distance vector for out_loc.
+     * @return arma::vec Distance vector for out_loc.
      */
-    static vec AbstractDistance(const double& out_loc, const vec& in_locs)
+    static arma::vec AbstractDistance(const double& out_loc, const arma::vec& in_locs)
     {
-        // vec d = abs(in_locs - out_loc);
+        // arma::vec d = abs(in_locs - out_loc);
         // d.print("d");
         return abs(in_locs - out_loc);
     }
@@ -80,15 +80,15 @@ public:
      * @brief Create Parameter for Caclulating CRS Distance.
      * 
      * @param plist A list of parameters containing 2 items:
-     *  - `vec` focus coordinates (one column)
-     *  - `vec` data coordinates (one column)
+     *  - `arma::vec` focus coordinates (one column)
+     *  - `arma::vec` data coordinates (one column)
      *  .
      * 
      * @return DistanceParameter* The pointer to parameters.
      */
     virtual void makeParameter(std::initializer_list<DistParamVariant> plist) override;
 
-    virtual vec distance(uword focus) override;
+    virtual arma::vec distance(arma::uword focus) override;
     virtual double maxDistance() override;
     virtual double minDistance() override;
 

@@ -32,31 +32,31 @@ public:
 
     struct LoocvParams
     {
-        const mat* x;
-        const mat* y;
-        const uword polynomial;
-        const mat* Mx0;
-        const mat* My0;
+        const arma::mat* x;
+        const arma::mat* y;
+        const arma::uword polynomial;
+        const arma::mat* Mx0;
+        const arma::mat* My0;
     };
 
-    typedef std::tuple<std::string, mat, NameFormat> ResultLayerDataItem;
+    typedef std::tuple<std::string, arma::mat, NameFormat> ResultLayerDataItem;
 
-    static double Loocv(const vec& target, const mat& x, const vec& y, uword poly, const mat& Mx0, const mat& My0);
-    static double AICvalue(const vec& target, const mat& x, const vec& y, uword poly, const mat& Mx0, const mat& My0);
+    static double Loocv(const arma::vec& target, const arma::mat& x, const arma::vec& y, arma::uword poly, const arma::mat& Mx0, const arma::mat& My0);
+    static double AICvalue(const arma::vec& target, const arma::mat& x, const arma::vec& y, arma::uword poly, const arma::mat& Mx0, const arma::mat& My0);
 
 public:
     static size_t treeChildCount;
 
 private:
-    static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
+    static GwmRegressionDiagnostic CalcDiagnostic(const arma::mat& x, const arma::vec& y, const arma::mat& betas, const arma::vec& shat);
 
 public:
     CGwmScalableGWR(){};
     ~CGwmScalableGWR(){};
 
-    uword polynomial() const { return mPolynomial; }
+    arma::uword polynomial() const { return mPolynomial; }
 
-    void setPolynomial(uword polynomial) { mPolynomial = polynomial; }
+    void setPolynomial(arma::uword polynomial) { mPolynomial = polynomial; }
 
     double cv() const { return mCV; }
 
@@ -83,21 +83,21 @@ public:     // GwmSpatialAlgorithm interface
 
 
 public:     // IRegressionAnalysis interface
-    mat fit() override;
+    arma::mat fit() override;
 
-    mat predict(const mat& locations) override;
+    arma::mat predict(const arma::mat& locations) override;
 
 private:
     void findDataPointNeighbours();
-    mat findNeighbours(const mat& points, umat &nnIndex);
-    double optimize(const mat& Mx0, const mat& My0, double& b_tilde, double& alpha);
+    arma::mat findNeighbours(const arma::mat& points, arma::umat &nnIndex);
+    double optimize(const arma::mat& Mx0, const arma::mat& My0, double& b_tilde, double& alpha);
     void prepare();
 
-    mat fitSerial(const arma::mat &x, const arma::vec &y);
-    mat predictSerial(const mat& locations, const arma::mat& x, const arma::vec& y);
+    arma::mat fitSerial(const arma::mat &x, const arma::vec &y);
+    arma::mat predictSerial(const arma::mat& locations, const arma::mat& x, const arma::vec& y);
 
 private:
-    uword mPolynomial = 4;
+    arma::uword mPolynomial = 4;
     size_t mMaxIter = 500;
     double mCV = 0.0;
     double mScale = 1.0;
@@ -112,14 +112,14 @@ private:
     BandwidthSelectionCriterionType mParameterOptimizeCriterion = BandwidthSelectionCriterionType::CV;
     
 
-    mat mG0;
-    umat mDpNNIndex;
-    mat mDpNNDists;
-    mat mMx0;
-    mat mMxx0;
-    mat mMy0;
-    vec mShat;
-    mat mBetasSE;
+    arma::mat mG0;
+    arma::umat mDpNNIndex;
+    arma::mat mDpNNDists;
+    arma::mat mMx0;
+    arma::mat mMxx0;
+    arma::mat mMy0;
+    arma::vec mShat;
+    arma::mat mBetasSE;
 };
 
 #endif  // CGWMScalableGWR_H

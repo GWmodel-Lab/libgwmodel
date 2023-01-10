@@ -5,7 +5,6 @@
 #include <string>
 #include <armadillo>
 
-using namespace arma;
 
 /**
  * @brief Abstract base class for calculating weight from distance.
@@ -62,7 +61,7 @@ public:
      * @param dist According distance vector.
      * @return Weight vector.
      */
-    virtual vec weight(vec dist) = 0;
+    virtual arma::vec weight(arma::vec dist) = 0;
 };
 
 #endif // CGWMWEIGHT_H

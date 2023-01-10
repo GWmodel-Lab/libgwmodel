@@ -21,18 +21,18 @@ public:
 
     static std::unordered_map<BandwidthSelectionCriterionType, std::string> BandwidthSelectionCriterionTypeNameMapper;
     
-    typedef mat (CGwmGWRBasic::*PredictCalculator)(const mat&, const mat&, const vec&);
-    typedef mat (CGwmGWRBasic::*FitCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
+    typedef arma::mat (CGwmGWRBasic::*PredictCalculator)(const arma::mat&, const arma::mat&, const arma::vec&);
+    typedef arma::mat (CGwmGWRBasic::*FitCalculator)(const arma::mat&, const arma::vec&, arma::mat&, arma::vec&, arma::vec&, arma::mat&);
 
     typedef double (CGwmGWRBasic::*BandwidthSelectionCriterionCalculator)(CGwmBandwidthWeight*);
     typedef double (CGwmGWRBasic::*IndepVarsSelectCriterionCalculator)(const std::vector<size_t>&);
 
 private:
-    static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
+    static GwmRegressionDiagnostic CalcDiagnostic(const arma::mat& x, const arma::vec& y, const arma::mat& betas, const arma::vec& shat);
 
 public:
     CGwmGWRBasic() {}
-    CGwmGWRBasic(const mat& x, const vec& y, const mat& coords, const CGwmSpatialWeight& spatialWeight, bool hasHatMatrix = true, bool hasIntercept = true)
+    CGwmGWRBasic(const arma::mat& x, const arma::vec& y, const arma::mat& coords, const CGwmSpatialWeight& spatialWeight, bool hasHatMatrix = true, bool hasIntercept = true)
         : CGwmGWRBase(x, y, spatialWeight, coords)
     {
         mHasHatMatrix = hasHatMatrix;
@@ -78,17 +78,17 @@ public:     // Implement CGwmAlgorithm
     bool isValid() override;
 
 public:     // Implement IGwmRegressionAnalysis
-    mat predict(const mat& locations) override;
+    arma::mat predict(const arma::mat& locations) override;
 
-    mat fit() override;
+    arma::mat fit() override;
 
 private:
-    mat predictSerial(const mat& locations, const mat& x, const vec& y);
-    mat fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+    arma::mat predictSerial(const arma::mat& locations, const arma::mat& x, const arma::vec& y);
+    arma::mat fitSerial(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qDiag, arma::mat& S);
     
 #ifdef ENABLE_OPENMP
-    mat predictOmp(const mat& locations, const mat& x, const vec& y);
-    mat fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+    arma::mat predictOmp(const arma::mat& locations, const arma::mat& x, const arma::vec& y);
+    arma::mat fitOmp(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qDiag, arma::mat& S);
 #endif
 
 public:     // Implement IGwmBandwidthSelectable

@@ -36,7 +36,7 @@ public:
     static std::unordered_map<KernelFunctionType, std::string> KernelFunctionTypeNameMapper;
     static std::unordered_map<bool, std::string> BandwidthTypeNameMapper;
 
-    typedef vec (*KernelFunction)(vec, double);
+    typedef arma::vec (*KernelFunction)(arma::vec, double);
 
     static KernelFunction Kernel[];
 
@@ -47,7 +47,7 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static vec GaussianKernelFunction(vec dist, double bw)
+    static arma::vec GaussianKernelFunction(arma::vec dist, double bw)
     {
         return exp((dist % dist) / ((-2.0) * (bw * bw)));
     }
@@ -59,7 +59,7 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static vec ExponentialKernelFunction(vec dist, double bw)
+    static arma::vec ExponentialKernelFunction(arma::vec dist, double bw)
     {
         return exp(-dist / bw);
     }
@@ -71,9 +71,9 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static vec BisquareKernelFunction(vec dist, double bw)
+    static arma::vec BisquareKernelFunction(arma::vec dist, double bw)
     {
-        vec d2_d_b2 = 1.0 - (dist % dist) / (bw * bw);
+        arma::vec d2_d_b2 = 1.0 - (dist % dist) / (bw * bw);
         return (dist < bw) % (d2_d_b2 % d2_d_b2);
     }
     
@@ -84,9 +84,9 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static vec TricubeKernelFunction(vec dist, double bw)
+    static arma::vec TricubeKernelFunction(arma::vec dist, double bw)
     {
-        vec d3_d_b3 = 1.0 - (dist % dist % dist) / (bw * bw * bw);
+        arma::vec d3_d_b3 = 1.0 - (dist % dist % dist) / (bw * bw * bw);
         return (dist < bw) % (d3_d_b3 % d3_d_b3 % d3_d_b3);
     }
     
@@ -97,9 +97,9 @@ public:
      * @param bw Bandwidth size. The unit is equal to that of distance vector.
      * @return Weight value.
      */
-    static vec BoxcarKernelFunction(vec dist, double bw)
+    static arma::vec BoxcarKernelFunction(arma::vec dist, double bw)
     {
-        return (dist < bw) % vec(arma::size(dist), arma::fill::ones);
+        return (dist < bw) % arma::vec(arma::size(dist), arma::fill::ones);
     }
 
 public:
@@ -153,7 +153,7 @@ public:
     }
 
 public:
-    virtual vec weight(vec dist) override;
+    virtual arma::vec weight(arma::vec dist) override;
 
     /**
      * @brief Get the CGwmBandwidthWeight::mBandwidth object.

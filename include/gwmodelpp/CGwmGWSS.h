@@ -65,7 +65,7 @@ public:
      * @return weighted covariances 
      * \f[ cov(X_1,X_2) = \frac{\sum_{i=1}^n w_i(x_{1i} - \bar{x}_1) \sum_{i=1}^n w_i(x_{2i} - \bar{x}_2)}{1 - \sum_{i=1}^n w_i} \f]
      */
-    static double covwt(const mat &x1, const mat &x2, const vec &w)
+    static double covwt(const arma::mat &x1, const arma::mat &x2, const arma::vec &w)
     {
         return sum((sqrt(w) % (x1 - sum(x1 % w))) % (sqrt(w) % (x2 - sum(x2 % w)))) / (1 - sum(w % w));
     }
@@ -79,24 +79,24 @@ public:
      * @return weighted correlation 
      * \f[ corr(X_1,X_2) = \frac{cov(X_1,X_2)}{\sqrt{cov(X_1,X_1) cov(X_2,X_2)}} \f]
      */
-    static double corwt(const mat &x1, const mat &x2, const vec &w)
+    static double corwt(const arma::mat &x1, const arma::mat &x2, const arma::vec &w)
     {
         return covwt(x1,x2,w)/sqrt(covwt(x1,x1,w)*covwt(x2,x2,w));
     }
 
-    static vec del(vec x, uword rowcount);
+    static arma::vec del(arma::vec x, arma::uword rowcount);
 
-    static vec rank(vec x)
+    static arma::vec rank(arma::vec x)
     {
-        vec n = linspace(0.0, (double)x.n_rows - 1, x.n_rows);
-        vec res = n(sort_index(x));
+        arma::vec n = arma::linspace(0.0, (double)x.n_rows - 1, x.n_rows);
+        arma::vec res = n(sort_index(x));
         return n(sort_index(res)) + 1.0;
     }
 
     typedef void (CGwmGWSS::*SummaryCalculator)();
 
 protected:
-    static vec findq(const mat& x, const vec& w);
+    static arma::vec findq(const arma::mat& x, const arma::vec& w);
 
 public:
     
@@ -166,7 +166,7 @@ public:
      * The number of rows is the same as number of features. 
      * The number of columns is the same as number of fields, arranged in the same order as CGwmGWSS::mVariables.
      */
-    mat localMean() const { return mLocalMean; }
+    arma::mat localMean() const { return mLocalMean; }
     
     /**
      * @brief Get the CGwmGWSS::mStandardDev object. 
@@ -177,7 +177,7 @@ public:
      * The number of rows is the same as number of features. 
      * The number of columns is the same as number of fields, arranged in the same order as CGwmGWSS::mVariables.
      */
-    mat localSDev() const { return mStandardDev; }
+    arma::mat localSDev() const { return mStandardDev; }
     
     /**
      * @brief Get the CGwmGWSS::mLocalSkewness object. 
@@ -188,7 +188,7 @@ public:
      * The number of rows is the same as number of features. 
      * The number of columns is the same as number of fields, arranged in the same order as CGwmGWSS::mVariables.
      */
-    mat localSkewness() const { return mLocalSkewness; }
+    arma::mat localSkewness() const { return mLocalSkewness; }
     
     /**
      * @brief Get the CGwmGWSS::mLCV object. 
@@ -199,7 +199,7 @@ public:
      * The number of rows is the same as number of features. 
      * The number of columns is the same as number of fields, arranged in the same order as CGwmGWSS::mVariables.
      */
-    mat localCV() const { return mLCV; }
+    arma::mat localCV() const { return mLCV; }
     
     /**
      * @brief Get the CGwmGWSS::mLVar object. 
@@ -210,7 +210,7 @@ public:
      * The number of rows is the same as number of features. 
      * The number of columns is the same as number of fields, arranged in the same order as CGwmGWSS::mVariables.
      */
-    mat localVar() const { return mLVar; }
+    arma::mat localVar() const { return mLVar; }
 
     
     /**
@@ -222,7 +222,7 @@ public:
      * The number of rows is the same as number of features. 
      * The number of columns is the same as number of fields, arranged in the same order as CGwmGWSS::mVariables.
      */
-    mat localMedian() const { return mLocalMedian; }
+    arma::mat localMedian() const { return mLocalMedian; }
     
     /**
      * @brief Get the CGwmGWSS::mIQR object. 
@@ -233,7 +233,7 @@ public:
      * The number of rows is the same as number of features. 
      * The number of columns is the same as number of fields, arranged in the same order as CGwmGWSS::mVariables.
      */
-    mat iqr() const { return mIQR; }
+    arma::mat iqr() const { return mIQR; }
     
     /**
      * @brief Get the CGwmGWSS::mQI object. 
@@ -244,7 +244,7 @@ public:
      * The number of rows is the same as number of features. 
      * The number of columns is the same as number of fields, arranged in the same order as CGwmGWSS::mVariables.
      */
-    mat qi() const { return mQI; }
+    arma::mat qi() const { return mQI; }
 
     
     /**
@@ -259,7 +259,7 @@ public:
      * For variables \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$, the fields are arranged as: 
      * \f$cov(v_1,v_2), cov(v_1,v_3), ... , cov(v_1,v_k), cov(v_2,v_3), ... , cov(v_2,v_k), ... , cov(v_{k-1},vk)\f$
      */
-    mat localCov() const { return mCovmat; }
+    arma::mat localCov() const { return mCovmat; }
     
     /**
      * @brief Get the CGwmGWSS::mCorrmat object. 
@@ -273,7 +273,7 @@ public:
      * For variables \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$, the fields are arranged as: 
      * \f$corr(v_1,v_2), corr(v_1,v_3), ... , corr(v_1,v_k), corr(v_2,v_3), ... , corr(v_2,v_k), ... , corr(v_{k-1},vk)\f$
      */
-    mat localCorr() const { return mCorrmat; }
+    arma::mat localCorr() const { return mCorrmat; }
     
     /**
      * @brief Get the CGwmGWSS::mSCorrmat object. 
@@ -287,14 +287,14 @@ public:
      * For variables \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$, the fields are arranged as: 
      * \f$corr(v_1,v_2), corr(v_1,v_3), ... , corr(v_1,v_k), corr(v_2,v_3), ... , corr(v_2,v_k), ... , corr(v_{k-1},vk)\f$
      */
-    mat localSCorr() const { return mSCorrmat; }
+    arma::mat localSCorr() const { return mSCorrmat; }
 
 public:     // GwmSpatialAlgorithm interface
     bool isValid() override;
 
 public:     // IGwmMultivariableAnalysis
-    mat variables() const override { return mX; }
-    void setVariables(const mat& x) override { mX = x; }
+    arma::mat variables() const override { return mX; }
+    void setVariables(const arma::mat& x) override { mX = x; }
     void run() override;
 
 public:     // IGwmParallelizable
@@ -346,18 +346,18 @@ private:
     bool mQuantile = false;             //!< Indicator of whether calculate quantile statistics.
     bool mIsCorrWithFirstOnly = false;  //!< Indicator of whether calculate local correlations and covariances between the first variable and the other variables.
 
-    mat mX;             //!< Variable matrix.
-    mat mLocalMean;     //!< Local mean.
-    mat mStandardDev;   //!< Local standard deviation.
-    mat mLocalSkewness; //!< Local skewness.
-    mat mLCV;           //!< Local coefficients of variation.
-    mat mLVar;          //!< Local variance.
-    mat mLocalMedian;   //!< Local medians.
-    mat mIQR;           //!< Local interquartile ranges.
-    mat mQI;            //!< Local quantile imbalances and coordinates.
-    mat mCovmat;        //!< Local covariances.
-    mat mCorrmat;       //!< Local correlations (Pearson's).
-    mat mSCorrmat;      //!< Local correlations (Spearman's).
+    arma::mat mX;             //!< Variable matrix.
+    arma::mat mLocalMean;     //!< Local mean.
+    arma::mat mStandardDev;   //!< Local standard deviation.
+    arma::mat mLocalSkewness; //!< Local skewness.
+    arma::mat mLCV;           //!< Local coefficients of variation.
+    arma::mat mLVar;          //!< Local variance.
+    arma::mat mLocalMedian;   //!< Local medians.
+    arma::mat mIQR;           //!< Local interquartile ranges.
+    arma::mat mQI;            //!< Local quantile imbalances and coordinates.
+    arma::mat mCovmat;        //!< Local covariances.
+    arma::mat mCorrmat;       //!< Local correlations (Pearson's).
+    arma::mat mSCorrmat;      //!< Local correlations (Spearman's).
     
     SummaryCalculator mSummaryFunction = &CGwmGWSS::summarySerial;  //!< Summary function specified by CGwmGWSS::mParallelType.
     
