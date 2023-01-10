@@ -12,7 +12,6 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multimin.h>
 
-using namespace std;
 
 class CGwmScalableGWR : public CGwmGWRBase
 {
@@ -40,7 +39,7 @@ public:
         const mat* My0;
     };
 
-    typedef tuple<string, mat, NameFormat> ResultLayerDataItem;
+    typedef std::tuple<std::string, mat, NameFormat> ResultLayerDataItem;
 
     static double Loocv(const vec& target, const mat& x, const vec& y, uword poly, const mat& Mx0, const mat& My0);
     static double AICvalue(const vec& target, const mat& x, const vec& y, uword poly, const mat& Mx0, const mat& My0);

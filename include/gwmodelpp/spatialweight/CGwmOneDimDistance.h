@@ -86,14 +86,14 @@ public:
      * 
      * @return DistanceParameter* The pointer to parameters.
      */
-    virtual void makeParameter(initializer_list<DistParamVariant> plist) override;
+    virtual void makeParameter(std::initializer_list<DistParamVariant> plist) override;
 
     virtual vec distance(uword focus) override;
     virtual double maxDistance() override;
     virtual double minDistance() override;
 
 protected:
-    unique_ptr<Parameter> mParameter = nullptr;
+    std::unique_ptr<Parameter> mParameter = nullptr;
 };
 
 #endif // CGWMOneDimDISTANCE_H

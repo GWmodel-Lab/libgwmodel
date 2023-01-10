@@ -11,7 +11,6 @@
 #include "IGwmParallelizable.h"
 #include "CGwmGWRBasic.h"
 
-using namespace std;
 using namespace arma;
 class CGwmRobustGWR : public CGwmGWRBasic
 {

@@ -8,6 +8,7 @@
 #include <omp.h>
 #endif
 
+using namespace std;
 using namespace arma;
 
 size_t CGwmScalableGWR::treeChildCount = 0;

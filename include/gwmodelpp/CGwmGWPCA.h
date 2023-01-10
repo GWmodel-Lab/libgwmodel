@@ -8,7 +8,6 @@
 #include "IGwmMultivariableAnalysis.h"
 #include "IGwmParallelizable.h"
 
-using namespace std;
 
 class CGwmGWPCA: public CGwmSpatialMonoscaleAlgorithm, public IGwmMultivariableAnalysis
 {

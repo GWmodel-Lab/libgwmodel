@@ -133,7 +133,7 @@ public:
      * 
      * @return DistanceParameter* The pointer to parameters.
      */
-    virtual void makeParameter(initializer_list<DistParamVariant> plist) override;
+    virtual void makeParameter(std::initializer_list<DistParamVariant> plist) override;
 
     virtual vec distance(uword focus) override;
     virtual double maxDistance() override;
@@ -141,7 +141,7 @@ public:
 
 protected:
     bool mGeographic;
-    unique_ptr<Parameter> mParameter;
+    std::unique_ptr<Parameter> mParameter;
 
 private:
     CalculatorType mCalculator = &EuclideanDistance;

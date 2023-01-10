@@ -21,21 +21,21 @@ public:
         Initial,
         Specified
     };
-    static unordered_map<BandwidthInitilizeType,string> BandwidthInitilizeTypeNameMapper;
+    static std::unordered_map<BandwidthInitilizeType,std::string> BandwidthInitilizeTypeNameMapper;
 
     enum BandwidthSelectionCriterionType
     {
         CV,
         AIC
     };
-    static unordered_map<BandwidthSelectionCriterionType,string> BandwidthSelectionCriterionTypeNameMapper;
+    static std::unordered_map<BandwidthSelectionCriterionType,std::string> BandwidthSelectionCriterionTypeNameMapper;
 
     enum BackFittingCriterionType
     {
         CVR,
         dCVR
     };
-    static unordered_map<BackFittingCriterionType,string> BackFittingCriterionTypeNameMapper;
+    static std::unordered_map<BackFittingCriterionType,std::string> BackFittingCriterionTypeNameMapper;
 
     typedef double (CGwmMGWR::*BandwidthSizeCriterionFunction)(CGwmBandwidthWeight*);
     typedef mat (CGwmMGWR::*FitAllFunction)(const arma::mat&, const arma::vec&);
@@ -87,17 +87,17 @@ public:
 
 public:
 
-    vector<BandwidthInitilizeType> bandwidthInitilize() const { return CGwmMGWR::mBandwidthInitilize; }
-    void setBandwidthInitilize(const vector<BandwidthInitilizeType> &bandwidthInitilize);
+    std::vector<BandwidthInitilizeType> bandwidthInitilize() const { return CGwmMGWR::mBandwidthInitilize; }
+    void setBandwidthInitilize(const std::vector<BandwidthInitilizeType> &bandwidthInitilize);
 
-    vector<BandwidthSelectionCriterionType> bandwidthSelectionApproach() const { return CGwmMGWR::mBandwidthSelectionApproach; }
-    void setBandwidthSelectionApproach(const vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach);
+    std::vector<BandwidthSelectionCriterionType> bandwidthSelectionApproach() const { return CGwmMGWR::mBandwidthSelectionApproach; }
+    void setBandwidthSelectionApproach(const std::vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach);
 
-    vector<bool> preditorCentered() const { return mPreditorCentered; }
-    void setPreditorCentered(const vector<bool> &preditorCentered) { mPreditorCentered = preditorCentered; }
+    std::vector<bool> preditorCentered() const { return mPreditorCentered; }
+    void setPreditorCentered(const std::vector<bool> &preditorCentered) { mPreditorCentered = preditorCentered; }
 
-    vector<double> bandwidthSelectThreshold() const { return mBandwidthSelectThreshold; }
-    void setBandwidthSelectThreshold(const vector<double> &bandwidthSelectThreshold) { mBandwidthSelectThreshold = bandwidthSelectThreshold; }
+    std::vector<double> bandwidthSelectThreshold() const { return mBandwidthSelectThreshold; }
+    void setBandwidthSelectThreshold(const std::vector<double> &bandwidthSelectThreshold) { mBandwidthSelectThreshold = bandwidthSelectThreshold; }
 
     bool hasHatMatrix() const { return mHasHatMatrix; }
     void setHasHatMatrix(bool hasHatMatrix) { mHasHatMatrix = hasHatMatrix; }
@@ -124,7 +124,7 @@ public:
 
 
 public:     // GwmTaskThread interface
-    string name() const { return "Multiscale GWR"; }//override 
+    std::string name() const { return "Multiscale GWR"; }//override 
 
 
 public:     // GwmSpatialAlgorithm interface
@@ -132,7 +132,7 @@ public:     // GwmSpatialAlgorithm interface
 
 
 public:     // GwmSpatialMultiscaleAlgorithm interface
-    virtual void setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights) override;
+    virtual void setSpatialWeights(const std::vector<CGwmSpatialWeight> &spatialWeights) override;
 
 
 public:     // IBandwidthSizeSelectable interface
@@ -223,10 +223,10 @@ private:
     size_t mBandwidthSelectionCurrentIndex = 0;
 
 
-    vector<BandwidthInitilizeType> mBandwidthInitilize;
-    vector<BandwidthSelectionCriterionType> mBandwidthSelectionApproach;
-    vector<bool> mPreditorCentered;
-    vector<double> mBandwidthSelectThreshold;
+    std::vector<BandwidthInitilizeType> mBandwidthInitilize;
+    std::vector<BandwidthSelectionCriterionType> mBandwidthSelectionApproach;
+    std::vector<bool> mPreditorCentered;
+    std::vector<double> mBandwidthSelectThreshold;
     uword mBandwidthSelectRetryTimes = 5;
     size_t mMaxIteration = 500;
     BackFittingCriterionType mCriterionType = BackFittingCriterionType::dCVR;

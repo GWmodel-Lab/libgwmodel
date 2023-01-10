@@ -5,7 +5,6 @@
 #include <string>
 #include <armadillo>
 
-using namespace std;
 using namespace arma;
 
 /**
@@ -34,7 +33,7 @@ public:
         BandwidthWeight //!< Bandwidth weight
     };
 
-    static unordered_map<WeightType, string> TypeNameMapper;
+    static std::unordered_map<WeightType, std::string> TypeNameMapper;
 
 public:
 

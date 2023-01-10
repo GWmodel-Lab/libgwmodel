@@ -3,6 +3,8 @@
 
 #include <exception>
 
+using namespace std;
+
 
 CGwmOneDimDistance::CGwmOneDimDistance() : CGwmDistance()
 {

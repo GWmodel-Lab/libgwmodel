@@ -7,10 +7,9 @@
 #include <armadillo>
 #include <variant>
 
-using namespace std;
 using namespace arma;
 
-typedef variant<mat, vec, uword> DistParamVariant;
+typedef std::variant<mat, vec, uword> DistParamVariant;
 
 /**
  * @brief Abstract base class for calculating spatial distance.
@@ -60,7 +59,7 @@ public:
      * @brief A mapper between types of distance and its names.
      * 
      */
-    static unordered_map<DistanceType, string> TypeNameMapper;
+    static std::unordered_map<DistanceType, std::string> TypeNameMapper;
 
 public:
 
@@ -94,7 +93,7 @@ public:
      * 
      * @param plist A list of parameters. 
      */
-    virtual void makeParameter(initializer_list<DistParamVariant> plist) = 0;
+    virtual void makeParameter(std::initializer_list<DistParamVariant> plist) = 0;
 
     /**
      * @brief Calculate distance vector for a focus point. 

@@ -4,7 +4,6 @@
 #include <string>
 #include "CGwmDistance.h"
 
-using namespace std;
 
 /**
  * [NOT AVALIABLE]
@@ -24,7 +23,7 @@ public:
     };
 
 public:
-    explicit CGwmDMatDistance(string dmatFile);
+    explicit CGwmDMatDistance(std::string dmatFile);
     CGwmDMatDistance(const CGwmDMatDistance& distance);
 
     virtual CGwmDistance * clone() override
@@ -34,8 +33,8 @@ public:
 
     DistanceType type() override { return DistanceType::DMatDistance; }
 
-    string dMatFile() const;
-    void setDMatFile(const string &dMatFile);
+    std::string dMatFile() const;
+    void setDMatFile(const std::string &dMatFile);
 
 public:
 
@@ -49,23 +48,23 @@ public:
      * 
      * @return DistanceParameter* The pointer to parameters.
      */
-    virtual void makeParameter(initializer_list<DistParamVariant> plist) override;
+    virtual void makeParameter(std::initializer_list<DistParamVariant> plist) override;
     
     virtual vec distance(uword focus) override;
     virtual double maxDistance() override;
     virtual double minDistance() override;
 
 private:
-    string mDMatFile;
-    unique_ptr<Parameter> mParameter = nullptr;
+    std::string mDMatFile;
+    std::unique_ptr<Parameter> mParameter = nullptr;
 };
 
-inline string CGwmDMatDistance::dMatFile() const
+inline std::string CGwmDMatDistance::dMatFile() const
 {
     return mDMatFile;
 }
 
-inline void CGwmDMatDistance::setDMatFile(const string &dMatFile)
+inline void CGwmDMatDistance::setDMatFile(const std::string &dMatFile)
 {
     mDMatFile = dMatFile;
 }

@@ -26,9 +26,9 @@ public:
         AIC
     };
 
-    typedef double (CGwmGWDR::*BandwidthCriterionCalculator)(const vector<CGwmBandwidthWeight*>&);
+    typedef double (CGwmGWDR::*BandwidthCriterionCalculator)(const std::vector<CGwmBandwidthWeight*>&);
 
-    typedef double (CGwmGWDR::*IndepVarCriterionCalculator)(const vector<size_t>&);
+    typedef double (CGwmGWDR::*IndepVarCriterionCalculator)(const std::vector<std::size_t>&);
 
 public:
     static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
@@ -53,7 +53,7 @@ public:
 public:
     CGwmGWDR() {}
 
-    CGwmGWDR(const mat& x, const vec& y, const mat& coords, const vector<CGwmSpatialWeight>& spatialWeights, bool hasHatMatrix = true, bool hasIntercept = true)
+    CGwmGWDR(const mat& x, const vec& y, const mat& coords, const std::vector<CGwmSpatialWeight>& spatialWeights, bool hasHatMatrix = true, bool hasIntercept = true)
         : CGwmSpatialAlgorithm(coords)
     {
         mX = x;
@@ -72,9 +72,9 @@ public:
 
     void setHasHatMatrix(bool flag) { mHasHatMatrix = flag; }
 
-    vector<CGwmSpatialWeight> spatialWeights() { return mSpatialWeights; }
+    std::vector<CGwmSpatialWeight> spatialWeights() { return mSpatialWeights; }
 
-    void setSpatialWeights(vector<CGwmSpatialWeight> spatialWeights) { mSpatialWeights = spatialWeights; }
+    void setSpatialWeights(std::vector<CGwmSpatialWeight> spatialWeights) { mSpatialWeights = spatialWeights; }
 
     bool enableBandwidthOptimize() { return mEnableBandwidthOptimize; }
 
@@ -84,9 +84,9 @@ public:
 
     void setBandwidthOptimizeEps(double value) { mBandwidthOptimizeEps = value; }
 
-    size_t bandwidthOptimizeMaxIter() const { return mBandwidthOptimizeMaxIter; }
+    std::size_t bandwidthOptimizeMaxIter() const { return mBandwidthOptimizeMaxIter; }
 
-    void setBandwidthOptimizeMaxIter(size_t value) { mBandwidthOptimizeMaxIter = value; }
+    void setBandwidthOptimizeMaxIter(std::size_t value) { mBandwidthOptimizeMaxIter = value; }
 
     double bandwidthOptimizeStep() const { return mBandwidthOptimizeStep; }
 
@@ -130,7 +130,7 @@ public: // IGwmRegressionAnalysis
     virtual mat fit() override;
 
 public:  // IGwmVariableSelectable
-    double getCriterion(const vector<size_t>& variables) override
+    double getCriterion(const std::vector<std::size_t>& variables) override
     {
         return (this->*mIndepVarCriterionFunction)(variables);
     }
@@ -164,7 +164,7 @@ public:  // IGwmOpenmpParallelizable
 
 
 public:
-    double bandwidthCriterion(const vector<CGwmBandwidthWeight*>& bandwidths)
+    double bandwidthCriterion(const std::vector<CGwmBandwidthWeight*>& bandwidths)
     {
         return (this->*mBandwidthCriterionFunction)(bandwidths);
     }
@@ -175,14 +175,14 @@ protected:
     mat fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
     mat fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
 
-    double bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
-    double bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
-    double indepVarCriterionSerial(const vector<size_t>& indepVars);
+    double bandwidthCriterionAICSerial(const std::vector<CGwmBandwidthWeight*>& bandwidths);
+    double bandwidthCriterionCVSerial(const std::vector<CGwmBandwidthWeight*>& bandwidths);
+    double indepVarCriterionSerial(const std::vector<std::size_t>& indepVars);
 
 #ifdef ENABLE_OPENMP
-    double bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& bandwidths);
-    double bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& bandwidths);
-    double indepVarCriterionOmp(const vector<size_t>& indepVars);
+    double bandwidthCriterionAICOmp(const std::vector<CGwmBandwidthWeight*>& bandwidths);
+    double bandwidthCriterionCVOmp(const std::vector<CGwmBandwidthWeight*>& bandwidths);
+    double indepVarCriterionOmp(const std::vector<std::size_t>& indepVars);
 #endif
 
 private:
@@ -192,7 +192,7 @@ private:
     }
 
 private:
-    vector<CGwmSpatialWeight> mSpatialWeights;
+    std::vector<CGwmSpatialWeight> mSpatialWeights;
 
     vec mY;
     mat mX;
@@ -208,7 +208,7 @@ private:
     BandwidthCriterionType mBandwidthCriterionType = BandwidthCriterionType::CV;
     BandwidthCriterionCalculator mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionCVSerial;
     double mBandwidthOptimizeEps = 1e-6;
-    size_t mBandwidthOptimizeMaxIter = 100000;
+    std::size_t mBandwidthOptimizeMaxIter = 100000;
     double mBandwidthOptimizeStep = 0.01;
 
     bool mEnableIndepVarSelect = false;
@@ -233,22 +233,22 @@ public:
     struct Parameter
     {
         CGwmGWDR* instance;
-        vector<CGwmBandwidthWeight*>* bandwidths;
+        std::vector<CGwmBandwidthWeight*>* bandwidths;
         uword featureCount;
     };
 
     static double criterion_function(const gsl_vector* bws, void* params);
 
 public:
-    CGwmGWDRBandwidthOptimizer(vector<CGwmBandwidthWeight*> weights)
+    CGwmGWDRBandwidthOptimizer(std::vector<CGwmBandwidthWeight*> weights)
     {
         mBandwidths = weights;
     }
 
-    const int optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps, double step);
+    const int optimize(CGwmGWDR* instance, uword featureCount, std::size_t maxIter, double eps, double step);
 
 private:
-    vector<CGwmBandwidthWeight*> mBandwidths;
+    std::vector<CGwmBandwidthWeight*> mBandwidths;
 };
 
 #endif  // CGWMGWDR_H

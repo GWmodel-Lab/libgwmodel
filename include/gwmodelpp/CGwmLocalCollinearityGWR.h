@@ -11,7 +11,6 @@
 #include "IGwmParallelizable.h"
 #include <exception>
 
-using namespace std;
 
 class CGwmLocalCollinearityGWR : public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmOpenmpParallelizable
 {
@@ -29,7 +28,7 @@ public:
         SuffixVariable
     };
     
-    typedef tuple<string, mat, NameFormat> ResultLayerDataItem;
+    typedef std::tuple<std::string, mat, NameFormat> ResultLayerDataItem;
     typedef double (CGwmLocalCollinearityGWR::*BandwidthSelectionCriterionCalculator)(CGwmBandwidthWeight*);
     typedef mat (CGwmLocalCollinearityGWR::*PredictCalculator)(const mat&, const vec&);
 

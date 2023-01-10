@@ -7,8 +7,6 @@
 #include "IGwmBandwidthSelectable.h"
 #include "spatialweight/CGwmBandwidthWeight.h"
 
-using namespace std;
-
 class CGwmBandwidthSelector
 {
 public:
@@ -35,7 +33,7 @@ private:
     CGwmBandwidthWeight* mBandwidth;
     double mLower;
     double mUpper;
-    unordered_map<double, double> mBandwidthCriterion;
+    std::unordered_map<double, double> mBandwidthCriterion;
 };
 
 inline CGwmBandwidthWeight *CGwmBandwidthSelector::bandwidth() const

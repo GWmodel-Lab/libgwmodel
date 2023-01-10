@@ -19,7 +19,7 @@ public:
         CV
     };
 
-    static unordered_map<BandwidthSelectionCriterionType, string> BandwidthSelectionCriterionTypeNameMapper;
+    static std::unordered_map<BandwidthSelectionCriterionType, std::string> BandwidthSelectionCriterionTypeNameMapper;
     
     typedef mat (CGwmGWRBasic::*PredictCalculator)(const mat&, const mat&, const vec&);
     typedef mat (CGwmGWRBasic::*FitCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);

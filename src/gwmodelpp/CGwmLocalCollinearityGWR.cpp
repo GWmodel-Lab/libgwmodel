@@ -7,6 +7,7 @@
 #include <omp.h>
 #endif
 
+using namespace std;
 using namespace arma;
 
 GwmRegressionDiagnostic CGwmLocalCollinearityGWR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)

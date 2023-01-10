@@ -90,14 +90,14 @@ public:
         SuffixVariable
     };
 
-    static map<string, double> TolUnitDict;
+    static std::map<std::string, double> TolUnitDict;
     static void initTolUnitDict();
 
     typedef double (CGwmGGWR::*BandwidthSelectCriterionFunction)(CGwmBandwidthWeight *);
     typedef mat (CGwmGGWR::*GGWRfitFunction)(const mat& x, const vec& y);
     typedef vec (CGwmGGWR::*CalWtFunction)(const mat &x, const vec &y, mat w);
 
-    typedef tuple<string, mat, NameFormat> CreateResultLayerData;
+    typedef std::tuple<std::string, mat, NameFormat> CreateResultLayerData;
 
 public:
     CGwmGGWR(){};
@@ -157,7 +157,7 @@ protected:
 #endif
     void CalGLMModel(const mat& x, const vec& y);
     // todo: QStringLiteral 用法不确定
-    void createResultLayer(initializer_list<CreateResultLayerData> items);
+    void createResultLayer(std::initializer_list<CreateResultLayerData> items);
 
 private:
     double bandwidthSizeGGWRCriterionCVSerial(CGwmBandwidthWeight *bandwidthWeight);
@@ -178,8 +178,8 @@ public:
     GwmGLMDiagnostic getGLMDiagnostic() const;
 
     bool setFamily(Family family);
-    void setTol(double tol, string unit);
-    void setMaxiter(size_t maxiter);
+    void setTol(double tol, std::string unit);
+    void setMaxiter(std::size_t maxiter);
 
     void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
     BandwidthCriterionList bandwidthSelectorCriterions() const;
@@ -204,8 +204,8 @@ public:
 protected:
     Family mFamily;
     double mTol=1e-5;
-    string mTolUnit;
-    size_t mMaxiter=20;
+    std::string mTolUnit;
+    std::size_t mMaxiter=20;
 
     bool mHasHatMatrix = true;
     bool mHasRegressionData = false;
@@ -283,7 +283,7 @@ inline GwmGLMDiagnostic CGwmGGWR::getGLMDiagnostic() const
     return mGLMDiagnostic;
 }
 
-inline void CGwmGGWR::setTol(double tol, string unit)
+inline void CGwmGGWR::setTol(double tol, std::string unit)
 {
     mTolUnit = unit;
     mTol = double(tol) * TolUnitDict[unit];

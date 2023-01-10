@@ -5,7 +5,6 @@
 #include <string>
 #include "CGwmWeight.h"
 
-using namespace std;
 
 /**
  * @brief Class for calculating weight with a bandwidth.
@@ -34,8 +33,8 @@ public:
         Tricube,        // Call for tricube kernel CGwmBandwidthWeight::TricubeKernelFunction().
         Boxcar          // Call for boxcar kernel CGwmBandwidthWeight::BoxcarKernelFunction().
     };
-    static unordered_map<KernelFunctionType, string> KernelFunctionTypeNameMapper;
-    static unordered_map<bool, string> BandwidthTypeNameMapper;
+    static std::unordered_map<KernelFunctionType, std::string> KernelFunctionTypeNameMapper;
+    static std::unordered_map<bool, std::string> BandwidthTypeNameMapper;
 
     typedef vec (*KernelFunction)(vec, double);
 

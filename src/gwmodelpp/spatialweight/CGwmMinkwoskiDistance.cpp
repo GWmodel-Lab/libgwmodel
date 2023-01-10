@@ -1,6 +1,8 @@
 #include "gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h"
 #include <assert.h>
 
+using namespace std;
+
 CGwmMinkwoskiDistance::CGwmMinkwoskiDistance(double p, double theta) : CGwmCRSDistance(false)
 {
     mPoly = p;

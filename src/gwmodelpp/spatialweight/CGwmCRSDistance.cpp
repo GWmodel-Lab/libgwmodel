@@ -1,7 +1,8 @@
 #include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
 #include <assert.h>
-
 #include <exception>
+
+using namespace std;
 
 #define POWDI(x, i) pow(x, i)
 

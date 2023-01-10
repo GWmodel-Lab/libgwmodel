@@ -1,5 +1,7 @@
 #include "londonhp.h"
 
+using namespace std;
+
 bool read_londonhp(mat& coords, mat& data, vector<string>& fields)
 {
     field<std::string> coordHeader(2);
