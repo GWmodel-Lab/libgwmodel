@@ -3,6 +3,9 @@
 
 #include <exception>
 
+using namespace std;
+using namespace arma;
+
 
 CGwmOneDimDistance::CGwmOneDimDistance() : CGwmDistance()
 {

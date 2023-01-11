@@ -5,6 +5,8 @@
 #include <omp.h>
 #endif
 
+using namespace arma;
+
 vec CGwmGWSS::del(vec x, uword rowcount){
     vec res;
     if (rowcount == 0)

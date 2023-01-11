@@ -22,14 +22,14 @@ struct IGwmMultivariableAnalysis
      * 
      * @return Vector of variables.
      */
-    virtual mat variables() const = 0;
+    virtual arma::mat variables() const = 0;
 
     /**
      * @brief Set variables.
      * 
      * @param variables Vector of variables.
      */
-    virtual void setVariables(const mat& x) = 0;
+    virtual void setVariables(const arma::mat& x) = 0;
 
     /**
      * @brief Run analysis algorithm.

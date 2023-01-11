@@ -48,7 +48,7 @@ public:
      * 
      * @return Spatial weight configuration object.
      */
-    const vector<CGwmSpatialWeight>& spatialWeights() const;
+    const std::vector<CGwmSpatialWeight>& spatialWeights() const;
 
     /**
      * @brief Set the spatial weight configuration.
@@ -59,20 +59,20 @@ public:
      * 
      * @param spatialWeights Reference of spatial weight configuration object.
      */
-    virtual void setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights);
+    virtual void setSpatialWeights(const std::vector<CGwmSpatialWeight> &spatialWeights);
     
     void createDistanceParameter(size_t size);
 
 protected:
-    vector<CGwmSpatialWeight> mSpatialWeights;   //!< Spatial weight configuration.
+    std::vector<CGwmSpatialWeight> mSpatialWeights;   //!< Spatial weight configuration.
 };
 
-inline const vector<CGwmSpatialWeight>& CGwmSpatialMultiscaleAlgorithm::spatialWeights() const
+inline const std::vector<CGwmSpatialWeight>& CGwmSpatialMultiscaleAlgorithm::spatialWeights() const
 {
     return mSpatialWeights;
 }
 
-inline void CGwmSpatialMultiscaleAlgorithm::setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights)
+inline void CGwmSpatialMultiscaleAlgorithm::setSpatialWeights(const std::vector<CGwmSpatialWeight> &spatialWeights)
 {
     mSpatialWeights = spatialWeights;
 }

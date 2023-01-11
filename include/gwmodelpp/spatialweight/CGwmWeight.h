@@ -5,8 +5,6 @@
 #include <string>
 #include <armadillo>
 
-using namespace std;
-using namespace arma;
 
 /**
  * @brief Abstract base class for calculating weight from distance.
@@ -34,7 +32,7 @@ public:
         BandwidthWeight //!< Bandwidth weight
     };
 
-    static unordered_map<WeightType, string> TypeNameMapper;
+    static std::unordered_map<WeightType, std::string> TypeNameMapper;
 
 public:
 
@@ -63,7 +61,7 @@ public:
      * @param dist According distance vector.
      * @return Weight vector.
      */
-    virtual vec weight(vec dist) = 0;
+    virtual arma::vec weight(arma::vec dist) = 0;
 };
 
 #endif // CGWMWEIGHT_H

@@ -2,7 +2,4 @@
 #include <string>
 #include <armadillo>
 
-using namespace std;
-using namespace arma;
-
-bool read_londonhp(mat& coords, mat& data, vector<string>& fields);
+bool read_londonhp(arma::mat& coords, arma::mat& data, std::vector<std::string>& fields);

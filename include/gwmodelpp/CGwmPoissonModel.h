@@ -9,27 +9,27 @@ public:
     CGwmPoissonModel();
 
 public:
-    mat mMuStart;
-    mat mY;
-    mat mWeight;
+    arma::mat mMuStart;
+    arma::mat mY;
+    arma::mat mWeight;
 
 public:
-    mat initialize() override;
-    mat variance(mat mu) override;
-    mat linkinv(mat eta) override;
-    vec devResids(mat y,mat mu,mat weights) override;
-    double aic(mat y,mat n,mat mu,mat wt) override;
-    mat muEta(mat eta) override;
-    bool valideta(mat eta) override;
-    bool validmu(mat mu) override;
-    mat linkfun(mat muStart) override;
+    arma::mat initialize() override;
+    arma::mat variance(arma::mat mu) override;
+    arma::mat linkinv(arma::mat eta) override;
+    arma::vec devResids(arma::mat y,arma::mat mu,arma::mat weights) override;
+    double aic(arma::mat y,arma::mat n,arma::mat mu,arma::mat wt) override;
+    arma::mat muEta(arma::mat eta) override;
+    bool valideta(arma::mat eta) override;
+    bool validmu(arma::mat mu) override;
+    arma::mat linkfun(arma::mat muStart) override;
 
-    mat muStart() override;
-    mat weights() override;
-    mat getY() override;
-    bool setMuStart(mat muStart) override;
-    bool setY(mat y) override;
-    bool setWeight(mat weight) override;
+    arma::mat muStart() override;
+    arma::mat weights() override;
+    arma::mat getY() override;
+    bool setMuStart(arma::mat muStart) override;
+    bool setY(arma::mat y) override;
+    bool setWeight(arma::mat weight) override;
 };
 
 #endif // GWMPOISSONMODEL_H

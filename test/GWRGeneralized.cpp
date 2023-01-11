@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp/CGwmGGWR.h"
+#include "gwmodelpp/CGwmGWRGeneralized.h"
 #include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
 #include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
 #include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
@@ -31,7 +31,7 @@ TEST_CASE("GGWR: basic flow")
     CGwmBandwidthWeight bandwidth(27, true, CGwmBandwidthWeight::Gaussian);
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
-    CGwmGGWR algorithm;
+    CGwmGWRGeneralized algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -39,7 +39,7 @@ TEST_CASE("GGWR: basic flow")
     algorithm.setHasHatMatrix(true);
     REQUIRE_NOTHROW(algorithm.fit());
 
-    GwmGGWRDiagnostic diagnostic = algorithm.getDiagnostic();
+    GwmGWRGeneralizedDiagnostic diagnostic = algorithm.getDiagnostic();
     /*REQUIRE_THAT(diagnostic.RSS, Catch::Matchers::WithinAbs(942063.05166298, 1e-5));
     REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(942081.2250579, 1e-5));
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(942083.26379446, 1e-5));
@@ -63,7 +63,7 @@ TEST_CASE("GGWR: adaptive bandwidth autoselection of with AIC")
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmGGWR algorithm;
+    CGwmGWRGeneralized algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -71,14 +71,14 @@ TEST_CASE("GGWR: adaptive bandwidth autoselection of with AIC")
     algorithm.setHasHatMatrix(true);
 
     algorithm.setIsAutoselectBandwidth(true);
-    algorithm.setBandwidthSelectionCriterionType(CGwmGGWR::BandwidthSelectionCriterionType::AIC);
+    algorithm.setBandwidthSelectionCriterionType(CGwmGWRGeneralized::BandwidthSelectionCriterionType::AIC);
     
     REQUIRE_NOTHROW(algorithm.fit());
 
     size_t bw = (size_t)algorithm.spatialWeight().weight<CGwmBandwidthWeight>()->bandwidth();
     REQUIRE(bw == 21);
 
-    GwmGGWRDiagnostic diagnostic = algorithm.getDiagnostic();
+    GwmGWRGeneralizedDiagnostic diagnostic = algorithm.getDiagnostic();
     /*REQUIRE_THAT(diagnostic.RSS, Catch::Matchers::WithinAbs(893682.63762606, 1e-5));
     REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(893704.45041084, 1e-5));
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(893707.39854274, 1e-5));
@@ -102,13 +102,13 @@ TEST_CASE("GGWR: adaptive bandwidth autoselection and with binomial")
     vec y = londonhp_data.col(13);
     mat x = join_rows(ones(londonhp_coord.n_rows), londonhp_data.cols(1,1));
 
-    CGwmGGWR algorithm;
+    CGwmGWRGeneralized algorithm;
     algorithm.setCoords(londonhp_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeight(spatial);
     algorithm.setHasHatMatrix(true);
-    algorithm.setFamily(CGwmGGWR::Family::Binomial);
+    algorithm.setFamily(CGwmGWRGeneralized::Family::Binomial);
     algorithm.setIsAutoselectBandwidth(true);
     
     REQUIRE_NOTHROW(algorithm.fit());
@@ -118,7 +118,7 @@ TEST_CASE("GGWR: adaptive bandwidth autoselection and with binomial")
     
     REQUIRE_NOTHROW(algorithm.fit());
 
-    GwmGGWRDiagnostic diagnostic = algorithm.getDiagnostic();
+    GwmGWRGeneralizedDiagnostic diagnostic = algorithm.getDiagnostic();
     REQUIRE_THAT(diagnostic.RSS, Catch::Matchers::WithinAbs(149.496688455, 1e-5));
     REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(154.56992046, 1e-5));
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(154.62734183, 1e-5));
@@ -143,23 +143,23 @@ TEST_CASE("GGWR: multithread basic flow")
     CGwmBandwidthWeight bandwidth(27, true, CGwmBandwidthWeight::Gaussian);
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
-    CGwmGGWR algorithm;
+    CGwmGWRGeneralized algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeight(spatial);
     algorithm.setHasHatMatrix(true);
     algorithm.setIsAutoselectBandwidth(true);
-    algorithm.setBandwidthSelectionCriterionType(CGwmGGWR::BandwidthSelectionCriterionType::CV);
+    algorithm.setBandwidthSelectionCriterionType(CGwmGWRGeneralized::BandwidthSelectionCriterionType::CV);
     algorithm.setParallelType(ParallelType::OpenMP);
     algorithm.setOmpThreadNum(6);
-    algorithm.setFamily(CGwmGGWR::Family::Poisson);
+    algorithm.setFamily(CGwmGWRGeneralized::Family::Poisson);
     REQUIRE_NOTHROW(algorithm.fit());
 
     double bw = algorithm.spatialWeight().weight<CGwmBandwidthWeight>()->bandwidth();
     REQUIRE(bw == 27.0);
 
-    GwmGGWRDiagnostic diagnostic = algorithm.getDiagnostic();
+    GwmGWRGeneralizedDiagnostic diagnostic = algorithm.getDiagnostic();
     /*REQUIRE_THAT(diagnostic.RSS, Catch::Matchers::WithinAbs(942063.05166298, 1e-5));
     REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(942081.2250579, 1e-5));
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(942083.26379446, 1e-5));

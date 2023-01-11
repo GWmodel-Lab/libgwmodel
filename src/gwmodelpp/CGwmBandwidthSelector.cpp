@@ -1,5 +1,7 @@
 #include "CGwmBandwidthSelector.h"
 
+using namespace std;
+
 CGwmBandwidthWeight* CGwmBandwidthSelector::optimize(IGwmBandwidthSelectable* instance)
 {
     CGwmBandwidthWeight* w1 = static_cast<CGwmBandwidthWeight*>(mBandwidth->clone());

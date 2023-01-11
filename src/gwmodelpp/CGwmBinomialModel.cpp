@@ -1,6 +1,8 @@
 #include "CGwmBinomialModel.h"
 //#include "GWmodel.h"
-#include "CGwmGGWR.h"
+#include "CGwmGWRGeneralized.h"
+
+using namespace arma;
 
 CGwmBinomialModel::CGwmBinomialModel()
 {
@@ -76,7 +78,7 @@ double CGwmBinomialModel::aic(mat y, mat n, mat mu, mat wt){
             wi[i] = 0;
         }
     }
-    vec temp = wi % CGwmGGWR::dbinom(round(m % y), round(m), mu);
+    vec temp = wi % CGwmGWRGeneralized::dbinom(round(m % y), round(m), mu);
     return -2 * sum(temp);
 }
 

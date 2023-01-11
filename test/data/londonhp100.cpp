@@ -1,5 +1,8 @@
 #include "londonhp100.h"
 
+using namespace std;
+using namespace arma;
+
 bool read_londonhp100(mat& coords, mat& data, vector<string>& fields)
 {
     field<std::string> coordHeader(2);

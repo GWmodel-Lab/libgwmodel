@@ -1,4 +1,4 @@
-#include "CGwmLocalCollinearityGWR.h"
+#include "CGwmGWRLocalCollinearity.h"
 #include "CGwmBandwidthSelector.h"
 #include "CGwmVariableForwardSelector.h"
 #include <assert.h>
@@ -7,9 +7,10 @@
 #include <omp.h>
 #endif
 
+using namespace std;
 using namespace arma;
 
-GwmRegressionDiagnostic CGwmLocalCollinearityGWR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
+GwmRegressionDiagnostic CGwmGWRLocalCollinearity::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
     vec r = y - sum(betas % x, 1);
     double rss = sum(r % r);
@@ -24,17 +25,17 @@ GwmRegressionDiagnostic CGwmLocalCollinearityGWR::CalcDiagnostic(const mat& x, c
     return { rss, AIC, AICc, enp, edf, r2, r2_adj };
 }
 
-CGwmLocalCollinearityGWR::CGwmLocalCollinearityGWR()
+CGwmGWRLocalCollinearity::CGwmGWRLocalCollinearity()
 {
 
 }
 
-CGwmLocalCollinearityGWR::~CGwmLocalCollinearityGWR()
+CGwmGWRLocalCollinearity::~CGwmGWRLocalCollinearity()
 {
 
 }
 
-mat CGwmLocalCollinearityGWR::fit()
+mat CGwmGWRLocalCollinearity::fit()
 {
     createDistanceParameter();
 
@@ -84,7 +85,7 @@ mat CGwmLocalCollinearityGWR::fit()
 }
 
 
-void CGwmLocalCollinearityGWR::setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion)
+void CGwmGWRLocalCollinearity::setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion)
 {
     //setBandwidthSelectionCriterionType
     mBandwidthSelectionCriterion = criterion;
@@ -93,17 +94,17 @@ void CGwmLocalCollinearityGWR::setBandwidthSelectionCriterion(const BandwidthSel
     {
     case BandwidthSelectionCriterionType::CV:
         mapper = {
-            make_pair(ParallelType::SerialOnly, &CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVSerial),
+            make_pair(ParallelType::SerialOnly, &CGwmGWRLocalCollinearity::bandwidthSizeCriterionCVSerial),
 #ifdef ENABLE_OPENMP
-            make_pair(ParallelType::OpenMP, &CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVOmp)
+            make_pair(ParallelType::OpenMP, &CGwmGWRLocalCollinearity::bandwidthSizeCriterionCVOmp)
 #endif
         };
         break;
     default:
         mapper = {
-            make_pair(ParallelType::SerialOnly, &CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVSerial),
+            make_pair(ParallelType::SerialOnly, &CGwmGWRLocalCollinearity::bandwidthSizeCriterionCVSerial),
 #ifdef ENABLE_OPENMP
-            make_pair(ParallelType::OpenMP, &CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVOmp)
+            make_pair(ParallelType::OpenMP, &CGwmGWRLocalCollinearity::bandwidthSizeCriterionCVOmp)
 #endif
         };
         break;
@@ -111,7 +112,7 @@ void CGwmLocalCollinearityGWR::setBandwidthSelectionCriterion(const BandwidthSel
     mBandwidthSelectionCriterionFunction = mapper[mParallelType];
 }
 
-vec CGwmLocalCollinearityGWR::ridgelm(const vec& w,double lambda)
+vec CGwmGWRLocalCollinearity::ridgelm(const vec& w,double lambda)
 {
     //to be done
     //ridgelm
@@ -144,29 +145,29 @@ vec CGwmLocalCollinearityGWR::ridgelm(const vec& w,double lambda)
     return resultb;
 }
 
-void CGwmLocalCollinearityGWR::setParallelType(const ParallelType& type)
+void CGwmGWRLocalCollinearity::setParallelType(const ParallelType& type)
 {
     if (type & parallelAbility())
     {
         mParallelType = type;
         switch (type) {
         case ParallelType::SerialOnly:
-            mPredictFunction = &CGwmLocalCollinearityGWR::predictSerial;
+            mPredictFunction = &CGwmGWRLocalCollinearity::predictSerial;
             break;
 #ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
-            mPredictFunction = &CGwmLocalCollinearityGWR::predictOmp;
+            mPredictFunction = &CGwmGWRLocalCollinearity::predictOmp;
             break;
 #endif
         default:
-            mPredictFunction = &CGwmLocalCollinearityGWR::predictSerial;
+            mPredictFunction = &CGwmGWRLocalCollinearity::predictSerial;
             break;
         }
     }
     setBandwidthSelectionCriterion(mBandwidthSelectionCriterion);
 }
 
-double CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwidthWeight)
+double CGwmGWRLocalCollinearity::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwidthWeight)
 {
     //行数
     uword n = mX.n_rows;
@@ -230,7 +231,7 @@ double CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVSerial(CGwmBandwidthWei
 }
 
 #ifdef ENABLE_OPENMP
-double CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthWeight)
+double CGwmGWRLocalCollinearity::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthWeight)
 {
     //行数
     uword n = mX.n_rows;
@@ -293,7 +294,7 @@ double CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight
 }
 #endif
 
-mat CGwmLocalCollinearityGWR::predictSerial(const mat& x, const vec& y)
+mat CGwmGWRLocalCollinearity::predictSerial(const mat& x, const vec& y)
 {
     uword nRp = mHasPredict ? mPredictData.n_rows : mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nRp, nVar, fill::zeros);
@@ -344,7 +345,7 @@ mat CGwmLocalCollinearityGWR::predictSerial(const mat& x, const vec& y)
 }
 
 #ifdef ENABLE_OPENMP
-mat CGwmLocalCollinearityGWR::predictOmp(const mat& x, const vec& y)
+mat CGwmGWRLocalCollinearity::predictOmp(const mat& x, const vec& y)
 {
     uword nRp = mHasPredict? mPredictData.n_rows : mCoords.n_rows, nVar = mX.size() + 1;
     mat betas(nRp, nVar, fill::zeros);

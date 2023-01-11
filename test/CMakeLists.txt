@@ -23,11 +23,11 @@ set(SAMPL_LONDONHP100 ${CMAKE_CURRENT_SOURCE_DIR}/data/londonhp100.cpp)
 add_definitions(-DSAMPLE_DATA_DIR="${SAMPLE_DATA_DIR}")
 set(SAMPL_LONDONHP ${CMAKE_CURRENT_SOURCE_DIR}/data/londonhp.cpp)
 
-add_executable(testBasicGWR BasicGWR.cpp ${SAMPL_LONDONHP100})
-target_link_libraries(testBasicGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRBasic GWRBasic.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testGWRBasic PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
-    NAME testBasicGWR 
-    COMMAND $<TARGET_FILE:testBasicGWR> --success
+    NAME testGWRBasic 
+    COMMAND $<TARGET_FILE:testGWRBasic> --success
 )
 
 add_executable(testGWSS GWSS.cpp ${SAMPL_LONDONHP100})
@@ -51,11 +51,11 @@ add_test(
     COMMAND $<TARGET_FILE:testGWDR> --success
 )
 
-add_executable(testMGWR MGWR.cpp ${SAMPL_LONDONHP100})
-target_link_libraries(testMGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRMultiscale GWRMultiscale.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testGWRMultiscale PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
-    NAME testMGWR 
-    COMMAND $<TARGET_FILE:testMGWR> --success
+    NAME testGWRMultiscale 
+    COMMAND $<TARGET_FILE:testGWRMultiscale> --success
 )
 
 add_executable(testLogger Logger.cpp ${SAMPL_LONDONHP100})
@@ -65,30 +65,30 @@ add_test(
     COMMAND $<TARGET_FILE:testLogger> --success
 )
 
-add_executable(testRobustGWR RobustGWR.cpp ${SAMPL_LONDONHP100})
-target_link_libraries(testRobustGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRRobust GWRRobust.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testGWRRobust PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
-    NAME testRobustGWR 
-    COMMAND $<TARGET_FILE:testRobustGWR> --success
+    NAME testGWRRobust 
+    COMMAND $<TARGET_FILE:testGWRRobust> --success
 )
 
-add_executable(testGGWR GGWR.cpp ${SAMPL_LONDONHP100} ${SAMPL_LONDONHP})
-target_link_libraries(testGGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRGeneralized GWRGeneralized.cpp ${SAMPL_LONDONHP100} ${SAMPL_LONDONHP})
+target_link_libraries(testGWRGeneralized PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
-    NAME testGGWR 
-    COMMAND $<TARGET_FILE:testGGWR> --success
+    NAME testGWRGeneralized 
+    COMMAND $<TARGET_FILE:testGWRGeneralized> --success
 )
 
-add_executable(testScalableGWR ScalableGWR.cpp ${SAMPL_LONDONHP100})
-target_link_libraries(testScalableGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRScalable GWRScalable.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testGWRScalable PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
-    NAME testScalableGWR 
-    COMMAND $<TARGET_FILE:testScalableGWR> --success
+    NAME testGWRScalable 
+    COMMAND $<TARGET_FILE:testGWRScalable> --success
 )
 
-add_executable(testLocalCollinearityGWR LocalCollinearityGWR.cpp ${SAMPL_LONDONHP100})
-target_link_libraries(testLocalCollinearityGWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRLocalCollinearity GWRLocalCollinearity.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testGWRLocalCollinearity PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
-    NAME testLocalCollinearityGWR 
-    COMMAND $<TARGET_FILE:testLocalCollinearityGWR> --success
+    NAME testGWRLocalCollinearity 
+    COMMAND $<TARGET_FILE:testGWRLocalCollinearity> --success
 )

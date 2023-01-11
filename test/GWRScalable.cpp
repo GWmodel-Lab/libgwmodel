@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp/CGwmScalableGWR.h"
+#include "gwmodelpp/CGwmGWRScalable.h"
 #include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
 #include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
 #include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
@@ -28,14 +28,14 @@ TEST_CASE("ScalableGWR: basic flow")
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmScalableGWR algorithm;
+    CGwmGWRScalable algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeight(spatial);
     algorithm.setPolynomial(4);
     algorithm.setHasHatMatrix(true);
-    algorithm.setParameterOptimizeCriterion(CGwmScalableGWR::BandwidthSelectionCriterionType::CV);
+    algorithm.setParameterOptimizeCriterion(CGwmGWRScalable::BandwidthSelectionCriterionType::CV);
     //algorithm.setPolynomial();
     REQUIRE_NOTHROW(algorithm.fit());
 
@@ -64,7 +64,7 @@ TEST_CASE("ScalableGWR:  bandwidth  of with AIC")
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmScalableGWR algorithm;
+    CGwmGWRScalable algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -72,7 +72,7 @@ TEST_CASE("ScalableGWR:  bandwidth  of with AIC")
     algorithm.setHasHatMatrix(true);
 
     //algorithm.setIsAutoselectBandwidth(true);
-    algorithm.setParameterOptimizeCriterion(CGwmScalableGWR::BandwidthSelectionCriterionType::AIC);
+    algorithm.setParameterOptimizeCriterion(CGwmGWRScalable::BandwidthSelectionCriterionType::AIC);
     
     REQUIRE_NOTHROW(algorithm.fit());
 
@@ -102,7 +102,7 @@ TEST_CASE("ScableGWR:  autoselection with CV")
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmScalableGWR algorithm;
+    CGwmGWRScalable algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);

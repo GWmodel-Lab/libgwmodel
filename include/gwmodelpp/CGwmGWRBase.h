@@ -7,21 +7,21 @@
 class CGwmGWRBase : public CGwmSpatialMonoscaleAlgorithm, public IGwmRegressionAnalysis
 {
 public:
-    static vec Fitted(const mat& x, const mat& betas)
+    static arma::vec Fitted(const arma::mat& x, const arma::mat& betas)
     {
         return sum(betas % x, 1);
     }
 
-    static double RSS(const mat& x, const mat& y, const mat& betas)
+    static double RSS(const arma::mat& x, const arma::mat& y, const arma::mat& betas)
     {
-        vec r = y - Fitted(x, betas);
+        arma::vec r = y - Fitted(x, betas);
         return sum(r % r);
     }
 
-    static double AICc(const mat& x, const mat& y, const mat& betas, const vec& shat)
+    static double AICc(const arma::mat& x, const arma::mat& y, const arma::mat& betas, const arma::vec& shat)
     {
         double ss = RSS(x, y, betas), n = (double)x.n_rows;
-        return n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
+        return n * log(ss / n) + n * log(2 * arma::datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
     }
 
 public:

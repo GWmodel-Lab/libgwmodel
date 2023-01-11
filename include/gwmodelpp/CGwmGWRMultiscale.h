@@ -12,7 +12,7 @@
 #include "IGwmParallelizable.h"
 
 
-class CGwmMGWR : public CGwmSpatialMultiscaleAlgorithm, public IGwmBandwidthSelectable,public IGwmOpenmpParallelizable,public IGwmRegressionAnalysis 
+class CGwmGWRMultiscale : public CGwmSpatialMultiscaleAlgorithm, public IGwmBandwidthSelectable,public IGwmOpenmpParallelizable,public IGwmRegressionAnalysis 
 {
 public:
     enum BandwidthInitilizeType
@@ -21,50 +21,50 @@ public:
         Initial,
         Specified
     };
-    static unordered_map<BandwidthInitilizeType,string> BandwidthInitilizeTypeNameMapper;
+    static std::unordered_map<BandwidthInitilizeType,std::string> BandwidthInitilizeTypeNameMapper;
 
     enum BandwidthSelectionCriterionType
     {
         CV,
         AIC
     };
-    static unordered_map<BandwidthSelectionCriterionType,string> BandwidthSelectionCriterionTypeNameMapper;
+    static std::unordered_map<BandwidthSelectionCriterionType,std::string> BandwidthSelectionCriterionTypeNameMapper;
 
     enum BackFittingCriterionType
     {
         CVR,
         dCVR
     };
-    static unordered_map<BackFittingCriterionType,string> BackFittingCriterionTypeNameMapper;
+    static std::unordered_map<BackFittingCriterionType,std::string> BackFittingCriterionTypeNameMapper;
 
-    typedef double (CGwmMGWR::*BandwidthSizeCriterionFunction)(CGwmBandwidthWeight*);
-    typedef mat (CGwmMGWR::*FitAllFunction)(const arma::mat&, const arma::vec&);
-    typedef vec (CGwmMGWR::*FitVarFunction)(const arma::vec&, const arma::vec&, const arma::uword, mat&);
-    typedef mat (CGwmMGWR::*FitCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
+    typedef double (CGwmGWRMultiscale::*BandwidthSizeCriterionFunction)(CGwmBandwidthWeight*);
+    typedef arma::mat (CGwmGWRMultiscale::*FitAllFunction)(const arma::mat&, const arma::vec&);
+    typedef arma::vec (CGwmGWRMultiscale::*FitVarFunction)(const arma::vec&, const arma::vec&, const arma::uword, arma::mat&);
+    typedef arma::mat (CGwmGWRMultiscale::*FitCalculator)(const arma::mat&, const arma::vec&, arma::mat&, arma::vec&, arma::vec&, arma::mat&);
 
 private:
-    static vec Fitted(const mat& x, const mat& betas)
+    static arma::vec Fitted(const arma::mat& x, const arma::mat& betas)
     {
         return sum(betas % x, 1);
     }
 
-    static double RSS(const mat& x, const mat& y, const mat& betas)
+    static double RSS(const arma::mat& x, const arma::mat& y, const arma::mat& betas)
     {
-        vec r = y - Fitted(x, betas);
+        arma::vec r = y - Fitted(x, betas);
         return sum(r % r);
     }
 
-    static double AICc(const mat& x, const mat& y, const mat& betas, const vec& shat)
+    static double AICc(const arma::mat& x, const arma::mat& y, const arma::mat& betas, const arma::vec& shat)
     {
         double ss = RSS(x, y, betas), n = (double)x.n_rows;
-        return n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
+        return n * log(ss / n) + n * log(2 * arma::datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
     }
     bool isStoreS()
     {
         return mHasHatMatrix && (mCoords.n_rows < 8192);
     }
 
-    static GwmRegressionDiagnostic CalcDiagnostic(const mat &x, const vec &y, const vec &shat, double RSS);
+    static GwmRegressionDiagnostic CalcDiagnostic(const arma::mat &x, const arma::vec &y, const arma::vec &shat, double RSS);
 
     void setInitSpatialWeight(const CGwmSpatialWeight &spatialWeight)
     {
@@ -72,9 +72,9 @@ private:
     }
 
 public:
-    CGwmMGWR() {}
+    CGwmGWRMultiscale() {}
 
-    CGwmMGWR(const mat& x, const vec& y, const arma::mat& coords, const std::vector<CGwmSpatialWeight>& spatialWeights)
+    CGwmGWRMultiscale(const arma::mat& x, const arma::vec& y, const arma::mat& coords, const std::vector<CGwmSpatialWeight>& spatialWeights)
         : CGwmSpatialMultiscaleAlgorithm(coords, spatialWeights)
     {
         mX = x;
@@ -83,27 +83,27 @@ public:
             setInitSpatialWeight(spatialWeights[0]);
     }
 
-    virtual ~CGwmMGWR() {}
+    virtual ~CGwmGWRMultiscale() {}
 
 public:
 
-    vector<BandwidthInitilizeType> bandwidthInitilize() const { return CGwmMGWR::mBandwidthInitilize; }
-    void setBandwidthInitilize(const vector<BandwidthInitilizeType> &bandwidthInitilize);
+    std::vector<BandwidthInitilizeType> bandwidthInitilize() const { return CGwmGWRMultiscale::mBandwidthInitilize; }
+    void setBandwidthInitilize(const std::vector<BandwidthInitilizeType> &bandwidthInitilize);
 
-    vector<BandwidthSelectionCriterionType> bandwidthSelectionApproach() const { return CGwmMGWR::mBandwidthSelectionApproach; }
-    void setBandwidthSelectionApproach(const vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach);
+    std::vector<BandwidthSelectionCriterionType> bandwidthSelectionApproach() const { return CGwmGWRMultiscale::mBandwidthSelectionApproach; }
+    void setBandwidthSelectionApproach(const std::vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach);
 
-    vector<bool> preditorCentered() const { return mPreditorCentered; }
-    void setPreditorCentered(const vector<bool> &preditorCentered) { mPreditorCentered = preditorCentered; }
+    std::vector<bool> preditorCentered() const { return mPreditorCentered; }
+    void setPreditorCentered(const std::vector<bool> &preditorCentered) { mPreditorCentered = preditorCentered; }
 
-    vector<double> bandwidthSelectThreshold() const { return mBandwidthSelectThreshold; }
-    void setBandwidthSelectThreshold(const vector<double> &bandwidthSelectThreshold) { mBandwidthSelectThreshold = bandwidthSelectThreshold; }
+    std::vector<double> bandwidthSelectThreshold() const { return mBandwidthSelectThreshold; }
+    void setBandwidthSelectThreshold(const std::vector<double> &bandwidthSelectThreshold) { mBandwidthSelectThreshold = bandwidthSelectThreshold; }
 
     bool hasHatMatrix() const { return mHasHatMatrix; }
     void setHasHatMatrix(bool hasHatMatrix) { mHasHatMatrix = hasHatMatrix; }
 
     size_t bandwidthSelectRetryTimes() const { return (size_t)mBandwidthSelectRetryTimes; }
-    void setBandwidthSelectRetryTimes(size_t bandwidthSelectRetryTimes) { mBandwidthSelectRetryTimes = (uword)bandwidthSelectRetryTimes; }
+    void setBandwidthSelectRetryTimes(size_t bandwidthSelectRetryTimes) { mBandwidthSelectRetryTimes = (arma::uword)bandwidthSelectRetryTimes; }
 
     size_t maxIteration() const { return mMaxIteration; }
     void setMaxIteration(size_t maxIteration) { mMaxIteration = maxIteration; }
@@ -117,14 +117,14 @@ public:
     int adaptiveLower() const { return mAdaptiveLower; }
     void setAdaptiveLower(int adaptiveLower) { mAdaptiveLower = adaptiveLower; }
 
-    mat betas() const { return mBetas; }
+    arma::mat betas() const { return mBetas; }
 
     BandwidthSizeCriterionFunction bandwidthSizeCriterionAll(BandwidthSelectionCriterionType type);
     BandwidthSizeCriterionFunction bandwidthSizeCriterionVar(BandwidthSelectionCriterionType type);
 
 
 public:     // GwmTaskThread interface
-    string name() const { return "Multiscale GWR"; }//override 
+    std::string name() const { return "Multiscale GWR"; }//override 
 
 
 public:     // GwmSpatialAlgorithm interface
@@ -132,7 +132,7 @@ public:     // GwmSpatialAlgorithm interface
 
 
 public:     // GwmSpatialMultiscaleAlgorithm interface
-    virtual void setSpatialWeights(const vector<CGwmSpatialWeight> &spatialWeights) override;
+    virtual void setSpatialWeights(const std::vector<CGwmSpatialWeight> &spatialWeights) override;
 
 
 public:     // IBandwidthSizeSelectable interface
@@ -154,9 +154,9 @@ public:     // IRegressionAnalysis interface
 
     virtual GwmRegressionDiagnostic diagnostic() const override { return mDiagnostic; }
 
-    mat predict(const mat& locations) override { return mat(locations.n_rows, mX.n_cols, arma::fill::zeros); }
+    arma::mat predict(const arma::mat& locations) override { return arma::mat(locations.n_rows, mX.n_cols, arma::fill::zeros); }
 
-    mat fit() override;
+    arma::mat fit() override;
 
 public:     // IParallelalbe interface
     int parallelAbility() const override 
@@ -184,15 +184,15 @@ protected:
         return static_cast<CGwmBandwidthWeight*>(mSpatialWeights[i].weight());
     }
 
-    mat fitAllSerial(const mat& x, const vec& y);
+    arma::mat fitAllSerial(const arma::mat& x, const arma::vec& y);
 
-    mat fitAllOmp(const mat& x, const vec& y);
+    arma::mat fitAllOmp(const arma::mat& x, const arma::vec& y);
 
-    vec fitVarSerial(const vec& x, const vec& y, const uword var, mat& S);
+    arma::vec fitVarSerial(const arma::vec& x, const arma::vec& y, const arma::uword var, arma::mat& S);
 
-    vec fitVarOmp(const vec& x, const vec& y, const uword var, mat& S);
+    arma::vec fitVarOmp(const arma::vec& x, const arma::vec& y, const arma::uword var, arma::mat& S);
 
-    mat backfitting(const mat &x, const vec &y);
+    arma::mat backfitting(const arma::mat &x, const arma::vec &y);
 
     double bandwidthSizeCriterionAllCVSerial(CGwmBandwidthWeight* bandwidthWeight);
 
@@ -215,19 +215,19 @@ protected:
     void createInitialDistanceParameter();
 
 private:
-    FitAllFunction mFitAll = &CGwmMGWR::fitAllSerial;
-    FitVarFunction mFitVar = &CGwmMGWR::fitVarSerial;
+    FitAllFunction mFitAll = &CGwmGWRMultiscale::fitAllSerial;
+    FitVarFunction mFitVar = &CGwmGWRMultiscale::fitVarSerial;
 
     CGwmSpatialWeight mInitSpatialWeight;
-    BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &CGwmMGWR::bandwidthSizeCriterionAllCVSerial;
+    BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &CGwmGWRMultiscale::bandwidthSizeCriterionAllCVSerial;
     size_t mBandwidthSelectionCurrentIndex = 0;
 
 
-    vector<BandwidthInitilizeType> mBandwidthInitilize;
-    vector<BandwidthSelectionCriterionType> mBandwidthSelectionApproach;
-    vector<bool> mPreditorCentered;
-    vector<double> mBandwidthSelectThreshold;
-    uword mBandwidthSelectRetryTimes = 5;
+    std::vector<BandwidthInitilizeType> mBandwidthInitilize;
+    std::vector<BandwidthSelectionCriterionType> mBandwidthSelectionApproach;
+    std::vector<bool> mPreditorCentered;
+    std::vector<double> mBandwidthSelectThreshold;
+    arma::uword mBandwidthSelectRetryTimes = 5;
     size_t mMaxIteration = 500;
     BackFittingCriterionType mCriterionType = BackFittingCriterionType::dCVR;
     double mCriterionThreshold = 1e-6;
@@ -235,20 +235,20 @@ private:
 
     bool mHasHatMatrix = true;
 
-    mat mX;
-    vec mY;
-    mat mBetas;
-    mat mBetasSE;
-    mat mBetasTV;
+    arma::mat mX;
+    arma::vec mY;
+    arma::mat mBetas;
+    arma::mat mBetasSE;
+    arma::mat mBetasTV;
     bool mHasIntercept = true;
 
-    mat mS0;
-    cube mSArray;
-    cube mC;
-    mat mX0;
-    vec mY0;
-    vec mXi;
-    vec mYi;
+    arma::mat mS0;
+    arma::cube mSArray;
+    arma::cube mC;
+    arma::mat mX0;
+    arma::vec mY0;
+    arma::vec mXi;
+    arma::vec mYi;
 
     double mRSS0;
 

@@ -7,10 +7,8 @@
 #include <armadillo>
 #include <variant>
 
-using namespace std;
-using namespace arma;
 
-typedef variant<mat, vec, uword> DistParamVariant;
+typedef std::variant<arma::mat, arma::vec, arma::uword> DistParamVariant;
 
 /**
  * @brief Abstract base class for calculating spatial distance.
@@ -37,7 +35,7 @@ public:
      */
     struct Parameter
     {
-        uword total;    //!< Total focus points.
+        arma::uword total;    //!< Total focus points.
 
         /**
          * @brief Construct a new DistanceParameter object.
@@ -60,7 +58,7 @@ public:
      * @brief A mapper between types of distance and its names.
      * 
      */
-    static unordered_map<DistanceType, string> TypeNameMapper;
+    static std::unordered_map<DistanceType, std::string> TypeNameMapper;
 
 public:
 
@@ -94,7 +92,7 @@ public:
      * 
      * @param plist A list of parameters. 
      */
-    virtual void makeParameter(initializer_list<DistParamVariant> plist) = 0;
+    virtual void makeParameter(std::initializer_list<DistParamVariant> plist) = 0;
 
     /**
      * @brief Calculate distance vector for a focus point. 
@@ -103,7 +101,7 @@ public:
      * @param focus Focused point's index. Require focus < total.
      * @return Distance vector for the focused point.
      */
-    virtual vec distance(uword focus) = 0;
+    virtual arma::vec distance(arma::uword focus) = 0;
 
     /**
      * @brief Get maximum distance among all points。

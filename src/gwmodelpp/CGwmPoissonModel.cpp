@@ -1,6 +1,8 @@
 #include "CGwmPoissonModel.h"
 //#include "GWmodel.h"
-#include "CGwmGGWR.h"
+#include "CGwmGWRGeneralized.h"
+
+using namespace arma;
 
 CGwmPoissonModel::CGwmPoissonModel()
 {
@@ -50,7 +52,7 @@ vec CGwmPoissonModel::devResids(mat y, mat mu, mat weights){
 }
 
 double CGwmPoissonModel::aic(mat y, mat n, mat mu, mat wt) {
-    vec temp = CGwmGGWR::dpois(y, mu) % wt;
+    vec temp = CGwmGWRGeneralized::dpois(y, mu) % wt;
     return -2 * sum(temp);
 }
 

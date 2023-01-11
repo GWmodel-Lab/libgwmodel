@@ -189,9 +189,9 @@ public:
      * 
      * @param parameter 
      * @param focus 
-     * @return vec 
+     * @return arma::vec 
      */
-    virtual vec weightVector(uword focus)
+    virtual arma::vec weightVector(arma::uword focus)
     {
         return mWeight->weight(mDistance->distance(focus));
     }

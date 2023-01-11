@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
+if(ENABLE_OpenMP)
 find_package(OpenMP)
 if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
     if(ENABLE_OpenMP)
@@ -10,6 +11,7 @@ if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
         include_directories(${OpenMP_C_INCLUDE_DIRS} ${OpenMP_CXX_INCLUDE_DIRS})
     endif(ENABLE_OpenMP)
 endif(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
+endif()
 
 find_package(GSL REQUIRED)
 if(GSL_FOUND)
@@ -54,15 +56,15 @@ set(SOURCES_CXX
     gwmodelpp/CGwmGWSS.cpp
     gwmodelpp/CGwmGWPCA.cpp
     gwmodelpp/CGwmGWDR.cpp
-    gwmodelpp/CGwmMGWR.cpp
+    gwmodelpp/CGwmGWRMultiscale.cpp
     gwmodelpp/GwmLogger.cpp
-    gwmodelpp/CGwmRobustGWR.cpp
-    gwmodelpp/CGwmGGWR.cpp
+    gwmodelpp/CGwmGWRRobust.cpp
+    gwmodelpp/CGwmGWRGeneralized.cpp
     gwmodelpp/CGwmBinomialModel.cpp
     gwmodelpp/CGwmPoissonModel.cpp
     gwmodelpp/CGwmGeneralizedLinearModel.cpp
-    gwmodelpp/CGwmScalableGWR.cpp
-    gwmodelpp/CGwmLocalCollinearityGWR.cpp
+    gwmodelpp/CGwmGWRScalable.cpp
+    gwmodelpp/CGwmGWRLocalCollinearity.cpp
 )
 
 set(SOURCES_C
@@ -90,16 +92,16 @@ set(HEADERS_CXX
     ../include/gwmodelpp/CGwmGWSS.h
     ../include/gwmodelpp/CGwmGWPCA.h
     ../include/gwmodelpp/CGwmGWDR.h
-    ../include/gwmodelpp/CGwmMGWR.h
+    ../include/gwmodelpp/CGwmGWRMultiscale.h
     ../include/gwmodelpp/GwmLogger.h
-    ../include/gwmodelpp/CGwmRobustGWR.h
-    ../include/gwmodelpp/CGwmGGWR.h
+    ../include/gwmodelpp/CGwmGWRRobust.h
+    ../include/gwmodelpp/CGwmGWRGeneralized.h
     ../include/gwmodelpp/CGwmBinomialModel.h
     ../include/gwmodelpp/CGwmLinearModel.h
     ../include/gwmodelpp/CGwmPoissonModel.h
     ../include/gwmodelpp/CGwmGeneralizedLinearModel.h
-    ../include/gwmodelpp/CGwmScalableGWR.h
-    ../include/gwmodelpp/CGwmLocalCollinearityGWR.h
+    ../include/gwmodelpp/CGwmGWRScalable.h
+    ../include/gwmodelpp/CGwmGWRLocalCollinearity.h
 )
 
 set(HEADERS_C

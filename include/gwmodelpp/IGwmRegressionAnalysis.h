@@ -5,7 +5,6 @@
 #include <armadillo>
 #include "GwmRegressionDiagnostic.h"
 
-using namespace std;
 
 struct IGwmRegressionAnalysis
 {

@@ -16,14 +16,14 @@
 #include "CGwmBandwidthSelector.h"
 #include "CGwmBandwidthSelector.h"
 
-struct GwmGGWRDiagnostic
+struct GwmGWRGeneralizedDiagnostic
 {
     double RSS;
     double AIC;
     double AICc;
     double RSquare;
 
-    GwmGGWRDiagnostic()
+    GwmGWRGeneralizedDiagnostic()
     {
         AIC = 0.0;
         AICc = 0.0;
@@ -31,7 +31,7 @@ struct GwmGGWRDiagnostic
         RSquare = 0.0;
     }
 
-    GwmGGWRDiagnostic(const vec &diag)
+    GwmGWRGeneralizedDiagnostic(const arma::vec &diag)
     {
         AIC = diag(0);
         AICc = diag(1);
@@ -57,7 +57,7 @@ struct GwmGLMDiagnostic
         RSquare = 0.0;
     }
 
-    GwmGLMDiagnostic(const vec &diag)
+    GwmGLMDiagnostic(const arma::vec &diag)
     {
         AIC = diag(0);
         AICc = diag(1);
@@ -67,7 +67,7 @@ struct GwmGLMDiagnostic
     }
 };
 
-class CGwmGGWR : public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmOpenmpParallelizable
+class CGwmGWRGeneralized : public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmOpenmpParallelizable
 {
 public:
     enum Family
@@ -90,18 +90,18 @@ public:
         SuffixVariable
     };
 
-    static map<string, double> TolUnitDict;
+    static std::map<std::string, double> TolUnitDict;
     static void initTolUnitDict();
 
-    typedef double (CGwmGGWR::*BandwidthSelectCriterionFunction)(CGwmBandwidthWeight *);
-    typedef mat (CGwmGGWR::*GGWRfitFunction)(const mat& x, const vec& y);
-    typedef vec (CGwmGGWR::*CalWtFunction)(const mat &x, const vec &y, mat w);
+    typedef double (CGwmGWRGeneralized::*BandwidthSelectCriterionFunction)(CGwmBandwidthWeight *);
+    typedef arma::mat (CGwmGWRGeneralized::*GGWRfitFunction)(const arma::mat& x, const arma::vec& y);
+    typedef arma::vec (CGwmGWRGeneralized::*CalWtFunction)(const arma::mat &x, const arma::vec &y, arma::mat w);
 
-    typedef tuple<string, mat, NameFormat> CreateResultLayerData;
+    typedef std::tuple<std::string, arma::mat, NameFormat> CreateResultLayerData;
 
 public:
-    CGwmGGWR(){};
-    ~CGwmGGWR(){};
+    CGwmGWRGeneralized(){};
+    ~CGwmGWRGeneralized(){};
 
 public: // IBandwidthSizeSelectable interface
     double getCriterion(CGwmBandwidthWeight *bandwidthWeight) override
@@ -125,39 +125,39 @@ public: // IOpenmpParallelable interface
     void setOmpThreadNum(const int threadNum) override;
 
 public:
-    static vec gwReg(const mat &x, const vec &y, const vec &w);
+    static arma::vec gwReg(const arma::mat &x, const arma::vec &y, const arma::vec &w);
 
-    static vec gwRegHatmatrix(const mat &x, const vec &y, const vec &w, uword focus, mat &ci, mat &s_ri);
+    static arma::vec gwRegHatmatrix(const arma::mat &x, const arma::vec &y, const arma::vec &w, arma::uword focus, arma::mat &ci, arma::mat &s_ri);
 
-    static mat dpois(mat y, mat mu);
-    static mat dbinom(mat y, mat m, mat mu);
-    static mat lchoose(mat n, mat k);
-    static mat lgammafn(mat x);
+    static arma::mat dpois(arma::mat y, arma::mat mu);
+    static arma::mat dbinom(arma::mat y, arma::mat m, arma::mat mu);
+    static arma::mat lchoose(arma::mat n, arma::mat k);
+    static arma::mat lgammafn(arma::mat x);
 
-    static mat CiMat(const mat &x, const vec &w);
+    static arma::mat CiMat(const arma::mat &x, const arma::vec &w);
 
-    mat predict(const mat& locations) override;
-    mat fit() override;
-    mat fit(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qdiag, mat &S);
+    arma::mat predict(const arma::mat& locations) override;
+    arma::mat fit() override;
+    arma::mat fit(const arma::mat &x, const arma::vec &y, arma::mat &betasSE, arma::vec &shat, arma::vec &qdiag, arma::mat &S);
 
 protected:
-    mat fitPoissonSerial(const mat& x, const vec& y);
-    mat fitBinomialSerial(const mat& x, const vec& y);
+    arma::mat fitPoissonSerial(const arma::mat& x, const arma::vec& y);
+    arma::mat fitBinomialSerial(const arma::mat& x, const arma::vec& y);
 #ifdef ENABLE_OPENMP
-    mat fitPoissonOmp(const mat& x, const vec& y);
-    mat fitBinomialOmp(const mat& x, const vec& y);
+    arma::mat fitPoissonOmp(const arma::mat& x, const arma::vec& y);
+    arma::mat fitBinomialOmp(const arma::mat& x, const arma::vec& y);
 #endif
-    mat diag(mat a);
+    arma::mat diag(arma::mat a);
 
-    vec PoissonWtSerial(const mat &x, const vec &y, mat w);
-    vec BinomialWtSerial(const mat &x, const vec &y, mat w);
+    arma::vec PoissonWtSerial(const arma::mat &x, const arma::vec &y, arma::mat w);
+    arma::vec BinomialWtSerial(const arma::mat &x, const arma::vec &y, arma::mat w);
 #ifdef ENABLE_OPENMP
-    vec PoissonWtOmp(const mat &x, const vec &y, mat w);
-    vec BinomialWtOmp(const mat &x, const vec &y, mat w);
+    arma::vec PoissonWtOmp(const arma::mat &x, const arma::vec &y, arma::mat w);
+    arma::vec BinomialWtOmp(const arma::mat &x, const arma::vec &y, arma::mat w);
 #endif
-    void CalGLMModel(const mat& x, const vec& y);
+    void CalGLMModel(const arma::mat& x, const arma::vec& y);
     // todo: QStringLiteral 用法不确定
-    void createResultLayer(initializer_list<CreateResultLayerData> items);
+    void createResultLayer(std::initializer_list<CreateResultLayerData> items);
 
 private:
     double bandwidthSizeGGWRCriterionCVSerial(CGwmBandwidthWeight *bandwidthWeight);
@@ -171,15 +171,15 @@ public:
     double getTol() const;
     size_t getMaxiter() const;
 
-    mat getWtMat1() const;
-    mat getWtMat2() const;
+    arma::mat getWtMat1() const;
+    arma::mat getWtMat2() const;
 
-    GwmGGWRDiagnostic getDiagnostic() const;
+    GwmGWRGeneralizedDiagnostic getDiagnostic() const;
     GwmGLMDiagnostic getGLMDiagnostic() const;
 
     bool setFamily(Family family);
-    void setTol(double tol, string unit);
-    void setMaxiter(size_t maxiter);
+    void setTol(double tol, std::string unit);
+    void setMaxiter(std::size_t maxiter);
 
     void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
     BandwidthCriterionList bandwidthSelectorCriterions() const;
@@ -189,8 +189,8 @@ public:
     bool autoselectBandwidth() const;
     void setIsAutoselectBandwidth(bool value);
 
-    mat regressionData() const;
-    void setRegressionData(const mat &locations);
+    arma::mat regressionData() const;
+    void setRegressionData(const arma::mat &locations);
 
     bool hasHatMatrix() const;
     void setHasHatMatrix(bool value);
@@ -204,38 +204,38 @@ public:
 protected:
     Family mFamily;
     double mTol=1e-5;
-    string mTolUnit;
-    size_t mMaxiter=20;
+    std::string mTolUnit;
+    std::size_t mMaxiter=20;
 
     bool mHasHatMatrix = true;
     bool mHasRegressionData = false;
 
-    mat mBetasSE;
+    arma::mat mBetasSE;
 
-    vec mShat;
-    mat mS;
+    arma::vec mShat;
+    arma::mat mS;
     double mGwDev;
 
-    mat mRegressionData;
+    arma::mat mRegressionData;
 
-    mat mWtMat1;
-    mat mWtMat2;
+    arma::mat mWtMat1;
+    arma::mat mWtMat2;
 
-    GwmGGWRDiagnostic mDiagnostic;
+    GwmGWRGeneralizedDiagnostic mDiagnostic;
     GwmGLMDiagnostic mGLMDiagnostic;
     CreateResultLayerData mResultList;
 
-    mat mWt2;
-    mat myAdj;
+    arma::mat mWt2;
+    arma::mat myAdj;
 
     double mLLik = 0;
 
-    GGWRfitFunction mGGWRfitFunction = &CGwmGGWR::fitPoissonSerial;
-    CalWtFunction mCalWtFunction = &CGwmGGWR::PoissonWtSerial;
+    GGWRfitFunction mGGWRfitFunction = &CGwmGWRGeneralized::fitPoissonSerial;
+    CalWtFunction mCalWtFunction = &CGwmGWRGeneralized::PoissonWtSerial;
 
     bool mIsAutoselectBandwidth = false;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;
-    BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &CGwmGGWR::bandwidthSizeGGWRCriterionCVSerial;
+    BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &CGwmGWRGeneralized::bandwidthSizeGGWRCriterionCVSerial;
     CGwmBandwidthSelector mBandwidthSizeSelector;
 
     ParallelType mParallelType = ParallelType::SerialOnly;
@@ -248,102 +248,102 @@ protected:
     //DistanceParameter *mPredictionDistanceParameter = nullptr;
 };
 
-inline CGwmGGWR::Family CGwmGGWR::getFamily() const
+inline CGwmGWRGeneralized::Family CGwmGWRGeneralized::getFamily() const
 {
     return mFamily;
 }
 
-inline double CGwmGGWR::getTol() const
+inline double CGwmGWRGeneralized::getTol() const
 {
     return mTol;
 }
 
-inline size_t CGwmGGWR::getMaxiter() const
+inline size_t CGwmGWRGeneralized::getMaxiter() const
 {
     return mMaxiter;
 }
 
-inline mat CGwmGGWR::getWtMat1() const
+inline arma::mat CGwmGWRGeneralized::getWtMat1() const
 {
     return mWtMat1;
 }
 
-inline mat CGwmGGWR::getWtMat2() const
+inline arma::mat CGwmGWRGeneralized::getWtMat2() const
 {
     return mWtMat2;
 }
 
-inline GwmGGWRDiagnostic CGwmGGWR::getDiagnostic() const
+inline GwmGWRGeneralizedDiagnostic CGwmGWRGeneralized::getDiagnostic() const
 {
     return mDiagnostic;
 }
 
-inline GwmGLMDiagnostic CGwmGGWR::getGLMDiagnostic() const
+inline GwmGLMDiagnostic CGwmGWRGeneralized::getGLMDiagnostic() const
 {
     return mGLMDiagnostic;
 }
 
-inline void CGwmGGWR::setTol(double tol, string unit)
+inline void CGwmGWRGeneralized::setTol(double tol, std::string unit)
 {
     mTolUnit = unit;
     mTol = double(tol) * TolUnitDict[unit];
 }
 
-inline void CGwmGGWR::setMaxiter(size_t maxiter)
+inline void CGwmGWRGeneralized::setMaxiter(size_t maxiter)
 {
     mMaxiter = maxiter;
 }
 
-inline BandwidthCriterionList CGwmGGWR::bandwidthSelectorCriterions() const
+inline BandwidthCriterionList CGwmGWRGeneralized::bandwidthSelectorCriterions() const
 {
     return mBandwidthSizeSelector.bandwidthCriterion();
 }
 
-inline bool CGwmGGWR::hasHatMatrix() const
+inline bool CGwmGWRGeneralized::hasHatMatrix() const
 {
     return mHasHatMatrix;
 }
 
-inline void CGwmGGWR::setHasHatMatrix(bool value)
+inline void CGwmGWRGeneralized::setHasHatMatrix(bool value)
 {
     mHasHatMatrix = value;
 }
 
-inline bool CGwmGGWR::hasRegressionData() const
+inline bool CGwmGWRGeneralized::hasRegressionData() const
 {
     return mHasRegressionData;
 }
 
-inline void CGwmGGWR::setHasRegressionData(bool value)
+inline void CGwmGWRGeneralized::setHasRegressionData(bool value)
 {
     mRegressionData = value;
 }
-inline mat CGwmGGWR::regressionData() const
+inline arma::mat CGwmGWRGeneralized::regressionData() const
 {
     return mRegressionData;
 }
 
-inline void CGwmGGWR::setRegressionData(const mat &locations)
+inline void CGwmGWRGeneralized::setRegressionData(const arma::mat &locations)
 {
     mRegressionData = locations;
 }
 
-inline CGwmGGWR::BandwidthSelectionCriterionType CGwmGGWR::bandwidthSelectionCriterionType() const
+inline CGwmGWRGeneralized::BandwidthSelectionCriterionType CGwmGWRGeneralized::bandwidthSelectionCriterionType() const
 {
     return mBandwidthSelectionCriterionType;
 }
 
-inline bool CGwmGGWR::autoselectBandwidth() const
+inline bool CGwmGWRGeneralized::autoselectBandwidth() const
 {
     return mIsAutoselectBandwidth;
 }
 
-inline void CGwmGGWR::setIsAutoselectBandwidth(bool value)
+inline void CGwmGWRGeneralized::setIsAutoselectBandwidth(bool value)
 {
     mIsAutoselectBandwidth = value;
 }
 
-inline int CGwmGGWR::parallelAbility() const
+inline int CGwmGWRGeneralized::parallelAbility() const
     {
         return ParallelType::SerialOnly
 #ifdef ENABLE_OPENMP
@@ -353,24 +353,24 @@ inline int CGwmGGWR::parallelAbility() const
     }
 
 
-inline ParallelType CGwmGGWR::parallelType() const
+inline ParallelType CGwmGWRGeneralized::parallelType() const
 {
     return mParallelType;
 }
 
-inline void CGwmGGWR::setOmpThreadNum(const int threadNum)
+inline void CGwmGWRGeneralized::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
 }
 
-// inline mat CGwmGGWR::fit(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qdiag, mat &S)
+// inline arma::mat CGwmGWRGeneralized::fit(const arma::mat &x, const arma::vec &y, arma::mat &betasSE, arma::vec &shat, arma::vec &qdiag, arma::mat &S)
 // {
 //     switch (type)
 //     {
-//     case CGwmGGWR::Family::Poisson:
+//     case CGwmGWRGeneralized::Family::Poisson:
 //         return regressionPoissonSerial(x, y);
 //         break;
-//     case CGwmGGWR::Family::Binomial:
+//     case CGwmGWRGeneralized::Family::Binomial:
 //         return regressionBinomialSerial(x, y);
 //         break;
 //     default:

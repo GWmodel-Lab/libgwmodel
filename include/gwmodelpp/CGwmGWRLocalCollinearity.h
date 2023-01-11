@@ -11,9 +11,8 @@
 #include "IGwmParallelizable.h"
 #include <exception>
 
-using namespace std;
 
-class CGwmLocalCollinearityGWR : public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmOpenmpParallelizable
+class CGwmGWRLocalCollinearity : public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmOpenmpParallelizable
 {
 public:
     enum BandwidthSelectionCriterionType
@@ -29,15 +28,15 @@ public:
         SuffixVariable
     };
     
-    typedef tuple<string, mat, NameFormat> ResultLayerDataItem;
-    typedef double (CGwmLocalCollinearityGWR::*BandwidthSelectionCriterionCalculator)(CGwmBandwidthWeight*);
-    typedef mat (CGwmLocalCollinearityGWR::*PredictCalculator)(const mat&, const vec&);
+    typedef std::tuple<std::string, arma::mat, NameFormat> ResultLayerDataItem;
+    typedef double (CGwmGWRLocalCollinearity::*BandwidthSelectionCriterionCalculator)(CGwmBandwidthWeight*);
+    typedef arma::mat (CGwmGWRLocalCollinearity::*PredictCalculator)(const arma::mat&, const arma::vec&);
 
-    static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
+    static GwmRegressionDiagnostic CalcDiagnostic(const arma::mat& x, const arma::vec& y, const arma::mat& betas, const arma::vec& shat);
 
 public:
-    CGwmLocalCollinearityGWR();
-    ~CGwmLocalCollinearityGWR();
+    CGwmGWRLocalCollinearity();
+    ~CGwmGWRLocalCollinearity();
 
 public:
     double cnThresh() const
@@ -74,11 +73,11 @@ public:
     {
         mHasPredict = value;
     }
-    mat predictData() const
+    arma::mat predictData() const
     {
         return mPredictData;
     }
-    void setPredictData(mat &value)
+    void setPredictData(arma::mat &value)
     {
         mPredictData = value;
     }
@@ -133,18 +132,18 @@ public:
 
 
 public:
-    mat fit() override;
+    arma::mat fit() override;
 
 public:
-    mat predict(const mat& x, const vec& y) 
+    arma::mat predict(const arma::mat& x, const arma::vec& y) 
     {
         return (this->*mPredictFunction)(x, y);
     }
-    mat predict(const mat &locations) override
+    arma::mat predict(const arma::mat &locations) override
     {
         throw std::runtime_error("not available"); 
     }
-    mat fit(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S) 
+    arma::mat fit(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qdiag, arma::mat& S) 
     {
         throw std::runtime_error("not available"); 
     }
@@ -157,13 +156,13 @@ public:
 protected:
     BandwidthCriterionList mBandwidthSelectionCriterionList;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::CV;
-    BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &CGwmLocalCollinearityGWR::bandwidthSizeCriterionCVSerial;
+    BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &CGwmGWRLocalCollinearity::bandwidthSizeCriterionCVSerial;
 
 
     //返回cv的函数
-    double LcrCV(double bw,uword kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
+    double LcrCV(double bw,arma::uword kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
     //ridge.lm函数
-    vec ridgelm(const vec& w,double lambda);
+    arma::vec ridgelm(const arma::vec& w,double lambda);
 
 
 private:
@@ -175,39 +174,39 @@ private:
     double mLambda=0;
     bool mLambdaAdjust=false;
     double mCnThresh=30;
-    mat mPredictData;
+    arma::mat mPredictData;
     bool mHasHatMatrix = false;
     bool mHasPredict=false;
     bool mIsAutoselectBandwidth = false;
     double mTrS = 0;
     double mTrStS = 0;
-    vec mSHat;
+    arma::vec mSHat;
 
 public:
-    mat predictSerial(const mat& x, const vec& y);
+    arma::mat predictSerial(const arma::mat& x, const arma::vec& y);
 #ifdef ENABLE_OPENMP
-    mat predictOmp(const mat& x, const vec& y);
+    arma::mat predictOmp(const arma::mat& x, const arma::vec& y);
 #endif
 
-    PredictCalculator mPredictFunction = &CGwmLocalCollinearityGWR::predictSerial;
+    PredictCalculator mPredictFunction = &CGwmGWRLocalCollinearity::predictSerial;
     ParallelType mParallelType = ParallelType::SerialOnly;
 
     int mOmpThreadNum = 8;
-    uword mGpuId = 0;
-    uword mGroupSize = 64;
+    arma::uword mGpuId = 0;
+    arma::uword mGroupSize = 64;
 };
 
-inline int CGwmLocalCollinearityGWR::parallelAbility() const
+inline int CGwmGWRLocalCollinearity::parallelAbility() const
 {
     return ParallelType::SerialOnly | ParallelType::OpenMP;
 }
 
-inline ParallelType CGwmLocalCollinearityGWR::parallelType() const
+inline ParallelType CGwmGWRLocalCollinearity::parallelType() const
 {
     return mParallelType;
 }
 
-inline void CGwmLocalCollinearityGWR::setOmpThreadNum(const int threadNum)
+inline void CGwmGWRLocalCollinearity::setOmpThreadNum(const int threadNum)
 {
     mOmpThreadNum = threadNum;
 }

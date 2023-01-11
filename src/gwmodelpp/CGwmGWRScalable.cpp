@@ -1,4 +1,4 @@
-#include "CGwmScalableGWR.h"
+#include "CGwmGWRScalable.h"
 #include "CGwmBandwidthSelector.h"
 #include "CGwmVariableForwardSelector.h"
 #include <assert.h>
@@ -8,11 +8,12 @@
 #include <omp.h>
 #endif
 
+using namespace std;
 using namespace arma;
 
-size_t CGwmScalableGWR::treeChildCount = 0;
+size_t CGwmGWRScalable::treeChildCount = 0;
 
-double CGwmScalableGWR::Loocv(const vec &target, const mat &x, const vec &y, uword poly, const mat &Mx0, const mat &My0)
+double CGwmGWRScalable::Loocv(const vec &target, const mat &x, const vec &y, uword poly, const mat &Mx0, const mat &My0)
 {
     uword n = x.n_rows, k = x.n_cols, poly1 = poly + 1;
     double b = target(0) * target(0), a = target(1) * target(1);
@@ -60,7 +61,7 @@ double CGwmScalableGWR::Loocv(const vec &target, const mat &x, const vec &y, uwo
     return sum((y - yhat) % (y - yhat));
 }
 
-double CGwmScalableGWR::AICvalue(const vec &target, const mat &x, const vec &y, uword poly, const mat &Mx0, const mat &My0)
+double CGwmGWRScalable::AICvalue(const vec &target, const mat &x, const vec &y, uword poly, const mat &Mx0, const mat &My0)
 {
     uword n = x.n_rows, k = x.n_cols, poly1 = poly + 1;
     double b = target(0) * target(0), a = target(1) * target(1);
@@ -125,7 +126,7 @@ double CGwmScalableGWR::AICvalue(const vec &target, const mat &x, const vec &y, 
     return isfinite(AICc) ? AICc : DBL_MAX;
 }
 
-GwmRegressionDiagnostic CGwmScalableGWR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
+GwmRegressionDiagnostic CGwmGWRScalable::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
     vec r = y - sum(betas % x, 1);
     double rss = sum(r % r);
@@ -140,7 +141,7 @@ GwmRegressionDiagnostic CGwmScalableGWR::CalcDiagnostic(const mat& x, const vec&
     return { rss, AIC, AICc, enp, edf, r2, r2_adj };
 }
 
-void CGwmScalableGWR::findDataPointNeighbours()
+void CGwmGWRScalable::findDataPointNeighbours()
 {
     CGwmBandwidthWeight* bandwidth = mDpSpatialWeight.weight<CGwmBandwidthWeight>();
     uword nDp = mCoords.n_rows, nBw = uword(bandwidth->bandwidth()) < nDp ? uword(bandwidth->bandwidth()) : nDp;
@@ -170,7 +171,7 @@ void CGwmScalableGWR::findDataPointNeighbours()
     }
 }
 
-mat CGwmScalableGWR::findNeighbours(const mat& points, umat &nnIndex)
+mat CGwmGWRScalable::findNeighbours(const mat& points, umat &nnIndex)
 {
     CGwmBandwidthWeight* bandwidth = mSpatialWeight.weight<CGwmBandwidthWeight>();
     uword nDp = mCoords.n_rows;
@@ -194,25 +195,25 @@ double scagwr_loocv_multimin_function(const gsl_vector* vars, void* params)
 {
     double b_tilde = gsl_vector_get(vars, 0), alpha = gsl_vector_get(vars, 1);
     vec target = { b_tilde, alpha };
-    const CGwmScalableGWR::LoocvParams *p = (CGwmScalableGWR::LoocvParams*) params;
+    const CGwmGWRScalable::LoocvParams *p = (CGwmGWRScalable::LoocvParams*) params;
     const mat *x = p->x, *y = p->y;
     uword polynomial = p->polynomial;
     const mat *Mx0 = p->Mx0, *My0 = p->My0;
-    return CGwmScalableGWR::Loocv(target, *x, *y, polynomial, *Mx0, *My0);
+    return CGwmGWRScalable::Loocv(target, *x, *y, polynomial, *Mx0, *My0);
 }
 
 double scagwr_aic_multimin_function(const gsl_vector* vars, void* params)
 {
     double b_tilde = gsl_vector_get(vars, 0), alpha = gsl_vector_get(vars, 1);
     vec target = { b_tilde, alpha };
-    const CGwmScalableGWR::LoocvParams *p = (CGwmScalableGWR::LoocvParams*) params;
+    const CGwmGWRScalable::LoocvParams *p = (CGwmGWRScalable::LoocvParams*) params;
     const mat *x = p->x, *y = p->y;
     uword polynomial = p->polynomial;
     const mat *Mx0 = p->Mx0, *My0 = p->My0;
-    return CGwmScalableGWR::AICvalue(target, *x, *y, polynomial, *Mx0, *My0);
+    return CGwmGWRScalable::AICvalue(target, *x, *y, polynomial, *Mx0, *My0);
 }
 
-double CGwmScalableGWR::optimize(const mat &Mx0, const mat &My0, double& b_tilde, double& alpha)
+double CGwmGWRScalable::optimize(const mat &Mx0, const mat &My0, double& b_tilde, double& alpha)
 {
     gsl_multimin_fminimizer* minizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex, 2);
     gsl_vector* target = gsl_vector_alloc(2);
@@ -251,7 +252,7 @@ double CGwmScalableGWR::optimize(const mat &Mx0, const mat &My0, double& b_tilde
     return  cv;
 }
 
-void CGwmScalableGWR::prepare()
+void CGwmGWRScalable::prepare()
 {
 //    CGwmBandwidthWeight* bandwidth = mSpatialWeight.weight<CGwmBandwidthWeight>();
     uword knn = mDpNNIndex.n_cols;
@@ -289,7 +290,7 @@ void CGwmScalableGWR::prepare()
     }
 }
 
-mat CGwmScalableGWR::predict(const mat& locations)
+mat CGwmGWRScalable::predict(const mat& locations)
 {
     createDistanceParameter();
     mDpSpatialWeight = mSpatialWeight;
@@ -327,7 +328,7 @@ mat CGwmScalableGWR::predict(const mat& locations)
     return mBetas;
 }
 
-mat CGwmScalableGWR::predictSerial(const mat& locations, const arma::mat &x, const arma::vec &y)
+mat CGwmGWRScalable::predictSerial(const mat& locations, const arma::mat &x, const arma::vec &y)
 {
     // Create Predict distance parameters
     if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
@@ -435,7 +436,7 @@ mat CGwmScalableGWR::predictSerial(const mat& locations, const arma::mat &x, con
     return betas.t();
 }
 
-mat CGwmScalableGWR::fit()
+mat CGwmGWRScalable::fit()
 {
     createDistanceParameter();
     mDpSpatialWeight = mSpatialWeight;
@@ -481,7 +482,7 @@ mat CGwmScalableGWR::fit()
     return mBetas;
 }
 
-arma::mat CGwmScalableGWR::fitSerial(const arma::mat &x, const arma::vec &y)
+arma::mat CGwmGWRScalable::fitSerial(const arma::mat &x, const arma::vec &y)
 {
     CGwmBandwidthWeight* bandwidth = mSpatialWeight.weight<CGwmBandwidthWeight>();
     uword bw = (uword)bandwidth->bandwidth();
@@ -606,7 +607,7 @@ arma::mat CGwmScalableGWR::fitSerial(const arma::mat &x, const arma::vec &y)
     return betas.t();
 }
 
-bool CGwmScalableGWR::isValid()
+bool CGwmGWRScalable::isValid()
 {
     if (CGwmGWRBase::isValid())
     {

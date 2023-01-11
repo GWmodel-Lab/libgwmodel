@@ -10,15 +10,14 @@
 #include "CGwmVariableForwardSelector.h"
 #include "IGwmParallelizable.h"
 
-using namespace arma;
 
 
 class CGwmGWDR : public CGwmSpatialAlgorithm, public IGwmRegressionAnalysis, public IGwmVarialbeSelectable, public IGwmOpenmpParallelizable
 {
 public:
-    typedef mat (CGwmGWDR::*PredictCalculator)(const mat&, const mat&, const vec&);
+    typedef arma::mat (CGwmGWDR::*PredictCalculator)(const arma::mat&, const arma::mat&, const arma::vec&);
 
-    typedef mat (CGwmGWDR::*FitCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
+    typedef arma::mat (CGwmGWDR::*FitCalculator)(const arma::mat&, const arma::vec&, arma::mat&, arma::vec&, arma::vec&, arma::mat&);
 
     enum BandwidthCriterionType
     {
@@ -26,34 +25,34 @@ public:
         AIC
     };
 
-    typedef double (CGwmGWDR::*BandwidthCriterionCalculator)(const vector<CGwmBandwidthWeight*>&);
+    typedef double (CGwmGWDR::*BandwidthCriterionCalculator)(const std::vector<CGwmBandwidthWeight*>&);
 
-    typedef double (CGwmGWDR::*IndepVarCriterionCalculator)(const vector<size_t>&);
+    typedef double (CGwmGWDR::*IndepVarCriterionCalculator)(const std::vector<std::size_t>&);
 
 public:
-    static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
+    static GwmRegressionDiagnostic CalcDiagnostic(const arma::mat& x, const arma::vec& y, const arma::mat& betas, const arma::vec& shat);
 
-    static vec Fitted(const mat& x, const mat& betas)
+    static arma::vec Fitted(const arma::mat& x, const arma::mat& betas)
     {
         return sum(betas % x, 1);
     }
 
-    static double RSS(const mat& x, const mat& y, const mat& betas)
+    static double RSS(const arma::mat& x, const arma::mat& y, const arma::mat& betas)
     {
-        vec r = y - Fitted(x, betas);
+        arma::vec r = y - Fitted(x, betas);
         return sum(r % r);
     }
 
-    static double AICc(const mat& x, const mat& y, const mat& betas, const vec& shat)
+    static double AICc(const arma::mat& x, const arma::mat& y, const arma::mat& betas, const arma::vec& shat)
     {
         double ss = RSS(x, y, betas), n = (double)x.n_rows;
-        return n * log(ss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
+        return n * log(ss / n) + n * log(2 * arma::datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
     }
 
 public:
     CGwmGWDR() {}
 
-    CGwmGWDR(const mat& x, const vec& y, const mat& coords, const vector<CGwmSpatialWeight>& spatialWeights, bool hasHatMatrix = true, bool hasIntercept = true)
+    CGwmGWDR(const arma::mat& x, const arma::vec& y, const arma::mat& coords, const std::vector<CGwmSpatialWeight>& spatialWeights, bool hasHatMatrix = true, bool hasIntercept = true)
         : CGwmSpatialAlgorithm(coords)
     {
         mX = x;
@@ -66,15 +65,15 @@ public:
     virtual ~CGwmGWDR() {}
 
 public:
-    mat betas() const { return mBetas; }
+    arma::mat betas() const { return mBetas; }
 
     bool hasHatMatrix() const { return mHasHatMatrix; }
 
     void setHasHatMatrix(bool flag) { mHasHatMatrix = flag; }
 
-    vector<CGwmSpatialWeight> spatialWeights() { return mSpatialWeights; }
+    std::vector<CGwmSpatialWeight> spatialWeights() { return mSpatialWeights; }
 
-    void setSpatialWeights(vector<CGwmSpatialWeight> spatialWeights) { mSpatialWeights = spatialWeights; }
+    void setSpatialWeights(std::vector<CGwmSpatialWeight> spatialWeights) { mSpatialWeights = spatialWeights; }
 
     bool enableBandwidthOptimize() { return mEnableBandwidthOptimize; }
 
@@ -84,9 +83,9 @@ public:
 
     void setBandwidthOptimizeEps(double value) { mBandwidthOptimizeEps = value; }
 
-    size_t bandwidthOptimizeMaxIter() const { return mBandwidthOptimizeMaxIter; }
+    std::size_t bandwidthOptimizeMaxIter() const { return mBandwidthOptimizeMaxIter; }
 
-    void setBandwidthOptimizeMaxIter(size_t value) { mBandwidthOptimizeMaxIter = value; }
+    void setBandwidthOptimizeMaxIter(std::size_t value) { mBandwidthOptimizeMaxIter = value; }
 
     double bandwidthOptimizeStep() const { return mBandwidthOptimizeStep; }
 
@@ -125,12 +124,12 @@ public: // IGwmRegressionAnalysis
 
     virtual GwmRegressionDiagnostic diagnostic() const override { return mDiagnostic; }
 
-    virtual mat predict(const mat& locations) override { return mat(locations.n_rows, mX.n_cols, arma::fill::zeros); }
+    virtual arma::mat predict(const arma::mat& locations) override { return arma::mat(locations.n_rows, mX.n_cols, arma::fill::zeros); }
 
-    virtual mat fit() override;
+    virtual arma::mat fit() override;
 
 public:  // IGwmVariableSelectable
-    double getCriterion(const vector<size_t>& variables) override
+    double getCriterion(const std::vector<std::size_t>& variables) override
     {
         return (this->*mIndepVarCriterionFunction)(variables);
     }
@@ -164,25 +163,25 @@ public:  // IGwmOpenmpParallelizable
 
 
 public:
-    double bandwidthCriterion(const vector<CGwmBandwidthWeight*>& bandwidths)
+    double bandwidthCriterion(const std::vector<CGwmBandwidthWeight*>& bandwidths)
     {
         return (this->*mBandwidthCriterionFunction)(bandwidths);
     }
 
 protected:
-    mat predictSerial(const mat& locations, const mat& x, const vec& y);
-    mat predictOmp(const mat& locations, const mat& x, const vec& y);
-    mat fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
-    mat fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S);
+    arma::mat predictSerial(const arma::mat& locations, const arma::mat& x, const arma::vec& y);
+    arma::mat predictOmp(const arma::mat& locations, const arma::mat& x, const arma::vec& y);
+    arma::mat fitSerial(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qdiag, arma::mat& S);
+    arma::mat fitOmp(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qdiag, arma::mat& S);
 
-    double bandwidthCriterionAICSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
-    double bandwidthCriterionCVSerial(const vector<CGwmBandwidthWeight*>& bandwidths);
-    double indepVarCriterionSerial(const vector<size_t>& indepVars);
+    double bandwidthCriterionAICSerial(const std::vector<CGwmBandwidthWeight*>& bandwidths);
+    double bandwidthCriterionCVSerial(const std::vector<CGwmBandwidthWeight*>& bandwidths);
+    double indepVarCriterionSerial(const std::vector<std::size_t>& indepVars);
 
 #ifdef ENABLE_OPENMP
-    double bandwidthCriterionAICOmp(const vector<CGwmBandwidthWeight*>& bandwidths);
-    double bandwidthCriterionCVOmp(const vector<CGwmBandwidthWeight*>& bandwidths);
-    double indepVarCriterionOmp(const vector<size_t>& indepVars);
+    double bandwidthCriterionAICOmp(const std::vector<CGwmBandwidthWeight*>& bandwidths);
+    double bandwidthCriterionCVOmp(const std::vector<CGwmBandwidthWeight*>& bandwidths);
+    double indepVarCriterionOmp(const std::vector<std::size_t>& indepVars);
 #endif
 
 private:
@@ -192,11 +191,11 @@ private:
     }
 
 private:
-    vector<CGwmSpatialWeight> mSpatialWeights;
+    std::vector<CGwmSpatialWeight> mSpatialWeights;
 
-    vec mY;
-    mat mX;
-    mat mBetas;
+    arma::vec mY;
+    arma::mat mX;
+    arma::mat mBetas;
     bool mHasIntercept = true;
     bool mHasHatMatrix = true;
     GwmRegressionDiagnostic mDiagnostic;
@@ -208,7 +207,7 @@ private:
     BandwidthCriterionType mBandwidthCriterionType = BandwidthCriterionType::CV;
     BandwidthCriterionCalculator mBandwidthCriterionFunction = &CGwmGWDR::bandwidthCriterionCVSerial;
     double mBandwidthOptimizeEps = 1e-6;
-    size_t mBandwidthOptimizeMaxIter = 100000;
+    std::size_t mBandwidthOptimizeMaxIter = 100000;
     double mBandwidthOptimizeStep = 0.01;
 
     bool mEnableIndepVarSelect = false;
@@ -233,22 +232,22 @@ public:
     struct Parameter
     {
         CGwmGWDR* instance;
-        vector<CGwmBandwidthWeight*>* bandwidths;
-        uword featureCount;
+        std::vector<CGwmBandwidthWeight*>* bandwidths;
+        arma::uword featureCount;
     };
 
     static double criterion_function(const gsl_vector* bws, void* params);
 
 public:
-    CGwmGWDRBandwidthOptimizer(vector<CGwmBandwidthWeight*> weights)
+    CGwmGWDRBandwidthOptimizer(std::vector<CGwmBandwidthWeight*> weights)
     {
         mBandwidths = weights;
     }
 
-    const int optimize(CGwmGWDR* instance, uword featureCount, size_t maxIter, double eps, double step);
+    const int optimize(CGwmGWDR* instance, arma::uword featureCount, std::size_t maxIter, double eps, double step);
 
 private:
-    vector<CGwmBandwidthWeight*> mBandwidths;
+    std::vector<CGwmBandwidthWeight*> mBandwidths;
 };
 
 #endif  // CGWMGWDR_H

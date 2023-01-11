@@ -8,12 +8,11 @@
 #include "IGwmMultivariableAnalysis.h"
 #include "IGwmParallelizable.h"
 
-using namespace std;
 
 class CGwmGWPCA: public CGwmSpatialMonoscaleAlgorithm, public IGwmMultivariableAnalysis
 {
 private:
-    typedef mat (CGwmGWPCA::*Solver)(const mat&, cube&, mat&);
+    typedef arma::mat (CGwmGWPCA::*Solver)(const arma::mat&, arma::cube&, arma::mat&);
 
 public: // Constructors and Deconstructors
 
@@ -59,34 +58,34 @@ public: // Constructors and Deconstructors
     /**
      * @brief Get the Local Principle Values matrix.
      * 
-     * @return mat Local Principle Values matrix.
+     * @return arma::mat Local Principle Values matrix.
      */
-    mat localPV() { return mLocalPV; }
+    arma::mat localPV() { return mLocalPV; }
 
     /**
      * @brief Get the Loadings matrix.
      * 
-     * @return mat Loadings matrix.
+     * @return arma::mat Loadings matrix.
      */
-    cube loadings() { return mLoadings; }
+    arma::cube loadings() { return mLoadings; }
 
     /**
      * @brief Get the Standard deviation matrix.
      * 
-     * @return mat Standard deviation matrix.
+     * @return arma::mat Standard deviation matrix.
      */
-    mat sdev() { return mSDev; }
+    arma::mat sdev() { return mSDev; }
 
     /**
      * @brief Get the Scores matrix.
      * 
-     * @return mat Scores matrix.
+     * @return arma::mat Scores matrix.
      */
-    cube scores() { return mScores; }
+    arma::cube scores() { return mScores; }
 
 public: // IGwmMultivariableAnalysis
-    virtual mat variables() const override { return mX; }
-    virtual void setVariables(const mat& x) override { mX = x; }
+    virtual arma::mat variables() const override { return mX; }
+    virtual void setVariables(const arma::mat& x) override { mX = x; }
     virtual void run() override;
 
 public: // GwmAlgorithm
@@ -100,9 +99,9 @@ private:
      * @param x Symmetric data matrix.
      * @param loadings Out reference to loadings matrix.
      * @param sdev Out reference to standard deviation matrix.
-     * @return mat Principle values matrix.
+     * @return arma::mat Principle values matrix.
      */
-    mat pca(const mat& x, cube& loadings, mat& sdev)
+    arma::mat pca(const arma::mat& x, arma::cube& loadings, arma::mat& sdev)
     {
         return (this->*mSolver)(x, loadings, sdev);
     }
@@ -113,9 +112,9 @@ private:
      * @param x Symmetric data matrix.
      * @param loadings Out reference to loadings matrix.
      * @param sdev Out reference to standard deviation matrix.
-     * @return mat Principle values matrix.
+     * @return arma::mat Principle values matrix.
      */
-    mat solveSerial(const mat& x, cube& loadings, mat& sdev);
+    arma::mat solveSerial(const arma::mat& x, arma::cube& loadings, arma::mat& sdev);
 
     /**
      * @brief Function to carry out weighted PCA.
@@ -125,22 +124,22 @@ private:
      * @param V Right orthogonal matrix.
      * @param d Rectangular diagonal matrix
      */
-    void wpca(const mat& x, const vec& w, mat& V, vec & d);
+    void wpca(const arma::mat& x, const arma::vec& w, arma::mat& V, arma::vec & d);
 
 private:    // Algorithm Parameters
     int mK = 2;  //< Number of components to be kept.
     // bool mRobust = false;
 
 private:    // Algorithm Results
-    mat mLocalPV;               //< Local principle component values.
-    cube mLoadings;             //< Loadings for each component.
-    mat mSDev;                  //< Standard Deviation.
-    cube mScores;               //< Scores for each variable.
-    uvec mWinner;               //< Winner variable at each sample.
+    arma::mat mLocalPV;               //< Local principle component values.
+    arma::cube mLoadings;             //< Loadings for each component.
+    arma::mat mSDev;                  //< Standard Deviation.
+    arma::cube mScores;               //< Scores for each variable.
+    arma::uvec mWinner;               //< Winner variable at each sample.
 
 private:    // Algorithm Runtime Variables
-    mat mX;
-    vec mLatestWt;
+    arma::mat mX;
+    arma::vec mLatestWt;
 
     Solver mSolver = &CGwmGWPCA::solveSerial;
 };

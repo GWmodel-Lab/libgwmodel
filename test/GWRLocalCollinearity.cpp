@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp/CGwmLocalCollinearityGWR.h"
+#include "gwmodelpp/CGwmGWRLocalCollinearity.h"
 #include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
 #include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
 #include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
@@ -29,7 +29,7 @@ TEST_CASE("LocalCollinearityGWR: basic flow")
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmLocalCollinearityGWR algorithm;
+    CGwmGWRLocalCollinearity algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -63,7 +63,7 @@ TEST_CASE("LocalCollinearityGWR: adaptive bandwidth autoselection of with CV")
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmLocalCollinearityGWR algorithm;
+    CGwmGWRLocalCollinearity algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -71,7 +71,7 @@ TEST_CASE("LocalCollinearityGWR: adaptive bandwidth autoselection of with CV")
     algorithm.setHasHatMatrix(true);
 
     algorithm.setIsAutoselectBandwidth(true);
-    algorithm.setBandwidthSelectionCriterion(CGwmLocalCollinearityGWR::BandwidthSelectionCriterionType::CV);
+    algorithm.setBandwidthSelectionCriterion(CGwmGWRLocalCollinearity::BandwidthSelectionCriterionType::CV);
     
     REQUIRE_NOTHROW(algorithm.fit());
 
@@ -95,7 +95,7 @@ TEST_CASE("LocalCollinearityGWR: ")
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmLocalCollinearityGWR algorithm;
+    CGwmGWRLocalCollinearity algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -130,14 +130,14 @@ TEST_CASE("LocalCollinearityGWR: multithread basic flow")
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmLocalCollinearityGWR algorithm;
+    CGwmGWRLocalCollinearity algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeight(spatial);
     algorithm.setHasHatMatrix(true);
     algorithm.setIsAutoselectBandwidth(true);
-    algorithm.setBandwidthSelectionCriterion(CGwmLocalCollinearityGWR::BandwidthSelectionCriterionType::CV);
+    algorithm.setBandwidthSelectionCriterion(CGwmGWRLocalCollinearity::BandwidthSelectionCriterionType::CV);
     algorithm.setParallelType(ParallelType::OpenMP);
     algorithm.setOmpThreadNum(6);
     REQUIRE_NOTHROW(algorithm.fit());

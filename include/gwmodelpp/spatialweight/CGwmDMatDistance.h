@@ -4,7 +4,6 @@
 #include <string>
 #include "CGwmDistance.h"
 
-using namespace std;
 
 /**
  * [NOT AVALIABLE]
@@ -15,16 +14,16 @@ public:
 
     struct Parameter : public CGwmDistance::Parameter
     {
-        uword rowSize;
+        arma::uword rowSize;
 
-        Parameter(uword size, uword rows) : rowSize(size) 
+        Parameter(arma::uword size, arma::uword rows) : rowSize(size) 
         {
             total = rows;
         }
     };
 
 public:
-    explicit CGwmDMatDistance(string dmatFile);
+    explicit CGwmDMatDistance(std::string dmatFile);
     CGwmDMatDistance(const CGwmDMatDistance& distance);
 
     virtual CGwmDistance * clone() override
@@ -34,8 +33,8 @@ public:
 
     DistanceType type() override { return DistanceType::DMatDistance; }
 
-    string dMatFile() const;
-    void setDMatFile(const string &dMatFile);
+    std::string dMatFile() const;
+    void setDMatFile(const std::string &dMatFile);
 
 public:
 
@@ -43,29 +42,29 @@ public:
      * @brief Create Parameter for Caclulating CRS Distance.
      * 
      * @param plist A list of parameters containing 2 items:
-     *  - `uword` size
-     *  - `uword` rows
+     *  - `arma::uword` size
+     *  - `arma::uword` rows
      *  . 
      * 
      * @return DistanceParameter* The pointer to parameters.
      */
-    virtual void makeParameter(initializer_list<DistParamVariant> plist) override;
+    virtual void makeParameter(std::initializer_list<DistParamVariant> plist) override;
     
-    virtual vec distance(uword focus) override;
+    virtual arma::vec distance(arma::uword focus) override;
     virtual double maxDistance() override;
     virtual double minDistance() override;
 
 private:
-    string mDMatFile;
-    unique_ptr<Parameter> mParameter = nullptr;
+    std::string mDMatFile;
+    std::unique_ptr<Parameter> mParameter = nullptr;
 };
 
-inline string CGwmDMatDistance::dMatFile() const
+inline std::string CGwmDMatDistance::dMatFile() const
 {
     return mDMatFile;
 }
 
-inline void CGwmDMatDistance::setDMatFile(const string &dMatFile)
+inline void CGwmDMatDistance::setDMatFile(const std::string &dMatFile)
 {
     mDMatFile = dMatFile;
 }
