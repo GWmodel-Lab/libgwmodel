@@ -82,4 +82,4 @@ inline void SpatialMultiscaleAlgorithm::setSpatialWeights(const std::vector<Spat
 
 }
 
-#endif  // CGWMSPATIALMultiSCALEALGORITHM_H
+#endif  // SPATIALMULTISCALEALGORITHM_H

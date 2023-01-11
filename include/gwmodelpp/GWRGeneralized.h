@@ -1,5 +1,5 @@
-#ifndef CGWMGGWR_H
-#define CGWMGGWR_H
+#ifndef GWRGENERALIZED_H
+#define GWRGENERALIZED_H
 
 #include <utility>
 #include <string>
@@ -384,4 +384,4 @@ inline void GWRGeneralized::setOmpThreadNum(const int threadNum)
 
 }
 
-#endif // CGWMGGWR_H
+#endif // GWRGENERALIZED_H

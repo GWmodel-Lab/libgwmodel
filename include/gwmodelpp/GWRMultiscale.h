@@ -1,5 +1,5 @@
-#ifndef CGWMMGWR_H
-#define CGWMMGWR_H
+#ifndef GWRMULTISCALE_H
+#define GWRMULTISCALE_H
 
 #include <utility>
 #include <string>
@@ -266,4 +266,4 @@ public:
 
 }
 
-#endif // GWMMULTISCALEGWRTASKTHREAD_H
+#endif // GWRMULTISCALE_H

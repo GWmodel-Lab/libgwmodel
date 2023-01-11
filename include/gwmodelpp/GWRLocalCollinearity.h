@@ -1,5 +1,5 @@
-#ifndef CGWMLOCALCOLLINEARITYGWR_H
-#define CGWMLOCALCOLLINEARITYGWR_H
+#ifndef GWRLOCALCOLLINEARITY_H
+#define GWRLOCALCOLLINEARITY_H
 
 #include <utility>
 #include <string>
@@ -216,4 +216,4 @@ inline void GWRLocalCollinearity::setOmpThreadNum(const int threadNum)
 
 }
 
-#endif  //CGWMLOCALCOLLINEARITYGWR_H
+#endif  //GWRLOCALCOLLINEARITY_H

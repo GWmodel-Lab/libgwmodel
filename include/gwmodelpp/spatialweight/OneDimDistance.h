@@ -1,5 +1,5 @@
-#ifndef CGWMOneDimDISTANCE_H
-#define CGWMOneDimDISTANCE_H
+#ifndef ONEDIMDISTANCE_H
+#define ONEDIMDISTANCE_H
 
 #include "Distance.h"
 
@@ -101,4 +101,4 @@ protected:
 
 }
 
-#endif // CGWMOneDimDISTANCE_H
+#endif // ONEDIMDISTANCE_H
