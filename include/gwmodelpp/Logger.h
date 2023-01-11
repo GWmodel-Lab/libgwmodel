@@ -4,24 +4,24 @@
 #include <functional>
 #include <string>
 
+#define GWM_LOGGING(MESSAGE, LEVEL) gwm::Logger::printer((MESSAGE), (LEVEL), __FUNCTION__, __FILE__)
+
+#define GWM_LOG_DEBUG(MESSAGE) gwm::Logger::printer((MESSAGE), Logger::LogLevel::LOG_DEBUG, __FUNCTION__, __FILE__)
+
+#define GWM_LOG_INFO(MESSAGE) gwm::Logger::printer((MESSAGE), Logger::LogLevel::LOG_INFO, __FUNCTION__, __FILE__)
+
+#define GWM_LOG_WARNNING(MESSAGE) gwm::Logger::printer((MESSAGE), Logger::LogLevel::LOG_WARNING, __FUNCTION__, __FILE__)
+
+#define GWM_LOG_ERROR(MESSAGE) gwm::Logger::printer((MESSAGE), Logger::LogLevel::LOG_ERR, __FUNCTION__, __FILE__)
+
 namespace gwm
 {
 
-#define GWM_LOGGING(MESSAGE, LEVEL) GwmLogger::logger((MESSAGE), (LEVEL), __FUNCTION__, __FILE__)
-
-#define GWM_LOG_DEBUG(MESSAGE) GwmLogger::logger((MESSAGE), GwmLogger::LogLevel::LOG_DEBUG, __FUNCTION__, __FILE__)
-
-#define GWM_LOG_INFO(MESSAGE) GwmLogger::logger((MESSAGE), GwmLogger::LogLevel::LOG_INFO, __FUNCTION__, __FILE__)
-
-#define GWM_LOG_WARNNING(MESSAGE) GwmLogger::logger((MESSAGE), GwmLogger::LogLevel::LOG_WARNING, __FUNCTION__, __FILE__)
-
-#define GWM_LOG_ERROR(MESSAGE) GwmLogger::logger((MESSAGE), GwmLogger::LogLevel::LOG_ERR, __FUNCTION__, __FILE__)
-
 /**
- * @brief Logger. Used to pass logging messages to outer logger functions.
- * To accept messages, set the static member logger to self-defined functions.
+ * @brief Printer. Used to pass logging messages to outer printer functions.
+ * To accept messages, set the static member printer to self-defined functions.
  */
-class GwmLogger
+class Logger
 {
 public:
 
@@ -40,12 +40,12 @@ public:
         LOG_DEBUG = 7 //!< The message is only for debugging purposes.
     };
 
-    using Logger = std::function<void (std::string, LogLevel, std::string, std::string)>; //!< Logger type.
+    using Printer = std::function<void (std::string, LogLevel, std::string, std::string)>; //!< Printer type.
 
-    static Logger logger;  //!< Logger used to print logging messages.
+    static Printer printer;  //!< Printer used to print logging messages.
 
     /**
-     * @brief Call logger to print a log;
+     * @brief Call printer to print a log;
      * 
      * @param message Log message.
      * @param level Log level.
@@ -54,7 +54,7 @@ public:
      */
     static void logging(std::string message, LogLevel level, std::string fun_name, std::string file_name)
     {
-        logger(message, level, fun_name, file_name);
+        printer(message, level, fun_name, file_name);
     }
 };
 

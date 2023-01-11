@@ -57,7 +57,7 @@ set(SOURCES_CXX
     gwmodelpp/GWPCA.cpp
     gwmodelpp/GWDR.cpp
     gwmodelpp/GWRMultiscale.cpp
-    gwmodelpp/GwmLogger.cpp
+    gwmodelpp/Logger.cpp
     gwmodelpp/GWRRobust.cpp
     gwmodelpp/GWRGeneralized.cpp
     gwmodelpp/BinomialModel.cpp
@@ -93,7 +93,7 @@ set(HEADERS_CXX
     ../include/gwmodelpp/GWPCA.h
     ../include/gwmodelpp/GWDR.h
     ../include/gwmodelpp/GWRMultiscale.h
-    ../include/gwmodelpp/GwmLogger.h
+    ../include/gwmodelpp/Logger.h
     ../include/gwmodelpp/GWRRobust.h
     ../include/gwmodelpp/GWRGeneralized.h
     ../include/gwmodelpp/BinomialModel.h

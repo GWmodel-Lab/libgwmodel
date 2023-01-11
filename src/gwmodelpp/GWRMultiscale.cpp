@@ -6,7 +6,7 @@
 #include <spatialweight/CRSDistance.h>
 #include "BandwidthSelector.h"
 #include "VariableForwardSelector.h"
-#include "GwmLogger.h"
+#include "Logger.h"
 
 using namespace std;
 using namespace arma;

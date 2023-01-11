@@ -4,7 +4,7 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multimin.h>
 #include <gsl/gsl_errno.h>
-#include "GwmLogger.h"
+#include "Logger.h"
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>

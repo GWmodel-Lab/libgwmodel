@@ -10,21 +10,21 @@
 #include "gwmodelpp/spatialweight/CRSDistance.h"
 #include "gwmodelpp/spatialweight/BandwidthWeight.h"
 #include "gwmodelpp/spatialweight/SpatialWeight.h"
-#include "gwmodelpp/GwmLogger.h"
+#include "gwmodelpp/Logger.h"
 #include "londonhp100.h"
 
 using namespace std;
 using namespace arma;
 using namespace gwm;
 
-void printer(string message, GwmLogger::LogLevel level, string fun_name, string file_name)
+void printer(string message, Logger::LogLevel level, string fun_name, string file_name)
 {
     cout << "[" << fun_name << "] (in file " << file_name << "): " << message << "\n";
 }
 
 TEST_CASE("MGWR: basic flow")
 {
-    GwmLogger::logger = printer;
+    Logger::printer = printer;
 
     mat londonhp100_coord, londonhp100_data;
     vector<string> londonhp100_fields;

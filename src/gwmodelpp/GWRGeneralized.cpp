@@ -6,7 +6,7 @@
 #include "math.h"
 #include "gsl/gsl_sf.h"
 #include "gsl/gsl_randist.h"
-#include "GwmLogger.h"
+#include "Logger.h"
 #include "GeneralizedLinearModel.h"
 
 #ifdef ENABLE_OPENMP

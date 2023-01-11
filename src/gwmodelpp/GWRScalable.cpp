@@ -2,7 +2,7 @@
 #include "BandwidthSelector.h"
 #include "VariableForwardSelector.h"
 #include <assert.h>
-#include "GwmLogger.h"
+#include "Logger.h"
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
