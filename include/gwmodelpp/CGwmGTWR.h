@@ -14,7 +14,7 @@
 
 using namespace std;
 
-class CGwmGTWR :  public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmVarialbeSelectable, public IGwmOpenmpParallelizable
+class CGwmGTWR :  public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmVarialbeSelectable
 {
 public:
     enum BandwidthSelectionCriterionType
@@ -35,14 +35,14 @@ private:
     static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
 
 public:
-    CGwmGTWR();
+    CGwmGTWR(){};
     CGwmGTWR(const mat& x, const vec& y, const mat& coords, const CGwmSpatialWeight& spatialWeight, bool hasHatMatrix = true, bool hasIntercept = true)
         : CGwmGWRBase(x, y, spatialWeight, coords)
     {
         mHasHatMatrix = hasHatMatrix;
         mHasIntercept = hasIntercept;
     }
-    ~CGwmGTWR();
+    ~CGwmGTWR(){};
 
 private:
     CGwmWeight* mWeight = nullptr;      
@@ -87,10 +87,6 @@ private:
     mat predictSerial(const mat& locations, const mat& x, const vec& y);
     mat fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
     
-#ifdef ENABLE_OPENMP
-    mat predictOmp(const mat& locations, const mat& x, const vec& y);
-    mat fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
-#endif
 
 public:     // Implement IGwmBandwidthSelectable
     double getCriterion(CGwmBandwidthWeight* weight) override
@@ -101,10 +97,7 @@ public:     // Implement IGwmBandwidthSelectable
 private:
     double bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwidthWeight);
-#ifdef ENABLE_OPENMP
-    double bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthWeight);
-    double bandwidthSizeCriterionAICOmp(CGwmBandwidthWeight* bandwidthWeight);
-#endif
+
 
 public:     // Implement IGwmVariableSelectable
     double getCriterion(const std::vector<size_t>& variables) override
@@ -119,31 +112,12 @@ public:     // Implement IGwmVariableSelectable
 
 private:
     double indepVarsSelectionCriterionSerial(const std::vector<size_t>& indepVars);
-#ifdef ENABLE_OPENMP
-    double indepVarsSelectionCriterionOmp(const std::vector<size_t>& indepVars);
-#endif     
-
-public:     // Implement IGwmParallelizable
-    int parallelAbility() const
-    {
-        return ParallelType::SerialOnly
-#ifdef ENABLE_OPENMP
-            | ParallelType::OpenMP
-#endif        
-        ;
-    }
-
-    ParallelType parallelType() const { return mParallelType; }
-
-    void setParallelType(const ParallelType& type);
-
-public:     // Implement IGwmOpenmpParallelizable
-    void setOmpThreadNum(const int threadNum) { mOmpThreadNum = threadNum; }
 
 protected:
     bool isStoreS() { return mHasHatMatrix && (mCoords.n_rows < 8192); }
 
     void createPredictionDistanceParameter(const arma::mat& locations);
+    void createDistanceParameter();
 
 protected:
     bool mHasHatMatrix = true;
@@ -164,8 +138,7 @@ protected:
     PredictCalculator mPredictFunction = &CGwmGTWR::predictSerial;
     FitCalculator mFitFunction = &CGwmGTWR::fitSerial;
 
-    ParallelType mParallelType = ParallelType::SerialOnly;
-    int mOmpThreadNum = 8;
+    // ParallelType mParallelType = ParallelType::SerialOnly;
 
     arma::mat mBetasSE;
     arma::vec mSHat;

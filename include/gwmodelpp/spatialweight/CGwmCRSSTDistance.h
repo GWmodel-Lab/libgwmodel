@@ -95,15 +95,12 @@ public:
     virtual void makeParameter(initializer_list<DistParamVariant> plist) override;
 
     virtual vec distance(uword focus) override;
-    virtual double maxDistance() override;
-    virtual double minDistance() override;
-
 
 protected:
 
     unique_ptr<Parameter> mParameter;
     bool mGeographic;
-    double mLambda=0.05;
+    double mLambda=0.0;
 
 private:
     typedef vec (*CalculatorType)(const rowvec&, const mat&);

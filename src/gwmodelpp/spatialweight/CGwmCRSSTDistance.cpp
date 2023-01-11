@@ -10,13 +10,14 @@ vec CGwmCRSSTDistance::SpatialTemporalDistance(const rowvec& out_loc, const mat&
     double uout = out_loc(0), vout = out_loc(1), tout=out_loc(2);
     double Sdist,Tdist;
     //double mLambda=0.05;
+
     CGwmCRSSTDistance temproportion;
     for (uword j = 0; j < N; j++)
     {
         Sdist = CGwmCRSDistance::SpGcdist(in_locs(j, 0), uout, in_locs(j, 1), vout);
         Tdist=in_locs(j, 2)-tout;
         //STdists(j) = sqrt((1-mLambda)*Sdist*Sdist+ mLambda *Tdist*Tdist);
-        STdists(j) = sqrt((1-temproportion.mLambda)*Sdist*Sdist+ temproportion.mLambda *Tdist*Tdist);
+        STdists(j) = (temproportion.mLambda)*Sdist+(1-temproportion.mLambda) *Tdist+2*sqrt(temproportion.mLambda*(1-temproportion.mLambda)*Sdist*Tdist);
     }
     return STdists;
 }
@@ -32,10 +33,13 @@ vec CGwmCRSSTDistance::EuclideanDistance(const rowvec& out_loc, const mat& in_lo
     {
         x=abs(in_locs(j, 0)- uout);
         y=abs(in_locs(j, 1)- vout);
-        Sdist = x*x + y*y;
-        Tdist=in_locs(j, 2)-tout;
+        Sdist = sqrt(x*x + y*y);
+        Tdist = abs((in_locs(j, 2)-tout));
         //STdists(j) = sqrt((1-mLambda)*Sdist*Sdist+ mLambda *Tdist*Tdist);
-        STdists(j) = sqrt((1-temproportion.mLambda)*Sdist+ temproportion.mLambda *Tdist*Tdist);
+        //x=sqrt((1-temproportion.mLambda)*Sdist+ temproportion.mLambda *Tdist*Tdist);
+        
+        //STdists(j) = sqrt((1-temproportion.mLambda)*Sdist*Sdist+ temproportion.mLambda *Tdist*Tdist);
+        STdists(j) = (temproportion.mLambda)*Sdist+(1-temproportion.mLambda) *Tdist+2*sqrt(temproportion.mLambda*(1-temproportion.mLambda)*Sdist*Tdist);
     }
     return STdists;
     // mat diff = (in_locs.each_row() - out_loc);
@@ -96,29 +100,6 @@ vec CGwmCRSSTDistance::distance(uword focus)
     else throw std::runtime_error("Target is out of bounds of data points.");
 }
 
-double CGwmCRSSTDistance::maxDistance()
-{
-    if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
-    double maxD = 0.0;
-    for (uword i = 0; i < mParameter->total; i++)
-    {
-        double d = max(mCalculator(mParameter->focusPoints.row(i), mParameter->dataPoints));
-        maxD = d > maxD ? d : maxD;
-    }
-    return maxD;
-}
-
-double CGwmCRSSTDistance::minDistance()
-{
-    if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
-    double minD = DBL_MAX;
-    for (uword i = 0; i < mParameter->total; i++)
-    {
-        double d = min(mCalculator(mParameter->focusPoints.row(i), mParameter->dataPoints));
-        minD = d < minD ? d : minD;
-    }
-    return minD;
-}
 
 
 

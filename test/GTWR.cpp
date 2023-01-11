@@ -26,8 +26,8 @@ TEST_CASE("GTWR: basic flow")
         FAIL("Cannot load londonhp100temporal data.");
     }
 
-    CGwmCRSSTDistance distance(false,0.05);
-    CGwmBandwidthWeight bandwidth(50, true, CGwmBandwidthWeight::Gaussian);
+    CGwmCRSSTDistance distance(false,0.8);
+    CGwmBandwidthWeight bandwidth(98,true, CGwmBandwidthWeight::Gaussian);
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
     vec y = londonhp100_data.col(0);
@@ -42,10 +42,10 @@ TEST_CASE("GTWR: basic flow")
     REQUIRE_NOTHROW(algorithm.fit());
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2441.907430935, 1e-8));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2453.5153601032, 1e-8));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.67006467896073, 1e-8));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.65086284199265 , 1e-8));
+    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2443.6983900328264, 1e-8));
+    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2451.1642069834747, 1e-8));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.67664190540256197, 1e-8));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.65852951400324511, 1e-8));
 
     REQUIRE(algorithm.hasIntercept() == true);
 }

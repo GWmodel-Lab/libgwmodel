@@ -28,22 +28,6 @@ mat CGwmGTWR::fit()
 {
     createDistanceParameter();
 
-    if (mIsAutoselectIndepVars)
-    {
-        vector<size_t> indep_vars;
-        for (size_t i = (mHasIntercept ? 1 : 0); i < mX.n_cols; i++)
-        {
-            indep_vars.push_back(i);
-        }
-        CGwmVariableForwardSelector selector(indep_vars, mIndepVarSelectionThreshold);
-        mSelectedIndepVars = selector.optimize(this);
-        if (mSelectedIndepVars.size() > 0)
-        {
-            mX = mX.cols(CGwmVariableForwardSelector::index2uvec(mSelectedIndepVars, mHasIntercept));
-            mIndepVarsSelectionCriterionList = selector.indepVarsCriterion();
-        }
-    }
-
     uword nDp = mCoords.n_rows;
 
     if (mIsAutoselectBandwidth)
@@ -92,13 +76,20 @@ mat CGwmGTWR::predict(const mat& locations)
 
 void CGwmGTWR::createPredictionDistanceParameter(const arma::mat& locations)
 {
-    if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSDistance || 
-        mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSSTDistance || 
-        mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::MinkwoskiDistance)
+    if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSSTDistance)
     {
-        mSpatialWeight.distance()->makeParameter({ locations, mCoords });//要改！！
+        mSpatialWeight.distance()->makeParameter({ locations, mCoords });
     }
 }
+
+void CGwmGTWR::createDistanceParameter()
+{
+    if (mSpatialWeight.distance()->type() == CGwmDistance::DistanceType::CRSSTDistance)
+    {
+        mSpatialWeight.distance()->makeParameter({ mCoords, mCoords });
+    }
+}
+
 
 mat CGwmGTWR::predictSerial(const mat& locations, const mat& x, const vec& y)
 {
@@ -161,95 +152,6 @@ mat CGwmGTWR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec
     betasSE = betasSE.t();
     return betas.t();
 }
-
-#ifdef ENABLE_OPENMP
-mat CGwmGTWR::predictOmp(const mat& locations, const mat& x, const vec& y)
-{
-    uword nRp = locations.n_rows, nVar = x.n_cols;
-    mat betas(nVar, nRp, arma::fill::zeros);
-    bool success = true;
-    std::exception except;
-#pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; (uword)i < nRp; i++)
-    {
-        if (success)
-        {
-            vec w = mSpatialWeight.weightVector(i);
-            mat xtw = trans(x.each_col() % w);
-            mat xtwx = xtw * x;
-            mat xtwy = xtw * y;
-            try
-            {
-                mat xtwx_inv = inv_sympd(xtwx);
-                betas.col(i) = xtwx_inv * xtwy;
-            }
-            catch (const exception& e)
-            {
-                GWM_LOG_ERROR(e.what());
-                except = e;
-                success = false;
-            }
-        }
-    }
-    if (!success)
-    {
-        throw except;
-    }
-    return betas.t();
-}
-
-mat CGwmGTWR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
-{
-    uword nDp = mCoords.n_rows, nVar = x.n_cols;
-    mat betas(nVar, nDp, fill::zeros);
-    betasSE = mat(nVar, nDp, fill::zeros);
-    S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
-    mat shat_all(2, mOmpThreadNum, fill::zeros);
-    mat qDiag_all(nDp, mOmpThreadNum, fill::zeros);
-    bool success = true;
-    std::exception except;
-#pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; (uword)i < nDp; i++)
-    {
-        if (success)
-        {
-            int thread = omp_get_thread_num();
-            vec w = mSpatialWeight.weightVector(i);
-            mat xtw = trans(x.each_col() % w);
-            mat xtwx = xtw * x;
-            mat xtwy = xtw * y;
-            try
-            {
-                mat xtwx_inv = inv_sympd(xtwx);
-                betas.col(i) = xtwx_inv * xtwy;
-                mat ci = xtwx_inv * xtw;
-                betasSE.col(i) = sum(ci % ci, 1);
-                mat si = x.row(i) * ci;
-                shat_all(0, thread) += si(0, i);
-                shat_all(1, thread) += det(si * si.t());
-                vec p = - si.t();
-                p(i) += 1.0;
-                qDiag_all.col(thread) += p % p;
-                S.row(isStoreS() ? i : 0) = si;
-            }
-            catch (const exception& e)
-            {
-                GWM_LOG_ERROR(e.what());
-                except = e;
-                success = false;
-            }
-        }
-    }
-    if (!success)
-    {
-        throw except;
-    }
-    shat = sum(shat_all, 1);
-    qDiag = sum(qDiag_all, 1);
-    betasSE = betasSE.t();
-    return betas.t();
-}
-#endif
 
 double CGwmGTWR::bandwidthSizeCriterionCVSerial(CGwmBandwidthWeight* bandwidthWeight)
 {
@@ -319,97 +221,6 @@ double CGwmGTWR::bandwidthSizeCriterionAICSerial(CGwmBandwidthWeight* bandwidthW
     else return DBL_MAX;
 }
 
-#ifdef ENABLE_OPENMP
-double CGwmGTWR::bandwidthSizeCriterionCVOmp(CGwmBandwidthWeight* bandwidthWeight)
-{
-    uword nDp = mCoords.n_rows;
-    vec shat(2, fill::zeros);
-    vec cv_all(mOmpThreadNum, fill::zeros);
-    bool flag = true;
-#pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; (uword)i < nDp; i++)
-    {
-        if (flag)
-        {
-            int thread = omp_get_thread_num();
-            vec d = mSpatialWeight.distance()->distance(i);
-            vec w = bandwidthWeight->weight(d);
-            w(i) = 0.0;
-            mat xtw = trans(mX.each_col() % w);
-            mat xtwx = xtw * mX;
-            mat xtwy = xtw * mY;
-            try
-            {
-                mat xtwx_inv = inv_sympd(xtwx);
-                vec beta = xtwx_inv * xtwy;
-                double res = mY(i) - det(mX.row(i) * beta);
-                if (isfinite(res))
-                    cv_all(thread) += res * res;
-                else
-                    flag = false;
-            }
-            catch (const exception& e)
-            {
-                GWM_LOG_ERROR(e.what());
-                flag = false;
-            }
-        }
-    }
-    if (flag)
-    {
-        double cv = sum(cv_all);
-        return cv;
-    }
-    else return DBL_MAX;
-}
-
-double CGwmGTWR::bandwidthSizeCriterionAICOmp(CGwmBandwidthWeight* bandwidthWeight)
-{
-    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
-    mat betas(nVar, nDp, fill::zeros);
-    mat shat_all(2, mOmpThreadNum, fill::zeros);
-    bool flag = true;
-#pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; (uword)i < nDp; i++)
-    {
-        if (flag)
-        {
-            int thread = omp_get_thread_num();
-            vec d = mSpatialWeight.distance()->distance(i);
-            vec w = bandwidthWeight->weight(d);
-            mat xtw = trans(mX.each_col() % w);
-            mat xtwx = xtw * mX;
-            mat xtwy = xtw * mY;
-            try
-            {
-                mat xtwx_inv = inv_sympd(xtwx);
-                betas.col(i) = xtwx_inv * xtwy;
-                mat ci = xtwx_inv * xtw;
-                mat si = mX.row(i) * ci;
-                shat_all(0, thread) += si(0, i);
-                shat_all(1, thread) += det(si * si.t());
-            }
-            catch (const exception& e)
-            {
-                GWM_LOG_ERROR(e.what());
-                flag = false;
-            }
-        }
-    }
-    if (flag)
-    {
-        vec shat = sum(shat_all, 1);
-        double value = CGwmGWRBase::AICc(mX, mY, betas.t(), shat);
-        if (isfinite(value))
-        {
-            return value;
-        }
-        else return DBL_MAX;
-    }
-    else return DBL_MAX;
-}
-#endif
-
 double CGwmGTWR::indepVarsSelectionCriterionSerial(const vector<size_t>& indepVars)
 {
     mat x = mX.cols(CGwmVariableForwardSelector::index2uvec(indepVars, mHasIntercept));
@@ -442,107 +253,15 @@ double CGwmGTWR::indepVarsSelectionCriterionSerial(const vector<size_t>& indepVa
     return value;
 }
 
-#ifdef ENABLE_OPENMP
-double CGwmGTWR::indepVarsSelectionCriterionOmp(const vector<size_t>& indepVars)
-{
-    mat x = mX.cols(CGwmVariableForwardSelector::index2uvec(indepVars, mHasIntercept));
-    vec y = mY;
-    uword nDp = mCoords.n_rows, nVar = x.n_cols;
-    mat betas(nVar, nDp, fill::zeros);
-    mat shat(2, mOmpThreadNum, fill::zeros);
-    int flag = true;
-#pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; (uword)i < nDp; i++)
-    {
-        if (flag)
-        {
-            int thread = omp_get_thread_num();
-            vec w(nDp, fill::ones);
-            mat xtw = trans(x.each_col() % w);
-            mat xtwx = xtw * x;
-            mat xtwy = xtw * y;
-            try
-            {
-                mat xtwx_inv = inv_sympd(xtwx);
-                betas.col(i) = xtwx_inv * xtwy;
-                mat ci = xtwx_inv * xtw;
-                mat si = x.row(i) * ci;
-                shat(0, thread) += si(0, i);
-                shat(1, thread) += det(si * si.t());
-            }
-            catch (const exception& e)
-            {
-                GWM_LOG_ERROR(e.what());
-                flag = false;
-            }
-        }
-    }
-    if (flag)
-    {
-        double value = CGwmGWRBase::AICc(x, y, betas.t(), sum(shat, 1));
-        return value;
-    }
-    else return DBL_MAX;
-}
-#endif
-
-
 void CGwmGTWR::setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion)
 {
     mBandwidthSelectionCriterion = criterion;
     unordered_map<BandwidthSelectionCriterionType, BandwidthSelectionCriterionCalculator> mapper;
-    switch (mParallelType)
-    {
-    case ParallelType::SerialOnly:
-        mapper = {
-            make_pair(BandwidthSelectionCriterionType::CV, &CGwmGTWR::bandwidthSizeCriterionCVSerial),
-            make_pair(BandwidthSelectionCriterionType::AIC, &CGwmGTWR::bandwidthSizeCriterionAICSerial)
-        };
-        break;
-#ifdef ENABLE_OPENMP
-    case ParallelType::OpenMP:
-        mapper = {
-            make_pair(BandwidthSelectionCriterionType::CV, &CGwmGTWR::bandwidthSizeCriterionCVOmp),
-            make_pair(BandwidthSelectionCriterionType::AIC, &CGwmGTWR::bandwidthSizeCriterionAICOmp)
-        };
-        break;
-#endif
-    default:
-        mapper = {
-            make_pair(BandwidthSelectionCriterionType::CV, &CGwmGTWR::bandwidthSizeCriterionCVSerial),
-            make_pair(BandwidthSelectionCriterionType::AIC, &CGwmGTWR::bandwidthSizeCriterionAICSerial)
-        };
-        break;
-    }
+    mapper = {
+        make_pair(BandwidthSelectionCriterionType::CV, &CGwmGTWR::bandwidthSizeCriterionCVSerial),
+        make_pair(BandwidthSelectionCriterionType::AIC, &CGwmGTWR::bandwidthSizeCriterionAICSerial)
+    };
     mBandwidthSelectionCriterionFunction = mapper[mBandwidthSelectionCriterion];
-}
-
-void CGwmGTWR::setParallelType(const ParallelType& type)
-{
-    if (type & parallelAbility())
-    {
-        mParallelType = type;
-        switch (type) {
-        case ParallelType::SerialOnly:
-            mPredictFunction = &CGwmGTWR::predictSerial;
-            mFitFunction = &CGwmGTWR::fitSerial;
-            mIndepVarsSelectionCriterionFunction = &CGwmGTWR::indepVarsSelectionCriterionSerial;
-            break;
-#ifdef ENABLE_OPENMP
-        case ParallelType::OpenMP:
-            mPredictFunction = &CGwmGTWR::predictOmp;
-            mFitFunction = &CGwmGTWR::fitOmp;
-            mIndepVarsSelectionCriterionFunction = &CGwmGTWR::indepVarsSelectionCriterionOmp;
-            break;
-#endif
-        default:
-            mPredictFunction = &CGwmGTWR::predictSerial;
-            mFitFunction = &CGwmGTWR::fitSerial;
-            mIndepVarsSelectionCriterionFunction = &CGwmGTWR::indepVarsSelectionCriterionSerial;
-            break;
-        }
-    }
-    setBandwidthSelectionCriterion(mBandwidthSelectionCriterion);
 }
 
 bool CGwmGTWR::isValid()
