@@ -15,6 +15,7 @@ Full Documentation
    :maxdepth: 1
 
    about.md
+   models/index.rst
    api/reference.rst
 
 
