@@ -358,7 +358,7 @@ public:     // Implement IRegressionAnalysis
 private:
     
     /**
-     * \english 
+     * \~english 
      * @brief Predict coefficients on specified locations (serial implementation).
      * 
      * @param locations Locations where to predict coefficients.
@@ -366,7 +366,7 @@ private:
      * @param y Dependent variable.
      * @return mat Predicted coefficients.
      * 
-     * \chinese 
+     * \~chinese 
      * @brief 在指定位置处进行回归系数预测（单线程实现）。
      * 
      * @param locations 指定位置。
@@ -403,7 +403,7 @@ private:
     
 #ifdef ENABLE_OPENMP
     /**
-     * \english 
+     * \~english 
      * @brief Predict coefficients on specified locations (OpenMP implementation).
      * 
      * @param locations Locations where to predict coefficients.
@@ -411,7 +411,7 @@ private:
      * @param y Dependent variable.
      * @return mat Predicted coefficients.
      * 
-     * \chinese 
+     * \~chinese 
      * @brief 在指定位置处进行回归系数预测（OpenMP 实现）。
      * 
      * @param locations 指定位置。
