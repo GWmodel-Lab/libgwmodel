@@ -68,6 +68,7 @@ set(SOURCES_CXX
     gwmodelpp/CGwmGWRLocalCollinearity.cpp
     gwmodelpp/CGwmRobustGWR.cpp
     gwmodelpp/CGwmGTWR.cpp
+
 )
 
 set(SOURCES_C
@@ -107,6 +108,7 @@ set(HEADERS_CXX
     ../include/gwmodelpp/CGwmGWRScalable.h
     ../include/gwmodelpp/CGwmGWRLocalCollinearity.h
     ../include/gwmodelpp/CGwmGTWR.h
+
 )
 
 set(HEADERS_C

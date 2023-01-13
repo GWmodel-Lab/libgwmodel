@@ -32,9 +32,9 @@ class CGwmCRSSTDistance : public CGwmCRSDistance
 
 
 public:
-    static vec SpatialTemporalDistance(const rowvec& out_loc, const mat& in_locs);
+    static vec GcrsSTDistance(const rowvec& out_loc, const mat& in_locs ,double mLambda);
 
-    static vec EuclideanDistance(const rowvec& out_loc, const mat& in_locs);
+    static vec EuclideanDistance(const rowvec& out_loc, const mat& in_locs ,double mLambda);
 
 
 public:
@@ -56,29 +56,6 @@ public:
 
 
     DistanceType type() override { return DistanceType::CRSSTDistance; }
-
-    bool geographic() const
-    {
-        return mGeographic;
-    }
-
-    void setGeographic(bool geographic)
-    {
-        mGeographic = geographic;
-        mCalculator = mGeographic ? &SpatialTemporalDistance : &EuclideanDistance;
-    }
-
-    /*
-    double lambda() const
-    {
-        return mLambda;
-    }
-
-    void setLambda(double lambda)
-    {
-        mLambda = lambda;
-    }
-    */
 
 public:
 
@@ -103,9 +80,10 @@ protected:
     double mLambda=0.0;
 
 private:
-    typedef vec (*CalculatorType)(const rowvec&, const mat&);
+    typedef vec (*CalculatorType)(const rowvec&, const mat&, const double);
 private:
     CalculatorType mCalculator = &EuclideanDistance;
+    //CalculatorType mCalculator;
 };
 
 

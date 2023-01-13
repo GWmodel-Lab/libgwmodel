@@ -16,7 +16,11 @@
             "memory": "cpp",
             "random": "cpp",
             "functional": "cpp",
-            "regex": "cpp"
+            "regex": "cpp",
+            "type_traits": "cpp",
+            "deque": "cpp",
+            "string": "cpp",
+            "vector": "cpp"
         }
     }
 }

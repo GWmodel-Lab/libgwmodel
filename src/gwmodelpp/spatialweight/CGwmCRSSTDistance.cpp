@@ -3,43 +3,41 @@
 
 #include <exception>
 
-vec CGwmCRSSTDistance::SpatialTemporalDistance(const rowvec& out_loc, const mat& in_locs)
+vec CGwmCRSSTDistance::GcrsSTDistance(const rowvec& out_loc, const mat& in_locs ,double mLambda)
 {
     uword N = in_locs.n_rows;
     vec STdists(N, fill::zeros);
     double uout = out_loc(0), vout = out_loc(1), tout=out_loc(2);
     double Sdist,Tdist;
-    //double mLambda=0.05;
 
-    CGwmCRSSTDistance temproportion;
     for (uword j = 0; j < N; j++)
     {
         Sdist = CGwmCRSDistance::SpGcdist(in_locs(j, 0), uout, in_locs(j, 1), vout);
         Tdist=in_locs(j, 2)-tout;
         //STdists(j) = sqrt((1-mLambda)*Sdist*Sdist+ mLambda *Tdist*Tdist);
-        STdists(j) = (temproportion.mLambda)*Sdist+(1-temproportion.mLambda) *Tdist+2*sqrt(temproportion.mLambda*(1-temproportion.mLambda)*Sdist*Tdist);
+        STdists(j) = (mLambda)*Sdist+(1-mLambda) *Tdist+2*sqrt(mLambda*(1-mLambda)*Sdist*Tdist);
     }
     return STdists;
 }
 
-vec CGwmCRSSTDistance::EuclideanDistance(const rowvec& out_loc, const mat& in_locs)
+vec CGwmCRSSTDistance::EuclideanDistance(const rowvec& out_loc, const mat& in_locs,double mLambda)
 {
     uword N = in_locs.n_rows;
     vec STdists(N, fill::zeros);
     double uout = out_loc(0), vout = out_loc(1), tout=out_loc(2);
     double Sdist,Tdist,x,y;
-    CGwmCRSSTDistance temproportion;
+    
     for (uword j = 0; j < N; j++)
     {
+        x=in_locs(j, 0);
+        y=in_locs(j, 1);
         x=abs(in_locs(j, 0)- uout);
         y=abs(in_locs(j, 1)- vout);
         Sdist = sqrt(x*x + y*y);
         Tdist = abs((in_locs(j, 2)-tout));
         //STdists(j) = sqrt((1-mLambda)*Sdist*Sdist+ mLambda *Tdist*Tdist);
-        //x=sqrt((1-temproportion.mLambda)*Sdist+ temproportion.mLambda *Tdist*Tdist);
         
-        //STdists(j) = sqrt((1-temproportion.mLambda)*Sdist*Sdist+ temproportion.mLambda *Tdist*Tdist);
-        STdists(j) = (temproportion.mLambda)*Sdist+(1-temproportion.mLambda) *Tdist+2*sqrt(temproportion.mLambda*(1-temproportion.mLambda)*Sdist*Tdist);
+        STdists(j) = (mLambda)*Sdist+(1-mLambda) *Tdist+2*sqrt(mLambda*(1-mLambda)*Sdist*Tdist);         
     }
     return STdists;
     // mat diff = (in_locs.each_row() - out_loc);
@@ -54,7 +52,7 @@ CGwmCRSSTDistance::CGwmCRSSTDistance() : mParameter(nullptr)
 CGwmCRSSTDistance::CGwmCRSSTDistance(bool isGeographic, double lambda): mParameter(nullptr), mGeographic(isGeographic)
 {
     mLambda=lambda;
-    mCalculator = mGeographic ? &SpatialTemporalDistance : &EuclideanDistance;
+    mCalculator = mGeographic ? &GcrsSTDistance : &EuclideanDistance;
 }
 
 CGwmCRSSTDistance::CGwmCRSSTDistance(const CGwmCRSSTDistance &distance) : CGwmCRSDistance(distance)
@@ -95,7 +93,7 @@ vec CGwmCRSSTDistance::distance(uword focus)
 
     if (focus < mParameter->total)
     {
-        return mCalculator(mParameter->focusPoints.row(focus), mParameter->dataPoints);
+        return mCalculator(mParameter->focusPoints.row(focus), mParameter->dataPoints, mLambda);
     }
     else throw std::runtime_error("Target is out of bounds of data points.");
 }
