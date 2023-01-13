@@ -7,11 +7,11 @@
 class CGwmCRSSTDistance : public CGwmDistance
 {
 public:
-    typedef vec (*CalculatorType)(const CGwmDistance* spatial, const CGwmDistance* temporal, uword focus, double lambda, double angle);
+    typedef arma::vec (*CalculatorType)(const CGwmDistance*, const CGwmDistance*, arma::uword, double, double);
 
-    static vec OrthogonalSTDistance(const CGwmDistance* spatial, const CGwmDistance* temporal, uword focus, double lambda, double angle);
+    static arma::vec OrthogonalSTDistance(const CGwmDistance* spatial, const CGwmDistance* temporal, arma::uword focus, double lambda, double angle);
 
-    static vec ObliqueSTDistance(const CGwmDistance* spatial, const CGwmDistance* temporal, uword focus, double lambda, double angle);
+    static arma::vec ObliqueSTDistance(const CGwmDistance* spatial, const CGwmDistance* temporal, arma::uword focus, double lambda, double angle);
 
 public:
     CGwmCRSSTDistance();
@@ -34,9 +34,9 @@ public:
 
     DistanceType type() const override { return DistanceType::CRSSTDistance; }
 
-    void makeParameter(initializer_list<DistParamVariant> plist) override;
+    void makeParameter(std::initializer_list<DistParamVariant> plist) override;
 
-    vec distance(uword focus) const override
+    arma::vec distance(arma::uword focus) const override
     {
         return mCalculator(mSpatialDistance, mTemporalDistance, focus, mLambda, mAngle);
     }

@@ -66,7 +66,6 @@ set(SOURCES_CXX
     gwmodelpp/CGwmGeneralizedLinearModel.cpp
     gwmodelpp/CGwmGWRScalable.cpp
     gwmodelpp/CGwmGWRLocalCollinearity.cpp
-    gwmodelpp/CGwmRobustGWR.cpp
     gwmodelpp/CGwmGTWR.cpp
 
 )

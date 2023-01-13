@@ -1,6 +1,6 @@
 #define CATCH_CONFIG_MAIN
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include <vector>
 #include <string>
@@ -26,7 +26,9 @@ TEST_CASE("GTWR: basic flow")
         FAIL("Cannot load londonhp100temporal data.");
     }
 
-    CGwmCRSSTDistance distance(true,0.5);
+    CGwmCRSDistance sdist(true);
+    CGwmOneDimDistance tdist;
+    CGwmCRSSTDistance distance(&sdist, &tdist, 0.5);
     CGwmBandwidthWeight bandwidth(36,true, CGwmBandwidthWeight::Gaussian);
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
@@ -42,10 +44,10 @@ TEST_CASE("GTWR: basic flow")
     REQUIRE_NOTHROW(algorithm.fit());
 
     GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AIC, Catch::WithinAbs(2443.9698348782, 1e-8));
-    REQUIRE_THAT(diagnostic.AICc, Catch::WithinAbs(2456.3750569354, 1e-8));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::WithinAbs(0.6872921780938, 1e-8));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::WithinAbs(0.65184964517969, 1e-8));
+    REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2443.9698348782, 1e-8));
+    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2456.3750569354, 1e-8));
+    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.6872921780938, 1e-8));
+    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.65184964517969, 1e-8));
 
     REQUIRE(algorithm.hasIntercept() == true);
 }

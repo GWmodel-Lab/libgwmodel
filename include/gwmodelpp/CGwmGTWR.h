@@ -9,10 +9,7 @@
 #include "IGwmBandwidthSelectable.h"
 #include "IGwmVarialbeSelectable.h"
 #include "IGwmParallelizable.h"
-
 #include "spatialweight/CGwmCRSSTDistance.h"
-
-using namespace std;
 
 class CGwmGTWR :  public CGwmGWRBase, public IGwmBandwidthSelectable, public IGwmVarialbeSelectable
 {
@@ -23,20 +20,20 @@ public:
         CV
     };
 
-    static unordered_map<BandwidthSelectionCriterionType, string> BandwidthSelectionCriterionTypeNameMapper;
+    static std::unordered_map<BandwidthSelectionCriterionType, std::string> BandwidthSelectionCriterionTypeNameMapper;
     
-    typedef mat (CGwmGTWR::*PredictCalculator)(const mat&, const mat&, const vec&);
-    typedef mat (CGwmGTWR::*FitCalculator)(const mat&, const vec&, mat&, vec&, vec&, mat&);
+    typedef arma::mat (CGwmGTWR::*PredictCalculator)(const arma::mat&, const arma::mat&, const arma::vec&);
+    typedef arma::mat (CGwmGTWR::*FitCalculator)(const arma::mat&, const arma::vec&, arma::mat&, arma::vec&, arma::vec&, arma::mat&);
 
     typedef double (CGwmGTWR::*BandwidthSelectionCriterionCalculator)(CGwmBandwidthWeight*);
-    typedef double (CGwmGTWR::*IndepVarsSelectCriterionCalculator)(const std::vector<size_t>&);
+    typedef double (CGwmGTWR::*IndepVarsSelectCriterionCalculator)(const std::vector<std::size_t>&);
 
 private:
-    static GwmRegressionDiagnostic CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat);
+    static GwmRegressionDiagnostic CalcDiagnostic(const arma::mat& x, const arma::vec& y, const arma::mat& betas, const arma::vec& shat);
 
 public:
     CGwmGTWR(){};
-    CGwmGTWR(const mat& x, const vec& y, const mat& coords, const CGwmSpatialWeight& spatialWeight, bool hasHatMatrix = true, bool hasIntercept = true)
+    CGwmGTWR(const arma::mat& x, const arma::vec& y, const arma::mat& coords, const CGwmSpatialWeight& spatialWeight, bool hasHatMatrix = true, bool hasIntercept = true)
         : CGwmGWRBase(x, y, spatialWeight, coords)
     {
         mHasHatMatrix = hasHatMatrix;
@@ -49,7 +46,7 @@ private:
     CGwmDistance* mDistance = nullptr;  
 
 //public:
-//    vec weightVector(uword focus);//recalculate weight using spatial temporal distance
+//    arma::vec weightVector(uword focus);//recalculate weight using spatial temporal distance
 
 public:
     bool isAutoselectBandwidth() const { return mIsAutoselectBandwidth; }
@@ -79,13 +76,13 @@ public:     // Implement CGwmAlgorithm
     bool isValid() override;
 
 public:     // Implement IGwmRegressionAnalysis
-    mat predict(const mat& locations) override;
+    arma::mat predict(const arma::mat& locations) override;
 
-    mat fit() override;
+    arma::mat fit() override;
 
 private:
-    mat predictSerial(const mat& locations, const mat& x, const vec& y);
-    mat fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S);
+    arma::mat predictSerial(const arma::mat& locations, const arma::mat& x, const arma::vec& y);
+    arma::mat fitSerial(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qDiag, arma::mat& S);
     
 
 public:     // Implement IGwmBandwidthSelectable
@@ -100,7 +97,7 @@ private:
 
 
 public:     // Implement IGwmVariableSelectable
-    double getCriterion(const std::vector<size_t>& variables) override
+    double getCriterion(const std::vector<std::size_t>& variables) override
     {
         return (this->*mIndepVarsSelectionCriterionFunction)(variables);
     }
@@ -111,7 +108,7 @@ public:     // Implement IGwmVariableSelectable
     }
 
 private:
-    double indepVarsSelectionCriterionSerial(const std::vector<size_t>& indepVars);
+    double indepVarsSelectionCriterionSerial(const std::vector<std::size_t>& indepVars);
 
 protected:
     bool isStoreS() { return mHasHatMatrix && (mCoords.n_rows < 8192); }

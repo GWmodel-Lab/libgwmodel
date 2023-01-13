@@ -54,13 +54,6 @@ public:
     CGwmOneDimDistance();
 
     /**
-     * @brief Construct a new CGwmOneDimDistance object
-     * 
-     * @param isGeographic Whether the coordinate reference system is geographical.
-     */
-    explicit CGwmOneDimDistance(bool isGeographic);
-
-    /**
      * @brief Construct a new CGwmOneDimDistance object.
      * 
      * @param distance Refernce to object for copying.

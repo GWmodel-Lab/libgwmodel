@@ -3,6 +3,7 @@
 
 #include <exception>
 
+using namespace std;
 using namespace arma;
 
 vec CGwmCRSSTDistance::OrthogonalSTDistance(const CGwmDistance* spatial, const CGwmDistance* temporal, uword focus, double lambda, double angle)
