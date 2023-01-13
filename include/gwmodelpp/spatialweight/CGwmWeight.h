@@ -51,7 +51,7 @@ public:
      * 
      * @return Newly created pointer.
      */
-    virtual CGwmWeight* clone() = 0;
+    virtual CGwmWeight* clone() const = 0;
 
 public:
 
@@ -61,7 +61,7 @@ public:
      * @param dist According distance vector.
      * @return Weight vector.
      */
-    virtual arma::vec weight(arma::vec dist) = 0;
+    virtual arma::vec weight(arma::vec dist) const = 0;
 };
 
 #endif // CGWMWEIGHT_H

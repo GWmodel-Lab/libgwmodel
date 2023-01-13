@@ -74,14 +74,14 @@ public:
      * 
      * @return Newly created pointer.
      */
-    virtual CGwmDistance* clone() = 0;
+    virtual CGwmDistance* clone() const = 0;
 
     /**
      * @brief Return the type of this object.
      * 
      * @return Type of distance. 
      */
-    virtual DistanceType type() = 0;
+    virtual DistanceType type() const = 0;
 
     virtual Parameter* parameter() const = delete;
 
@@ -103,7 +103,7 @@ public:
      * @param focus Focused point's index. Require focus < total.
      * @return Distance vector for the focused point.
      */
-    virtual arma::vec distance(arma::uword focus) = 0;
+    virtual arma::vec distance(arma::uword focus) const = 0;
 
     /**
      * @brief Get maximum distance among all points。
@@ -112,7 +112,7 @@ public:
      * @param parameter Pointer to parameter object used for calculating distance. 
      * @return Maximum distance. 
      */
-    virtual double maxDistance() = 0;
+    virtual double maxDistance() const = 0;
     
     /**
      * @brief Get minimum distance among all points
@@ -121,7 +121,7 @@ public:
      * @param parameter Pointer to parameter object used for calculating distance. 
      * @return Maximum distance.  
      */
-    virtual double minDistance() = 0;
+    virtual double minDistance() const = 0;
 
 };
 

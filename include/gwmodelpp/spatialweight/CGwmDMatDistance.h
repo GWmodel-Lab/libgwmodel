@@ -26,12 +26,12 @@ public:
     explicit CGwmDMatDistance(std::string dmatFile);
     CGwmDMatDistance(const CGwmDMatDistance& distance);
 
-    virtual CGwmDistance * clone() override
+    virtual CGwmDistance * clone() const override
     {
         return new CGwmDMatDistance(*this);
     }
 
-    DistanceType type() override { return DistanceType::DMatDistance; }
+    DistanceType type() const override { return DistanceType::DMatDistance; }
 
     std::string dMatFile() const;
     void setDMatFile(const std::string &dMatFile);
@@ -50,9 +50,9 @@ public:
      */
     virtual void makeParameter(std::initializer_list<DistParamVariant> plist) override;
     
-    virtual arma::vec distance(arma::uword focus) override;
-    virtual double maxDistance() override;
-    virtual double minDistance() override;
+    virtual arma::vec distance(arma::uword focus) const override;
+    virtual double maxDistance() const override;
+    virtual double minDistance() const override;
 
 private:
     std::string mDMatFile;

@@ -25,7 +25,7 @@ mat CGwmMinkwoskiDistance::CoordinateRotate(const mat& coords, double theta)
     return rotated_coords;
 }
 
-vec CGwmMinkwoskiDistance::distance(uword focus)
+vec CGwmMinkwoskiDistance::distance(uword focus) const
 {
     if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
 

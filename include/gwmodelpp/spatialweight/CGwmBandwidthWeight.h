@@ -147,13 +147,13 @@ public:
         mKernel = bandwidthWeight->kernel();
     }
 
-    virtual CGwmWeight * clone() override
+    virtual CGwmWeight * clone() const override
     {
         return new CGwmBandwidthWeight(*this);
     }
 
 public:
-    virtual arma::vec weight(arma::vec dist) override;
+    virtual arma::vec weight(arma::vec dist) const override;
 
     /**
      * @brief Get the CGwmBandwidthWeight::mBandwidth object.

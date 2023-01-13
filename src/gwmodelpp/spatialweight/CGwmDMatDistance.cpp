@@ -25,7 +25,7 @@ void CGwmDMatDistance::makeParameter(initializer_list<DistParamVariant> plist)
     else mParameter = nullptr;
 }
 
-vec CGwmDMatDistance::distance(uword focus)
+vec CGwmDMatDistance::distance(uword focus) const
 {
     if (mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
     if (focus >= mParameter->total) throw std::runtime_error("Index exceeds ranges.");
@@ -40,13 +40,13 @@ vec CGwmDMatDistance::distance(uword focus)
     return vec();
 }
 
-double CGwmDMatDistance::maxDistance()
+double CGwmDMatDistance::maxDistance() const
 {
     if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
     return DBL_MAX;
 }
 
-double CGwmDMatDistance::minDistance()
+double CGwmDMatDistance::minDistance() const
 {
     if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
     return 0.0;

@@ -107,7 +107,7 @@ void CGwmCRSDistance::makeParameter(initializer_list<DistParamVariant> plist)
     }
 }
 
-vec CGwmCRSDistance::distance(uword focus)
+vec CGwmCRSDistance::distance(uword focus) const
 {
     if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
 
@@ -118,7 +118,7 @@ vec CGwmCRSDistance::distance(uword focus)
     else throw std::runtime_error("Target is out of bounds of data points.");
 }
 
-double CGwmCRSDistance::maxDistance()
+double CGwmCRSDistance::maxDistance() const
 {
     if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
     double maxD = 0.0;
@@ -130,7 +130,7 @@ double CGwmCRSDistance::maxDistance()
     return maxD;
 }
 
-double CGwmCRSDistance::minDistance()
+double CGwmCRSDistance::minDistance() const
 {
     if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
     double minD = DBL_MAX;

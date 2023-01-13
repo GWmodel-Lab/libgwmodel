@@ -92,12 +92,12 @@ public:
      */
     CGwmCRSDistance(const CGwmCRSDistance& distance);
 
-    virtual CGwmDistance * clone() override
+    virtual CGwmDistance * clone() const override
     {
         return new CGwmCRSDistance(*this);
     }
 
-    DistanceType type() override { return DistanceType::CRSDistance; }
+    DistanceType type() const override { return DistanceType::CRSDistance; }
 
     /**
      * @brief Get the CGwmCRSDistance::mGeographic object.
@@ -135,9 +135,9 @@ public:
      */
     virtual void makeParameter(std::initializer_list<DistParamVariant> plist) override;
 
-    virtual arma::vec distance(arma::uword focus) override;
-    virtual double maxDistance() override;
-    virtual double minDistance() override;
+    virtual arma::vec distance(arma::uword focus) const override;
+    virtual double maxDistance() const override;
+    virtual double minDistance() const override;
 
 protected:
     bool mGeographic;

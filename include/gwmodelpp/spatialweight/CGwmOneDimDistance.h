@@ -67,12 +67,12 @@ public:
      */
     CGwmOneDimDistance(const CGwmOneDimDistance& distance);
 
-    virtual CGwmDistance * clone() override
+    virtual CGwmDistance * clone() const override
     {
         return new CGwmOneDimDistance(*this);
     }
 
-    DistanceType type() override { return DistanceType::OneDimDistance; }
+    DistanceType type() const override { return DistanceType::OneDimDistance; }
 
 public:
 
@@ -88,9 +88,9 @@ public:
      */
     virtual void makeParameter(std::initializer_list<DistParamVariant> plist) override;
 
-    virtual arma::vec distance(arma::uword focus) override;
-    virtual double maxDistance() override;
-    virtual double minDistance() override;
+    virtual arma::vec distance(arma::uword focus) const override;
+    virtual double maxDistance() const override;
+    virtual double minDistance() const override;
 
 protected:
     std::unique_ptr<Parameter> mParameter = nullptr;

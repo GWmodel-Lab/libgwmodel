@@ -26,7 +26,7 @@ CGwmBandwidthWeight::KernelFunction CGwmBandwidthWeight::Kernel[] =
     &CGwmBandwidthWeight::BoxcarKernelFunction
 };
 
-vec CGwmBandwidthWeight::weight(vec dist)
+vec CGwmBandwidthWeight::weight(vec dist) const
 {
     const KernelFunction *kerf = Kernel + mKernel;
     uword nr = dist.n_elem;

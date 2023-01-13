@@ -15,12 +15,12 @@ public:
     explicit CGwmMinkwoskiDistance(double p, double theta);
     CGwmMinkwoskiDistance(const CGwmMinkwoskiDistance& distance);
 
-    virtual CGwmDistance * clone() override
+    virtual CGwmDistance * clone() const override
     {
         return new CGwmMinkwoskiDistance(*this);
     }
 
-    DistanceType type() override { return DistanceType::MinkwoskiDistance; }
+    DistanceType type() const override { return DistanceType::MinkwoskiDistance; }
 
     double poly() const;
     void setPoly(double poly);
@@ -29,7 +29,7 @@ public:
     void setTheta(double theta);
 
 public:
-    virtual arma::vec distance(arma::uword focus) override;
+    virtual arma::vec distance(arma::uword focus) const override;
 
 private:
     double mPoly;
