@@ -78,7 +78,7 @@ vec CRSDistance::SpatialDistance(const rowvec &out_loc, const mat &in_locs)
 
 CRSDistance::CRSDistance(const CRSDistance &distance) : Distance(distance)
 {
-    mGeographic = distance.mGeographic;
+    setGeographic(distance.mGeographic);
     if (distance.mParameter)
     {
         mat fp = distance.mParameter->focusPoints;
