@@ -73,6 +73,8 @@ public:
 
     virtual vec distance(uword focus) override;
 
+    double maxDistance();
+
 protected:
 
     unique_ptr<Parameter> mParameter;

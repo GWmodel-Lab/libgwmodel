@@ -98,6 +98,14 @@ vec CGwmCRSSTDistance::distance(uword focus)
     else throw std::runtime_error("Target is out of bounds of data points.");
 }
 
-
-
-
+double CGwmCRSSTDistance::maxDistance()
+{
+    if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
+    double maxD = 0.0;
+    for (uword i = 0; i < mParameter->total; i++)
+    {
+        double d = max(mCalculator(mParameter->focusPoints.row(i), mParameter->dataPoints, mLambda));
+        maxD = d > maxD ? d : maxD;
+    }
+    return maxD;
+}
