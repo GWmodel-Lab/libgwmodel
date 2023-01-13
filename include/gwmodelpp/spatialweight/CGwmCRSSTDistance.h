@@ -2,45 +2,23 @@
 #define CGWMCRSSTDISTANCE_H
 
 #include "CGwmCRSDistance.h"
+#include "CGwmOneDimDistance.h"
 
-class CGwmCRSSTDistance : public CGwmCRSDistance
+class CGwmCRSSTDistance : public CGwmDistance
 {
-
-    /**
-     * @brief Struct of parameters used in spatial distance calculating according to coordinate reference system. 
-     * Usually a pointer to object of this class is passed to CGwmCRSSTDistance::distance().
-     */
-        struct Parameter : public CGwmDistance::Parameter
-    {
-        mat focusPoints;    //!< Matrix of focus points' coordinates. The shape of it must be nx3 and the first column is longitudes or x-coordinate, 
-                            //the second column is latitudes or y-coordinate, the third column is time index;
-        mat dataPoints;     //!< Matrix of data points' coordinates. The shape of it must be nx3 and the first column is longitudes or x-coordinate,
-                            //the second column is latitudes or y-coordinate, the third column is time index;
-        /**
-         * @brief Construct a new CRSDistanceParameter object.
-         * 
-         * @param fp Reference to focus points.
-         * @param dp Reference to data points.
-         */
-        Parameter(const mat& fp, const mat& dp) : CGwmDistance::Parameter()
-            , focusPoints(fp)
-            , dataPoints(dp)
-        {
-            total = fp.n_rows;
-        }
-    };
-
-
 public:
-    static vec GcrsSTDistance(const rowvec& out_loc, const mat& in_locs ,double mLambda);
+    typedef vec (*CalculatorType)(const CGwmDistance* spatial, const CGwmDistance* temporal, uword focus, double lambda, double angle);
 
-    static vec EuclideanDistance(const rowvec& out_loc, const mat& in_locs ,double mLambda);
+    static vec OrthogonalSTDistance(const CGwmDistance* spatial, const CGwmDistance* temporal, uword focus, double lambda, double angle);
 
+    static vec ObliqueSTDistance(const CGwmDistance* spatial, const CGwmDistance* temporal, uword focus, double lambda, double angle);
 
 public:
     CGwmCRSSTDistance();
 
-    explicit CGwmCRSSTDistance(bool isGeographic, double lambda);    
+    explicit CGwmCRSSTDistance(const CGwmDistance* spatialDistance, const CGwmOneDimDistance* temporalDistance, double lambda);
+
+    explicit CGwmCRSSTDistance(const CGwmDistance* spatialDistance, const CGwmOneDimDistance* temporalDistance, double lambda, double angle);
 
     /**
      * @brief Copy construct a new CGwmCRSDistance object.
@@ -49,43 +27,45 @@ public:
      */
     CGwmCRSSTDistance(const CGwmCRSSTDistance& distance);
 
-    virtual CGwmDistance * clone() override
+    CGwmDistance * clone() const override
     {
         return new CGwmCRSSTDistance(*this);
     }
 
+    DistanceType type() const override { return DistanceType::CRSSTDistance; }
 
-    DistanceType type() override { return DistanceType::CRSSTDistance; }
+    void makeParameter(initializer_list<DistParamVariant> plist) override;
+
+    vec distance(uword focus) const override
+    {
+        return mCalculator(mSpatialDistance, mTemporalDistance, focus, mLambda, mAngle);
+    }
+
+    double minDistance() const override;
+
+    double maxDistance() const override;
 
 public:
 
-    /**
-     * @brief Create Parameter for Caclulating CRS Distance.
-     * 
-     * @param plist A list of parameters containing 2 items:
-     *  - `mat` focus points
-     *  - `mat` data points
-     *  .
-     * 
-     * @return DistanceParameter* The pointer to parameters.
-     */
-    virtual void makeParameter(initializer_list<DistParamVariant> plist) override;
+    const CGwmDistance* spatialDistance() const { return mSpatialDistance; }
 
-    virtual vec distance(uword focus) override;
+    const CGwmOneDimDistance* temporalDistance() const { return mTemporalDistance; }
 
-    double maxDistance();
+    double lambda() const { return mLambda; }
+
+    void setLambda(const double lambda) { mLambda = lambda; }
 
 protected:
 
-    unique_ptr<Parameter> mParameter;
-    bool mGeographic;
-    double mLambda=0.0;
+    CGwmDistance* mSpatialDistance = nullptr;
+    CGwmOneDimDistance* mTemporalDistance = nullptr;
+
+    double mLambda = 0.0;
+    double mAngle = arma::datum::pi / 2;
 
 private:
-    typedef vec (*CalculatorType)(const rowvec&, const mat&, const double);
-private:
-    CalculatorType mCalculator = &EuclideanDistance;
-    //CalculatorType mCalculator;
+    std::unique_ptr<Parameter> mParameter;
+    CalculatorType mCalculator = &OrthogonalSTDistance;
 };
 
 
