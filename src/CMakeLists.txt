@@ -37,34 +37,34 @@ endif()
 
 
 set(SOURCES_CXX
-    gwmodelpp/spatialweight/CGwmBandwidthWeight.cpp
-    gwmodelpp/spatialweight/CGwmCRSDistance.cpp
-    gwmodelpp/spatialweight/CGwmOneDimDistance.cpp
-    gwmodelpp/spatialweight/CGwmDistance.cpp
-    gwmodelpp/spatialweight/CGwmDMatDistance.cpp
-    gwmodelpp/spatialweight/CGwmMinkwoskiDistance.cpp
-    gwmodelpp/spatialweight/CGwmSpatialWeight.cpp
-    gwmodelpp/spatialweight/CGwmWeight.cpp
+    gwmodelpp/spatialweight/BandwidthWeight.cpp
+    gwmodelpp/spatialweight/CRSDistance.cpp
+    gwmodelpp/spatialweight/OneDimDistance.cpp
+    gwmodelpp/spatialweight/Distance.cpp
+    gwmodelpp/spatialweight/DMatDistance.cpp
+    gwmodelpp/spatialweight/MinkwoskiDistance.cpp
+    gwmodelpp/spatialweight/SpatialWeight.cpp
+    gwmodelpp/spatialweight/Weight.cpp
 
-    gwmodelpp/CGwmBandwidthSelector.cpp
-    gwmodelpp/CGwmVariableForwardSelector.cpp
-    gwmodelpp/CGwmSpatialAlgorithm.cpp
-    gwmodelpp/CGwmSpatialMonoscaleAlgorithm.cpp
-    gwmodelpp/CGwmSpatialMultiscaleAlgorithm.cpp
-    gwmodelpp/CGwmGWRBase.cpp
-    gwmodelpp/CGwmGWRBasic.cpp
-    gwmodelpp/CGwmGWSS.cpp
-    gwmodelpp/CGwmGWPCA.cpp
-    gwmodelpp/CGwmGWDR.cpp
-    gwmodelpp/CGwmGWRMultiscale.cpp
-    gwmodelpp/GwmLogger.cpp
-    gwmodelpp/CGwmGWRRobust.cpp
-    gwmodelpp/CGwmGWRGeneralized.cpp
-    gwmodelpp/CGwmBinomialModel.cpp
-    gwmodelpp/CGwmPoissonModel.cpp
-    gwmodelpp/CGwmGeneralizedLinearModel.cpp
-    gwmodelpp/CGwmGWRScalable.cpp
-    gwmodelpp/CGwmGWRLocalCollinearity.cpp
+    gwmodelpp/BandwidthSelector.cpp
+    gwmodelpp/VariableForwardSelector.cpp
+    gwmodelpp/SpatialAlgorithm.cpp
+    gwmodelpp/SpatialMonoscaleAlgorithm.cpp
+    gwmodelpp/SpatialMultiscaleAlgorithm.cpp
+    gwmodelpp/GWRBase.cpp
+    gwmodelpp/GWRBasic.cpp
+    gwmodelpp/GWSS.cpp
+    gwmodelpp/GWPCA.cpp
+    gwmodelpp/GWDR.cpp
+    gwmodelpp/GWRMultiscale.cpp
+    gwmodelpp/Logger.cpp
+    gwmodelpp/GWRRobust.cpp
+    gwmodelpp/GWRGeneralized.cpp
+    gwmodelpp/BinomialModel.cpp
+    gwmodelpp/PoissonModel.cpp
+    gwmodelpp/GeneralizedLinearModel.cpp
+    gwmodelpp/GWRScalable.cpp
+    gwmodelpp/GWRLocalCollinearity.cpp
 )
 
 set(SOURCES_C
@@ -72,36 +72,36 @@ set(SOURCES_C
 )
 
 set(HEADERS_CXX
-    ../include/gwmodelpp/spatialweight/CGwmBandwidthWeight.h
-    ../include/gwmodelpp/spatialweight/CGwmCRSDistance.h
-    ../include/gwmodelpp/spatialweight/CGwmOneDimDistance.h
-    ../include/gwmodelpp/spatialweight/CGwmDistance.h
-    ../include/gwmodelpp/spatialweight/CGwmDMatDistance.h
-    ../include/gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h
-    ../include/gwmodelpp/spatialweight/CGwmSpatialWeight.h
-    ../include/gwmodelpp/spatialweight/CGwmWeight.h
+    ../include/gwmodelpp/spatialweight/BandwidthWeight.h
+    ../include/gwmodelpp/spatialweight/CRSDistance.h
+    ../include/gwmodelpp/spatialweight/OneDimDistance.h
+    ../include/gwmodelpp/spatialweight/Distance.h
+    ../include/gwmodelpp/spatialweight/DMatDistance.h
+    ../include/gwmodelpp/spatialweight/MinkwoskiDistance.h
+    ../include/gwmodelpp/spatialweight/SpatialWeight.h
+    ../include/gwmodelpp/spatialweight/Weight.h
 
-    ../include/gwmodelpp/CGwmAlgorithm.h
-    ../include/gwmodelpp/CGwmBandwidthSelector.h
-    ../include/gwmodelpp/CGwmVariableForwardSelector.h
-    ../include/gwmodelpp/CGwmSpatialAlgorithm.h
-    ../include/gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h
-    ../include/gwmodelpp/CGwmSpatialMultiscaleAlgorithm.h
-    ../include/gwmodelpp/CGwmGWRBase.h
-    ../include/gwmodelpp/CGwmGWRBasic.h
-    ../include/gwmodelpp/CGwmGWSS.h
-    ../include/gwmodelpp/CGwmGWPCA.h
-    ../include/gwmodelpp/CGwmGWDR.h
-    ../include/gwmodelpp/CGwmGWRMultiscale.h
-    ../include/gwmodelpp/GwmLogger.h
-    ../include/gwmodelpp/CGwmGWRRobust.h
-    ../include/gwmodelpp/CGwmGWRGeneralized.h
-    ../include/gwmodelpp/CGwmBinomialModel.h
-    ../include/gwmodelpp/CGwmLinearModel.h
-    ../include/gwmodelpp/CGwmPoissonModel.h
-    ../include/gwmodelpp/CGwmGeneralizedLinearModel.h
-    ../include/gwmodelpp/CGwmGWRScalable.h
-    ../include/gwmodelpp/CGwmGWRLocalCollinearity.h
+    ../include/gwmodelpp/Algorithm.h
+    ../include/gwmodelpp/BandwidthSelector.h
+    ../include/gwmodelpp/VariableForwardSelector.h
+    ../include/gwmodelpp/SpatialAlgorithm.h
+    ../include/gwmodelpp/SpatialMonoscaleAlgorithm.h
+    ../include/gwmodelpp/SpatialMultiscaleAlgorithm.h
+    ../include/gwmodelpp/GWRBase.h
+    ../include/gwmodelpp/GWRBasic.h
+    ../include/gwmodelpp/GWSS.h
+    ../include/gwmodelpp/GWPCA.h
+    ../include/gwmodelpp/GWDR.h
+    ../include/gwmodelpp/GWRMultiscale.h
+    ../include/gwmodelpp/Logger.h
+    ../include/gwmodelpp/GWRRobust.h
+    ../include/gwmodelpp/GWRGeneralized.h
+    ../include/gwmodelpp/BinomialModel.h
+    ../include/gwmodelpp/LinearModel.h
+    ../include/gwmodelpp/PoissonModel.h
+    ../include/gwmodelpp/GeneralizedLinearModel.h
+    ../include/gwmodelpp/GWRScalable.h
+    ../include/gwmodelpp/GWRLocalCollinearity.h
 )
 
 set(HEADERS_C
