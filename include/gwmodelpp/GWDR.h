@@ -13,7 +13,7 @@
 namespace gwm
 {
 
-class GWDR : public SpatialAlgorithm, public IRegressionAnalysis, public IVarialbeSelectable, public IOpenmpParallelizable
+class GWDR : public SpatialAlgorithm, public IRegressionAnalysis, public IVarialbeSelectable, public IParallelizable, public IParallelOpenmpEnabled
 {
 public:
     typedef arma::mat (GWDR::*PredictCalculator)(const arma::mat&, const arma::mat&, const arma::vec&);
@@ -140,7 +140,7 @@ public:  // IVariableSelectable
         return mSelectedIndepVars;
     }
 
-public:  // IOpenmpParallelizable
+public:  // IParallelOpenmpEnabled
     int parallelAbility() const override
     {
         return ParallelType::SerialOnly

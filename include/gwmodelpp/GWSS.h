@@ -55,7 +55,7 @@ namespace gwm
  * 
  * For more details on how to use this class, see /test/GWSS/static.cpp or /test/GWSS/shared.cpp .
  */
-class GWSS : public SpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IOpenmpParallelizable
+class GWSS : public SpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IParallelizable, public IParallelOpenmpEnabled
 {
 public:
 
@@ -320,7 +320,7 @@ public:     // IParallelizable
      */
     void setParallelType(const ParallelType& type) override;
 
-public:     // IOpenmpParallelizable
+public:     // IParallelOpenmpEnabled
 
     /**
      * @brief Set the thread numbers while paralleling.

@@ -15,7 +15,7 @@
 namespace gwm
 {
 
-class GWRLocalCollinearity : public GWRBase, public IBandwidthSelectable, public IOpenmpParallelizable
+class GWRLocalCollinearity : public GWRBase, public IBandwidthSelectable, public IParallelizable, public IParallelOpenmpEnabled
 {
 public:
     enum BandwidthSelectionCriterionType
