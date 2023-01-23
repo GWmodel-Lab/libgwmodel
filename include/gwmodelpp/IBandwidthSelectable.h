@@ -7,8 +7,6 @@ namespace gwm
 {
 
 /**
- * @interface IBandwidthSelectable
- * 
  * \~english
  * @brief Interface for bandwidth-selectable algorithm.
  * 

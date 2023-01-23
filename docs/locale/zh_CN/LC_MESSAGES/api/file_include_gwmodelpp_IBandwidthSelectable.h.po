@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 20:21+0000\n"
+"POT-Creation-Date: 2023-01-23 20:46+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -86,10 +86,18 @@ msgid ":ref:`namespace_gwm`"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_IBandwidthSelectable.h.rst:66
-msgid "Typedefs"
+msgid "Classes"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_IBandwidthSelectable.h.rst:69
+msgid ":ref:`exhale_struct_structgwm_1_1IBandwidthSelectable`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_IBandwidthSelectable.h.rst:73
+msgid "Typedefs"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_IBandwidthSelectable.h.rst:76
 msgid ":ref:`exhale_typedef_IBandwidthSelectable_8h_1ae90108073e4144ac3fbed1a68bb44031`"
 msgstr ""
 

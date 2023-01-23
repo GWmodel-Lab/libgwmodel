@@ -7,7 +7,6 @@ namespace gwm
 {
 
 /**
- * @interface IMultivariableAnalysis
  * @brief Interface for multivariable analysis. 
  * It defines some interface commonly used in spatial algorithms:
  * 

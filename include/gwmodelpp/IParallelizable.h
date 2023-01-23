@@ -20,8 +20,6 @@ enum ParallelType
 };
 
 /**
- * @interface IParallelizable
- * 
  * \~english
  * @brief Interface for parallelizable algorithm.
  * 
@@ -74,8 +72,6 @@ struct IParallelizable
 };
 
 /**
- * @interface IParallelOpenmpEnabled
- * 
  * \~english
  * @brief Interface for parallelizable algorithm implemented by OpenMP.
  * 
@@ -100,8 +96,6 @@ struct IParallelOpenmpEnabled
 };
 
 /**
- * @interface IParallelCudaEnabled
- * 
  * \~english
  * @brief Interface for parallelizable algorithm implemented by CUDA.
  * 

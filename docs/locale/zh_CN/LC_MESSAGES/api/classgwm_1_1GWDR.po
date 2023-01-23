@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 20:21+0000\n"
+"POT-Creation-Date: 2023-01-23 20:46+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -54,13 +54,13 @@ msgstr ""
 #: ../../api/classgwm_1_1GWDR.rst:18
 msgid ""
 "``public gwm::IParallelizable`` "
-"(:ref:`exhale_interface_structgwm_1_1IParallelizable`)"
+"(:ref:`exhale_struct_structgwm_1_1IParallelizable`)"
 msgstr ""
 
 #: ../../api/classgwm_1_1GWDR.rst:19
 msgid ""
 "``public gwm::IParallelOpenmpEnabled`` "
-"(:ref:`exhale_interface_structgwm_1_1IParallelOpenmpEnabled`)"
+"(:ref:`exhale_struct_structgwm_1_1IParallelOpenmpEnabled`)"
 msgstr ""
 
 #: ../../api/classgwm_1_1GWDR.rst:23
@@ -90,4 +90,14 @@ msgstr ""
 #: ../../api/classgwm_1_1GWDR.rst
 msgid "Protected Functions"
 msgstr ""
+
+#~ msgid ""
+#~ "``public gwm::IParallelizable`` "
+#~ "(:ref:`exhale_interface_structgwm_1_1IParallelizable`)"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "``public gwm::IParallelOpenmpEnabled`` "
+#~ "(:ref:`exhale_interface_structgwm_1_1IParallelOpenmpEnabled`)"
+#~ msgstr ""
 

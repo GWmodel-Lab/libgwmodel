@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 20:21+0000\n"
+"POT-Creation-Date: 2023-01-23 20:46+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -84,10 +84,26 @@ msgid ":ref:`namespace_gwm`"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_IParallelizable.h.rst:64
-msgid "Enums"
+msgid "Classes"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_IParallelizable.h.rst:67
+msgid ":ref:`exhale_struct_structgwm_1_1IParallelCudaEnabled`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_IParallelizable.h.rst:69
+msgid ":ref:`exhale_struct_structgwm_1_1IParallelizable`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_IParallelizable.h.rst:71
+msgid ":ref:`exhale_struct_structgwm_1_1IParallelOpenmpEnabled`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_IParallelizable.h.rst:75
+msgid "Enums"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_IParallelizable.h.rst:78
 msgid ":ref:`exhale_enum_IParallelizable_8h_1a166813c41923ca9f51b81af038e7cb7a`"
 msgstr ""
 
