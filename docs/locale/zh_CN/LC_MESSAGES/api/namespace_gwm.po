@@ -19,15 +19,15 @@ msgstr ""
 
 #: ../../api/namespace_gwm.rst:5
 msgid "Namespace gwm"
-msgstr ""
+msgstr "命名空间 gwm"
 
 #: ../../api/namespace_gwm.rst:14
 msgid "Contents"
-msgstr ""
+msgstr "内容"
 
 #: ../../api/namespace_gwm.rst:17
 msgid "Classes"
-msgstr ""
+msgstr "类"
 
 #: ../../api/namespace_gwm.rst:20
 msgid ":ref:`exhale_struct_structgwm_1_1CRSDistance_1_1Parameter`"
@@ -195,7 +195,7 @@ msgstr ""
 
 #: ../../api/namespace_gwm.rst:104
 msgid "Enums"
-msgstr ""
+msgstr "枚举"
 
 #: ../../api/namespace_gwm.rst:107
 msgid ":ref:`exhale_enum_IParallelizable_8h_1a166813c41923ca9f51b81af038e7cb7a`"
@@ -203,7 +203,7 @@ msgstr ""
 
 #: ../../api/namespace_gwm.rst:111
 msgid "Typedefs"
-msgstr ""
+msgstr "类型别名"
 
 #: ../../api/namespace_gwm.rst:114
 msgid ":ref:`exhale_typedef_IBandwidthSelectable_8h_1ae90108073e4144ac3fbed1a68bb44031`"

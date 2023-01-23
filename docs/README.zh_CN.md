@@ -61,7 +61,7 @@ class CGwmAlgorithm
 
 ### 翻译使用文档
 
-首先需要安装 `sphinx-intl` 
+首先需要安装 `sphinx-intl`
 
 ```bash
 pip install sphinx-intl
@@ -93,7 +93,7 @@ msgstr "该库包含一系列地理加权模型的 C++ 实现。目前已经实�
 翻译完成后，使用下面命令生成翻译过后的文档
 
 ```bash
-DOXYGEN_LANGUAGE=zh_CN make html
+DOXYGEN_LANGUAGE=zh_CN make -e SPHINXOPTS="-D language='zh_CN'" html
 ```
 
 注意，在 `locale/zh_CN/LC_MESSAGES/api` 目录中的 `.po` 文件也需要翻译。

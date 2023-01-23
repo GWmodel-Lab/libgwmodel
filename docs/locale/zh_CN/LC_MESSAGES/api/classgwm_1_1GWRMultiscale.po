@@ -19,19 +19,19 @@ msgstr ""
 
 #: ../../api/classgwm_1_1GWRMultiscale.rst:4
 msgid "Class GWRMultiscale"
-msgstr ""
+msgstr "类 GWRMultiscale"
 
 #: ../../api/classgwm_1_1GWRMultiscale.rst:6
 msgid "Defined in :ref:`file_include_gwmodelpp_GWRMultiscale.h`"
-msgstr ""
+msgstr "定义于 :ref:`file_include_gwmodelpp_GWRMultiscale.h`"
 
 #: ../../api/classgwm_1_1GWRMultiscale.rst:10
 msgid "Inheritance Relationships"
-msgstr ""
+msgstr "继承关系"
 
 #: ../../api/classgwm_1_1GWRMultiscale.rst:13
 msgid "Base Types"
-msgstr ""
+msgstr "基类"
 
 #: ../../api/classgwm_1_1GWRMultiscale.rst:15
 msgid ""
@@ -65,29 +65,29 @@ msgstr ""
 
 #: ../../api/classgwm_1_1GWRMultiscale.rst:23
 msgid "Class Documentation"
-msgstr ""
+msgstr "类文档"
 
 #: ../../api/classgwm_1_1GWRMultiscale.rst
 msgid "Public Types"
-msgstr ""
+msgstr "公有类型"
 
 #: ../../api/classgwm_1_1GWRMultiscale.rst
 msgid "Public Functions"
-msgstr ""
+msgstr "公有成员函数"
 
 #: ../../api/classgwm_1_1GWRMultiscale.rst
 msgid "Parameters"
-msgstr ""
+msgstr "参数"
 
 #: ../../api/classgwm_1_1GWRMultiscale.rst
 msgid "Returns"
-msgstr ""
+msgstr "返回"
 
 #: ../../api/classgwm_1_1GWRMultiscale.rst
 msgid "Public Static Attributes"
-msgstr ""
+msgstr "公有静态属性"
 
 #: ../../api/classgwm_1_1GWRMultiscale.rst
 msgid "Protected Functions"
-msgstr ""
+msgstr "保护成员函数"
 

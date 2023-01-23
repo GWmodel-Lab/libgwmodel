@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 20:21+0000\n"
+"POT-Creation-Date: 2023-01-23 20:44+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,9 +18,9 @@ msgstr ""
 "Generated-By: Babel 2.8.0\n"
 
 #: ../../api/page_todo.rst:4
-msgid "待办事项列表"
-msgstr ""
+msgid "Todo List"
+msgstr "代办列表"
 
-msgid "成员 gwm::GWRBasic::mHasFTest   是否具有F检验。"
+msgid "Member gwm::GWRBasic::mHasFTest   Whether has F-test"
 msgstr ""
 

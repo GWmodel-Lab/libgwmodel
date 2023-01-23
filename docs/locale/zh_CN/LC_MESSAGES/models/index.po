@@ -19,9 +19,9 @@ msgstr ""
 
 #: ../../models/index.rst:2
 msgid "Spatial Models"
-msgstr ""
+msgstr "空间模型"
 
 #: ../../models/index.rst:4
 msgid "The following models are currently provided in this library."
-msgstr ""
+msgstr "该库目前提供下列模型的支持。"
 
