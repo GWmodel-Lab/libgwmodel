@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-04 15:01+0000\n"
+"POT-Creation-Date: 2023-01-23 20:21+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.11.0\n"
+"Generated-By: Babel 2.8.0\n"
 
 #: ../../api/dir_include_gwmodelpp.rst:5
 msgid "Directory gwmodelpp"
@@ -42,106 +42,110 @@ msgid "Files"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:24
-msgid ":ref:`file_include_gwmodelpp_CGwmAlgorithm.h`"
+msgid ":ref:`file_include_gwmodelpp_Algorithm.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:25
-msgid ":ref:`file_include_gwmodelpp_CGwmBandwidthSelector.h`"
+msgid ":ref:`file_include_gwmodelpp_BandwidthSelector.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:26
-msgid ":ref:`file_include_gwmodelpp_CGwmBinomialModel.h`"
+msgid ":ref:`file_include_gwmodelpp_BinomialModel.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:27
-msgid ":ref:`file_include_gwmodelpp_CGwmGeneralizedLinearModel.h`"
+msgid ":ref:`file_include_gwmodelpp_GeneralizedLinearModel.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:28
-msgid ":ref:`file_include_gwmodelpp_CGwmGGWR.h`"
+msgid ":ref:`file_include_gwmodelpp_GWDR.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:29
-msgid ":ref:`file_include_gwmodelpp_CGwmGWDR.h`"
+msgid ":ref:`file_include_gwmodelpp_GWPCA.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:30
-msgid ":ref:`file_include_gwmodelpp_CGwmGWPCA.h`"
+msgid ":ref:`file_include_gwmodelpp_GWRBase.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:31
-msgid ":ref:`file_include_gwmodelpp_CGwmGWRBase.h`"
+msgid ":ref:`file_include_gwmodelpp_GWRBasic.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:32
-msgid ":ref:`file_include_gwmodelpp_CGwmGWRBasic.h`"
+msgid ":ref:`file_include_gwmodelpp_GWRGeneralized.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:33
-msgid ":ref:`file_include_gwmodelpp_CGwmGWSS.h`"
+msgid ":ref:`file_include_gwmodelpp_GWRLocalCollinearity.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:34
-msgid ":ref:`file_include_gwmodelpp_CGwmLinearModel.h`"
+msgid ":ref:`file_include_gwmodelpp_GWRMultiscale.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:35
-msgid ":ref:`file_include_gwmodelpp_CGwmMGWR.h`"
+msgid ":ref:`file_include_gwmodelpp_GWRRobust.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:36
-msgid ":ref:`file_include_gwmodelpp_CGwmPoissonModel.h`"
+msgid ":ref:`file_include_gwmodelpp_GWRScalable.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:37
-msgid ":ref:`file_include_gwmodelpp_CGwmRobustGWR.h`"
+msgid ":ref:`file_include_gwmodelpp_GWSS.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:38
-msgid ":ref:`file_include_gwmodelpp_CGwmScalableGWR.h`"
+msgid ":ref:`file_include_gwmodelpp_IBandwidthSelectable.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:39
-msgid ":ref:`file_include_gwmodelpp_CGwmSpatialAlgorithm.h`"
+msgid ":ref:`file_include_gwmodelpp_IMultivariableAnalysis.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:40
-msgid ":ref:`file_include_gwmodelpp_CGwmSpatialMonoscaleAlgorithm.h`"
+msgid ":ref:`file_include_gwmodelpp_IParallelizable.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:41
-msgid ":ref:`file_include_gwmodelpp_CGwmSpatialMultiscaleAlgorithm.h`"
+msgid ":ref:`file_include_gwmodelpp_IRegressionAnalysis.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:42
-msgid ":ref:`file_include_gwmodelpp_CGwmVariableForwardSelector.h`"
+msgid ":ref:`file_include_gwmodelpp_IVarialbeSelectable.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:43
-msgid ":ref:`file_include_gwmodelpp_GwmLogger.h`"
+msgid ":ref:`file_include_gwmodelpp_LinearModel.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:44
-msgid ":ref:`file_include_gwmodelpp_GwmRegressionDiagnostic.h`"
+msgid ":ref:`file_include_gwmodelpp_Logger.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:45
-msgid ":ref:`file_include_gwmodelpp_IGwmBandwidthSelectable.h`"
+msgid ":ref:`file_include_gwmodelpp_PoissonModel.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:46
-msgid ":ref:`file_include_gwmodelpp_IGwmMultivariableAnalysis.h`"
+msgid ":ref:`file_include_gwmodelpp_RegressionDiagnostic.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:47
-msgid ":ref:`file_include_gwmodelpp_IGwmParallelizable.h`"
+msgid ":ref:`file_include_gwmodelpp_SpatialAlgorithm.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:48
-msgid ":ref:`file_include_gwmodelpp_IGwmRegressionAnalysis.h`"
+msgid ":ref:`file_include_gwmodelpp_SpatialMonoscaleAlgorithm.h`"
 msgstr ""
 
 #: ../../api/dir_include_gwmodelpp.rst:49
-msgid ":ref:`file_include_gwmodelpp_IGwmVarialbeSelectable.h`"
+msgid ":ref:`file_include_gwmodelpp_SpatialMultiscaleAlgorithm.h`"
+msgstr ""
+
+#: ../../api/dir_include_gwmodelpp.rst:50
+msgid ":ref:`file_include_gwmodelpp_VariableForwardSelector.h`"
 msgstr ""
 

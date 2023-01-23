@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-04 15:01+0000\n"
+"POT-Creation-Date: 2023-01-23 20:21+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.11.0\n"
+"Generated-By: Babel 2.8.0\n"
 
 #: ../../api/file_include_gwmodel.h.rst:5
 msgid "File gwmodel.h"
@@ -66,88 +66,90 @@ msgid "Includes"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:52
-msgid ""
-"``gwmodelpp/CGwmAlgorithm.h`` "
-"(:ref:`file_include_gwmodelpp_CGwmAlgorithm.h`)"
+msgid "``gwmodelpp/Algorithm.h`` (:ref:`file_include_gwmodelpp_Algorithm.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:54
 msgid ""
-"``gwmodelpp/CGwmBandwidthSelector.h`` "
-"(:ref:`file_include_gwmodelpp_CGwmBandwidthSelector.h`)"
+"``gwmodelpp/BandwidthSelector.h`` "
+"(:ref:`file_include_gwmodelpp_BandwidthSelector.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:56
-msgid "``gwmodelpp/CGwmGWPCA.h`` (:ref:`file_include_gwmodelpp_CGwmGWPCA.h`)"
+msgid "``gwmodelpp/GWPCA.h`` (:ref:`file_include_gwmodelpp_GWPCA.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:58
-msgid "``gwmodelpp/CGwmGWRBase.h`` (:ref:`file_include_gwmodelpp_CGwmGWRBase.h`)"
+msgid "``gwmodelpp/GWRBase.h`` (:ref:`file_include_gwmodelpp_GWRBase.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:60
-msgid ""
-"``gwmodelpp/CGwmGWRBasic.h`` "
-"(:ref:`file_include_gwmodelpp_CGwmGWRBasic.h`)"
+msgid "``gwmodelpp/GWRBasic.h`` (:ref:`file_include_gwmodelpp_GWRBasic.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:62
 msgid ""
-"``gwmodelpp/CGwmSpatialAlgorithm.h`` "
-"(:ref:`file_include_gwmodelpp_CGwmSpatialAlgorithm.h`)"
+"``gwmodelpp/GWRMultiscale.h`` "
+"(:ref:`file_include_gwmodelpp_GWRMultiscale.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:64
 msgid ""
-"``gwmodelpp/CGwmSpatialMonoscaleAlgorithm.h`` "
-"(:ref:`file_include_gwmodelpp_CGwmSpatialMonoscaleAlgorithm.h`)"
+"``gwmodelpp/SpatialAlgorithm.h`` "
+"(:ref:`file_include_gwmodelpp_SpatialAlgorithm.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:66
 msgid ""
-"``gwmodelpp/CGwmVariableForwardSelector.h`` "
-"(:ref:`file_include_gwmodelpp_CGwmVariableForwardSelector.h`)"
+"``gwmodelpp/SpatialMonoscaleAlgorithm.h`` "
+"(:ref:`file_include_gwmodelpp_SpatialMonoscaleAlgorithm.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:68
 msgid ""
-"``gwmodelpp/spatialweight/CGwmBandwidthWeight.h`` "
-"(:ref:`file_include_gwmodelpp_spatialweight_CGwmBandwidthWeight.h`)"
+"``gwmodelpp/VariableForwardSelector.h`` "
+"(:ref:`file_include_gwmodelpp_VariableForwardSelector.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:70
 msgid ""
-"``gwmodelpp/spatialweight/CGwmCRSDistance.h`` "
-"(:ref:`file_include_gwmodelpp_spatialweight_CGwmCRSDistance.h`)"
+"``gwmodelpp/spatialweight/BandwidthWeight.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_BandwidthWeight.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:72
 msgid ""
-"``gwmodelpp/spatialweight/CGwmDMatDistance.h`` "
-"(:ref:`file_include_gwmodelpp_spatialweight_CGwmDMatDistance.h`)"
+"``gwmodelpp/spatialweight/CRSDistance.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_CRSDistance.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:74
 msgid ""
-"``gwmodelpp/spatialweight/CGwmDistance.h`` "
-"(:ref:`file_include_gwmodelpp_spatialweight_CGwmDistance.h`)"
+"``gwmodelpp/spatialweight/DMatDistance.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_DMatDistance.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:76
 msgid ""
-"``gwmodelpp/spatialweight/CGwmMinkwoskiDistance.h`` "
-"(:ref:`file_include_gwmodelpp_spatialweight_CGwmMinkwoskiDistance.h`)"
+"``gwmodelpp/spatialweight/Distance.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_Distance.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:78
 msgid ""
-"``gwmodelpp/spatialweight/CGwmSpatialWeight.h`` "
-"(:ref:`file_include_gwmodelpp_spatialweight_CGwmSpatialWeight.h`)"
+"``gwmodelpp/spatialweight/MinkwoskiDistance.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_MinkwoskiDistance.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:80
 msgid ""
-"``gwmodelpp/spatialweight/CGwmWeight.h`` "
-"(:ref:`file_include_gwmodelpp_spatialweight_CGwmWeight.h`)"
+"``gwmodelpp/spatialweight/SpatialWeight.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_SpatialWeight.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:82
+msgid ""
+"``gwmodelpp/spatialweight/Weight.h`` "
+"(:ref:`file_include_gwmodelpp_spatialweight_Weight.h`)"
 msgstr ""
 

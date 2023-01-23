@@ -1,0 +1,326 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023, GWmodel Lab
+# This file is distributed under the same license as the libgwmodel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: libgwmodel \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-23 20:21+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.8.0\n"
+
+#: ../../models/gwr-basic.rst:2
+msgid "Basic GWR Model"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:4
+msgid ""
+"For a data set of :math:`n` samples and :math:`p` independent variables, "
+"the basic GWR model at sample :math:`i` is defined as"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:7
+msgid ""
+"y_i = \\beta_{i0} + \\sum_{k=1}^p \\beta_{ik}x_{ik} + \\epsilon_{i}\n"
+"\n"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:9
+msgid ""
+"where :math:`y_i` is the dependent variable, :math:`x_{ik}` is the "
+":math:`k`-th independent variable, :math:`\\beta_{ik}` is the "
+":math:`k`-th coefficient, :math:`\\beta_{i0}` is the intercept, "
+":math:`\\epsilon_i` is the random error which :math:`\\epsilon_i \\sim "
+"N(0, \\sigma^2)` and :math:`\\sigma` is the standard deviation. Then "
+":math:`\\beta_i` is calibrated by the following estimator"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:17
+msgid ""
+"\\beta_i = \\left(X' W X \\right)^{-1} X' W y\n"
+"\n"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:22
+msgid ""
+"where :math:`\\beta_i=(\\beta_{i0},\\beta_{i1},\\cdots,\\beta_{ip})'` is "
+"the vector of coefficients, :math:`X` is the matrix of independent "
+"variables, :math:`y` is the vector of the dependent variable, :math:`W` "
+"is called spatial weighting matrix defined by"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:27
+msgid ""
+"W = \\begin{pmatrix}\n"
+"w_{i1} & & & \\\\\n"
+"& w_{i2} & & \\\\\n"
+"& & \\ddots & \\\\\n"
+"& & & w_{in} \\\\\n"
+"\\end{pmatrix}\n"
+"\n"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:35
+msgid ""
+"Each :math:`w_{ij}` in :math:`W` is calculated by a kernel function "
+":math:`k` according to the distance from sample :math:`i` to sample "
+":math:`j`. Larger distance, lower weights."
+msgstr ""
+
+#: ../../models/gwr-basic.rst:39
+msgid "Kernel functions"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:41
+msgid "There are some useful kernel functions:"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:43
+msgid "Gaussian"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:44
+msgid ""
+"k(d;b) = \\exp\\left\\{- \\frac{d^2}{2 b^2}\\right\\}\n"
+"\n"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:45
+msgid "Exponential"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:46
+msgid ""
+"k(d;b) = \\exp\\left\\{- \\frac{|d|}{b}\\right\\}\n"
+"\n"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:53
+msgid "Bi-squared"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:48
+msgid ""
+"k(d;b) = \\left\\{\n"
+"    \\begin{array}{ll}\n"
+"    \\left[ 1 - \\left( \\frac{d}{b} \\right)^2 \\right]^2, & \\mbox{if }"
+" d < b \\\\\n"
+"    0, & \\mbox{otherwise}\n"
+"    \\end{array}\n"
+"\\right.\n"
+"\n"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:61
+msgid "Tri-cube"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:56
+msgid ""
+"k(d;b) = \\left\\{\n"
+"    \\begin{array}{ll}\n"
+"    \\left[ 1 - \\left( \\frac{d}{b} \\right)^3 \\right]^3, & \\mbox{if }"
+" d < b \\\\\n"
+"    0, & \\mbox{otherwise}\n"
+"    \\end{array}\n"
+"\\right.\n"
+"\n"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:70
+msgid "Box-car"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:64
+msgid ""
+"k(d;b) = \\left\\{\n"
+"    \\begin{array}{ll}\n"
+"    1, & \\mbox{if } d < b \\\\\n"
+"    0, & \\mbox{otherwise}\n"
+"    \\end{array}\n"
+"\\right.\n"
+"\n"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:72
+msgid ""
+"The parameter :math:`b` is called \"bandwidth\". Its value is usually "
+"automatically optimized by the golden-selection algorithm from data "
+"according to some criterions. Usually, the following criterions are "
+"supported,"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:83
+msgid "Cross-validation (CV)"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:77
+msgid "For given bandwidth :math:`b`, the CV value is defined by"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:79
+msgid ""
+"CV(b) = \\sum_{i=1}^n \\left( y - x_i \\hat{\\beta}_{-i} \\right)^2\n"
+"\n"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:81
+msgid ""
+"where :math:`x_i` is the :math:`i`-th row of :math:`X`, and "
+":math:`\\hat{\\beta}_{-i}` is the coefficient vector estimated without "
+"sample :math:`i`. It is also calibrated according to :eq:`gwr-estimator` "
+"but set :math:`w_{ii} = 0`."
+msgstr ""
+
+#: ../../models/gwr-basic.rst:104
+msgid "Corrected Akaike Information Criterion (AIC:sub:`c`)"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:86
+msgid "For given bandwidth :math:`b`, the AIC value is defined by"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:88
+msgid ""
+"AIC(b) = 2n \\ln \\hat{\\sigma} + n \\ln 2pi + n \\left\\{ "
+"\\frac{n+tr(S)}{n - 2 - tr(S)} \\right\\}\n"
+"\n"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:90
+msgid ""
+"where :math:`\\hat{\\sigma}` is the estimated deviation of random error, "
+":math:`S` is called the \"hat matrix\" which is defined by"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:93
+msgid ""
+"S = \\begin{pmatrix}\n"
+"x_1 (X'W_1X)^{-1}X'W_1 \\\\\n"
+"x_2 (X'W_2X)^{-1}X'W_2 \\\\\n"
+"\\vdots \\\\\n"
+"x_n (X'W_nX)^{-1}X'W_n\n"
+"\\end{pmatrix}\n"
+"\n"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:101
+msgid "and it works like"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:103
+msgid ""
+"\\hat{y} = Sy\n"
+"\n"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:107
+msgid "Distance Metrics"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:109
+msgid ""
+"Not only euclidean distance but also any kinds of distance metrics can be"
+" applied in GWR. Currently, there are two kinds of distance metrics "
+"supported."
+msgstr ""
+
+#: ../../models/gwr-basic.rst:118
+msgid "CRS Distance"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:113
+msgid ""
+"Distance as the crow files is calculated according to the type of "
+"coordinate reference system (CRS). When the CRS is projected, for two "
+"samples at :math:`(u_i,v_i)` and :math:`(u_j,v_j)`,"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:116
+msgid ""
+"d_{ij} = \\sqrt{ (u_i - u_j)^2 + (v_i - v_j)^2 }\n"
+"\n"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:118
+msgid "When the CRS is geographic, their great circle distance is calculated."
+msgstr ""
+
+#: ../../models/gwr-basic.rst:123
+msgid "Minkwoski Distance"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:121
+msgid "This metric is only applicable when the CRS is projected. It is defined by"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:123
+msgid ""
+"d_{ij} = \\sqrt[p]{ |u_i - u_j|^p + |v_i - v_j|^p }\n"
+"\n"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:125
+msgid "In the future, we will support to set distances by a matrix file."
+msgstr ""
+
+#: ../../models/gwr-basic.rst:129
+msgid "Example"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:131
+msgid ""
+"To calibrate a basic GWR model, use "
+":ref:`exhale_class_class_c_gwm_g_w_r_base`."
+msgstr ""
+
+#: ../../models/gwr-basic.rst:134
+msgid "Basic Usage"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:162
+msgid "Bandwidth Optimization"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:164
+msgid ""
+"If you are not confident about the bandwidth value, you can also let the "
+"algorithm optimize it by making the following changes:"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:178
+msgid ""
+"The argument passing to "
+":func:`CGwmGWRBasic::setBandwidthSelectionCriterion` can be either value "
+"of :enum:`CGwmGWRBasic::BandwidthSelectionCriterionType`."
+msgstr ""
+
+#: ../../models/gwr-basic.rst:182
+msgid "Independent Variable Optimization"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:184
+msgid ""
+"If you do not want to include all independent variables into the model "
+"and just include some significant variables, you can let the algorithm "
+"optimize variables by making the following changes:"
+msgstr ""
+
+#: ../../models/gwr-basic.rst:198
+msgid ""
+"The argument passing to "
+":func:`CGwmGWRBasic::setIndepVarSelectionThreshold` is the threshold of "
+"AIC change determining whether one model is significantly different from "
+"another. Generally speaking, the size of this value depends on the number"
+" of samples. Data set of larger number of samples may need a larger "
+"threshold."
+msgstr ""
+

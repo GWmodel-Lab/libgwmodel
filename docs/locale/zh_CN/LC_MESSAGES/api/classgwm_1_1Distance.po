@@ -1,0 +1,91 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023, GWmodel Lab
+# This file is distributed under the same license as the libgwmodel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: libgwmodel \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-23 20:21+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.8.0\n"
+
+#: ../../api/classgwm_1_1Distance.rst:4
+msgid "Class Distance"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst:6
+msgid "Defined in :ref:`file_include_gwmodelpp_spatialweight_Distance.h`"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst:10
+msgid "Nested Relationships"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst:14
+msgid "Nested Types"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst:16
+msgid ":ref:`exhale_struct_structgwm_1_1Distance_1_1Parameter`"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst:20
+msgid "Inheritance Relationships"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst:23
+msgid "Derived Types"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst:25
+msgid "``public gwm::CRSDistance`` (:ref:`exhale_class_classgwm_1_1CRSDistance`)"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst:26
+msgid ""
+"``public gwm::DMatDistance`` "
+"(:ref:`exhale_class_classgwm_1_1DMatDistance`)"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst:27
+msgid ""
+"``public gwm::OneDimDistance`` "
+"(:ref:`exhale_class_classgwm_1_1OneDimDistance`)"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst:31
+msgid "Class Documentation"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst
+msgid "Public Types"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst
+msgid "Public Functions"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst
+msgid "Returns"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst
+msgid "Parameters"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst
+msgid "Public Static Attributes"
+msgstr ""
+
+#: ../../api/classgwm_1_1Distance.rst
+msgid "Public Members"
+msgstr ""
+
