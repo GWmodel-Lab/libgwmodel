@@ -325,11 +325,11 @@ msgstr "如果不确定带宽值，可以按照如下方式让算法自动优选
 
 #: ../../models/gwr-basic.rst:178
 msgid ""
-"The argument passing to :func:`GWRBasic::setBandwidthSelectionCriterion` "
-"can be either value of :enum:`GWRBasic::BandwidthSelectionCriterionType`."
+"The argument passing to :func:`gwm::GWRBasic::setBandwidthSelectionCriterion` "
+"can be either value of :enum:`gwm::GWRBasic::BandwidthSelectionCriterionType`."
 msgstr ""
-"传递给 :func:`GWRBasic::setBandwidthSelectionCriterion` 的参数"
-"可以是 :enum:`GWRBasic::BandwidthSelectionCriterionType` 中的任意值。"
+"传递给 :func:`gwm::GWRBasic::setBandwidthSelectionCriterion` 的参数"
+"可以是 :enum:`gwm::GWRBasic::BandwidthSelectionCriterionType` 中的任意值。"
 
 #: ../../models/gwr-basic.rst:182
 msgid "Independent Variable Optimization"
@@ -346,38 +346,13 @@ msgstr ""
 
 #: ../../models/gwr-basic.rst:198
 msgid ""
-"The argument passing to :func:`GWRBasic::setIndepVarSelectionThreshold` "
+"The argument passing to :func:`gwm::GWRBasic::setIndepVarSelectionThreshold` "
 "is the threshold of AIC change determining whether one model is "
 "significantly different from another. Generally speaking, the size of "
 "this value depends on the number of samples. Data set of larger number of"
 " samples may need a larger threshold."
 msgstr ""
-"传递给 :func:`GWRBasic::setIndepVarSelectionThreshold` 的参数"
+"传递给 :func:`gwm::GWRBasic::setIndepVarSelectionThreshold` 的参数"
 "是一个 AIC 变化阈值，用于确定一个模型与另一个模型相比拟合效果是否有显著改进。"
 "一般来说，该值地大小取决于样本地数量。"
 "样本数量越大，就需要一个更大的阈值。"
-
-#~ msgid ""
-#~ "To calibrate a basic GWR model, "
-#~ "use :ref:`exhale_class_class_c_gwm_g_w_r_base`."
-#~ msgstr ""
-
-#~ msgid ""
-#~ "The argument passing to "
-#~ ":func:`CGwmGWRBasic::setBandwidthSelectionCriterion` can "
-#~ "be either value of "
-#~ ":enum:`CGwmGWRBasic::BandwidthSelectionCriterionType`."
-#~ msgstr ""
-
-#~ msgid ""
-#~ "The argument passing to "
-#~ ":func:`CGwmGWRBasic::setIndepVarSelectionThreshold` is the"
-#~ " threshold of AIC change determining "
-#~ "whether one model is significantly "
-#~ "different from another. Generally speaking,"
-#~ " the size of this value depends "
-#~ "on the number of samples. Data set"
-#~ " of larger number of samples may "
-#~ "need a larger threshold."
-#~ msgstr ""
-

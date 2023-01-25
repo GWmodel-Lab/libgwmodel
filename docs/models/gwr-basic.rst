@@ -175,8 +175,8 @@ you can also let the algorithm optimize it by making the following changes:
     algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
     mat beta_hat = algorithm.fit();
 
-The argument passing to :func:`GWRBasic::setBandwidthSelectionCriterion`
-can be either value of :enum:`GWRBasic::BandwidthSelectionCriterionType`.
+The argument passing to :func:`gwm::GWRBasic::setBandwidthSelectionCriterion`
+can be either value of :enum:`gwm::GWRBasic::BandwidthSelectionCriterionType`.
 
 Independent Variable Optimization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -195,7 +195,7 @@ you can let the algorithm optimize variables by making the following changes:
     algorithm.setIndepVarSelectionThreshold(3.0);
     mat beta_hat = algorithm.fit();
 
-The argument passing to :func:`GWRBasic::setIndepVarSelectionThreshold` is the threshold of AIC change
+The argument passing to :func:`gwm::GWRBasic::setIndepVarSelectionThreshold` is the threshold of AIC change
 determining whether one model is significantly different from another.
 Generally speaking, the size of this value depends on the number of samples.
 Data set of larger number of samples may need a larger threshold.
