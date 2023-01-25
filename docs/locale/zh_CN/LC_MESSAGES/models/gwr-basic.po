@@ -266,7 +266,7 @@ msgstr "坐标系距离"
 
 #: ../../models/gwr-basic.rst:113
 msgid ""
-"Distance as the crow files is calculated according to the type of "
+"Distance as the crow flies is calculated according to the type of "
 "coordinate reference system (CRS). When the CRS is projected, for two "
 "samples at :math:`(u_i,v_i)` and :math:`(u_j,v_j)`,"
 msgstr ""

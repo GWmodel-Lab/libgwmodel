@@ -110,7 +110,7 @@ Not only euclidean distance but also any kinds of distance metrics can be applie
 Currently, there are two kinds of distance metrics supported.
 
 CRS Distance
-    Distance as the crow files is calculated according to the type of coordinate reference system (CRS).
+    Distance as the crow flies is calculated according to the type of coordinate reference system (CRS).
     When the CRS is projected, for two samples at :math:`(u_i,v_i)` and :math:`(u_j,v_j)`,
 
     .. math:: d_{ij} = \sqrt{ (u_i - u_j)^2 + (v_i - v_j)^2 }
