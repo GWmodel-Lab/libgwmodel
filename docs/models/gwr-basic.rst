@@ -128,7 +128,7 @@ In the future, we will support to set distances by a matrix file.
 Example
 -------
 
-To calibrate a basic GWR model, use :ref:`exhale_class_class_c_gwm_g_w_r_base`.
+To calibrate a basic GWR model, use :class:`gwm::GWRBasic`.
 
 Basic Usage
 ^^^^^^^^^^^
@@ -151,7 +151,7 @@ Basic Usage
     CGwmBandwidthWeight bandwidth(25, true, CGwmBandwidthWeight::Gaussian);
     CGwmSpatialWeight spatial(&bandwidth, &distance);
 
-    CGwmGWRBasic algorithm;
+    GWRBasic algorithm;
     algorithm.setCoords(coords);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -166,17 +166,17 @@ you can also let the algorithm optimize it by making the following changes:
 
 .. code:: cpp
 
-    CGwmGWRBasic algorithm;
+    GWRBasic algorithm;
     algorithm.setCoords(coords);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeight(spatial);
     algorithm.setIsAutoselectBandwidth(true);
-    algorithm.setBandwidthSelectionCriterion(CGwmGWRBasic::BandwidthSelectionCriterionType::AIC);
+    algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
     mat beta_hat = algorithm.fit();
 
-The argument passing to :func:`CGwmGWRBasic::setBandwidthSelectionCriterion`
-can be either value of :enum:`CGwmGWRBasic::BandwidthSelectionCriterionType`.
+The argument passing to :func:`GWRBasic::setBandwidthSelectionCriterion`
+can be either value of :enum:`GWRBasic::BandwidthSelectionCriterionType`.
 
 Independent Variable Optimization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -186,7 +186,7 @@ you can let the algorithm optimize variables by making the following changes:
 
 .. code:: cpp
 
-    CGwmGWRBasic algorithm;
+    GWRBasic algorithm;
     algorithm.setCoords(coords);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -195,7 +195,7 @@ you can let the algorithm optimize variables by making the following changes:
     algorithm.setIndepVarSelectionThreshold(3.0);
     mat beta_hat = algorithm.fit();
 
-The argument passing to :func:`CGwmGWRBasic::setIndepVarSelectionThreshold` is the threshold of AIC change
+The argument passing to :func:`GWRBasic::setIndepVarSelectionThreshold` is the threshold of AIC change
 determining whether one model is significantly different from another.
 Generally speaking, the size of this value depends on the number of samples.
 Data set of larger number of samples may need a larger threshold.

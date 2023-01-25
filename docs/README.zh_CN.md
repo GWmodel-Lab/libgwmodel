@@ -70,7 +70,7 @@ pip install sphinx-intl
 生成可翻译消息（存储在 `/docs/_built/gettext/*.pot` 文件中）
 
 ```bash
-DOXYGEN_LANGUAGE=zh_CN make gettext
+make gettext
 ```
 
 生成翻译字符串（存储在 `/docs/locale/zh_CN/LC_MESSAGES/*.po` 文件中）

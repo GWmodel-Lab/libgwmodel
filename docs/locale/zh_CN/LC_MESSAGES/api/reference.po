@@ -19,41 +19,41 @@ msgstr ""
 
 #: ../../api/reference.rst:3
 msgid "Library Reference"
-msgstr ""
+msgstr "库参考"
 
 #: ../../api/page_view_hierarchy.rst.include:3
 msgid "Page Hierarchy"
-msgstr ""
+msgstr "页面层级"
 
 #: ../../api/class_view_hierarchy.rst.include:3
 msgid "Class Hierarchy"
-msgstr ""
+msgstr "类层级"
 
 #: ../../api/file_view_hierarchy.rst.include:3
 msgid "File Hierarchy"
-msgstr ""
+msgstr "文件层级"
 
 #: ../../api/unabridged_api.rst.include:3
 msgid "Full API"
-msgstr ""
+msgstr "所有 API"
 
 #: ../../api/unabridged_api.rst.include:6
 msgid "Namespaces"
-msgstr ""
+msgstr "命名空间"
 
 #: ../../api/unabridged_api.rst.include:15
 msgid "Classes and Structs"
-msgstr ""
+msgstr "类和结构"
 
 #: ../../api/unabridged_api.rst.include:224
 msgid "Enums"
-msgstr ""
+msgstr "枚举"
 
 #: ../../api/unabridged_api.rst.include:233
 msgid "Defines"
-msgstr ""
+msgstr "宏定义"
 
 #: ../../api/unabridged_api.rst.include:262
 msgid "Typedefs"
-msgstr ""
+msgstr "类型别名"
 
