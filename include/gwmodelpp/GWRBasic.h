@@ -13,7 +13,7 @@
 namespace gwm
 {
 
-class GWRBasic : public GWRBase, public IBandwidthSelectable, public IVarialbeSelectable, public IOpenmpParallelizable
+class GWRBasic : public GWRBase, public IBandwidthSelectable, public IVarialbeSelectable, public IParallelizable, public IParallelOpenmpEnabled
 {
 public:
     enum BandwidthSelectionCriterionType
@@ -139,7 +139,7 @@ public:     // Implement IParallelizable
 
     void setParallelType(const ParallelType& type) override;
 
-public:     // Implement IOpenmpParallelizable
+public:     // Implement IGwmParallelOpenmpEnabled
     void setOmpThreadNum(const int threadNum) override { mOmpThreadNum = threadNum; }
 
 protected:

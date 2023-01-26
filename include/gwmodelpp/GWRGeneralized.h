@@ -70,7 +70,7 @@ struct GLMDiagnostic
     }
 };
 
-class GWRGeneralized : public GWRBase, public IBandwidthSelectable, public IOpenmpParallelizable
+class GWRGeneralized : public GWRBase, public IBandwidthSelectable, public IParallelizable, public IParallelOpenmpEnabled
 {
 public:
     enum Family
@@ -124,7 +124,7 @@ public: // IParallelalbe interface
     ParallelType parallelType() const override;
     void setParallelType(const ParallelType &type) override;
 
-public: // IOpenmpParallelable interface
+public: // IParallelOpenmpEnabled interface
     void setOmpThreadNum(const int threadNum) override;
 
 public:

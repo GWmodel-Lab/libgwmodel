@@ -15,7 +15,7 @@
 namespace gwm
 {
 
-class GWRMultiscale : public SpatialMultiscaleAlgorithm, public IBandwidthSelectable,public IOpenmpParallelizable,public IRegressionAnalysis 
+class GWRMultiscale : public SpatialMultiscaleAlgorithm, public IBandwidthSelectable, public IRegressionAnalysis, public IParallelizable, public IParallelOpenmpEnabled
 {
 public:
     enum BandwidthInitilizeType

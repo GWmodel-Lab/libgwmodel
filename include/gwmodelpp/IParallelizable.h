@@ -53,7 +53,7 @@ struct IParallelizable
 };
 
 /**
- * @interface IOpenmpParallelizable
+ * @interface IParallelOpenmpEnabled
  * @brief Interface for parallelizable algorithm implemented by OpenMP. 
  * It defines some interface commonly used in parallelizable algorithms:
  * 
@@ -65,7 +65,7 @@ struct IParallelizable
  * - GWSS
  * 
  */
-struct IOpenmpParallelizable : public IParallelizable
+struct IParallelOpenmpEnabled
 {
     /**
      * @brief Set the thread numbers while paralleling.
@@ -76,7 +76,7 @@ struct IOpenmpParallelizable : public IParallelizable
 };
 
 /**
- * @interface ICudaParallelizable
+ * @interface IParallelCudaEnabled
  * @brief Interface for parallelizable algorithm implemented by CUDA. 
  * It defines some interface commonly used in parallelizable algorithms:
  * 
@@ -89,7 +89,7 @@ struct IOpenmpParallelizable : public IParallelizable
  * - GWSS
  * 
  */
-struct ICudaParallelizable : public IParallelizable
+struct IParallelCudaEnabled
 {
     /**
      * @brief Set ID of used GPU while paralleling. 
