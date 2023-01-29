@@ -9,6 +9,10 @@
 namespace gwm
 {
 
+/**
+ * @brief \~english Interface for regression analysis algorithms. \~chinese 回归分析算法接口。
+ * 
+ */
 struct IRegressionAnalysis
 {
     

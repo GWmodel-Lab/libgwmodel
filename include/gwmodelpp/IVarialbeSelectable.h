@@ -6,6 +6,10 @@
 namespace gwm
 {
 
+/**
+ * @brief \~english Interface for variable selectable algorithms. \~chinese 可变量优选接口。
+ * 
+ */
 struct IVarialbeSelectable
 {
     
