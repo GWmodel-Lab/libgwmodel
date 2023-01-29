@@ -33,7 +33,8 @@ public:
     };
     
     typedef double (GWRLocalCollinearity::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);    //!< \~english Calculator to get criterion for bandwidth optimization \~chinese 带宽优选指标值计算函数
-    typedef arma::mat (GWRLocalCollinearity::*PredictCalculator)(const arma::mat&, const arma::vec&);   //!< \~english Calculator to predict \~chinese 用于预测的函数
+    typedef arma::mat (GWRLocalCollinearity::*FitCalculator)(const arma::mat&, const arma::vec&);   //!< \~english Calculator to predict \~chinese 用于预测的函数
+    typedef arma::mat (GWRLocalCollinearity::*PredictCalculator)(const arma::mat&, const arma::mat&, const arma::vec&);   //!< \~english Calculator to predict \~chinese 用于预测的函数
 
     /**
      * @brief \~english Calculate diagnostic information. \~chinese 计算诊断信息。
@@ -124,47 +125,6 @@ public:
     }
 
     /**
-     * @brief \~english Get whether has predict data. \~chinese 获取是否是否预测。
-     * 
-     * @return true \~english Yes \~chinese 是
-     * @return false \~english No \~chinese 否
-     */
-    bool hasPredict() const
-    {
-        return mHasPredict;
-    }
-
-    /**
-     * @brief \~english Set whether has predict data. \~chinese 设置是否是否预测。
-     * 
-     * @param flag \~english Whether has predict data. \~chinese 是否预测
-     */
-    void setHasPredict(bool value)
-    {
-        mHasPredict = value;
-    }
-
-    /**
-     * @brief \~english Get the data to predict. \~chinese 获取用于预测的数据。
-     * 
-     * @return arma::mat \~english The data to predict \~chinese 用于预测的数据
-     */
-    arma::mat predictData() const
-    {
-        return mPredictData;
-    }
-
-    /**
-     * @brief \~english Set the data to predict. \~chinese 设置用于预测的数据。
-     * 
-     * @param value \~english The data to predict \~chinese 用于预测的数据
-     */
-    void setPredictData(arma::mat &value)
-    {
-        mPredictData = value;
-    }
-
-    /**
      * @brief \~english Get whether to adjust lambda \~chinese 获取是否调整 lambda 值。
      * 
      * @return true \~english  \~chinese 
@@ -246,20 +206,63 @@ public:
 public:
     arma::mat fit() override;
 
+    arma::mat predict(const arma::mat &locations) override;
+
+private:
+
+    /**
+     * \~english
+     * @brief Create distance parameters for prediction.
+     * 
+     * @param locations Distance parameters for prediction.
+     * 
+     * \~chinese
+     * @brief 生成用于预测的距离参数。
+     * 
+     * @param locations 用于预测的距离参数。
+     * 
+     */
+    void createPredictionDistanceParameter(const arma::mat& locations);
+
+    /**
+     * @brief \~english Non-parallel implementation of fitting function. \~chinese 拟合函数的非并行实现。
+     * 
+     * @param x \~english Independent variables \~chinese 自变量
+     * @param y \~english Dependent variables \~chinese 因变量
+     */
+    arma::mat fitSerial(const arma::mat& x, const arma::vec& y);
+
+    /**
+     * @brief \~english Multithreading implementation of fitting function. \~chinese 拟合函数的多线程实现。
+     * 
+     * @param x \~english Independent variables \~chinese 自变量
+     * @param y \~english Dependent variables \~chinese 因变量
+     */
+    arma::mat fitOmp(const arma::mat& x, const arma::vec& y);
+
+    /**
+     * @brief \~english Non-parallel implementation of prediction function. \~chinese 预测函数的非并行实现。
+     * 
+     * @param locations \~english Locations to predict \~chinese 要预测的位置
+     * @param x \~english Independent variables \~chinese 自变量
+     * @param y \~english Dependent variables \~chinese 因变量
+     * @return arma::mat \~english Coefficient estimates \~chinese 回归系数估计值
+     */
+    arma::mat predictSerial(const arma::mat& locations, const arma::mat& x, const arma::vec& y);
+
+#ifdef ENABLE_OPENMP
+    /**
+     * @brief \~english Multithreading implementation of prediction function. \~chinese 预测函数的多线程实现。
+     * 
+     * @param locations \~english Locations to predict \~chinese 要预测的位置
+     * @param x \~english Independent variables \~chinese 自变量
+     * @param y \~english Dependent variables \~chinese 因变量
+     * @return arma::mat \~english Coefficient estimates \~chinese 回归系数估计值
+     */
+    arma::mat predictOmp(const arma::mat& locations, const arma::mat& x, const arma::vec& y);
+#endif
+
 public:
-    arma::mat predict(const arma::mat& x, const arma::vec& y) 
-    {
-        return (this->*mPredictFunction)(x, y);
-    }
-    arma::mat predict(const arma::mat &locations) override
-    {
-        throw std::runtime_error("not available"); 
-    }
-    arma::mat fit(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qdiag, arma::mat& S) 
-    {
-        throw std::runtime_error("not available"); 
-    }
-    
     int parallelAbility() const override;
     ParallelType parallelType() const override;
     void setParallelType(const ParallelType& type) override;
@@ -313,41 +316,18 @@ private:
     double bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight);
 #endif
 
-    double mLambda=0;
-    bool mLambdaAdjust=false;
-    double mCnThresh=30;
-    arma::mat mPredictData;
+private:
+
+    double mLambda = 0;
+    bool mLambdaAdjust = false;
+    double mCnThresh = 30;
     bool mHasHatMatrix = false;
-    bool mHasPredict=false;
     bool mIsAutoselectBandwidth = false;
     double mTrS = 0;
     double mTrStS = 0;
     arma::vec mSHat;
 
-public:
-
-    /**
-     * @brief \~english Non-parallel implementation of prediction function. \~chinese 预测函数的非并行实现。
-     * 
-     * @param locations \~english Locations to predict \~chinese 要预测的位置
-     * @param x \~english Independent variables \~chinese 自变量
-     * @param y \~english Dependent variables \~chinese 因变量
-     * @return arma::mat \~english Coefficient estimates \~chinese 回归系数估计值
-     */
-    arma::mat predictSerial(const arma::mat& x, const arma::vec& y);
-
-#ifdef ENABLE_OPENMP
-    /**
-     * @brief \~english Multithreading implementation of prediction function. \~chinese 预测函数的多线程实现。
-     * 
-     * @param locations \~english Locations to predict \~chinese 要预测的位置
-     * @param x \~english Independent variables \~chinese 自变量
-     * @param y \~english Dependent variables \~chinese 因变量
-     * @return arma::mat \~english Coefficient estimates \~chinese 回归系数估计值
-     */
-    arma::mat predictOmp(const arma::mat& x, const arma::vec& y);
-#endif
-
+    FitCalculator mFitFunction = &GWRLocalCollinearity::fitSerial;
     PredictCalculator mPredictFunction = &GWRLocalCollinearity::predictSerial;
     ParallelType mParallelType = ParallelType::SerialOnly;
 

@@ -114,8 +114,7 @@ public:
         mY(y),
         mSpatialWeights(spatialWeights),
         mHasHatMatrix(hasHatMatrix),
-        mHasIntercept(hasIntercept),
-        mDiagnostic()
+        mHasIntercept(hasIntercept)
     {
     }
 
@@ -483,14 +482,14 @@ private:
     }
 
 private:
-    std::vector<SpatialWeight> mSpatialWeights; //!< \~english Spatial weighting scheme \~chinese 空间权重配置
 
-    arma::vec mY;                       //!< \~english Independent variables \~chinese 自变量
     arma::mat mX;                       //!< \~english Dependent variables \~chinese 因变量
+    arma::vec mY;                       //!< \~english Independent variables \~chinese 自变量
+    std::vector<SpatialWeight> mSpatialWeights; //!< \~english Spatial weighting scheme \~chinese 空间权重配置
     arma::mat mBetas;                   //!< \~english Coefficient estimates \~chinese 回归系数估计值
-    bool mHasIntercept = true;          //!< \~english Whether has intercept \~chinese 是否包含截距 
     bool mHasHatMatrix = true;          //!< \~english Whether has hat matrix \~chinese 是否有帽子矩阵 
-    RegressionDiagnostic mDiagnostic;   //!< \~english Diagnostic information \~chinese 诊断信息
+    bool mHasIntercept = true;          //!< \~english Whether has intercept \~chinese 是否包含截距 
+    RegressionDiagnostic mDiagnostic = RegressionDiagnostic();   //!< \~english Diagnostic information \~chinese 诊断信息
 
     PredictCalculator mPredictFunction = &GWDR::predictSerial;  //!< \~english Calculator to predict \~chinese 用于预测的函数
     FitCalculator mFitFunction = &GWDR::fitSerial;              //!< \~english Calculator to fit \~chinese 用于拟合的函数
