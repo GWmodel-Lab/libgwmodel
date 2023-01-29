@@ -17,14 +17,6 @@ using namespace arma;
 using namespace std;
 using namespace gwm;
 
-int GWRGeneralized::treeChildCount = 0;
-
-map<string, double> GWRGeneralized::TolUnitDict = {
-    make_pair(string("e -3"), 0.001),
-    make_pair(string("e -5"), 0.00001),
-    make_pair(string("e -7"), 0.0000001),
-    make_pair(string("e -10"), 0.0000000001)};
-
 mat GWRGeneralized::fit()
 {
     // 点位初始化
@@ -231,7 +223,7 @@ mat GWRGeneralized::fitPoissonSerial(const mat &x, const vec &y)
             try
             {
                 vec wi = mWtMat2.col(i);
-                vec gwsi = gwRegHatmatrix(x, myAdj, wi % mWt2, i, ci, s_ri);
+                vec gwsi = gwFit(x, myAdj, wi % mWt2, i, ci, s_ri);
                 betas.col(i) = gwsi;
                 mat invwt2 = 1.0 / mWt2;
                 S.row(isStoreS ? i : 0) = s_ri;
@@ -263,7 +255,7 @@ mat GWRGeneralized::fitPoissonSerial(const mat &x, const vec &y)
             try
             {
                 vec wi = mWtMat2.col(i);
-                vec gwsi = gwReg(x, myAdj, wi * mWt2);
+                vec gwsi = gwPredict(x, myAdj, wi * mWt2);
                 betas.col(i) = gwsi;
             }
             catch (const exception& e)
@@ -321,7 +313,7 @@ mat GWRGeneralized::fitPoissonOmp(const mat &x, const vec &y)
                 {
                     int thread = omp_get_thread_num();
                     vec wi = mWtMat2.col(i);
-                    vec gwsi = gwRegHatmatrix(x, myAdj, wi % mWt2, i, ci, s_ri);
+                    vec gwsi = gwFit(x, myAdj, wi % mWt2, i, ci, s_ri);
                     betas.col(i) = gwsi;
                     mat invwt2 = 1.0 / mWt2;
                     S.row(isStoreS ? i : 0) = s_ri;
@@ -361,7 +353,7 @@ mat GWRGeneralized::fitPoissonOmp(const mat &x, const vec &y)
                 try
                 {
                     vec wi = mWtMat2.col(i);
-                    vec gwsi = gwReg(x, myAdj, wi * mWt2);
+                    vec gwsi = gwPredict(x, myAdj, wi * mWt2);
                     betas.col(i) = gwsi;
                     // emit tick(current++, nRp);
                 }
@@ -413,7 +405,7 @@ mat GWRGeneralized::fitBinomialOmp(const mat &x, const vec &y)
                 {
                     int thread = omp_get_thread_num();
                     vec wi = mWtMat1.col(i);
-                    vec gwsi = gwRegHatmatrix(x, myAdj, wi % mWt2, i, ci, s_ri);
+                    vec gwsi = gwFit(x, myAdj, wi % mWt2, i, ci, s_ri);
                     betas.col(i) = gwsi;
                     mat invwt2 = 1.0 / mWt2;
                     S.row(isStoreS ? i : 0) = s_ri;
@@ -449,7 +441,7 @@ mat GWRGeneralized::fitBinomialOmp(const mat &x, const vec &y)
                 try
                 {
                     vec wi = mWtMat2.col(i);
-                    vec gwsi = gwReg(x, myAdj, wi * mWt2);
+                    vec gwsi = gwPredict(x, myAdj, wi * mWt2);
                     mBetas.col(i) = gwsi;
                     // emit tick(current++, nRp);
                 }
@@ -493,7 +485,7 @@ mat GWRGeneralized::fitBinomialSerial(const mat &x, const vec &y)
             try
             {
                 vec wi = mWtMat1.col(i);
-                vec gwsi = gwRegHatmatrix(x, myAdj, wi % mWt2, i, ci, s_ri);
+                vec gwsi = gwFit(x, myAdj, wi % mWt2, i, ci, s_ri);
                 betas.col(i) = gwsi;
                 mat invwt2 = 1.0 / mWt2;
                 S.row(isStoreS ? i : 0) = s_ri;
@@ -521,7 +513,7 @@ mat GWRGeneralized::fitBinomialSerial(const mat &x, const vec &y)
             try
             {
                 vec wi = mWtMat2.col(i);
-                vec gwsi = gwReg(x, myAdj, wi * mWt2);
+                vec gwsi = gwPredict(x, myAdj, wi * mWt2);
                 mBetas.col(i) = gwsi;
                 // emit tick(i, nRp);
             }
@@ -556,7 +548,7 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionCVSerial(BandwidthWeight *bandw
     for (uword i = 0; i < n; i++)
     {
         mat wi = wt.col(i) % mWt2;
-        vec gwsi = gwReg(mX, myAdj, wi);
+        vec gwsi = gwPredict(mX, myAdj, wi);
         mat yhatnoi = mX.row(i) * gwsi;
         if (mFamily == GWRGeneralized::Family::Poisson)
         {
@@ -597,7 +589,7 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionCVOmp(BandwidthWeight *bandwidt
         if (true)
         {
             mat wi = wt.col(i) % mWt2;
-            vec gwsi = gwReg(mX, myAdj, wi);
+            vec gwsi = gwPredict(mX, myAdj, wi);
             mat yhatnoi = mX.row(i) * gwsi;
             if (mFamily == GWRGeneralized::Family::Poisson)
             {
@@ -714,7 +706,7 @@ vec GWRGeneralized::PoissonWtSerial(const mat &x, const vec &y, mat wt)
         for (uword i = 0; i < dpn; i++)
         {
             vec wi = wt.col(i);
-            vec gwsi = gwReg(x, myAdj, wi % mWt2);
+            vec gwsi = gwPredict(x, myAdj, wi % mWt2);
             betas.col(i) = gwsi;
         }
         mat betas1 = trans(betas);
@@ -753,7 +745,7 @@ vec GWRGeneralized::PoissonWtOmp(const mat &x, const vec &y, mat wt)
         for (uword i = 0; i < dpn; i++)
         {
             vec wi = wt.col(i);
-            vec gwsi = gwReg(x, myAdj, wi % mWt2);
+            vec gwsi = gwPredict(x, myAdj, wi % mWt2);
             betas.col(i) = gwsi;
         }
         mat betas1 = trans(betas);
@@ -796,7 +788,7 @@ vec GWRGeneralized::BinomialWtSerial(const mat &x, const vec &y, mat wt)
         for (uword i = 0; i < dpn; i++)
         {
             vec wi = wt.col(i);
-            vec gwsi = gwReg(x, myAdj, wi % mWt2);
+            vec gwsi = gwPredict(x, myAdj, wi % mWt2);
             betas.col(i) = gwsi;
         }
         mat betas1 = trans(betas);
@@ -837,7 +829,7 @@ vec GWRGeneralized::BinomialWtOmp(const mat &x, const vec &y, mat wt)
         for (uword i = 0; i < dpn ; i++)
         {
             vec wi = wt.col(i);
-            vec gwsi = gwReg(x, myAdj, wi % mWt2);
+            vec gwsi = gwPredict(x, myAdj, wi % mWt2);
             betas.col(i) = gwsi;
         }
         mat betas1 = trans(betas);
@@ -907,7 +899,7 @@ mat GWRGeneralized::diag(mat a)
 }
 
 // GWR clalibration
-vec GWRGeneralized::gwReg(const mat &x, const vec &y, const vec &w)
+vec GWRGeneralized::gwPredict(const mat &x, const vec &y, const vec &w)
 {
     mat wspan(1, x.n_cols, fill::ones);
     mat xtw = trans(x % (w * wspan));
@@ -918,7 +910,7 @@ vec GWRGeneralized::gwReg(const mat &x, const vec &y, const vec &w)
     return beta;
 }
 
-vec GWRGeneralized::gwRegHatmatrix(const mat &x, const vec &y, const vec &w, uword focus, mat &ci, mat &s_ri)
+vec GWRGeneralized::gwFit(const mat &x, const vec &y, const vec &w, uword focus, mat &ci, mat &s_ri)
 {
     mat wspan(1, x.n_cols, fill::ones);
     mat xtw = trans(x % (w * wspan));

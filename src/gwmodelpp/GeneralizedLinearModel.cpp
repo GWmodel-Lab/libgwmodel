@@ -68,7 +68,7 @@ void GeneralizedLinearModel::fit(){
                 xadj.col(i) = mX.col(i)%w;
             }
             for (uword i = 0; i < mX.n_rows ; i++){
-                start.col(i) = GWRGeneralized::gwReg(xadj, z%w, vec(mX.n_rows,fill::ones));
+                start.col(i) = GWRGeneralized::gwPredict(xadj, z%w, vec(mX.n_rows,fill::ones));
             }
             eta = GWRGeneralized::Fitted(mX , start.t()) ; //?不是很确定
             mu = mModel->linkinv(eta + mOffset);
