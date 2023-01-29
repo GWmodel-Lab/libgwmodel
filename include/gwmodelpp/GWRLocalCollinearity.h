@@ -15,80 +15,171 @@
 namespace gwm
 {
 
+/**
+ * @brief \~english GWR model for dat of local collinearity. \~chinese 局部岭回归地理加权模型
+ * 
+ */
 class GWRLocalCollinearity : public GWRBase, public IBandwidthSelectable, public IParallelizable, public IParallelOpenmpEnabled
 {
 public:
+
+    /**
+     * @brief \~english Type of bandwidth criterion. \~chinese 带宽优选指标值类型。
+     * 
+     */
     enum BandwidthSelectionCriterionType
     {
-        CV
-    };
-
-    enum NameFormat
-    {
-        Fixed,
-        VarName,
-        PrefixVarName,
-        SuffixVariable
+        CV     //!< CV
     };
     
-    typedef std::tuple<std::string, arma::mat, NameFormat> ResultLayerDataItem;
-    typedef double (GWRLocalCollinearity::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);
-    typedef arma::mat (GWRLocalCollinearity::*PredictCalculator)(const arma::mat&, const arma::vec&);
+    typedef double (GWRLocalCollinearity::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);    //!< \~english Calculator to get criterion for bandwidth optimization \~chinese 带宽优选指标值计算函数
+    typedef arma::mat (GWRLocalCollinearity::*PredictCalculator)(const arma::mat&, const arma::vec&);   //!< \~english Calculator to predict \~chinese 用于预测的函数
 
+    /**
+     * @brief \~english Calculate diagnostic information. \~chinese 计算诊断信息。
+     * 
+     * @param x \~english Independent variables \~chinese 自变量
+     * @param y \~english Dependent variables \~chinese 因变量
+     * @param betas \~english Coefficient estimates \~chinese 回归系数估计值
+     * @param shat \~english A vector of trace of \f$S\f$ and \f$S'S\f$ \~chinese 一个包含 \f$S\f$ 和 \f$S'S\f$ 矩阵迹的向量
+     * @return RegressionDiagnostic \~english Diagnostic information \~chinese 诊断信息
+     */
     static RegressionDiagnostic CalcDiagnostic(const arma::mat& x, const arma::vec& y, const arma::mat& betas, const arma::vec& shat);
 
 public:
+
+    /**
+     * @brief \~english Construct a new GWRLocalCollinearity object. \~chinese 构造一个新的 GWRLocalCollinearity 对象。
+     * 
+     */
     GWRLocalCollinearity();
+
+    /**
+     * @brief \~english Destroy the GWRLocalCollinearity object. \~chinese 销毁 GWRLocalCollinearity 对象。
+     * 
+     */
     ~GWRLocalCollinearity();
 
 public:
+
+    /**
+     * @brief \~english Get the threshold. \~chinese 获取阈值
+     * 
+     * @return double \~english The threshold \~chinese 阈值
+     */
     double cnThresh() const
     {
         return mCnThresh;
     }
+
+    /**
+     * @brief \~english Set the threshold. \~chinese 设置阈值
+     * 
+     * @param cnThresh \~english The threshold \~chinese 阈值
+     */
     void setCnThresh(double cnThresh)
     {
         mCnThresh = cnThresh;
     }
 
+    /**
+     * @brief \~english Get the lambda value \~chinese 获取参数 lambda 的值
+     * 
+     * @return double \~english The lambda value \~chinese 参数 lambda 的值
+     */
     double lambda() const
     {
         return mLambda;
     }
+
+    /**
+     * @brief \~english Set the lambda value \~chinese 设置参数 lambda 的值
+     * 
+     * @param lambda \~english The lambda value \~chinese 参数 lambda 的值
+     */
     void setLambda(double lambda)
     {
         mLambda = lambda;
     }
 
+    /**
+     * @brief \~english Get whether has hat matrix. \~chinese 获取是否有帽子矩阵。
+     * 
+     * @return true \~english Yes \~chinese 是
+     * @return false \~english No \~chinese 否
+     */
     bool hasHatMatrix() const
     {
         return mHasHatMatrix;
     }
+
+    /**
+     * @brief \~english Set whether has hat matrix. \~chinese 设置是否有帽子矩阵。 
+     * 
+     * @param flag \~english Whether has hat matrix. \~chinese 是否有帽子矩阵。 
+     */
     void setHasHatMatrix(bool value)
     {
         mHasHatMatrix = value;
     }
+
+    /**
+     * @brief \~english Get whether has predict data. \~chinese 获取是否是否预测。
+     * 
+     * @return true \~english Yes \~chinese 是
+     * @return false \~english No \~chinese 否
+     */
     bool hasPredict() const
     {
         return mHasPredict;
     }
+
+    /**
+     * @brief \~english Set whether has predict data. \~chinese 设置是否是否预测。
+     * 
+     * @param flag \~english Whether has predict data. \~chinese 是否预测
+     */
     void setHasPredict(bool value)
     {
         mHasPredict = value;
     }
+
+    /**
+     * @brief \~english Get the data to predict. \~chinese 获取用于预测的数据。
+     * 
+     * @return arma::mat \~english The data to predict \~chinese 用于预测的数据
+     */
     arma::mat predictData() const
     {
         return mPredictData;
     }
+
+    /**
+     * @brief \~english Set the data to predict. \~chinese 设置用于预测的数据。
+     * 
+     * @param value \~english The data to predict \~chinese 用于预测的数据
+     */
     void setPredictData(arma::mat &value)
     {
         mPredictData = value;
     }
 
+    /**
+     * @brief \~english Get whether to adjust lambda \~chinese 获取是否调整 lambda 值。
+     * 
+     * @return true \~english  \~chinese 
+     * @return false \~english  \~chinese 
+     */
     bool lambdaAdjust() const
     {
         return mLambdaAdjust;
     }
+
+    /**
+     * @brief \~english Set whether to adjust lambda \~chinese 设置是否调整 lambda 值。
+     * 
+     * @param lambdaAdjust \~english Whether to adjust lambda \~chinese 是否调整 lambda 值
+     */
     void setLambdaAdjust(bool lambdaAdjust)
     {
         mLambdaAdjust = lambdaAdjust;
@@ -99,40 +190,58 @@ public:
         return mDiagnostic;
     }
 
+    /**
+     * @brief \~english Get whether bandwidth optimization is enabled. \~chinese 获取是否进行带宽优选。
+     * 
+     * @return true \~english Yes \~chinese 是
+     * @return false \~english No \~chinese 否
+     */
     bool isAutoselectBandwidth() const
     {
         return mIsAutoselectBandwidth;
     }
 
+    /**
+     * @brief \~english Set whether bandwidth optimization is enabled. \~chinese 设置是否进行带宽优选。 
+     * 
+     * @param flag \~english Whether bandwidth optimization is enabled \~chinese 是否进行带宽优选
+     */
     void setIsAutoselectBandwidth(bool isAutoSelect)
     {
         mIsAutoselectBandwidth = isAutoSelect;
     }
 
+    /**
+     * @brief \~english Get the list of criterion values for each bandwidth value. \~chinese 获取每种带宽对应的指标值列表。
+     * 
+     * @return BandwidthCriterionList \~english List of criterion values for each bandwidth value \~chinese 每种带宽对应的指标值列表
+     */
     BandwidthCriterionList bandwidthSelectionCriterionList() const
     {
         return mBandwidthSelectionCriterionList;
     }
 
+    /**
+     * @brief \~english Get the type of criterion for bandwidth optimization. \~chinese 获取带宽优选指标类型。
+     * 
+     * @return BandwidthCriterionType \~english Type of criterion for bandwidth optimization \~chinese 带宽优选指标类型
+     */
     BandwidthSelectionCriterionType bandwidthSelectionCriterion() const
     {
         return mBandwidthSelectionCriterion;
     }
-    
 
+    /**
+     * @brief \~english Set the type of criterion for bandwidth optimization. \~chinese 设置带宽优选指标类型。
+     * 
+     * @param type \~english Type of criterion for bandwidth optimization \~chinese 带宽优选指标类型
+     */
     void setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion);
 
     double getCriterion(BandwidthWeight* weight) override
     {
         return (this->*mBandwidthSelectionCriterionFunction)(weight);
     }
-
-    /*double getCriterion(const vector<size_t>& variables) override
-    {
-        throw std::runtime_error("not available"); 
-
-    }*/
-
 
 public:
     arma::mat fit() override;
@@ -162,15 +271,45 @@ protected:
     BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &GWRLocalCollinearity::bandwidthSizeCriterionCVSerial;
 
 
-    //返回cv的函数
+    /**
+     * @brief \~english Get the CV. \~chinese 返回cv的函数
+     * 
+     * @param bw \~english  \~chinese 
+     * @param kernel \~english  \~chinese 
+     * @param adaptive \~english  \~chinese 
+     * @param lambda \~english  \~chinese 
+     * @param lambdaAdjust \~english  \~chinese 
+     * @param cnThresh \~english  \~chinese 
+     * @return double \~english  \~chinese 
+     */
     double LcrCV(double bw,arma::uword kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
-    //ridge.lm函数
+    
+    /**
+     * @brief \~english Ridge linear regression. \~chinese 岭回归。
+     * 
+     * @param w \~english  \~chinese 
+     * @param lambda \~english  \~chinese 
+     * @return arma::vec \~english  \~chinese 
+     */
     arma::vec ridgelm(const arma::vec& w,double lambda);
 
-
 private:
+
+    /**
+     * @brief \~english Non-parallel implementation of calculator to get CV criterion for given bandwidths. \~chinese 获取给定带宽值对应的CV值的非并行实现。
+     * 
+     * @param bandwidths \~english Given bandwidths \~chinese 给定带宽值
+     * @return double \~english Criterion value \~chinese 指标值
+     */
     double bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight);
+
 #ifdef ENABLE_OPENMP
+    /**
+     * @brief \~english Multithreading implementation of calculator to get CV criterion for given bandwidths. \~chinese 获取给定带宽值对应的CV值的多线程实现。
+     * 
+     * @param bandwidths \~english Given bandwidths \~chinese 给定带宽值
+     * @return double \~english Criterion value \~chinese 指标值
+     */
     double bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight);
 #endif
 
@@ -186,8 +325,26 @@ private:
     arma::vec mSHat;
 
 public:
+
+    /**
+     * @brief \~english Non-parallel implementation of prediction function. \~chinese 预测函数的非并行实现。
+     * 
+     * @param locations \~english Locations to predict \~chinese 要预测的位置
+     * @param x \~english Independent variables \~chinese 自变量
+     * @param y \~english Dependent variables \~chinese 因变量
+     * @return arma::mat \~english Coefficient estimates \~chinese 回归系数估计值
+     */
     arma::mat predictSerial(const arma::mat& x, const arma::vec& y);
+
 #ifdef ENABLE_OPENMP
+    /**
+     * @brief \~english Multithreading implementation of prediction function. \~chinese 预测函数的多线程实现。
+     * 
+     * @param locations \~english Locations to predict \~chinese 要预测的位置
+     * @param x \~english Independent variables \~chinese 自变量
+     * @param y \~english Dependent variables \~chinese 因变量
+     * @return arma::mat \~english Coefficient estimates \~chinese 回归系数估计值
+     */
     arma::mat predictOmp(const arma::mat& x, const arma::vec& y);
 #endif
 
