@@ -12,24 +12,29 @@
 namespace gwm
 {
 
+/**
+ * @brief \~english Geographically weighted principle component analysis. \~chinese 地理加权主成分分析。
+ * 
+ */
 class GWPCA: public SpatialMonoscaleAlgorithm, public IMultivariableAnalysis
 {
 private:
-    typedef arma::mat (GWPCA::*Solver)(const arma::mat&, arma::cube&, arma::mat&);
+    typedef arma::mat (GWPCA::*Solver)(const arma::mat&, arma::cube&, arma::mat&);  //!< \~english Calculator to solve \~chinese 模型求解函数
 
 public: // Constructors and Deconstructors
 
     /**
-     * @brief Construct a new GWPCA object.
+     * @brief \~english Construct a new GWPCA object. \~chinese 构造一个新的 GWPCA 对象。
      * 
-     * Use gwmodel_create_gwpca_algorithm() to construct an instance in shared build.
      */
     GWPCA() {}
 
     /**
-     * @brief Construct a new GWPCA object.
+     * @brief \~english Construct a new GWPCA object. \~chinese 构造一个新的 GWPCA 对象。
      * 
-     * Use gwmodel_create_gwpca_algorithm() to construct an instance in shared build.
+     * @param x \~english Variables \~chinese 变量
+     * @param coords \~english Coordinates \~chinese 样本坐标
+     * @param spatialWeight \~english Spatial weighting scheme \~chinese 空间权重配置
      */
     GWPCA(const arma::mat x, const arma::mat coords, const SpatialWeight& spatialWeight)
         : SpatialMonoscaleAlgorithm(spatialWeight, coords)
@@ -38,51 +43,50 @@ public: // Constructors and Deconstructors
     }
     
     /**
-     * @brief Destroy the GWPCA object.
+     * @brief \~english Destroy the GWPCA object. \~chinese 销毁 GWPCA 对象。
      * 
-     * Use gwmodel_delete_gwpca_algorithm() to destory an instance in shared build.
      */
     virtual ~GWPCA() {}
 
     /**
-     * @brief Get the number of Kept Components.
+     * @brief \~english Get the number of Kept Components. \~chinese 获取保留主成分数量。
      * 
-     * @return int Number of Kept Components.
+     * @return int \~english Number of Kept Components \~chinese 保留主成分数量
      */
     int keepComponents() { return mK; }
 
     /**
-     * @brief Set the number of Kept Components object.
+     * @brief \~english Set the number of Kept Components object. \~chinese 设置保留主成分数量。
      * 
-     * @param k Number of Kept Components.
+     * @param k \~english Number of Kept Components \~chinese 保留主成分数量
      */
     void setKeepComponents(int k) { mK = k; }
 
     /**
-     * @brief Get the Local Principle Values matrix.
+     * @brief \~english Get the Local Principle Values matrix. \~chinese 获取局部主成分值。
      * 
-     * @return arma::mat Local Principle Values matrix.
+     * @return arma::mat \~english Local Principle Values matrix \~chinese 局部主成分值
      */
     arma::mat localPV() { return mLocalPV; }
 
     /**
-     * @brief Get the Loadings matrix.
+     * @brief \~english Get the Loadings matrix. \~chinese 获取局部载荷矩阵。
      * 
-     * @return arma::mat Loadings matrix.
+     * @return arma::mat \~english Loadings matrix \~chinese 局部载荷矩阵
      */
     arma::cube loadings() { return mLoadings; }
 
     /**
-     * @brief Get the Standard deviation matrix.
+     * @brief \~english Get the Standard deviation matrix. \~chinese 获取标准差矩阵。
      * 
-     * @return arma::mat Standard deviation matrix.
+     * @return arma::mat \~english Standard deviation matrix \~chinese 标准差矩阵
      */
     arma::mat sdev() { return mSDev; }
 
     /**
-     * @brief Get the Scores matrix.
+     * @brief \~english Get the Scores matrix. \~chinese 获取得分矩阵。
      * 
-     * @return arma::mat Scores matrix.
+     * @return arma::mat \~english Scores matrix \~chinese 得分矩阵
      */
     arma::cube scores() { return mScores; }
 
@@ -97,12 +101,12 @@ public: // Algorithm
 private:
 
     /**
-     * @brief Function to carry out PCA.
+     * @brief \~english Function to carry out PCA. \~chinese 执行 PCA 的函数。
      * 
-     * @param x Symmetric data matrix.
-     * @param loadings Out reference to loadings matrix.
-     * @param sdev Out reference to standard deviation matrix.
-     * @return arma::mat Principle values matrix.
+     * @param x \~english Symmetric data matrix \~chinese 对称数据矩阵
+     * @param loadings [out] \~english Out reference to loadings matrix \~chinese 载荷矩阵
+     * @param sdev [out] \~english Out reference to standard deviation matrix \~chinese 标准差
+     * @return arma::mat \~english Principle values matrix \~chinese 主成分值矩阵
      */
     arma::mat pca(const arma::mat& x, arma::cube& loadings, arma::mat& sdev)
     {
@@ -110,41 +114,41 @@ private:
     }
 
     /**
-     * @brief Serial version of PCA funtion.
+     * @brief \~english Serial version of PCA funtion. \~chinese 单线程 PCA 函数。
      * 
-     * @param x Symmetric data matrix.
-     * @param loadings Out reference to loadings matrix.
-     * @param sdev Out reference to standard deviation matrix.
-     * @return arma::mat Principle values matrix.
+     * @param x \~english Symmetric data matrix \~chinese 对称数据矩阵
+     * @param loadings [out] \~english Out reference to loadings matrix \~chinese 载荷矩阵
+     * @param sdev [out] \~english Out reference to standard deviation matrix \~chinese 标准差
+     * @return arma::mat \~english Principle values matrix \~chinese 主成分值矩阵
      */
     arma::mat solveSerial(const arma::mat& x, arma::cube& loadings, arma::mat& sdev);
 
     /**
-     * @brief Function to carry out weighted PCA.
+     * @brief \~english Function to carry out weighted PCA. \~chinese 执行加权PCA的函数。
      * 
-     * @param x Symmetric data matrix.
-     * @param w Weight vector.
-     * @param V Right orthogonal matrix.
-     * @param d Rectangular diagonal matrix
+     * @param x \~english Symmetric data matrix \~chinese 对称数据矩阵
+     * @param w \~english Weight vector \~chinese 权重向量
+     * @param V [out] \~english Right orthogonal matrix \~chinese 右边的正交矩阵
+     * @param d [out] \~english Rectangular diagonal matri \~chinese 矩形对角阵
      */
     void wpca(const arma::mat& x, const arma::vec& w, arma::mat& V, arma::vec & d);
 
 private:    // Algorithm Parameters
-    int mK = 2;  //< Number of components to be kept.
+    int mK = 2;  //!< \~english Number of components to be kept \~chinese 要保留的主成分数量
     // bool mRobust = false;
 
 private:    // Algorithm Results
-    arma::mat mLocalPV;               //< Local principle component values.
-    arma::cube mLoadings;             //< Loadings for each component.
-    arma::mat mSDev;                  //< Standard Deviation.
-    arma::cube mScores;               //< Scores for each variable.
-    arma::uvec mWinner;               //< Winner variable at each sample.
+    arma::mat mLocalPV;               //!< \~english Local principle component values \~chinese 局部主成分值
+    arma::cube mLoadings;             //!< \~english Loadings for each component \~chinese 局部载荷矩阵
+    arma::mat mSDev;                  //!< \~english Standard Deviation \~chinese 标准差矩阵
+    arma::cube mScores;               //!< \~english Scores for each variable \~chinese 得分矩阵
+    arma::uvec mWinner;               //!< \~english Winner variable at each sample \~chinese 优胜变量索引值
 
 private:    // Algorithm Runtime Variables
-    arma::mat mX;
-    arma::vec mLatestWt;
+    arma::mat mX;           //!< \~english Variable matrix \~chinese 变量矩阵
+    arma::vec mLatestWt;    //!< \~english Latest weigths \~chinese 最新的权重
 
-    Solver mSolver = &GWPCA::solveSerial;
+    Solver mSolver = &GWPCA::solveSerial;   //!< \~english Calculator to solve \~chinese 模型求解函数
 };
 
 }
