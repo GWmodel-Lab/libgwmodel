@@ -28,9 +28,16 @@
 #include "gwmodelpp/VariableForwardSelector.h"
 #include "gwmodelpp/SpatialAlgorithm.h"
 #include "gwmodelpp/SpatialMonoscaleAlgorithm.h"
+#include "gwmodelpp/SpatialMultiscaleAlgorithm.h"
 #include "gwmodelpp/GWRBase.h"
 #include "gwmodelpp/GWRBasic.h"
-#include "gwmodelpp/GWPCA.h"
+#include "gwmodelpp/GWRGeneralized.h"
+#include "gwmodelpp/GWRLocalCollinearity.h"
 #include "gwmodelpp/GWRMultiscale.h"
+#include "gwmodelpp/GWRRobust.h"
+#include "gwmodelpp/GWRScalable.h"
+#include "gwmodelpp/GWDR.h"
+#include "gwmodelpp/GWSS.h"
+#include "gwmodelpp/GWPCA.h"
 
 #endif  // GWMODEL_H
