@@ -63,7 +63,7 @@ mat GWRLocalCollinearity::fit()
     vec locallambda(nDp,fill::zeros);
     vec hatrow(nDp,fill::zeros);
     //yhat赋值
-    mBetas = predict(mX, mY);
+    mBetas = (this->*mFitFunction)(mX, mY);
     //vec mYHat = fitted(mX,mBetas);
     vec mYHat = sum(mBetas % mX,1);
     vec mResidual = mY - mYHat;
@@ -75,16 +75,25 @@ mat GWRLocalCollinearity::fit()
     mDiagnostic.AICc = nDp * (log(2*M_PI*s2)) + nDp*( (1+mDiagnostic.ENP/nDp) / (1-(mDiagnostic.ENP+2)/nDp) );
     mDiagnostic.RSquare = 1 - mDiagnostic.RSS/sum((mY - mean(mY)) % (mY - mean(mY)));
     mDiagnostic.RSquareAdjust = 1 - (1 - mDiagnostic.RSquare)*(nDp - 1) / (mDiagnostic.EDF);
-    // s2
-    // aic 、 aicc
-    //调用gwr.lcr.cv.contrib
-    //生成诊断信息
-    // 诊断
-    //mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
 
     return mBetas;
 }
 
+void GWRLocalCollinearity::createPredictionDistanceParameter(const arma::mat& locations)
+{
+    if (mSpatialWeight.distance()->type() == Distance::DistanceType::CRSDistance || 
+        mSpatialWeight.distance()->type() == Distance::DistanceType::MinkwoskiDistance)
+    {
+        mSpatialWeight.distance()->makeParameter({ locations, mCoords });
+    }
+}
+
+mat GWRLocalCollinearity::predict(const mat& locations)
+{
+    createPredictionDistanceParameter(locations);
+    mBetas = (this->*mPredictFunction)(locations, mX, mY);
+    return mBetas;
+}
 
 void GWRLocalCollinearity::setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion)
 {
@@ -153,14 +162,17 @@ void GWRLocalCollinearity::setParallelType(const ParallelType& type)
         mParallelType = type;
         switch (type) {
         case ParallelType::SerialOnly:
+            mFitFunction = &GWRLocalCollinearity::fitSerial;
             mPredictFunction = &GWRLocalCollinearity::predictSerial;
             break;
 #ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
+            mFitFunction = &GWRLocalCollinearity::fitOmp;
             mPredictFunction = &GWRLocalCollinearity::predictOmp;
             break;
 #endif
         default:
+            mFitFunction = &GWRLocalCollinearity::fitSerial;
             mPredictFunction = &GWRLocalCollinearity::predictSerial;
             break;
         }
@@ -295,9 +307,55 @@ double GWRLocalCollinearity::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwi
 }
 #endif
 
-mat GWRLocalCollinearity::predictSerial(const mat& x, const vec& y)
+mat GWRLocalCollinearity::fitSerial(const mat& x, const vec& y)
 {
-    uword nRp = mHasPredict ? mPredictData.n_rows : mCoords.n_rows, nVar = mX.n_cols;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
+    mat betas(nDp, nVar, fill::zeros);
+    vec localcn(nDp, fill::zeros);
+    vec locallambda(nDp, fill::zeros);
+    vec hatrow(nDp, fill::zeros);
+    for(uword i=0;i<nDp ;i++)
+    {
+        vec wi =mSpatialWeight.weightVector(i);
+        //计算xw
+        //取mX不含第一列的部分
+        mat mXnot1 = x.cols(1, x.n_cols - 1);
+        mat wispan(1,mXnot1.n_cols,fill::ones);
+        mat wispan1(1,x.n_cols,fill::ones);
+        //计算xw
+        mat xw = mXnot1 % (wi * wispan);
+        //计算x1w
+        mat x1w = x % (wi * wispan1);
+        //计算svd.x
+        //mat U,V均为正交矩阵，S为奇异值构成的列向量
+        mat U,V;
+        colvec S;
+        svd(U,S,V,x1w.each_row() / sqrt(sum(x1w % x1w, 0)));
+        //qDebug() << mX.n_cols;
+        //赋值操作
+        localcn(i)=S(0)/S(x.n_cols-1);
+        locallambda(i) = mLambda;
+        if(mLambdaAdjust){
+            if(localcn(i)>mCnThresh){
+                locallambda(i) = (S(0) - mCnThresh*S(x.n_cols-1)) / (mCnThresh - 1);
+            }
+        }
+        betas.row(i) = trans(ridgelm(wi,locallambda(i)) );
+        //如果没有给regressionpoint
+        mat xm = x;
+        mat xtw = trans(x % (wi * wispan1));
+        mat xtwx = xtw * x;
+        mat xtwxinv = inv(xtwx);
+        rowvec hatrow = x1w.row(i) * xtwxinv * trans(x1w);
+        this->mTrS += hatrow(i);
+        this->mTrStS += sum(hatrow % hatrow);
+    }
+    return betas;
+}
+
+mat GWRLocalCollinearity::predictSerial(const arma::mat &locations, const mat& x, const vec& y)
+{
+    uword nRp = locations.n_rows, nVar = mX.n_cols;
     mat betas(nRp, nVar, fill::zeros);
     vec localcn(nRp, fill::zeros);
     vec locallambda(nRp, fill::zeros);
@@ -329,35 +387,22 @@ mat GWRLocalCollinearity::predictSerial(const mat& x, const vec& y)
             }
         }
         betas.row(i) = trans(ridgelm(wi,locallambda(i)) );
-        //如果没有给regressionpoint
-        if(mHasPredict )
-        {
-            mat xm = x;
-            mat xtw = trans(x % (wi * wispan1));
-            mat xtwx = xtw * x;
-            mat xtwxinv = inv(xtwx);
-            rowvec hatrow = x1w.row(i) * xtwxinv * trans(x1w);
-            this->mTrS += hatrow(i);
-            this->mTrStS += sum(hatrow % hatrow);
-        }
     }
     return betas;
-
 }
 
 #ifdef ENABLE_OPENMP
-mat GWRLocalCollinearity::predictOmp(const mat& x, const vec& y)
+mat GWRLocalCollinearity::fitOmp(const mat& x, const vec& y)
 {
-    uword nRp = mHasPredict? mPredictData.n_rows : mCoords.n_rows, nVar = mX.size() + 1;
-    mat betas(nRp, nVar, fill::zeros);
-    vec localcn(nRp, fill::zeros);
-    vec locallambda(nRp, fill::zeros);
-    vec hatrow(nRp, fill::zeros);
-
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
+    mat betas(nDp, nVar, fill::zeros);
+    vec localcn(nDp, fill::zeros);
+    vec locallambda(nDp, fill::zeros);
+    vec hatrow(nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     //int current = 0;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for(int i=0;i <(int)nRp;i++)
+    for(int i=0;i <(int)nDp;i++)
     {
         int thread = omp_get_thread_num();
         vec wi = mSpatialWeight.weightVector(i);
@@ -386,18 +431,60 @@ mat GWRLocalCollinearity::predictOmp(const mat& x, const vec& y)
         }
         betas.row(i) = trans( ridgelm(wi,locallambda(i)) );
         //如果没有给regressionpoint
-        if(mHasPredict)
-        {
-            mat xm = x;
-            mat xtw = trans(x % (wi * wispan1));
-            mat xtwx = xtw * x;
-            mat xtwxinv = inv(xtwx);
-            rowvec hatrow = x1w.row(i) * xtwxinv * trans(x1w);
-            shat_all(0, thread) += hatrow(i);
-            shat_all(1, thread) += sum(hatrow % hatrow);
-            //this->mTrS += hatrow(i);
-            //this->mTrStS += sum(hatrow % hatrow);
+        mat xm = x;
+        mat xtw = trans(x % (wi * wispan1));
+        mat xtwx = xtw * x;
+        mat xtwxinv = inv(xtwx);
+        rowvec hatrow = x1w.row(i) * xtwxinv * trans(x1w);
+        shat_all(0, thread) += hatrow(i);
+        shat_all(1, thread) += sum(hatrow % hatrow);
+        this->mTrS += hatrow(i);
+        this->mTrStS += sum(hatrow % hatrow);
+    }
+    vec shat = sum(shat_all,1);
+    this->mTrS = sum(shat.row(0));
+    this->mTrStS = sum(shat.row(1));
+    return betas;
+}
+
+mat GWRLocalCollinearity::predictOmp(const arma::mat &locations, const mat& x, const vec& y)
+{
+    uword nRp = locations.n_rows, nVar = mX.size() + 1;
+    mat betas(nRp, nVar, fill::zeros);
+    vec localcn(nRp, fill::zeros);
+    vec locallambda(nRp, fill::zeros);
+    vec hatrow(nRp, fill::zeros);
+
+    mat shat_all(2, mOmpThreadNum, fill::zeros);
+    //int current = 0;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for(int i=0;i <(int)nRp;i++)
+    {
+        vec wi = mSpatialWeight.weightVector(i);
+        //计算xw
+        //取mX不含第一列的部分
+        mat mXnot1 = x.cols(1, x.n_cols - 1);
+        mat wispan(1,mXnot1.n_cols,fill::ones);
+        mat wispan1(1,x.n_cols,fill::ones);
+        //计算xw
+        mat xw = mXnot1 % (wi * wispan);
+        //计算x1w
+        mat x1w = x % (wi * wispan1);
+        //计算svd.x
+        //mat U,V均为正交矩阵，S为奇异值构成的列向量
+        mat U,V;
+        colvec S;
+        svd(U,S,V,x1w.each_row() / sqrt(sum(x1w % x1w, 0)));
+        //qDebug() << mX.n_cols;
+        //赋值操作
+        localcn(i)=S(0)/S(x.n_cols-1);
+        locallambda(i) = mLambda;
+        if(mLambdaAdjust){
+            if(localcn(i)>mCnThresh){
+                locallambda(i) = (S(0) - mCnThresh*S(x.n_cols-1)) / (mCnThresh - 1);
+            }
         }
+        betas.row(i) = trans( ridgelm(wi,locallambda(i)) );
     }
     vec shat = sum(shat_all,1);
     this->mTrS = sum(shat.row(0));

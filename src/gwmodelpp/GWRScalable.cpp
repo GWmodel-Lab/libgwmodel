@@ -12,8 +12,6 @@ using namespace std;
 using namespace arma;
 using namespace gwm;
 
-size_t GWRScalable::treeChildCount = 0;
-
 double GWRScalable::Loocv(const vec &target, const mat &x, const vec &y, uword poly, const mat &Mx0, const mat &My0)
 {
     uword n = x.n_rows, k = x.n_cols, poly1 = poly + 1;

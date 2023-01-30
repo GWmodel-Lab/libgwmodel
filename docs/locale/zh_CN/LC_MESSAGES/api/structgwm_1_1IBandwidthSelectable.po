@@ -1,0 +1,73 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023, GWmodel Lab
+# This file is distributed under the same license as the libgwmodel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: libgwmodel \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-23 20:46+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.8.0\n"
+
+#: ../../api/structgwm_1_1IBandwidthSelectable.rst:4
+msgid "Struct IBandwidthSelectable"
+msgstr ""
+
+#: ../../api/structgwm_1_1IBandwidthSelectable.rst:6
+msgid "Defined in :ref:`file_include_gwmodelpp_IBandwidthSelectable.h`"
+msgstr ""
+
+#: ../../api/structgwm_1_1IBandwidthSelectable.rst:10
+msgid "Inheritance Relationships"
+msgstr ""
+
+#: ../../api/structgwm_1_1IBandwidthSelectable.rst:13
+msgid "Derived Types"
+msgstr ""
+
+#: ../../api/structgwm_1_1IBandwidthSelectable.rst:15
+msgid "``public gwm::GWRBasic`` (:ref:`exhale_class_classgwm_1_1GWRBasic`)"
+msgstr ""
+
+#: ../../api/structgwm_1_1IBandwidthSelectable.rst:16
+msgid ""
+"``public gwm::GWRGeneralized`` "
+"(:ref:`exhale_class_classgwm_1_1GWRGeneralized`)"
+msgstr ""
+
+#: ../../api/structgwm_1_1IBandwidthSelectable.rst:17
+msgid ""
+"``public gwm::GWRLocalCollinearity`` "
+"(:ref:`exhale_class_classgwm_1_1GWRLocalCollinearity`)"
+msgstr ""
+
+#: ../../api/structgwm_1_1IBandwidthSelectable.rst:18
+msgid ""
+"``public gwm::GWRMultiscale`` "
+"(:ref:`exhale_class_classgwm_1_1GWRMultiscale`)"
+msgstr ""
+
+#: ../../api/structgwm_1_1IBandwidthSelectable.rst:22
+msgid "Struct Documentation"
+msgstr ""
+
+#: ../../api/structgwm_1_1IBandwidthSelectable.rst
+msgid "Public Functions"
+msgstr ""
+
+#: ../../api/structgwm_1_1IBandwidthSelectable.rst
+msgid "Parameters"
+msgstr ""
+
+#: ../../api/structgwm_1_1IBandwidthSelectable.rst
+msgid "Returns"
+msgstr ""
+

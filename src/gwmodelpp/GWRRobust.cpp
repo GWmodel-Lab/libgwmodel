@@ -27,14 +27,6 @@ RegressionDiagnostic GWRRobust::CalcDiagnostic(const mat &x, const vec &y, const
     return {rss, AIC, AICc, enp, edf, r2, r2_adj};
 }
 
-GWRRobust::GWRRobust()
-{
-}
-
-GWRRobust::~GWRRobust()
-{
-}
-
 mat GWRRobust::fit()
 {
     createDistanceParameter();

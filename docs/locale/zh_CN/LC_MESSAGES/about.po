@@ -1,0 +1,179 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2023, GWmodel Lab
+# This file is distributed under the same license as the libgwmodel package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: libgwmodel \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-04 15:01+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
+
+#: ../../about.md:1
+msgid "Get Started"
+msgstr "开始"
+
+#: ../../about.md:3
+msgid ""
+"This library consist of C++ implementations of some geographically "
+"weighted models. Currently, implemented models are:"
+msgstr "该库包含一系列地理加权模型的 C++ 实现。目前已经实现的模型有"
+
+#: ../../about.md:5
+msgid "Geographically Weighted Regression"
+msgstr "地理加权回归"
+
+#: ../../about.md:6
+msgid "Geographically Weighted Summary Statistics"
+msgstr "地理加权汇总统计"
+
+#: ../../about.md:7
+msgid "Geographically Weighted Density Regression"
+msgstr "地理加权主成分分析"
+
+#: ../../about.md:9
+msgid "Comparing with other libraries, this library has these features:"
+msgstr "与其他库相比，该库具有下列特性："
+
+#: ../../about.md:11
+msgid "[x] Pure C++ implementation which promise high efficiency"
+msgstr "[x] 高效的纯 C++ 实现"
+
+#: ../../about.md:12
+msgid "[x] Can be linked ether as a static library or shared library"
+msgstr "[x] 可以作为动态库或静态库引入"
+
+#: ../../about.md:13
+msgid "[x] Use OpenMP to make algorithms faster"
+msgstr "[x] 使用 OpenMP 进行算法加速"
+
+#: ../../about.md:14
+msgid "[ ] Use CUDA to reach very high efficiency"
+msgstr "[x] 使用 CUDA 以实现极高性能"
+
+#: ../../about.md:15
+msgid "[x] Cross platform, configure and generate by CMake"
+msgstr "[x] 基于 CMake 实现跨平台配置和构建"
+
+#: ../../about.md:16
+msgid "[x] A python wrapper based on Cython"
+msgstr "[x] 基于 Cython 的 Python 外壳"
+
+#: ../../about.md:18
+msgid ""
+"With OOP style codes, this library is easy to be integrated in any C++ "
+"project."
+msgstr "借助于面向对象的代码风格，该类很容易被集成进其他 C++ 项目。"
+
+#: ../../about.md:20
+msgid "Installation"
+msgstr "安装"
+
+#: ../../about.md:22
+msgid "You can use CMake to build and install. These dependencies are required:"
+msgstr "可以使用 CMake 进行编译和安装。需要下列依赖项："
+
+#: ../../about.md:24
+msgid ""
+"Armadillo, together with a BLAS and LAPACK implementation. Such as "
+"OpenBLAS and Intel MKL."
+msgstr "Armadillo 以及一个 BLAS 和 LAPACK 实现。例如 OpenBLAS 和 Intel MKL。"
+
+#: ../../about.md:25
+msgid ""
+"OpenMP (if ENABLE_OPENMP is defined), usually provided by complier. On "
+"macOS, OpenMP support is disabled by default, but clang support OpenMP."
+msgstr ""
+"OpenMP （如果 `ENABLE_OPENMP` 被定义），通常由编译器提供。"
+"在 macOS 上，默认不支持 OpenMP。"
+
+#: ../../about.md:26
+msgid ""
+"CUDA (if ENABLE_CUDA is defined, to be supported in the next stage) and "
+"cuBLAS."
+msgstr "CUDA 和 cuBLAS （如果 `ENABLE_CUDA` 被定义，目前相关功能尚未实现）"
+
+#: ../../about.md:27
+msgid "Cython (if WITH_PYTHON is defined)"
+msgstr "Cython （如果定义了 `WITH_PYTHON`）"
+
+#: ../../about.md:29
+msgid "Then configure project with cmake, for example"
+msgstr "然后使用 `cmake` 命令配置项目，例如"
+
+#: ../../about.md:37
+msgid "Then build the projects, for example"
+msgstr "然后编译项目，例如"
+
+#: ../../about.md:43
+msgid ""
+"Currently, auto install is not enabled. It will be finished in the next "
+"stage."
+msgstr "目前，还不支持自动安装。"
+
+#: ../../about.md:45
+msgid "Usage"
+msgstr "用法"
+
+#: ../../about.md:47
+msgid ""
+"Usually, include the gwmodel.h header file in your project to use this "
+"library. If this library is build as a shared library, GWMODEL_SHARED_LIB"
+" should be defined in your project."
+msgstr "通常，在项目中包含 `gwmodel.h` 头文件即可。"
+
+#: ../../about.md:50
+msgid ""
+"For more details, check static.cpp or shared.cpp fils in each test "
+"project."
+msgstr "查看测试项目中的 `static.cpp` 或 `shared.cpp` 文件以获取更多信息。"
+
+#: ../../about.md:52
+msgid "Examples for python is coming."
+msgstr "未来将提供在 Python 调用的案例。"
+
+#: ../../about.md:58
+msgid "Bindings for Python are archived. Please find it at tag v0.2.0."
+msgstr "对于 Python 的支持已经归档。请查看标签 `v0.2.0`。"
+
+#: ../../about.md:61
+msgid "Development"
+msgstr "开发"
+
+#: ../../about.md:63
+msgid ""
+"This repositry provides VSCode container development configurations. "
+"Developers can create a container with ready-to-use development "
+"environment. To do so,"
+msgstr "该仓库提供了 VSCode 容器开发环境配置。开发者可以创建一个开箱即用的容器。使用方法："
+
+#: ../../about.md:67
+msgid "Install Docker on your PC."
+msgstr "安装 Docker。"
+
+#: ../../about.md:68
+msgid "Open this repositry with VSCode."
+msgstr "使用 VSCode 打开该仓库。"
+
+#: ../../about.md:69
+msgid "Press Ctrl+P to open command panel, then choose Open in Container."
+msgstr "按下 `Ctrl+P` 以打开命令面板，然后选择“在容器中打开”。"
+
+#: ../../about.md:70
+msgid "Wait for the building of container."
+msgstr "等待容器构建完成。"
+
+#: ../../about.md:72
+msgid ""
+"When the container is ready, make some changes then build and test. Happy"
+" coding!"
+msgstr "当容器构建完成，就可以进行开发和测试了。"
+
