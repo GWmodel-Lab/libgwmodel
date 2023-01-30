@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 20:21+0000\n"
+"POT-Creation-Date: 2023-01-30 11:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -38,10 +38,9 @@ msgid "Public Static Functions"
 msgstr ""
 
 #: ../../api/classgwm_1_1Logger.rst
-msgid "Parameters"
-msgstr ""
-
-#: ../../api/classgwm_1_1Logger.rst
 msgid "Public Static Attributes"
 msgstr ""
+
+#~ msgid "Parameters"
+#~ msgstr ""
 

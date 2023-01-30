@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 20:46+0000\n"
+"POT-Creation-Date: 2023-01-30 11:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -84,10 +84,6 @@ msgid "Public Static Functions"
 msgstr ""
 
 #: ../../api/classgwm_1_1GWRGeneralized.rst
-msgid "Public Static Attributes"
-msgstr ""
-
-#: ../../api/classgwm_1_1GWRGeneralized.rst
 msgid "Protected Functions"
 msgstr ""
 
@@ -108,5 +104,8 @@ msgstr ""
 #~ msgid ""
 #~ "``public gwm::IParallelOpenmpEnabled`` "
 #~ "(:ref:`exhale_interface_structgwm_1_1IParallelOpenmpEnabled`)"
+#~ msgstr ""
+
+#~ msgid "Public Static Attributes"
 #~ msgstr ""
 

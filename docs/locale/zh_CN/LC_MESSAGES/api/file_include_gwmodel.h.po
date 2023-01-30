@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 20:21+0000\n"
+"POT-Creation-Date: 2023-01-30 11:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -76,78 +76,112 @@ msgid ""
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:56
-msgid "``gwmodelpp/GWPCA.h`` (:ref:`file_include_gwmodelpp_GWPCA.h`)"
+msgid "``gwmodelpp/GWDR.h`` (:ref:`file_include_gwmodelpp_GWDR.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:58
-msgid "``gwmodelpp/GWRBase.h`` (:ref:`file_include_gwmodelpp_GWRBase.h`)"
+msgid "``gwmodelpp/GWPCA.h`` (:ref:`file_include_gwmodelpp_GWPCA.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:60
-msgid "``gwmodelpp/GWRBasic.h`` (:ref:`file_include_gwmodelpp_GWRBasic.h`)"
+msgid "``gwmodelpp/GWRBase.h`` (:ref:`file_include_gwmodelpp_GWRBase.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodel.h.rst:62
+msgid "``gwmodelpp/GWRBasic.h`` (:ref:`file_include_gwmodelpp_GWRBasic.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:64
+msgid ""
+"``gwmodelpp/GWRGeneralized.h`` "
+"(:ref:`file_include_gwmodelpp_GWRGeneralized.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:66
+msgid ""
+"``gwmodelpp/GWRLocalCollinearity.h`` "
+"(:ref:`file_include_gwmodelpp_GWRLocalCollinearity.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:68
 msgid ""
 "``gwmodelpp/GWRMultiscale.h`` "
 "(:ref:`file_include_gwmodelpp_GWRMultiscale.h`)"
 msgstr ""
 
-#: ../../api/file_include_gwmodel.h.rst:64
+#: ../../api/file_include_gwmodel.h.rst:70
+msgid "``gwmodelpp/GWRRobust.h`` (:ref:`file_include_gwmodelpp_GWRRobust.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:72
+msgid "``gwmodelpp/GWRScalable.h`` (:ref:`file_include_gwmodelpp_GWRScalable.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:74
+msgid "``gwmodelpp/GWSS.h`` (:ref:`file_include_gwmodelpp_GWSS.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:76
 msgid ""
 "``gwmodelpp/SpatialAlgorithm.h`` "
 "(:ref:`file_include_gwmodelpp_SpatialAlgorithm.h`)"
 msgstr ""
 
-#: ../../api/file_include_gwmodel.h.rst:66
+#: ../../api/file_include_gwmodel.h.rst:78
 msgid ""
 "``gwmodelpp/SpatialMonoscaleAlgorithm.h`` "
 "(:ref:`file_include_gwmodelpp_SpatialMonoscaleAlgorithm.h`)"
 msgstr ""
 
-#: ../../api/file_include_gwmodel.h.rst:68
+#: ../../api/file_include_gwmodel.h.rst:80
+msgid ""
+"``gwmodelpp/SpatialMultiscaleAlgorithm.h`` "
+"(:ref:`file_include_gwmodelpp_SpatialMultiscaleAlgorithm.h`)"
+msgstr ""
+
+#: ../../api/file_include_gwmodel.h.rst:82
 msgid ""
 "``gwmodelpp/VariableForwardSelector.h`` "
 "(:ref:`file_include_gwmodelpp_VariableForwardSelector.h`)"
 msgstr ""
 
-#: ../../api/file_include_gwmodel.h.rst:70
+#: ../../api/file_include_gwmodel.h.rst:84
 msgid ""
 "``gwmodelpp/spatialweight/BandwidthWeight.h`` "
 "(:ref:`file_include_gwmodelpp_spatialweight_BandwidthWeight.h`)"
 msgstr ""
 
-#: ../../api/file_include_gwmodel.h.rst:72
+#: ../../api/file_include_gwmodel.h.rst:86
 msgid ""
 "``gwmodelpp/spatialweight/CRSDistance.h`` "
 "(:ref:`file_include_gwmodelpp_spatialweight_CRSDistance.h`)"
 msgstr ""
 
-#: ../../api/file_include_gwmodel.h.rst:74
+#: ../../api/file_include_gwmodel.h.rst:88
 msgid ""
 "``gwmodelpp/spatialweight/DMatDistance.h`` "
 "(:ref:`file_include_gwmodelpp_spatialweight_DMatDistance.h`)"
 msgstr ""
 
-#: ../../api/file_include_gwmodel.h.rst:76
+#: ../../api/file_include_gwmodel.h.rst:90
 msgid ""
 "``gwmodelpp/spatialweight/Distance.h`` "
 "(:ref:`file_include_gwmodelpp_spatialweight_Distance.h`)"
 msgstr ""
 
-#: ../../api/file_include_gwmodel.h.rst:78
+#: ../../api/file_include_gwmodel.h.rst:92
 msgid ""
 "``gwmodelpp/spatialweight/MinkwoskiDistance.h`` "
 "(:ref:`file_include_gwmodelpp_spatialweight_MinkwoskiDistance.h`)"
 msgstr ""
 
-#: ../../api/file_include_gwmodel.h.rst:80
+#: ../../api/file_include_gwmodel.h.rst:94
 msgid ""
 "``gwmodelpp/spatialweight/SpatialWeight.h`` "
 "(:ref:`file_include_gwmodelpp_spatialweight_SpatialWeight.h`)"
 msgstr ""
 
-#: ../../api/file_include_gwmodel.h.rst:82
+#: ../../api/file_include_gwmodel.h.rst:96
 msgid ""
 "``gwmodelpp/spatialweight/Weight.h`` "
 "(:ref:`file_include_gwmodelpp_spatialweight_Weight.h`)"

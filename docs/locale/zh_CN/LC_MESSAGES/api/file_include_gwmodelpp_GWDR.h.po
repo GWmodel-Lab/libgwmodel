@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 20:21+0000\n"
+"POT-Creation-Date: 2023-01-30 11:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -77,27 +77,35 @@ msgstr ""
 msgid "``vector``"
 msgstr ""
 
+#: ../../api/file_include_gwmodelpp_GWDR.h.rst:52
+msgid "Included By"
+msgstr ""
+
 #: ../../api/file_include_gwmodelpp_GWDR.h.rst:55
+msgid ":ref:`file_include_gwmodel.h`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GWDR.h.rst:61
 msgid "Namespaces"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_GWDR.h.rst:58
+#: ../../api/file_include_gwmodelpp_GWDR.h.rst:64
 msgid ":ref:`namespace_gwm`"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_GWDR.h.rst:62
+#: ../../api/file_include_gwmodelpp_GWDR.h.rst:68
 msgid "Classes"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_GWDR.h.rst:65
+#: ../../api/file_include_gwmodelpp_GWDR.h.rst:71
 msgid ":ref:`exhale_struct_structgwm_1_1GWDRBandwidthOptimizer_1_1Parameter`"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_GWDR.h.rst:67
+#: ../../api/file_include_gwmodelpp_GWDR.h.rst:73
 msgid ":ref:`exhale_class_classgwm_1_1GWDR`"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_GWDR.h.rst:69
+#: ../../api/file_include_gwmodelpp_GWDR.h.rst:75
 msgid ":ref:`exhale_class_classgwm_1_1GWDRBandwidthOptimizer`"
 msgstr ""
 

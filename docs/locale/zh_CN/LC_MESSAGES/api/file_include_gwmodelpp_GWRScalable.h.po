@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 20:21+0000\n"
+"POT-Creation-Date: 2023-01-30 11:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -85,23 +85,31 @@ msgstr ""
 msgid "``utility``"
 msgstr ""
 
+#: ../../api/file_include_gwmodelpp_GWRScalable.h.rst:56
+msgid "Included By"
+msgstr ""
+
 #: ../../api/file_include_gwmodelpp_GWRScalable.h.rst:59
+msgid ":ref:`file_include_gwmodel.h`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GWRScalable.h.rst:65
 msgid "Namespaces"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_GWRScalable.h.rst:62
+#: ../../api/file_include_gwmodelpp_GWRScalable.h.rst:68
 msgid ":ref:`namespace_gwm`"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_GWRScalable.h.rst:66
+#: ../../api/file_include_gwmodelpp_GWRScalable.h.rst:72
 msgid "Classes"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_GWRScalable.h.rst:69
+#: ../../api/file_include_gwmodelpp_GWRScalable.h.rst:75
 msgid ":ref:`exhale_struct_structgwm_1_1GWRScalable_1_1LoocvParams`"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_GWRScalable.h.rst:71
+#: ../../api/file_include_gwmodelpp_GWRScalable.h.rst:77
 msgid ":ref:`exhale_class_classgwm_1_1GWRScalable`"
 msgstr ""
 

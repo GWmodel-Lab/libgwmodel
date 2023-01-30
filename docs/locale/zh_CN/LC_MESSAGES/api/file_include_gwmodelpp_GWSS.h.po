@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 20:21+0000\n"
+"POT-Creation-Date: 2023-01-30 11:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -81,19 +81,27 @@ msgid ""
 "(:ref:`file_include_gwmodelpp_SpatialMonoscaleAlgorithm.h`)"
 msgstr ""
 
+#: ../../api/file_include_gwmodelpp_GWSS.h.rst:61
+msgid "Included By"
+msgstr ""
+
 #: ../../api/file_include_gwmodelpp_GWSS.h.rst:64
+msgid ":ref:`file_include_gwmodel.h`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GWSS.h.rst:70
 msgid "Namespaces"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_GWSS.h.rst:67
+#: ../../api/file_include_gwmodelpp_GWSS.h.rst:73
 msgid ":ref:`namespace_gwm`"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_GWSS.h.rst:71
+#: ../../api/file_include_gwmodelpp_GWSS.h.rst:77
 msgid "Classes"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_GWSS.h.rst:74
+#: ../../api/file_include_gwmodelpp_GWSS.h.rst:80
 msgid ":ref:`exhale_class_classgwm_1_1GWSS`"
 msgstr ""
 
