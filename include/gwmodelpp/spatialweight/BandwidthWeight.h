@@ -10,7 +10,7 @@ namespace gwm
 {
 
 /**
- * @brief Class for calculating weight with a bandwidth.
+ * @brief \~english Class for calculating weight with a bandwidth. 
  * Users can specific bandwidth size, bandwidth type and kernel function type.
  * 
  * There are two types of bandwidth: adaptive and fixed. 
@@ -20,35 +20,46 @@ namespace gwm
  * There are five types of kernels: Gaussian, Exponential, Bisquare, Tricube and Boxcar.
  * Each type of kernel representing a kernel function. 
  * Users need only set the kernel type to let the instance call for the kernel function.
+ * 
+ * \~chinese 基于带宽计算权重的类。
+ * 用户可以指定带宽的大小、类型和核函数类型。
+ * 
+ * 带宽的类型有两种：可变和固定。
+ * 如果使用可变带宽，带宽大小 \f$b\f$ 必须是整数，代表到最近的第 \f$b\f$ 个点的距离。
+ * 如果使用固定带宽，带宽大小是距离值。
+ * 
+ * 目前有五种核函数类型：Gaussian, Exponential, Bisquare, Tricube 和 Boxcar。
+ * 每种类型的对应一种函数。
+ * 用户只需要指定核函数类型以使实例调用对应的核函数。
  */
 class BandwidthWeight : public Weight
 {
 public:
 
     /**
-     * @brief Type of kernel function.
+     * @brief \~english Type of kernel function. \~chinese 核函数类型。
      */
     enum KernelFunctionType
     {
-        Gaussian,       // Call for gaussian kernel BandwidthWeight::GaussianKernelFunction().
-        Exponential,    // Call for exponential kernel BandwidthWeight::ExponentialKernelFunction().
-        Bisquare,       // Call for bisquare kernel BandwidthWeight::BisquareKernelFunction().
-        Tricube,        // Call for tricube kernel BandwidthWeight::TricubeKernelFunction().
-        Boxcar          // Call for boxcar kernel BandwidthWeight::BoxcarKernelFunction().
+        Gaussian,       //!< \~english Gaussian kernel BandwidthWeight::GaussianKernelFunction() \~chinese Gaussian 核函数 BandwidthWeight::GaussianKernelFunction()
+        Exponential,    //!< \~english Exponential kernel BandwidthWeight::ExponentialKernelFunction() \~chinese Exponential 核函数 BandwidthWeight::ExponentialKernelFunction()
+        Bisquare,       //!< \~english Bisquare kernel BandwidthWeight::BisquareKernelFunction() \~chinese Bisquare 核函数 BandwidthWeight::BisquareKernelFunction()
+        Tricube,        //!< \~english Tricube kernel BandwidthWeight::TricubeKernelFunction() \~chinese Tricube 核函数 BandwidthWeight::TricubeKernelFunction()
+        Boxcar          //!< \~english Boxcar kernel BandwidthWeight::BoxcarKernelFunction() \~chinese Boxcar 核函数 BandwidthWeight::BoxcarKernelFunction()
     };
     static std::unordered_map<KernelFunctionType, std::string> KernelFunctionTypeNameMapper;
     static std::unordered_map<bool, std::string> BandwidthTypeNameMapper;
 
-    typedef arma::vec (*KernelFunction)(arma::vec, double);
+    typedef arma::vec (*KernelFunction)(arma::vec, double); //!< \~english Kernel functions \~chinese 核函数
 
     static KernelFunction Kernel[];
 
     /**
-     * @brief Gaussian kernel function.
+     * @brief \~english Gaussian kernel function. \~chinese Gaussian 核函数。
      * 
-     * @param dist Distance vector. 
-     * @param bw Bandwidth size. The unit is equal to that of distance vector.
-     * @return Weight value.
+     * @param dist \~english Distance vector \~chinese 距离向量
+     * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
+     * @return \~english Weight value \~chinese 权重值
      */
     static arma::vec GaussianKernelFunction(arma::vec dist, double bw)
     {
@@ -56,11 +67,11 @@ public:
     }
     
     /**
-     * @brief Exponential kernel function.
+     * @brief \~english Exponential kernel function. \~chinese Exponential 核函数。
      * 
-     * @param dist Distance vector. 
-     * @param bw Bandwidth size. The unit is equal to that of distance vector.
-     * @return Weight value.
+     * @param dist \~english Distance vector \~chinese 距离向量
+     * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
+     * @return \~english Weight value \~chinese 权重值
      */
     static arma::vec ExponentialKernelFunction(arma::vec dist, double bw)
     {
@@ -68,11 +79,11 @@ public:
     }
     
     /**
-     * @brief Bisquare kernel function.
+     * @brief \~english Bisquare kernel function. \~chinese Bisquare 核函数。
      * 
-     * @param dist Distance vector. 
-     * @param bw Bandwidth size. The unit is equal to that of distance vector.
-     * @return Weight value.
+     * @param dist \~english Distance vector \~chinese 距离向量
+     * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
+     * @return \~english Weight value \~chinese 权重值
      */
     static arma::vec BisquareKernelFunction(arma::vec dist, double bw)
     {
@@ -81,11 +92,11 @@ public:
     }
     
     /**
-     * @brief Tricube kernel function.
+     * @brief \~english Tricube kernel function. \~chinese Tricube 核函数。
      * 
-     * @param dist Distance vector. 
-     * @param bw Bandwidth size. The unit is equal to that of distance vector.
-     * @return Weight value.
+     * @param dist \~english Distance vector \~chinese 距离向量
+     * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
+     * @return \~english Weight value \~chinese 权重值
      */
     static arma::vec TricubeKernelFunction(arma::vec dist, double bw)
     {
@@ -94,11 +105,11 @@ public:
     }
     
     /**
-     * @brief Boxcar kernel function.
+     * @brief \~english Boxcar kernel function. \~chinese Boxcar 核函数。
      * 
-     * @param dist Distance vector. 
-     * @param bw Bandwidth size. The unit is equal to that of distance vector.
-     * @return Weight value.
+     * @param dist \~english Distance vector \~chinese 距离向量
+     * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
+     * @return \~english Weight value \~chinese 权重值
      */
     static arma::vec BoxcarKernelFunction(arma::vec dist, double bw)
     {
@@ -108,16 +119,16 @@ public:
 public:
 
     /**
-     * @brief Construct a new BandwidthWeight object.
+     * @brief \~english Construct a new BandwidthWeight object. \~chinese 构造一个新的 BandwidthWeight 对象。
      */
     BandwidthWeight() {}
 
     /**
-     * @brief Construct a new BandwidthWeight object.
+     * @brief \~english Construct a new BandwidthWeight object. \~chinese 构造一个新的 BandwidthWeight 对象。
      * 
-     * @param size Bandwidth size. 
-     * @param adaptive Whether use an adaptive bandwidth. 
-     * @param kernel Type of kernel function.
+     * @param size \~english Bandwidth size \~chinese 带宽大小
+     * @param adaptive \~english Whether use an adaptive bandwidth \~chinese 是否是可变带宽
+     * @param kernel \~english Type of kernel function \~chinese 核函数类型
      */
     BandwidthWeight(double size, bool adaptive, KernelFunctionType kernel)
     {
@@ -127,9 +138,9 @@ public:
     }
 
     /**
-     * @brief Construct a new BandwidthWeight object.
+     * @brief \~english Copy construct a new BandwidthWeight object. \~chinese 复制构造一个 BandwidthWeight 对象。
      * 
-     * @param bandwidthWeight Reference to the object for copying.
+     * @param bandwidthWeight \~english Reference to the object for copying \~chinese 要复制的对象引用
      */
     BandwidthWeight(const BandwidthWeight& bandwidthWeight)
     {
@@ -139,9 +150,9 @@ public:
     }
 
     /**
-     * @brief Construct a new BandwidthWeight object.
+     * @brief \~english Copy construct a new BandwidthWeight object from a pointer. \~chinese 从指针复制构造一个 BandwidthWeight 对象。
      * 
-     * @param bandwidthWeight Pointer to the object for copying.
+     * @param bandwidthWeight \~english Pointer to the object for copying \~chinese 要复制的对象指针
      */
     BandwidthWeight(const BandwidthWeight* bandwidthWeight)
     {
@@ -159,9 +170,9 @@ public:
     virtual arma::vec weight(arma::vec dist) override;
 
     /**
-     * @brief Get the BandwidthWeight::mBandwidth object.
+     * @brief \~english Get the bandwidth size. \~chinese 获取带宽大小。
      * 
-     * @return Bandwidth size. 
+     * @return \~english Bandwidth size \~chinese 带宽大小
      */
     double bandwidth() const
     {
@@ -169,9 +180,9 @@ public:
     }
 
     /**
-     * @brief Set the BandwidthWeight::mBandwidth object.
+     * @brief \~english Set the bandwidth size. \~chinese 设置带宽大小。
      * 
-     * @param bandwidth Bandwidth size. 
+     * @param bandwidth \~english Bandwidth size \~chinese 带宽大小
      */
     void setBandwidth(double bandwidth)
     {
@@ -179,10 +190,10 @@ public:
     }
 
     /**
-     * @brief Get the BandwidthWeight::mAdaptive object.
+     * @brief \~english Get whether it is adaptive bandwidth. \~chinese 获取是否使可变带宽。
      * 
-     * @return true if use an adaptive bandwidth. 
-     * @return false if use an fixed bandwidth.
+     * @return true \~english Yes  \~chinese 是
+     * @return false \~english No \~chinese 否
      */
     bool adaptive() const
     {
@@ -190,9 +201,9 @@ public:
     }
 
     /**
-     * @brief Set the BandwidthWeight::mAdaptive object.
+     * @brief \~english Set whether it is adaptive bandwidth. \~chinese 设置是否使可变带宽。
      * 
-     * @param bandwidth Whether use an adaptive bandwidth. 
+     * @param bandwidth \~english Whether it is adaptive bandwidth \~chinese 是否使可变带宽
      */
     void setAdaptive(bool adaptive)
     {
@@ -200,9 +211,9 @@ public:
     }
 
     /**
-     * @brief Get the BandwidthWeight::mKernel object.
+     * @brief \~english Get the type of kernel function. \~chinese 获取核函数类型。
      * 
-     * @return Type of kernel function. 
+     * @return KernelFunctionType \~english Type of kernel function \~chinese 核函数类型
      */
     KernelFunctionType kernel() const
     {
@@ -210,9 +221,9 @@ public:
     }
 
     /**
-     * @brief Set the BandwidthWeight::mBandwidth object.
+     * @brief \~english Set the type of kernel function. \~chinese 设置核函数类型。
      * 
-     * @param bandwidth Type of kernel function. 
+     * @param bandwidth \~english Type of kernel function \~chinese 核函数类型
      */
     void setKernel(const KernelFunctionType &kernel)
     {
@@ -220,9 +231,9 @@ public:
     }
 
 private:
-    double mBandwidth;
-    bool mAdaptive;
-    KernelFunctionType mKernel;
+    double mBandwidth;          //!< \~english Bandwidth size \~chinese 带宽大小
+    bool mAdaptive;             //!< \~english Whether it is adaptive bandwidth \~chinese 是否使可变带宽
+    KernelFunctionType mKernel; //!< \~english Type of kernel function \~chinese 核函数类型
 };
 
 }
