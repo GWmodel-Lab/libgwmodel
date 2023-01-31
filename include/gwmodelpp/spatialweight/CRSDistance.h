@@ -25,7 +25,7 @@ public:
          * the second column is latitudes or \f$y\f$-coordinate.
          * \~chinese 目标点坐标矩阵。
          * 其形状必须是 \f$n \times 2\f$ 且其第一列是经度或 \f$x\f$ 坐标，
-         * 第二列是纬度或 \f$y\f$ 坐标，
+         * 第二列是纬度或 \f$y\f$ 坐标。
          */
         arma::mat focusPoints;
 
@@ -35,7 +35,7 @@ public:
          * the second column is latitudes or \f$y\f$-coordinate.
          * \~chinese 数据点坐标矩阵。
          * 其形状必须是 \f$n \times 2\f$ 且其第一列是经度或 \f$x\f$ 坐标，
-         * 第二列是纬度或 \f$y\f$ 坐标，
+         * 第二列是纬度或 \f$y\f$ 坐标。
          */
         arma::mat dataPoints;
 
@@ -62,12 +62,12 @@ public:
      * The shape of it must be 1x2 and the first column is longitudes, the second column is latitudes.
      * \~chinese 目标点坐标行向量。
      * 其形状必须是 \f$n \times 2\f$ 且其第一列是经度或 \f$x\f$ 坐标，
-     * 第二列是纬度或 \f$y\f$ 坐标，
+     * 第二列是纬度或 \f$y\f$ 坐标。
      * @param in_locs \~english Matrix of data points' coordinates.
      * The shape of it must be nx2 and the first column is longitudes, the second column is latitudes.
      * \~chinese 数据点坐标矩阵。
      * 其形状必须是 \f$n \times 2\f$ 且其第一列是经度或 \f$x\f$ 坐标，
-     * 第二列是纬度或 \f$y\f$ 坐标，
+     * 第二列是纬度或 \f$y\f$ 坐标。
      * @return arma::vec \~english Distance vector for out_loc \~chinese 为 out_loc 计算得到的距离向量
      */
     static arma::vec SpatialDistance(const arma::rowvec& out_loc, const arma::mat& in_locs);
@@ -79,12 +79,12 @@ public:
      * The shape of it must be 1x2 and the first column is longitudes, the second column is latitudes.
      * \~chinese 目标点坐标行向量。
      * 其形状必须是 \f$n \times 2\f$ 且其第一列是经度或 \f$x\f$ 坐标，
-     * 第二列是纬度或 \f$y\f$ 坐标，
+     * 第二列是纬度或 \f$y\f$ 坐标。
      * @param in_locs \~english Matrix of data points' coordinates.
      * The shape of it must be nx2 and the first column is longitudes, the second column is latitudes.
      * \~chinese 数据点坐标矩阵。
      * 其形状必须是 \f$n \times 2\f$ 且其第一列是经度或 \f$x\f$ 坐标，
-     * 第二列是纬度或 \f$y\f$ 坐标，
+     * 第二列是纬度或 \f$y\f$ 坐标。
      * @return arma::vec \~english Distance vector for out_loc \~chinese 为 out_loc 计算得到的距离向量
      */
     static arma::vec EuclideanDistance(const arma::rowvec& out_loc, const arma::mat& in_locs)
