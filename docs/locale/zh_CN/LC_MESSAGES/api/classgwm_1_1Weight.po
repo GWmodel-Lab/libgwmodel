@@ -3,63 +3,63 @@
 # This file is distributed under the same license as the libgwmodel package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: libgwmodel \n"
+"Project-Id-Version: libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-01-23 20:21+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2023-01-31 16:15+0000\n"
+"Last-Translator: Yigong Hu <huyg0180110559@outook.com>\n"
+"Language-Team: \n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
+"X-Generator: Poedit 3.2.2\n"
 
 #: ../../api/classgwm_1_1Weight.rst:4
 msgid "Class Weight"
-msgstr ""
+msgstr "类 Weight"
 
 #: ../../api/classgwm_1_1Weight.rst:6
 msgid "Defined in :ref:`file_include_gwmodelpp_spatialweight_Weight.h`"
-msgstr ""
+msgstr "定义于 :ref:`file_include_gwmodelpp_spatialweight_Weight.h`"
 
 #: ../../api/classgwm_1_1Weight.rst:10
 msgid "Inheritance Relationships"
-msgstr ""
+msgstr "继承关系"
 
 #: ../../api/classgwm_1_1Weight.rst:13
 msgid "Derived Type"
-msgstr ""
+msgstr "派生类"
 
 #: ../../api/classgwm_1_1Weight.rst:15
 msgid ""
-"``public gwm::BandwidthWeight`` "
-"(:ref:`exhale_class_classgwm_1_1BandwidthWeight`)"
+"``public gwm::BandwidthWeight`` (:ref:"
+"`exhale_class_classgwm_1_1BandwidthWeight`)"
 msgstr ""
 
 #: ../../api/classgwm_1_1Weight.rst:19
 msgid "Class Documentation"
-msgstr ""
+msgstr "类文档"
 
 #: ../../api/classgwm_1_1Weight.rst
 msgid "Public Types"
-msgstr ""
+msgstr "公有类型"
 
 #: ../../api/classgwm_1_1Weight.rst
 msgid "Public Functions"
-msgstr ""
+msgstr "公有成员函数"
 
 #: ../../api/classgwm_1_1Weight.rst
 msgid "Returns"
-msgstr ""
+msgstr "返回"
 
 #: ../../api/classgwm_1_1Weight.rst
 msgid "Parameters"
-msgstr ""
+msgstr "参数"
 
 #: ../../api/classgwm_1_1Weight.rst
 msgid "Public Static Attributes"
-msgstr ""
-
+msgstr "公有静态属性"
