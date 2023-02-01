@@ -3,34 +3,35 @@
 # This file is distributed under the same license as the libgwmodel package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: libgwmodel \n"
+"Project-Id-Version: libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-01-23 20:21+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2023-01-31 14:01+0000\n"
+"Last-Translator: Yigong Hu <huyg0180110559@outook.com>\n"
+"Language-Team: \n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
+"X-Generator: Poedit 3.2.2\n"
 
 #: ../../api/file_include_gwmodelpp_spatialweight_BandwidthWeight.h.rst:5
 msgid "File BandwidthWeight.h"
-msgstr ""
+msgstr "文件 BandwidthWeight.h"
 
 #: ../../api/file_include_gwmodelpp_spatialweight_BandwidthWeight.h.rst:7
 msgid ""
 "|exhale_lsh| :ref:`Parent directory "
-"<dir_include_gwmodelpp_spatialweight>` "
-"(``include/gwmodelpp/spatialweight``)"
+"<dir_include_gwmodelpp_spatialweight>` (``include/gwmodelpp/"
+"spatialweight``)"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_spatialweight_BandwidthWeight.h.rst:14
 msgid "Contents"
-msgstr ""
+msgstr "内容"
 
 #: ../../api/file_include_gwmodelpp_spatialweight_BandwidthWeight.h.rst:17
 msgid "Definition (``include/gwmodelpp/spatialweight/BandwidthWeight.h``)"
@@ -38,12 +39,12 @@ msgstr ""
 
 #: ../../api/file_include_gwmodelpp_spatialweight_BandwidthWeight.h.rst:30
 msgid "Includes"
-msgstr ""
+msgstr "包含"
 
 #: ../../api/file_include_gwmodelpp_spatialweight_BandwidthWeight.h.rst:33
 msgid ""
-"``Weight.h`` "
-"(:ref:`file_include_gwmodelpp_spatialweight_BandwidthWeight.h`)"
+"``Weight.h`` (:ref:"
+"`file_include_gwmodelpp_spatialweight_BandwidthWeight.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_spatialweight_BandwidthWeight.h.rst:35
@@ -56,7 +57,7 @@ msgstr ""
 
 #: ../../api/file_include_gwmodelpp_spatialweight_BandwidthWeight.h.rst:42
 msgid "Included By"
-msgstr ""
+msgstr "被下列头文件包含"
 
 #: ../../api/file_include_gwmodelpp_spatialweight_BandwidthWeight.h.rst:45
 msgid ":ref:`file_include_gwmodel.h`"
@@ -76,7 +77,7 @@ msgstr ""
 
 #: ../../api/file_include_gwmodelpp_spatialweight_BandwidthWeight.h.rst:57
 msgid "Namespaces"
-msgstr ""
+msgstr "命名空间"
 
 #: ../../api/file_include_gwmodelpp_spatialweight_BandwidthWeight.h.rst:60
 msgid ":ref:`namespace_gwm`"
@@ -84,9 +85,8 @@ msgstr ""
 
 #: ../../api/file_include_gwmodelpp_spatialweight_BandwidthWeight.h.rst:64
 msgid "Classes"
-msgstr ""
+msgstr "类"
 
 #: ../../api/file_include_gwmodelpp_spatialweight_BandwidthWeight.h.rst:67
 msgid ":ref:`exhale_class_classgwm_1_1BandwidthWeight`"
 msgstr ""
-

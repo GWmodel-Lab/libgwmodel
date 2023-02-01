@@ -10,29 +10,19 @@ namespace gwm
 {
 
 /**
- * @brief Abstract base class for calculating weight from distance.
- * It defines some interface commonly used in spatial algorithms:
- * 
- * - Clone this object.
- * - Calculate distance vector for a focus point.
- * - Get maximum distance among all points.
- * - Get minimum distance among all points.
- * 
- * Pointer of this type can be put to these classes:
- * 
- * - BandwidthWeight
- * 
+ * @brief \~english Abstract base class for calculating weight from distance.
+ * \~chinese 根据距离计算权重的基类。
  */
 class Weight
 {
 public:
 
     /**
-     * @brief Type of weight.
+     * @brief \~english Type of weight. \~chinese 权重的类型。
      */
     enum WeightType
     {
-        BandwidthWeight //!< Bandwidth weight
+        BandwidthWeight //!< \~english Bandwidth weight \~chinese 基于带宽的权重
     };
 
     static std::unordered_map<WeightType, std::string> TypeNameMapper;
@@ -40,29 +30,29 @@ public:
 public:
 
     /**
-     * @brief Construct a new Weight object.
+     * @brief \~english Construct a new Weight object. \~chinese 构造一个新的 Weight 对象。
      */
     Weight() {}
 
     /**
-     * @brief Destroy the Weight object.
+     * @brief \~english Destroy the Weight object. \~chinese 销毁 Weight 对象。
      */
     virtual ~Weight() {}
 
     /**
-     * @brief Clone this object.
+     * @brief \~english Clone this object. \~chinese 克隆该对象。
      * 
-     * @return Newly created pointer.
+     * @return \~english Newly created pointer \~chinese 新创建的指针
      */
     virtual Weight* clone() = 0;
 
 public:
 
     /**
-     * @brief Calculate weight vector from a distance vector. 
+     * @brief \~english Calculate weight vector from a distance vector.  \~chinese 从距离计算权重。
      * 
-     * @param dist According distance vector.
-     * @return Weight vector.
+     * @param dist \~english According distance vector \~chinese 距离向量
+     * @return \~english Weight vector \~chinese 权重向量
      */
     virtual arma::vec weight(arma::vec dist) = 0;
 };

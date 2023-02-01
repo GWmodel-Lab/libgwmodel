@@ -3,19 +3,20 @@
 # This file is distributed under the same license as the libgwmodel package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: libgwmodel \n"
+"Project-Id-Version: libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-01-04 15:01+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2023-01-31 13:09+0000\n"
+"Last-Translator: Yigong Hu <huyg0180110559@outook.com>\n"
+"Language-Team: \n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.11.0\n"
+"X-Generator: Poedit 3.2.2\n"
 
 #: ../../about.md:1
 msgid "Get Started"
@@ -23,9 +24,9 @@ msgstr "开始"
 
 #: ../../about.md:3
 msgid ""
-"This library consist of C++ implementations of some geographically "
-"weighted models. Currently, implemented models are:"
-msgstr "该库包含一系列地理加权模型的 C++ 实现。目前已经实现的模型有"
+"This library consist of C++ implementations of some geographically weighted "
+"models. Currently, implemented models are:"
+msgstr "该库包含一系列地理加权模型的 C++ 实现。目前已经实现的模型有："
 
 #: ../../about.md:5
 msgid "Geographically Weighted Regression"
@@ -83,17 +84,17 @@ msgstr "可以使用 CMake 进行编译和安装。需要下列依赖项："
 
 #: ../../about.md:24
 msgid ""
-"Armadillo, together with a BLAS and LAPACK implementation. Such as "
-"OpenBLAS and Intel MKL."
+"Armadillo, together with a BLAS and LAPACK implementation. Such as OpenBLAS "
+"and Intel MKL."
 msgstr "Armadillo 以及一个 BLAS 和 LAPACK 实现。例如 OpenBLAS 和 Intel MKL。"
 
 #: ../../about.md:25
 msgid ""
-"OpenMP (if ENABLE_OPENMP is defined), usually provided by complier. On "
-"macOS, OpenMP support is disabled by default, but clang support OpenMP."
+"OpenMP (if ENABLE_OPENMP is defined), usually provided by complier. On macOS, "
+"OpenMP support is disabled by default, but clang support OpenMP."
 msgstr ""
-"OpenMP （如果 `ENABLE_OPENMP` 被定义），通常由编译器提供。"
-"在 macOS 上，默认不支持 OpenMP。"
+"OpenMP （如果 `ENABLE_OPENMP` 被定义），通常由编译器提供。在 macOS 上，默认不"
+"支持 OpenMP。"
 
 #: ../../about.md:26
 msgid ""
@@ -115,8 +116,7 @@ msgstr "然后编译项目，例如"
 
 #: ../../about.md:43
 msgid ""
-"Currently, auto install is not enabled. It will be finished in the next "
-"stage."
+"Currently, auto install is not enabled. It will be finished in the next stage."
 msgstr "目前，还不支持自动安装。"
 
 #: ../../about.md:45
@@ -126,14 +126,13 @@ msgstr "用法"
 #: ../../about.md:47
 msgid ""
 "Usually, include the gwmodel.h header file in your project to use this "
-"library. If this library is build as a shared library, GWMODEL_SHARED_LIB"
-" should be defined in your project."
+"library. If this library is build as a shared library, GWMODEL_SHARED_LIB "
+"should be defined in your project."
 msgstr "通常，在项目中包含 `gwmodel.h` 头文件即可。"
 
 #: ../../about.md:50
 msgid ""
-"For more details, check static.cpp or shared.cpp fils in each test "
-"project."
+"For more details, check static.cpp or shared.cpp fils in each test project."
 msgstr "查看测试项目中的 `static.cpp` 或 `shared.cpp` 文件以获取更多信息。"
 
 #: ../../about.md:52
@@ -151,9 +150,11 @@ msgstr "开发"
 #: ../../about.md:63
 msgid ""
 "This repositry provides VSCode container development configurations. "
-"Developers can create a container with ready-to-use development "
-"environment. To do so,"
-msgstr "该仓库提供了 VSCode 容器开发环境配置。开发者可以创建一个开箱即用的容器。使用方法："
+"Developers can create a container with ready-to-use development environment. "
+"To do so,"
+msgstr ""
+"该仓库提供了 VSCode 容器开发环境配置。开发者可以创建一个开箱即用的容器。使用方"
+"法如下，"
 
 #: ../../about.md:67
 msgid "Install Docker on your PC."
@@ -173,7 +174,6 @@ msgstr "等待容器构建完成。"
 
 #: ../../about.md:72
 msgid ""
-"When the container is ready, make some changes then build and test. Happy"
-" coding!"
+"When the container is ready, make some changes then build and test. Happy "
+"coding!"
 msgstr "当容器构建完成，就可以进行开发和测试了。"
-
