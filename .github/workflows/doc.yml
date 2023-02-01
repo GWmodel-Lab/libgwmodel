@@ -33,12 +33,12 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Install dependencies
-        runs: |
+        run: |
           apt-get -qq -y update && apt-get -qq -y install doxygen
           pip3 install -r requirements.txt
         working-directory: ./docs
       - name: Build docs
-        runs: |
+        run: |
           make html
         working-directory: ./docs
       - name: Upload artifact
