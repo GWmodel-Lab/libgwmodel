@@ -4,14 +4,15 @@
 #include <vector>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp/CGwmGWRLocalCollinearity.h"
-#include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
-#include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
-#include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
+#include "gwmodelpp/GWRLocalCollinearity.h"
+#include "gwmodelpp/spatialweight/CRSDistance.h"
+#include "gwmodelpp/spatialweight/BandwidthWeight.h"
+#include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
 
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 TEST_CASE("LocalCollinearityGWR: basic flow")
 {
@@ -22,14 +23,14 @@ TEST_CASE("LocalCollinearityGWR: basic flow")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    CGwmCRSDistance distance(false);
-    CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
-    CGwmSpatialWeight spatial(&bandwidth, &distance);
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmGWRLocalCollinearity algorithm;
+    GWRLocalCollinearity algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -38,7 +39,7 @@ TEST_CASE("LocalCollinearityGWR: basic flow")
     //algorithm.setLambdaAdjust(true);
     REQUIRE_NOTHROW(algorithm.fit());
 
-    GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    RegressionDiagnostic diagnostic = algorithm.diagnostic();
     /*REQUIRE_THAT(diagnostic.AIC, Catch::MatchersWithinAbs(2461.565456, 1e-6));
     REQUIRE_THAT(diagnostic.AICc, Catch::MatchersWithinAbs(2464.600255, 1e-6));
     REQUIRE_THAT(diagnostic.RSquare, Catch::MatchersWithinAbs(0.708010632044736, 1e-6));
@@ -56,14 +57,14 @@ TEST_CASE("LocalCollinearityGWR: adaptive bandwidth autoselection of with CV")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    CGwmCRSDistance distance(false);
-    CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Gaussian);
-    CGwmSpatialWeight spatial(&bandwidth, &distance);
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmGWRLocalCollinearity algorithm;
+    GWRLocalCollinearity algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -71,11 +72,11 @@ TEST_CASE("LocalCollinearityGWR: adaptive bandwidth autoselection of with CV")
     algorithm.setHasHatMatrix(true);
 
     algorithm.setIsAutoselectBandwidth(true);
-    algorithm.setBandwidthSelectionCriterion(CGwmGWRLocalCollinearity::BandwidthSelectionCriterionType::CV);
+    algorithm.setBandwidthSelectionCriterion(GWRLocalCollinearity::BandwidthSelectionCriterionType::CV);
     
     REQUIRE_NOTHROW(algorithm.fit());
 
-    size_t bw = (size_t)algorithm.spatialWeight().weight<CGwmBandwidthWeight>()->bandwidth();
+    size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
     REQUIRE(bw == 67);
 }
 
@@ -88,14 +89,14 @@ TEST_CASE("LocalCollinearityGWR: ")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    CGwmCRSDistance distance(false);
-    CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
-    CGwmSpatialWeight spatial(&bandwidth, &distance);
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmGWRLocalCollinearity algorithm;
+    GWRLocalCollinearity algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
@@ -104,7 +105,7 @@ TEST_CASE("LocalCollinearityGWR: ")
     algorithm.setLambdaAdjust(true);
     REQUIRE_NOTHROW(algorithm.fit());
 
-    GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    RegressionDiagnostic diagnostic = algorithm.diagnostic();
     /*REQUIRE_THAT(diagnostic.AIC, Catch::MatchersWithinAbs(2461.565456, 1e-6));
     REQUIRE_THAT(diagnostic.AICc, Catch::MatchersWithinAbs(2464.600255, 1e-6));
     REQUIRE_THAT(diagnostic.RSquare, Catch::MatchersWithinAbs(0.708010632044736, 1e-6));
@@ -123,30 +124,30 @@ TEST_CASE("LocalCollinearityGWR: multithread basic flow")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    CGwmCRSDistance distance(false);
-    CGwmBandwidthWeight bandwidth(0, true, CGwmBandwidthWeight::Gaussian);
-    CGwmSpatialWeight spatial(&bandwidth, &distance);
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
-    CGwmGWRLocalCollinearity algorithm;
+    GWRLocalCollinearity algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeight(spatial);
     algorithm.setHasHatMatrix(true);
     algorithm.setIsAutoselectBandwidth(true);
-    algorithm.setBandwidthSelectionCriterion(CGwmGWRLocalCollinearity::BandwidthSelectionCriterionType::CV);
+    algorithm.setBandwidthSelectionCriterion(GWRLocalCollinearity::BandwidthSelectionCriterionType::CV);
     algorithm.setParallelType(ParallelType::OpenMP);
     algorithm.setOmpThreadNum(6);
     REQUIRE_NOTHROW(algorithm.fit());
 
 
-    double bw = algorithm.spatialWeight().weight<CGwmBandwidthWeight>()->bandwidth();
+    double bw = algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
     REQUIRE(bw == 67.0);
 
-    GwmRegressionDiagnostic diagnostic = algorithm.diagnostic();
+    RegressionDiagnostic diagnostic = algorithm.diagnostic();
     REQUIRE_THAT(diagnostic.AIC, Catch::MatchersWithinAbs(2458.2472656218, 1e-6));
     REQUIRE_THAT(diagnostic.AICc, Catch::MatchersWithinAbs(2459.743757379, 1e-6));
     REQUIRE_THAT(diagnostic.RSquare, Catch::MatchersWithinAbs(0.68733847, 1e-6));

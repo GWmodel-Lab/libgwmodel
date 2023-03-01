@@ -4,14 +4,15 @@
 #include <vector>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp/CGwmGWSS.h"
-#include "gwmodelpp/spatialweight/CGwmCRSDistance.h"
-#include "gwmodelpp/spatialweight/CGwmBandwidthWeight.h"
-#include "gwmodelpp/spatialweight/CGwmSpatialWeight.h"
+#include "gwmodelpp/GWSS.h"
+#include "gwmodelpp/spatialweight/CRSDistance.h"
+#include "gwmodelpp/spatialweight/BandwidthWeight.h"
+#include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
 
 using namespace std;
 using namespace arma;
+using namespace gwm;
 
 TEST_CASE("GWSS: basic flow")
 {
@@ -22,13 +23,13 @@ TEST_CASE("GWSS: basic flow")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    CGwmCRSDistance distance(false);
-    CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
-    CGwmSpatialWeight spatial(&bandwidth, &distance);
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
 
     mat x = londonhp100_data.cols(0, 3);
 
-    CGwmGWSS algorithm;
+    GWSS algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setVariables(x);
     algorithm.setSpatialWeight(spatial);
@@ -106,14 +107,14 @@ TEST_CASE("GWSS: correlation with first variable only")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    CGwmCRSDistance distance(false);
-    CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
-    CGwmSpatialWeight spatial(&bandwidth, &distance);
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
 
     vec y = londonhp100_data.col(0);
     mat x = londonhp100_data.cols(0, 3);
 
-    CGwmGWSS algorithm;
+    GWSS algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setVariables(x);
     algorithm.setSpatialWeight(spatial);
@@ -143,14 +144,14 @@ TEST_CASE("GWSS: multithread basic flow")
         FAIL("Cannot load londonhp100 data.");
     }
 
-    CGwmCRSDistance distance(false);
-    CGwmBandwidthWeight bandwidth(36, true, CGwmBandwidthWeight::Gaussian);
-    CGwmSpatialWeight spatial(&bandwidth, &distance);
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
 
     vec y = londonhp100_data.col(0);
     mat x = londonhp100_data.cols(0, 3);
 
-    CGwmGWSS algorithm;
+    GWSS algorithm;
     algorithm.setCoords(londonhp100_coord);
     algorithm.setVariables(x);
     algorithm.setSpatialWeight(spatial);
