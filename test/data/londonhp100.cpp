@@ -25,7 +25,7 @@ bool read_londonhp100(mat& coords, mat& data, vector<string>& fields)
     else return false;
 }
 
-bool read_londonhp100temporal(mat& coords, mat& data, vector<string>& fields)
+bool read_londonhp100temporal(arma::mat& coords, arma::mat& data, std::vector<std::string>& fields)
 {
     field<std::string> coordHeader(3);
     coordHeader(0) = "x";

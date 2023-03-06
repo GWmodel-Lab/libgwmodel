@@ -7,7 +7,7 @@
 namespace gwm
 {
 
-class CRSSTDistance : public OneDimDistance
+class CRSSTDistance : public Distance
 {
 public:
     typedef arma::vec (*CalculatorType)(Distance*, Distance*, arma::uword, double, double);
@@ -19,9 +19,9 @@ public:
 public:
     CRSSTDistance();
 
-    explicit CRSSTDistance(Distance* spatialDistance, OneDimDistance* temporalDistance, double lambda);
+    explicit CRSSTDistance(Distance* spatialDistance, gwm::OneDimDistance* temporalDistance, double lambda);
 
-    explicit CRSSTDistance(Distance* spatialDistance, OneDimDistance* temporalDistance, double lambda, double angle);
+    explicit CRSSTDistance(Distance* spatialDistance, gwm::OneDimDistance* temporalDistance, double lambda, double angle);
 
     /**
      * @brief Copy construct a new CRSDistance object.
@@ -35,24 +35,24 @@ public:
         return new CRSSTDistance(*this);
     }
 
-    DistanceType type() const { return DistanceType::CRSSTDistance; }
+    DistanceType type() override { return DistanceType::CRSSTDistance; }
 
     void makeParameter(std::initializer_list<DistParamVariant> plist) override;
 
-    arma::vec distance(arma::uword focus) const
+    arma::vec distance(arma::uword focus) override
     {
         return mCalculator(mSpatialDistance, mTemporalDistance, focus, mLambda, mAngle);
     }
 
-    double minDistance() const;
+    double minDistance() override;
 
-    double maxDistance() const;
+    double maxDistance() override;
 
 public:
 
     const Distance* spatialDistance() const { return mSpatialDistance; }
 
-    const OneDimDistance* temporalDistance() const { return mTemporalDistance; }
+    const gwm::OneDimDistance* temporalDistance() const { return mTemporalDistance; }
 
     double lambda() const { return mLambda; }
 
@@ -61,7 +61,7 @@ public:
 protected:
 
     Distance* mSpatialDistance = nullptr;
-    OneDimDistance* mTemporalDistance = nullptr;
+    gwm::OneDimDistance* mTemporalDistance = nullptr;
 
     double mLambda = 0.0;
     double mAngle = arma::datum::pi / 2;

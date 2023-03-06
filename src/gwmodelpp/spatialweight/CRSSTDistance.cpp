@@ -31,21 +31,21 @@ CRSSTDistance::CRSSTDistance() :
     mCalculator = &OrthogonalSTDistance;
 }
 
-CRSSTDistance::CRSSTDistance(Distance* spatialDistance, OneDimDistance* temporalDistance, double lambda) :
+CRSSTDistance::CRSSTDistance(Distance* spatialDistance, gwm::OneDimDistance* temporalDistance, double lambda) :
     mLambda(lambda),
     mAngle(datum::pi / 2.0)
 {
     mSpatialDistance = spatialDistance->clone();
-    mTemporalDistance = static_cast<OneDimDistance*>(temporalDistance->clone());
+    mTemporalDistance = static_cast<gwm::OneDimDistance*>(temporalDistance->clone());
     mCalculator = &OrthogonalSTDistance;
 }
 
-CRSSTDistance::CRSSTDistance(Distance* spatialDistance, OneDimDistance* temporalDistance, double lambda, double angle) :
+CRSSTDistance::CRSSTDistance(Distance* spatialDistance, gwm::OneDimDistance* temporalDistance, double lambda, double angle) :
     mLambda(lambda),
     mAngle(angle)
 {
     mSpatialDistance = spatialDistance->clone();
-    mTemporalDistance = static_cast<OneDimDistance*>(temporalDistance->clone());
+    mTemporalDistance = static_cast<gwm::OneDimDistance*>(temporalDistance->clone());
     mCalculator = (abs(angle - datum::pi / 2.0) < 1e-16) ? &OrthogonalSTDistance : &ObliqueSTDistance;
 }
 
@@ -53,7 +53,7 @@ CRSSTDistance::CRSSTDistance(CRSSTDistance &distance)
 {
     mLambda = distance.mLambda;
     mSpatialDistance = distance.mSpatialDistance->clone();
-    mTemporalDistance = static_cast<OneDimDistance*>(distance.mTemporalDistance->clone());
+    mTemporalDistance = static_cast<gwm::OneDimDistance*>(distance.mTemporalDistance->clone());
 }
 
 void CRSSTDistance::makeParameter(initializer_list<DistParamVariant> plist)
@@ -84,7 +84,7 @@ void CRSSTDistance::makeParameter(initializer_list<DistParamVariant> plist)
     }
 }
 
-double CRSSTDistance::maxDistance() const
+double CRSSTDistance::maxDistance()
 {
     if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
     double maxD = 0.0;
@@ -96,7 +96,7 @@ double CRSSTDistance::maxDistance() const
     return maxD;
 }
 
-double CRSSTDistance::minDistance() const
+double CRSSTDistance::minDistance()
 {
     if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
     double minD = DBL_MAX;
