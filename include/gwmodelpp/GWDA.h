@@ -10,27 +10,22 @@ namespace gwm
 
     /**
      * \~english
-     * @brief The class for Geographically Weighted Summary Statistics.
-     * Geographically Weighted Summary Statistics is an algorithm for calculating local weighted statistics.
-     * They are local mean, local standard deviation, local variance, local skewness, local coefficients of variation,
+     * @brief The class for Geographically Weighted Discriminant Analysis.
+     * Geographically Weighted Discriminant Analysis is an algorithm for calculating local weighted statistics,
+     * where location-wise probabilities and their associated entropy are also calculated.
+     * They are local mean,  local variance, local skewness, local coefficients of variation,
      * local covariances, local correlations (Pearson's), local correlations (Spearman's),
      * local medians, local interquartile ranges, local quantile imbalances and coordinates.
      * To get these matrices, call these functions:
      *
      * - local mean <- GWDA::localMean()
-     * - local standard deviation <- GWDA::localSDev()
      * - local variance <- GWDA::localVar()
      * - local skewness <- GWDA::localSkewness()
      * - local coefficients of variation <- GWDA::localCV()
      * - local covariances <- GWDA::localCov()
-     * - local correlations (Pearson's) <- GWDA::localCorr()
-     * - local correlations (Spearman's) <- GWDA::localSCorr()
-     * - local medians <- GWDA::localMedian()
-     * - local interquartile ranges <- GWDA::iqr()
-     * - local quantile imbalances and coordinates <- GWDA::qi()
      *
      * \~chinese
-     * @brief 地理加权汇总统计分析算法类。
+     * @brief 地理加权分析算法类。
      * 地理加权汇总统计是计算局部加权统计值的方法。
      * 可计算的统计值包括： local mean, local standard deviation, local variance, local skewness, local coefficients of variation,
      * local covariances, local correlations (Pearson's), local correlations (Spearman's),
@@ -38,16 +33,6 @@ namespace gwm
      * 使用下面这些函数获取上述值：
      *
      * - local mean <- GWDA::localMean()
-     * - local standard deviation <- GWDA::localSDev()
-     * - local variance <- GWDA::localVar()
-     * - local skewness <- GWDA::localSkewness()
-     * - local coefficients of variation <- GWDA::localCV()
-     * - local covariances <- GWDA::localCov()
-     * - local correlations (Pearson's) <- GWDA::localCorr()
-     * - local correlations (Spearman's) <- GWDA::localSCorr()
-     * - local medians <- GWDA::localMedian()
-     * - local interquartile ranges <- GWDA::iqr()
-     * - local quantile imbalances and coordinates <- GWDA::qi()
      */
     class GWDA : public SpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IParallelizable, public IParallelOpenmpEnabled
     {
@@ -99,10 +84,7 @@ namespace gwm
             return n(sort_index(res)) + 1.0;
         }
 
-        typedef void (GWDA::*SummaryCalculator)(); //!< \~english Calculator for summary statistics \~chinese 汇总统计计算函数
-
-    protected:
-        static arma::vec findq(const arma::mat &x, const arma::vec &w);
+        typedef void (GWDA::*DiscriminantAnalysisCalculator)(); //!< \~english Calculator for summary statistics \~chinese 汇总统计计算函数
 
     public:
         /**
@@ -156,6 +138,68 @@ namespace gwm
          * @param corrWithFirstOnly \~english Whether calculate correlation between the first variable and others. \~chinese 是否仅为第一个变量计算与其他变量的相关系数
          */
         void setIsCorrWithFirstOnly(bool corrWithFirstOnly) { mIsCorrWithFirstOnly = corrWithFirstOnly; }
+
+        /**
+         *
+         */
+        bool isWqda() const { return mIsWqda; }
+
+        /**
+         *
+         */
+        void setIsWqda(bool iswqda)
+        {
+            mIsWqda = iswqda;
+        }
+
+        /**
+         *
+         */
+        bool hasCov() const { return mHascov; }
+
+        /**
+         *
+         */
+        void setHascov(bool hascov)
+        {
+            mHascov = hascov;
+        }
+
+        /**
+         *
+         */
+        bool hasMean() const { return mHasmean; }
+
+        /**
+         *
+         */
+        void setHasmean(bool hasmean)
+        {
+            mHasmean = hasmean;
+        }
+
+        /**
+         *
+         */
+        bool hasPrior() const { return mHasprior; }
+
+        /**
+         *
+         */
+        void setHasprior(bool hasprior)
+        {
+            mHasprior = hasprior;
+        }
+
+        /**
+         *
+         */
+        double correctRate() const { return mCorrectRate; }
+
+        /**
+         *
+         */
+        arma::mat res() const { return mRes; }
 
         /**
          * @brief \~english Get local mean on each sample. \~chinese 获取每个样本的局部均值。
@@ -230,38 +274,6 @@ namespace gwm
         arma::mat localCov() const { return mCovmat; }
 
         /**
-         * @brief \~english Get local correlations (Pearson's) on each sample. \~chinese 获取局部皮尔逊相关系数。
-         *
-         * @return \~english Local correlations (Pearson's) on each sample.
-         * If corrWithFirstOnly is set true, the number of columns is the (number of fields) - 1;
-         * if not, the number of columns is the (((number of fields) - 1) * (number of fields)) / 2.
-         * For variables \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$, the fields are arranged as:
-         * \f$corr(v_1,v_2), corr(v_1,v_3), ... , corr(v_1,v_k), corr(v_2,v_3), ... , corr(v_2,v_k), ... , corr(v_{k-1},vk)\f$
-         * \~chinese 局部皮尔逊相关系数。
-         * 如果 corrWithFirstOnly 设置为 true ，则共有 字段数 - 1 列；
-         * 否则，有 ((字段数 - 1) * 字段数) / 2 列。
-         * 对于变量 \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$ 返回字段按如下方式排序：
-         * \f$corr(v_1,v_2), corr(v_1,v_3), ... , corr(v_1,v_k), corr(v_2,v_3), ... , corr(v_2,v_k), ... , corr(v_{k-1},vk)\f$
-         */
-        arma::mat localCorr() const { return mCorrmat; }
-
-        /**
-         * @brief \~english Get local correlations (Spearman's) on each sample. \~chinese 获取局部斯皮尔曼相关系数。
-         *
-         * @return \~english Local correlations (Spearman's) on each sample.
-         * If corrWithFirstOnly is set true, the number of columns is the (number of fields) - 1;
-         * if not, the number of columns is the (((number of fields) - 1) * (number of fields)) / 2.
-         * For variables \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$, the fields are arranged as:
-         * \f$corr(v_1,v_2), corr(v_1,v_3), ... , corr(v_1,v_k), corr(v_2,v_3), ... , corr(v_2,v_k), ... , corr(v_{k-1},vk)\f$
-         * \~chinese 局部斯皮尔曼相关系数。
-         * 如果 corrWithFirstOnly 设置为 true ，则共有 字段数 - 1 列；
-         * 否则，有 ((字段数 - 1) * 字段数) / 2 列。
-         * 对于变量 \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$ 返回字段按如下方式排序：
-         * \f$corr(v_1,v_2), corr(v_1,v_3), ... , corr(v_1,v_k), corr(v_2,v_3), ... , corr(v_2,v_k), ... , corr(v_{k-1},vk)\f$
-         */
-        arma::mat localSCorr() const { return mSCorrmat; }
-
-        /**
          *
          *
          */
@@ -287,6 +299,7 @@ namespace gwm
     public: // IMultivariableAnalysis
         arma::mat variables() const override { return mX; }
         void setVariables(const arma::mat &x) override { mX = x; }
+        void setGroup(const arma::vec &y) { mY = y; }
         void run() override;
 
     public: // IParallelizable
@@ -323,27 +336,29 @@ namespace gwm
         /**
          * @brief \~english Summary algorithm implemented with no parallel methods. \~chinese 统计算法的单线程实现。
          */
-        void summarySerial();
+        void discriminantAnalysisSerial();
 
 #ifdef ENABLE_OPENMP
         /**
          * @brief \~english Summary algorithm implemented with OpenMP. \~chinese 统计算法的多线程实现。
          */
-        void summaryOmp();
+        void discriminantAnalysisOmp();
 #endif
 
     private:
         bool mQuantile = false;            //!< \~english Indicator of whether calculate quantile statistics. \~chinese 是否使用基于排序的算法
         bool mIsCorrWithFirstOnly = false; //!< \~english Indicator of whether calculate local correlations and covariances between the first variable and the other variables. \~chinese 是否仅为第一个变量计算与其他变量的相关系数
+        bool mIsWqda = false;
+        bool mHascov = true;
+        bool mHasmean = true;
+        bool mHasprior = true;
+
+        double mCorrectRate = 0;
 
         arma::mat mX; //!< \~english Variable matrix \~chinese 变量矩阵
         arma::vec mY;
         arma::mat mprX; //!< \~english Variable matrix \~chinese 变量矩阵
         arma::vec mprY;
-        bool misWqda;
-        bool mHascov;
-        bool mHasmean;
-        bool mHasprior;
         arma::mat mLocalMean;     //!< \~english Local mean \~chinese 局部均值
         arma::mat mStandardDev;   //!< \~english Local standard deviation \~chinese 局部标准差
         arma::mat mLocalSkewness; //!< \~english Local skewness \~chinese 局部偏度
@@ -355,8 +370,9 @@ namespace gwm
         arma::mat mCovmat;        //!< \~english Local covariances \~chinese 局部协方差
         arma::mat mCorrmat;       //!< \~english Local correlations (Pearson's) \~chinese 局部皮尔逊相关系数
         arma::mat mSCorrmat;      //!< \~english Local correlations (Spearman's) \~chinese 局部斯皮尔曼相关系数
+        arma::mat mRes;
 
-        SummaryCalculator mSummaryFunction = &GWDA::summarySerial; //!< \~english Calculator for summary statistics \~chinese 汇总统计计算函数
+        DiscriminantAnalysisCalculator mDiscriminantAnalysisFunction = &GWDA::discriminantAnalysisSerial; //!< \~english Calculator for summary statistics \~chinese 汇总统计计算函数
 
         ParallelType mParallelType = ParallelType::SerialOnly; //!< \~english Parallel type \~chinese 并行方法
         int mOmpThreadNum = 8;                                 //!< \~english Numbers of threads to be created while paralleling \~chinese 多线程所使用的线程数
