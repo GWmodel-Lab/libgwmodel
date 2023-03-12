@@ -88,7 +88,7 @@ void GTWR::createDistanceParameter()
 {
     if (mSpatialWeight.distance()->type() == Distance::DistanceType::CRSSTDistance)
     {
-        mSpatialWeight.distance()->makeParameter({ mCoords, mCoords });
+        mSpatialWeight.distance()->makeParameter({ mCoords, mCoords, vTimes, vTimes });
     }
 }
 
