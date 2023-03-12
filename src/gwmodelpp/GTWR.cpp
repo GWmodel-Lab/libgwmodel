@@ -80,7 +80,7 @@ void GTWR::createPredictionDistanceParameter(const arma::mat& locations)
 {
     if (mSpatialWeight.distance()->type() == Distance::DistanceType::CRSSTDistance)
     {
-        mSpatialWeight.distance()->makeParameter({ locations, mCoords });
+        mSpatialWeight.distance()->makeParameter({ mCoords, mCoords, vTimes, vTimes });
     }
 }
 

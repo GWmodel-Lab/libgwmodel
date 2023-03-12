@@ -30,7 +30,7 @@ TEST_CASE("GTWR: basic flow")
 
     CRSDistance sdist(true);
     OneDimDistance tdist;
-    CRSSTDistance distance(&sdist, &tdist, 0, datum::pi /2);
+    CRSSTDistance distance(&sdist, &tdist, 0.5, datum::pi /2);
     BandwidthWeight bandwidth(36,true, BandwidthWeight::Gaussian);
     SpatialWeight spatial(&bandwidth, &distance);
 
@@ -46,6 +46,7 @@ TEST_CASE("GTWR: basic flow")
     REQUIRE_NOTHROW(algorithm.fit());
 
     RegressionDiagnostic diagnostic = algorithm.diagnostic();
+    //these are diagnostics when lambda=0 
     REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2443.9698348782, 1e-8));
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2456.3750569354, 1e-8));
     REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.6872921780938, 1e-8));
