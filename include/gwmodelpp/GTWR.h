@@ -70,6 +70,17 @@ public:
     bool hasHatMatrix() const { return mHasHatMatrix; }
     void setHasHatMatrix(const bool has) { mHasHatMatrix = has; }
 
+    // void setTimes(const arma::vec& times)
+    // {
+    //     vTimes=times;
+    // }
+
+    void setCoords(const arma::mat& coords, const arma::vec& times)
+    {
+        mCoords=coords;
+        vTimes=times;
+    }
+
     arma::mat betasSE() { return mBetasSE; }
     arma::vec sHat() { return mSHat; }
     arma::vec qDiag() { return mQDiag; }
@@ -144,6 +155,8 @@ protected:
     arma::vec mSHat;
     arma::vec mQDiag;
     arma::mat mS;
+
+    arma::vec vTimes;
 
 };
 

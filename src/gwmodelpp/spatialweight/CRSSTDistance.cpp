@@ -51,6 +51,7 @@ CRSSTDistance::CRSSTDistance(Distance* spatialDistance, gwm::OneDimDistance* tem
 
 CRSSTDistance::CRSSTDistance(CRSSTDistance &distance)
 {
+    mAngle=distance.mAngle;
     mLambda = distance.mLambda;
     mSpatialDistance = distance.mSpatialDistance->clone();
     mTemporalDistance = static_cast<gwm::OneDimDistance*>(distance.mTemporalDistance->clone());
@@ -68,8 +69,10 @@ void CRSSTDistance::makeParameter(initializer_list<DistParamVariant> plist)
         {
             // mSpatialDistance->makeParameter(initializer_list<DistParamVariant>(plist.begin(), plist.begin() + 2));
             // mTemporalDistance->makeParameter(initializer_list<DistParamVariant>(plist.begin() + 2, plist.begin() + 4));
-            // mParameter = make_unique<Parameter>();
-            // mParameter->total = sfp.n_rows;
+            mSpatialDistance->makeParameter({sfp,sdp});
+            mTemporalDistance->makeParameter({tfp,tdp});
+            mParameter = make_unique<Parameter>();
+            mParameter->total = sfp.n_rows;
         }
         else
         {

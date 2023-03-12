@@ -21,15 +21,16 @@ using namespace gwm;
 TEST_CASE("GTWR: basic flow")
 {
     mat londonhp100_coord, londonhp100_data;
+    vec londonhp100_times;
     vector<string> londonhp100_fields;
-    if (!read_londonhp100temporal(londonhp100_coord, londonhp100_data, londonhp100_fields))
+    if (!read_londonhp100temporal(londonhp100_coord, londonhp100_times, londonhp100_data, londonhp100_fields))
     {
         FAIL("Cannot load londonhp100temporal data.");
     }
 
     CRSDistance sdist(true);
     OneDimDistance tdist;
-    CRSSTDistance distance(&sdist, &tdist, 0.5);
+    CRSSTDistance distance(&sdist, &tdist, 0, datum::pi /2);
     BandwidthWeight bandwidth(36,true, BandwidthWeight::Gaussian);
     SpatialWeight spatial(&bandwidth, &distance);
 
@@ -37,7 +38,7 @@ TEST_CASE("GTWR: basic flow")
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
     GTWR algorithm;
-    algorithm.setCoords(londonhp100_coord);
+    algorithm.setCoords(londonhp100_coord,londonhp100_times);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeight(spatial);
