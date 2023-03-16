@@ -5,6 +5,7 @@
 #include "IMultivariableAnalysis.h"
 #include "IParallelizable.h"
 
+
 namespace gwm
 {
 
@@ -34,6 +35,7 @@ namespace gwm
      *
      * - local mean <- GWDA::localMean()
      */
+    //template<class T>
     class GWDA : public SpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IParallelizable, public IParallelOpenmpEnabled
     {
     public:
@@ -202,86 +204,35 @@ namespace gwm
         arma::mat res() const { return mRes; }
 
         /**
-         * @brief \~english Get local mean on each sample. \~chinese 获取每个样本的局部均值。
          *
-         * @return \~english Local mean on each sample \~chinese 每个样本的局部均值
          */
-        arma::mat localMean() const { return mLocalMean; }
+        std::vector<std::string> group() const { return mGroup; }
 
         /**
-         * @brief \~english Get local standard deviation on each sample. \~chinese 获取每个样本的局部标准差。
          *
-         * @return \~english Local standard deviation on each sample \~chinese 每个样本的局部标准差
          */
-        arma::mat localSDev() const { return mStandardDev; }
+        arma::mat probs() const { return mProbs; }
 
         /**
-         * @brief \~english Get local skewness on each sample. \~chinese 获取每个样本的局部偏度。
          *
-         * @return \~english Local skewness on each sample \~chinese 每个样本的局部偏度
          */
-        arma::mat localSkewness() const { return mLocalSkewness; }
+        arma::mat pmax() const { return mPmax; }
 
         /**
-         * @brief \~english Get local coefficients of variation on each sample. \~chinese 获取每个样本的局部变化系数。
          *
-         * @return \~english Local coefficients of variation on each sample \~chinese 每个样本的局部变化系数
          */
-        arma::mat localCV() const { return mLCV; }
+        arma::mat entropy() const { return mEntropy; }
 
-        /**
-         * @brief \~english Get local variance on each sample. \~chinese 获取每个样本的局部方差。
-         *
-         * @return \~english Local variance on each sample \~chinese 每个样本的局部方差
-         */
-        arma::mat localVar() const { return mLVar; }
-
-        /**
-         * @brief \~english Get local median on each sample. \~chinese 获取每个样本的局部中位数。
-         *
-         * @return \~english Local median on each sample \~chinese 每个样本的局部中位数
-         */
-        arma::mat localMedian() const { return mLocalMedian; }
-
-        /**
-         * @brief \~english Get local interquartile ranges on each sample. \~chinese 获取每个样本的局部四分位距。
-         *
-         * @return \~english Local interquartile ranges on each sample \~chinese 每个样本的局部四分位距
-         */
-        arma::mat iqr() const { return mIQR; }
-
-        /**
-         * @brief \~english Get local quantile imbalances and coordinates on each sample. \~chinese 获取每个样本的局部分位数不平衡度。
-         *
-         * @return \~english Local quantile imbalances and coordinates on each sample \~chinese 每个样本的局部分位数不平衡度
-         */
-        arma::mat qi() const { return mQI; }
-
-        /**
-         * @brief \~english Get local coefficients of variation on each sample. \~chinese 获取局部协方差。
-         *
-         * @return \~english Local coefficients of variation on each sample.
-         * If corrWithFirstOnly is set true, the number of columns is the (number of fields) - 1;
-         * if not, the number of columns is the (((number of fields) - 1) * (number of fields)) / 2.
-         * For variables \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$, the fields are arranged as:
-         * \f$cov(v_1,v_2), cov(v_1,v_3), ... , cov(v_1,v_k), cov(v_2,v_3), ... , cov(v_2,v_k), ... , cov(v_{k-1},vk)\f$
-         * \~chinese 局部协方差。
-         * 如果 corrWithFirstOnly 设置为 true ，则共有 字段数 - 1 列；
-         * 否则，有 ((字段数 - 1) * 字段数) / 2 列。
-         * 对于变量 \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$ 返回字段按如下方式排序：
-         * \f$cov(v_1,v_2), cov(v_1,v_3), ... , cov(v_1,v_k), cov(v_2,v_3), ... , cov(v_2,v_k), ... , cov(v_{k-1},vk)\f$
-         */
-        arma::mat localCov() const { return mCovmat; }
 
         /**
          *
          *
          */
-        arma::mat wqda(arma::mat &x, arma::vec &y, arma::mat &wt, arma::mat &xpr, bool hasCOv, bool hasMean, bool hasPrior);
+        arma::mat wqda(arma::mat &x, std::vector<std::string> &y, arma::mat &wt, arma::mat &xpr, bool hasCOv, bool hasMean, bool hasPrior);
 
-        arma::mat wlda(arma::mat &x, arma::vec &y, arma::mat &wt, arma::mat &xpr, bool hasCOv, bool hasMean, bool hasPrior);
+        arma::mat wlda(arma::mat &x, std::vector<std::string> &y, arma::mat &wt, arma::mat &xpr, bool hasCOv, bool hasMean, bool hasPrior);
 
-        std::vector<arma::mat> splitX(arma::mat &x, arma::vec &y);
+        std::vector<arma::mat> splitX(arma::mat &x, std::vector<std::string> &y);
 
         arma::mat wMean(arma::mat &x, arma::mat &wt);
 
@@ -291,7 +242,13 @@ namespace gwm
 
         arma::mat confusionMatrix(arma::mat &origin, arma::mat &classified);
 
-        arma::vec levels(arma::vec &y);
+        std::vector<std::string> levels(std::vector<std::string> &y);
+
+        double shannonEntropy(arma::vec &p);
+
+        arma::uvec findSameString(std::vector<std::string> &y,std::string s);
+
+        std::unordered_map<std::string,arma::uword> ytable(std::vector<std::string> &y);
 
     public: // SpatialMonoscaleAlgorithm interface
         bool isValid() override;
@@ -299,7 +256,7 @@ namespace gwm
     public: // IMultivariableAnalysis
         arma::mat variables() const override { return mX; }
         void setVariables(const arma::mat &x) override { mX = x; }
-        void setGroup(const arma::vec &y) { mY = y; }
+        void setGroup(std::vector<std::string> &y) { mY = y; }
         void run() override;
 
     public: // IParallelizable
@@ -354,23 +311,17 @@ namespace gwm
         bool mHasprior = true;
 
         double mCorrectRate = 0;
-
-        arma::mat mX; //!< \~english Variable matrix \~chinese 变量矩阵
-        arma::vec mY;
+    
+        
+        arma::mat mX; //!< \~english Variable matrix for training \~chinese 变量矩阵
+        std::vector<std::string> mY; //!< \~english Variable vector \~chinese 变量矩阵
         arma::mat mprX; //!< \~english Variable matrix \~chinese 变量矩阵
-        arma::vec mprY;
-        arma::mat mLocalMean;     //!< \~english Local mean \~chinese 局部均值
-        arma::mat mStandardDev;   //!< \~english Local standard deviation \~chinese 局部标准差
-        arma::mat mLocalSkewness; //!< \~english Local skewness \~chinese 局部偏度
-        arma::mat mLCV;           //!< \~english Local coefficients of variation \~chinese 局部变化系数
-        arma::mat mLVar;          //!< \~english Local variance \~chinese 局部方差
-        arma::mat mLocalMedian;   //!< \~english Local medians \~chinese 局部中位数
-        arma::mat mIQR;           //!< \~english Local interquartile ranges \~chinese 局部分位距
-        arma::mat mQI;            //!< \~english Local quantile imbalances and coordinates \~chinese 局部分位数不平衡度
-        arma::mat mCovmat;        //!< \~english Local covariances \~chinese 局部协方差
-        arma::mat mCorrmat;       //!< \~english Local correlations (Pearson's) \~chinese 局部皮尔逊相关系数
-        arma::mat mSCorrmat;      //!< \~english Local correlations (Spearman's) \~chinese 局部斯皮尔曼相关系数
-        arma::mat mRes;
+        std::vector<std::string> mprY; //!< \~english Variable matrix \~chinese 变量矩阵
+        arma::mat mRes; //!< \~english Variable matrix \~chinese 变量矩阵
+        std::vector<std::string> mGroup; //!< \~english Variable matrix \~chinese 变量矩阵
+        arma::mat mProbs; //!< \~english Variable matrix \~chinese 变量矩阵
+        arma::mat mPmax; //!< \~english Variable matrix \~chinese 变量矩阵
+        arma::mat mEntropy; //!< \~english Variable matrix \~chinese 变量矩阵
 
         DiscriminantAnalysisCalculator mDiscriminantAnalysisFunction = &GWDA::discriminantAnalysisSerial; //!< \~english Calculator for summary statistics \~chinese 汇总统计计算函数
 

@@ -1,6 +1,7 @@
 #include "GWDA.h"
 #include <assert.h>
 #include <vector>
+#include <string>
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
@@ -10,6 +11,7 @@ using namespace arma;
 using namespace gwm;
 using namespace std;
 
+// template<class T>
 bool GWDA::isValid()
 {
     if (SpatialAlgorithm::isValid())
@@ -23,29 +25,77 @@ bool GWDA::isValid()
         return false;
 }
 
+// template<class T>
 void GWDA::run()
 {
     createDistanceParameter();
-    uword nRp=mCoords.n_rows;
-    //vec lev = levels(mY);
+    uword nRp = mCoords.n_rows;
+    if(mX.n_cols<2){
+        throw std::runtime_error("Two or more variables should be specfied for analysis");
+    }
+    // vec lev = levels(mY);
     if (mprX.is_empty())
     {
         mprX = mX;
     }
-    if(mprY.is_empty()){
-        mprY=mY;
+    if (mprY.empty())
+    {
+        mprY = mY;
     }
     (this->*mDiscriminantAnalysisFunction)();
-    uword nCol=mRes.n_cols;
-    uvec correct=find((mRes.col(nCol-1)==mY)==1);
-    mCorrectRate=(double)correct.n_rows/nRp;
+    uword NV = mRes.n_cols;
+    vec correct(mY.size(), fill::zeros);
+    for (uword i = 0; i < mGroup.size(); i++)
+    {
+        if (mGroup[i] == mY[i])
+        {
+            correct[i] = 1;
+        }
+    }
+    uvec correctCount = find(correct == 1);
+    mCorrectRate = (double)correctCount.n_rows / nRp;
+    mat tmp = mRes.cols(0, NV - 1);
+    for (uword i = 0; i < NV - 1; i++)
+    {
+        vec tempi = tmp.col(i);
+        tmp.col(i) = exp(tempi);
+    }
+    mat probs = tmp.each_col() / sum(tmp, 1); // / sum(tmp, 1);
+    vec pmax = max(probs, 1);
+    // double pnorm=0;
+    vec p(NV - 1, fill::value(1 / (NV - 1)));
+    double entMax;
+    entMax = shannonEntropy(p);
+    vec entropy(nRp, fill::zeros);
+    for (uword i = 0; i < nRp; i++)
+    {
+        vec t = probs.row(i).t();
+        entropy(i) = shannonEntropy(t) / entMax;
+    }
+    mProbs = probs;
+    mPmax = pmax;
+    mEntropy = entropy;
 }
 
+// template<class T>
+double GWDA::shannonEntropy(arma::vec &p)
+{
+    double entMax = 0;
+    if (min(p) < 0 || sum(p) <= 0)
+    {
+        return entMax;
+    }
+    vec pnorm = p(find(p > 0)) / sum(p);
+    entMax = -sum(log2(pnorm) % pnorm);
+    return entMax;
+}
+
+// template<class T>
 void GWDA::discriminantAnalysisSerial()
 {
     uword nRp = mCoords.n_rows;
     // uword nVar = mX.n_cols;//nPr = mprX.n_rows;
-    vec lev = levels(mY);
+    vector<string> lev = levels(mY);
     mat wt(nRp, nRp, fill::zeros);
     for (uword i = 0; i < nRp; i++)
     {
@@ -63,11 +113,12 @@ void GWDA::discriminantAnalysisSerial()
 }
 
 #ifdef ENABLE_OPENMP
+// template<class T>
 void GWDA::discriminantAnalysisOmp()
 {
     uword nRp = mCoords.n_rows;
     // uword nVar = mX.n_cols;//nPr = mprX.n_rows;
-    vec lev = levels(mY);
+    vector<string> lev = levels(mY);
     mat wt(nRp, nRp, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (uword i = 0; i < nRp; i++)
@@ -85,41 +136,79 @@ void GWDA::discriminantAnalysisOmp()
 }
 #endif
 
-vector<mat> GWDA::splitX(arma::mat &x, arma::vec &y)
+uvec GWDA::findSameString(std::vector<std::string> &y, std::string s)
 {
-    vec lev = levels(y);
+    uword n = y.size();
+    uvec idx;
+    uword index = 1;
+    for (uword i = 0; i < n; i++)
+    {
+        // uword d = std::find(y.begin(), y.end(), s) - y.begin();
+        if (y[i] == s)
+        {
+            idx.resize(index);
+            idx(index - 1) = i;
+            index++;
+        }
+    }
+    return idx;
+}
+
+// template<class T>
+vector<mat> GWDA::splitX(arma::mat &x, std::vector<std::string> &y)
+{
+    vector<string> lev = levels(y);
     uword p = lev.size();
     vector<mat> res;
     for (uword i = 0; i < p; i++)
     {
-        res.push_back(x.rows(find(y == lev[i])));
+        res.push_back(x.rows(findSameString(y, lev[i])));
     }
     return res;
 }
 
-vec GWDA::levels(arma::vec &y)
+// template<class T>
+vector<string> GWDA::levels(vector<std::string> &y)
 {
     uword n = y.size();
-    vec lev;
-    uword index = 0;
+    vector<string> lev;
     for (uword i = 0; i < n; i++)
     {
-        if (any(lev == y(i)) == false)
+        auto d = std::find(lev.begin(), lev.end(), y[i]);
+        if (d == lev.end())
         {
-            lev.resize(index + 1);
-            lev(index) = y(i);
-            index++;
+            lev.push_back(y[i]);
         }
     }
     return lev;
 }
 
+unordered_map<string, uword> GWDA::ytable(std::vector<std::string> &y)
+{
+    uword n = y.size();
+    unordered_map<string, uword> counts;
+    for (uword i = 0; i < n; i++)
+    {
+        unordered_map<string, uword>::const_iterator d = counts.find(y[i]);
+        if (d == counts.end())
+        {
+            counts.insert(make_pair(y[i], 1));
+        }
+        else
+        {
+            counts[y[i]] = (d->second) + 1;
+        }
+    }
+    return counts;
+}
+
+// template<class T>
 mat GWDA::covwtmat(const arma::mat &x, const arma::vec &wt)
 {
     uword n = x.n_cols;
     mat sigma(n, n, fill::zeros);
     double w = sum(wt) / (sum(wt) * sum(wt) - sum(wt % wt));
-    vec average(n,fill::zeros);
+    vec average(n, fill::zeros);
     for (uword i = 0; i < n; i++)
     {
         average(i) = sum(x.col(i) % wt) / sum(wt);
@@ -134,10 +223,11 @@ mat GWDA::covwtmat(const arma::mat &x, const arma::vec &wt)
     return sigma;
 }
 
-mat GWDA::wqda(arma::mat &x, arma::vec &y, arma::mat &wt, arma::mat &xpr, bool hasCOv, bool hasMean, bool hasPrior)
+// template<class T>
+mat GWDA::wqda(arma::mat &x, std::vector<std::string> &y, arma::mat &wt, arma::mat &xpr, bool hasCOv, bool hasMean, bool hasPrior)
 {
-    vec lev = levels(y);
-    uword m = lev.n_rows;
+    vector<string> lev = levels(y);
+    uword m = lev.size();
     // uword nDp = x.n_rows;
     uword nPr = xpr.n_rows;
     mat wtOnes;
@@ -166,30 +256,30 @@ mat GWDA::wqda(arma::mat &x, arma::vec &y, arma::mat &wt, arma::mat &xpr, bool h
             {
                 wti.row(idx[j]) = mSpatialWeight.weightVector(j);
             }*/
-            wti = wt.rows(find(y == lev[i]));
+            wti = wt.rows(findSameString(y, lev[i]));
         }
         else
         {
-            wti = wtOnes.rows(find(y == lev[i]));
+            wti = wtOnes.rows(findSameString(y, lev[i]));
         }
         localMean.push_back(wMean(xi, wti));
         if (hasCOv)
         {
-            wti = wt.rows(find(y == lev[i]));
+            wti = wt.rows(findSameString(y, lev[i]));
         }
         else
         {
-            wti = wtOnes.rows(find(y == lev[i]));
+            wti = wtOnes.rows(findSameString(y, lev[i]));
         }
         sigmagw.push_back(wVarCov(xi, wti));
         if (hasPrior)
         {
-            wti = wt.rows(find(y == lev[i]));
+            wti = wt.rows(findSameString(y, lev[i]));
             sumW = accu(wt);
         }
         else
         {
-            wti = wtOnes.rows(find(y == lev[i]));
+            wti = wtOnes.rows(findSameString(y, lev[i]));
             sumW = accu(wtOnes);
         }
         prior.push_back(wPrior(wti, sumW));
@@ -202,24 +292,25 @@ mat GWDA::wqda(arma::mat &x, arma::vec &y, arma::mat &wt, arma::mat &xpr, bool h
             vec xprj = xpr.row(j).t();
             vec meani = localMean[i].row(j).t();
             mat covmatj = sigmagw[i].row(j);
-            vec x1 = 0.5 * (xprj - meani).t() * solve(covmatj,(xprj-meani));//inv(covmatj) * (xprj - meani);
+            vec x1 = 0.5 * (xprj - meani).t() * solve(covmatj, (xprj - meani)); // inv(covmatj) * (xprj - meani);
             logPf(j, i) = (m / 2) * log(norm(covmatj)) + x1(0) - log(prior[i].at(j));
         }
     }
-    mat groupPr=mat(nPr,1,fill::zeros);
+    vector<string> groupPr;
     for (uword i = 0; i < nPr; i++)
     {
         uvec index = find(logPf.row(i) == min(logPf.row(i)));
-        groupPr(i, 0) = lev(index(0));
+        groupPr.push_back((lev[index(0)]));
     }
-    logPf=join_rows(logPf,groupPr);
+    mGroup = groupPr;
     return logPf;
 }
 
-mat GWDA::wlda(arma::mat &x, arma::vec &y, arma::mat &wt, arma::mat &xpr, bool hasCOv, bool hasMean, bool hasPrior)
+// template<class T>
+mat GWDA::wlda(arma::mat &x, std::vector<std::string> &y, arma::mat &wt, arma::mat &xpr, bool hasCOv, bool hasMean, bool hasPrior)
 {
-    vec lev = levels(y);
-    uword m = lev.n_rows;
+    vector<string> lev = levels(y);
+    uword m = lev.size();
     uword nDp = x.n_rows;
     uword nPr = xpr.n_rows;
     uword nVar = x.n_cols;
@@ -227,7 +318,7 @@ mat GWDA::wlda(arma::mat &x, arma::vec &y, arma::mat &wt, arma::mat &xpr, bool h
     wtOnes.ones(nDp, nPr);
     vector<mat> xg = splitX(x, y);
     vector<vec> prior;
-    mat wti(nDp, nPr, fill::zeros); 
+    mat wti(nDp, nPr, fill::zeros);
     vector<mat> localMean;
     vector<cube> sigmagw;
     double sumW;
@@ -245,46 +336,48 @@ mat GWDA::wlda(arma::mat &x, arma::vec &y, arma::mat &wt, arma::mat &xpr, bool h
         }*/
         if (hasMean)
         {
-            wti = wt.rows(find(y == lev[i]));
+            wti = wt.rows(findSameString(y, lev[i]));
         }
         else
         {
-            wti = wtOnes.rows(find(y == lev[i]));
+            wti = wtOnes.rows(findSameString(y, lev[i]));
         }
         localMean.push_back(wMean(xi, wti));
         if (hasCOv)
         {
-            wti = wt.rows(find(y == lev[i]));
+            wti = wt.rows(findSameString(y, lev[i]));
         }
         else
         {
-            wti = wtOnes.rows(find(y == lev[i]));
+            wti = wtOnes.rows(findSameString(y, lev[i]));
         }
         sigmagw.push_back(wVarCov(xi, wti));
         if (hasPrior)
         {
-            wti = wt.rows(find(y == lev[i]));
+            wti = wt.rows(findSameString(y, lev[i]));
             sumW = accu(wt);
         }
         else
         {
-            wti = wtOnes.rows(find(y == lev[i]));
+            wti = wtOnes.rows(findSameString(y, lev[i]));
             sumW = accu(wtOnes);
         }
         prior.push_back(wPrior(wti, sumW));
     }
     cube sigma1gw(nPr, nVar, nVar, fill::zeros);
-    vec counts = y;
+    unordered_map<string, uword> counts = ytable(y);
     for (uword i = 0; i < nPr; i++)
     {
         mat sigmai(nVar, nVar, fill::zeros);
+        double yisum = 0;
         for (uword j = 0; j < m; j++)
         {
-            double yi = counts(j);
+            double yi = counts[lev[j]];
             mat x1 = sigmagw[j].row(i);
             sigmai = sigmai + yi * x1;
+            yisum += yi;
         }
-        sigma1gw.row(i) = sigmai / sum(counts);
+        sigma1gw.row(i) = sigmai / yisum;
     }
 
     mat logPf = mat(nPr, m, fill::zeros);
@@ -295,20 +388,21 @@ mat GWDA::wlda(arma::mat &x, arma::vec &y, arma::mat &wt, arma::mat &xpr, bool h
             vec xprj = xpr.row(j).t();
             vec meani = localMean[i].row(j).t();
             mat covmatj = sigma1gw.row(j);
-            vec x1 = 0.5 * (xprj - meani).t() * solve(covmatj,(xprj-meani));
+            vec x1 = 0.5 * (xprj - meani).t() * solve(covmatj, (xprj - meani));
             logPf(j, i) = (m / 2) * log(norm(covmatj)) + x1(0) - log(prior[i].at(j));
         }
     }
-    mat groupPr=mat(nPr,1,fill::zeros);
+    vector<string> groupPr;
     for (uword i = 0; i < nPr; i++)
     {
         uvec index = find(logPf.row(i) == min(logPf.row(i)));
-        groupPr(i, 0) = lev(index(0));
+        groupPr.push_back((lev[index(0)]));
     }
-    logPf=join_rows(logPf,groupPr);
+    mGroup = groupPr;
     return logPf;
 }
 
+// template<class T>
 mat GWDA::wMean(arma::mat &x, arma::mat &wt)
 {
     uword nVar = x.n_cols;
@@ -324,6 +418,7 @@ mat GWDA::wMean(arma::mat &x, arma::mat &wt)
     return localMean;
 }
 
+// template<class T>
 cube GWDA::wVarCov(arma::mat &x, arma::mat &wt)
 {
     uword nVar = x.n_cols;
@@ -337,13 +432,15 @@ cube GWDA::wVarCov(arma::mat &x, arma::mat &wt)
         if (nVar >= 2)
         {
             Covmat.row(i) = covwtmat(x, wi);
-        }else{
-
+        }
+        else
+        {
         }
     }
     return Covmat;
 }
 
+// template<class T>
 vec GWDA::wPrior(arma::mat &wt, double sumW)
 {
     uword nPr = wt.n_cols;
@@ -355,6 +452,7 @@ vec GWDA::wPrior(arma::mat &wt, double sumW)
     return localPrior;
 }
 
+// template<class T>
 void GWDA::setParallelType(const ParallelType &type)
 {
     if (type & parallelAbility())

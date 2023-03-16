@@ -14,7 +14,18 @@ using namespace std;
 using namespace arma;
 using namespace gwm;
 
-TEST_CASE("GWSS: LondonHP")
+template<typename T>
+vector<string> convertY(vector<T> &y1){
+    uword n=y1.size();
+    vector<string> y(n);
+    for(uword i=0;i<n;i++){
+        y[i]=to_string(y1[i]);
+    }
+    return y;
+}
+
+//template<class T>
+TEST_CASE("GWDA: LondonHP")
 {
     mat londonhp_coord, londonhp_data;
     vector<string> londonhp_fields;
@@ -28,7 +39,13 @@ TEST_CASE("GWSS: LondonHP")
     mat x1 = londonhp_data.cols(17, 18);
     mat x2=londonhp_data.col(1);
     mat x=join_rows(x2,x1);
-    vec y=londonhp_data.col(13);
+    vec y0=londonhp_data.col(13);
+    vector<uword> y1;
+    y1=conv_to<vector<uword>>::from(y0);
+    vector<string> y;
+    y=convertY(y1);
+    //vector<string> y=conv_to<std::vector<string>>::from(y1);
+    
 
     GWDA algorithm;
     algorithm.setCoords(londonhp_coord);
