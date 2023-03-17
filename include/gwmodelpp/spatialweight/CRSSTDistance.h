@@ -19,9 +19,9 @@ public:
 public:
     CRSSTDistance();
 
-    explicit CRSSTDistance(gwm::CRSDistance* spatialDistance, gwm::OneDimDistance* temporalDistance, double lambda);
+    explicit CRSSTDistance(Distance* spatialDistance, gwm::OneDimDistance* temporalDistance, double lambda);
 
-    explicit CRSSTDistance(gwm::CRSDistance* spatialDistance, gwm::OneDimDistance* temporalDistance, double lambda, double angle);
+    explicit CRSSTDistance(Distance* spatialDistance, gwm::OneDimDistance* temporalDistance, double lambda, double angle);
 
     /**
      * @brief Copy construct a new CRSDistance object.
@@ -50,8 +50,8 @@ public:
 
 public:
 
-    const gwm::CRSDistance* spatialDistance() const { return mSpatialDistance; }
-    //const Distance* spatialDistance() const { return mSpatialDistance; }
+    //const gwm::CRSDistance* spatialDistance() const { return mSpatialDistance; }
+    const Distance* spatialDistance() const { return mSpatialDistance; }
 
     const gwm::OneDimDistance* temporalDistance() const { return mTemporalDistance; }
 
@@ -61,8 +61,8 @@ public:
 
 protected:
 
-    gwm::CRSDistance* mSpatialDistance = nullptr;
-    //Distance* mSpatialDistance = nullptr;
+    //gwm::CRSDistance* mSpatialDistance = nullptr;
+    Distance* mSpatialDistance = nullptr;
     gwm::OneDimDistance* mTemporalDistance = nullptr;
 
     double mLambda = 0.0;
