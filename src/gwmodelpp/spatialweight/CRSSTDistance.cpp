@@ -12,8 +12,15 @@ vec CRSSTDistance::OrthogonalSTDistance(Distance* spatial, Distance* temporal, u
     (void)angle;
     vec sdist = spatial->distance(focus);
     vec tdist = temporal->distance(focus);
+    uvec idx=arma::find(tdist<0);
+    // tdist.print("td");
+    // neg.print("neg");
     vec stdist = (lambda) * sdist + (1-lambda) * tdist + 2 * sqrt(lambda * (1 - lambda) * sdist % tdist);
-    return (lambda) * sdist + (1-lambda) * tdist + 2 * sqrt(lambda * (1 - lambda) * sdist % tdist);
+    stdist.rows(idx).fill(0);
+    // stdist.print("std");
+    return stdist;
+    // //former gwmodels code:
+    // return sqrt(sdist % sdist + lambda * (tdist % tdist));
 }
 
 vec CRSSTDistance::ObliqueSTDistance(Distance* spatial, Distance* temporal, uword focus, double lambda, double angle)
