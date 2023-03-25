@@ -310,7 +310,9 @@ private:
     /**
      * @brief \~english Summary algorithm implemented with no parallel methods. \~chinese 统计算法的单线程实现。
      */
-    void summarySerial();
+    // void summarySerial();
+    void GWAverageSerial();
+    void GWCorrelationSerial();
 
 #ifdef ENABLE_OPENMP
     /**
@@ -336,7 +338,9 @@ private:
     arma::mat mCorrmat;       //!< \~english Local correlations (Pearson's) \~chinese 局部皮尔逊相关系数
     arma::mat mSCorrmat;      //!< \~english Local correlations (Spearman's) \~chinese 局部斯皮尔曼相关系数
     
-    SummaryCalculator mSummaryFunction = &GWSS::summarySerial;  //!< \~english Calculator for summary statistics \~chinese 汇总统计计算函数
+    arma::mat mY;
+
+    SummaryCalculator mSummaryFunction = &GWSS::GWAverageSerial;  //!< \~english Calculator for summary statistics \~chinese 汇总统计计算函数
     
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Parallel type \~chinese 并行方法
     int mOmpThreadNum = 8;                                  //!< \~english Numbers of threads to be created while paralleling \~chinese 多线程所使用的线程数
