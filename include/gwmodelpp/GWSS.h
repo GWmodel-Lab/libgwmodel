@@ -272,6 +272,12 @@ public:     // SpatialAlgorithm interface
 public:     // IMultivariableAnalysis
     arma::mat variables() const override { return mX; }
     void setVariables(const arma::mat& x) override { mX = x; }
+    void setXYVariables(const arma::mat &x, const arma::mat &y)
+    {
+        mX = x;
+        mY = y;
+        gwssType = true;
+    }
     void run() override;
 
 public:     // IParallelizable
@@ -337,11 +343,12 @@ private:
     arma::mat mCovmat;        //!< \~english Local covariances \~chinese 局部协方差
     arma::mat mCorrmat;       //!< \~english Local correlations (Pearson's) \~chinese 局部皮尔逊相关系数
     arma::mat mSCorrmat;      //!< \~english Local correlations (Spearman's) \~chinese 局部斯皮尔曼相关系数
-    
+
     arma::mat mY;
+    bool gwssType=false;
 
     SummaryCalculator mSummaryFunction = &GWSS::GWAverageSerial;  //!< \~english Calculator for summary statistics \~chinese 汇总统计计算函数
-    
+    // SummaryCalculator mSummaryFunction = &GWSS::GWCorrelationSerial;
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Parallel type \~chinese 并行方法
     int mOmpThreadNum = 8;                                  //!< \~english Numbers of threads to be created while paralleling \~chinese 多线程所使用的线程数
 };

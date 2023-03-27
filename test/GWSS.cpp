@@ -28,9 +28,11 @@ TEST_CASE("GWSS: basic flow")
     SpatialWeight spatial(&bandwidth, &distance);
 
     mat x = londonhp100_data.cols(0, 3);
+    mat y = londonhp100_data.cols(0,1);
 
     GWSS algorithm;
     algorithm.setCoords(londonhp100_coord);
+    // algorithm.setXYVariables(x,y);
     algorithm.setVariables(x);
     algorithm.setSpatialWeight(spatial);
     REQUIRE_NOTHROW(algorithm.run());

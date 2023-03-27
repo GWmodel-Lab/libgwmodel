@@ -61,21 +61,34 @@ bool GWSS::isValid()
 void GWSS::run()
 {
     createDistanceParameter();
-    uword nRp = mCoords.n_rows, nVar = mX.n_cols;
-    mLocalMean = mat(nRp, nVar, fill::zeros);
-    mStandardDev = mat(nRp, nVar, fill::zeros);
-    mLocalSkewness = mat(nRp, nVar, fill::zeros);
-    mLCV = mat(nRp, nVar, fill::zeros);
-    mLVar = mat(nRp, nVar, fill::zeros);
-    if (mQuantile)
-    {
-        mLocalMedian = mat(nRp, nVar, fill::zeros);
-        mIQR = mat(nRp, nVar, fill::zeros);
-        mQI = mat(nRp, nVar, fill::zeros);
+    if(!gwssType){
+        uword nRp = mCoords.n_rows, nVar = mX.n_cols;
+        mLocalMean = mat(nRp, nVar, fill::zeros);
+        mStandardDev = mat(nRp, nVar, fill::zeros);
+        mLocalSkewness = mat(nRp, nVar, fill::zeros);
+        mLCV = mat(nRp, nVar, fill::zeros);
+        mLVar = mat(nRp, nVar, fill::zeros);
+        if (mQuantile)
+        {
+            mLocalMedian = mat(nRp, nVar, fill::zeros);
+            mIQR = mat(nRp, nVar, fill::zeros);
+            mQI = mat(nRp, nVar, fill::zeros);
+        }
+        if (nVar > 1)
+        {
+            uword nCol = mIsCorrWithFirstOnly ? (nVar - 1) : (nVar + 1) * nVar / 2 - nVar;
+            mCovmat = mat(nRp, nCol, fill::zeros);
+            mCorrmat = mat(nRp, nCol, fill::zeros);
+            mSCorrmat = mat(nRp, nCol, fill::zeros);
+        }
     }
-    if (nVar > 1)
+    else
     {
-        uword nCol = mIsCorrWithFirstOnly ? (nVar - 1) : (nVar + 1) * nVar / 2 - nVar;
+        uword nRp = mCoords.n_rows, nCol;
+        uword nVarX = mX.n_cols, nVarY = mY.n_cols;
+        nCol = nVarX * nVarY;
+        mLocalMean = mat(nRp, nVarX + nVarY, fill::zeros);//nVarX?
+        mLVar = mat(nRp, nVarX + nVarY, fill::zeros);
         mCovmat = mat(nRp, nCol, fill::zeros);
         mCorrmat = mat(nRp, nCol, fill::zeros);
         mSCorrmat = mat(nRp, nCol, fill::zeros);
