@@ -223,37 +223,37 @@ double GTWR::bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeight)
     else return DBL_MAX;
 }
 
-double GTWR::indepVarsSelectionCriterionSerial(const vector<size_t>& indepVars)
-{
-    mat x = mX.cols(VariableForwardSelector::index2uvec(indepVars, mHasIntercept));
-    vec y = mY;
-    uword nDp = mCoords.n_rows, nVar = x.n_cols;
-    mat betas(nVar, nDp, fill::zeros);
-    vec shat(2, fill::zeros);
-    for (uword i = 0; i < nDp; i++)
-    {
-        vec w(nDp, fill::ones);
-        mat xtw = trans(x.each_col() % w);
-        mat xtwx = xtw * x;
-        mat xtwy = xtw * y;
-        try
-        {
-            mat xtwx_inv = inv_sympd(xtwx);
-            betas.col(i) = xtwx_inv * xtwy;
-            mat ci = xtwx_inv * xtw;
-            mat si = x.row(i) * ci;
-            shat(0) += si(0, i);
-            shat(1) += det(si * si.t());
-        }
-        catch (const exception& e)
-        {
-            GWM_LOG_ERROR(e.what());
-            return DBL_MAX;
-        }
-    }
-    double value = GWRBase::AICc(x, y, betas.t(), shat);    
-    return value;
-}
+// double GTWR::indepVarsSelectionCriterionSerial(const vector<size_t>& indepVars)
+// {
+//     mat x = mX.cols(VariableForwardSelector::index2uvec(indepVars, mHasIntercept));
+//     vec y = mY;
+//     uword nDp = mCoords.n_rows, nVar = x.n_cols;
+//     mat betas(nVar, nDp, fill::zeros);
+//     vec shat(2, fill::zeros);
+//     for (uword i = 0; i < nDp; i++)
+//     {
+//         vec w(nDp, fill::ones);
+//         mat xtw = trans(x.each_col() % w);
+//         mat xtwx = xtw * x;
+//         mat xtwy = xtw * y;
+//         try
+//         {
+//             mat xtwx_inv = inv_sympd(xtwx);
+//             betas.col(i) = xtwx_inv * xtwy;
+//             mat ci = xtwx_inv * xtw;
+//             mat si = x.row(i) * ci;
+//             shat(0) += si(0, i);
+//             shat(1) += det(si * si.t());
+//         }
+//         catch (const exception& e)
+//         {
+//             GWM_LOG_ERROR(e.what());
+//             return DBL_MAX;
+//         }
+//     }
+//     double value = GWRBase::AICc(x, y, betas.t(), shat);    
+//     return value;
+// }
 
 void GTWR::setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion)
 {

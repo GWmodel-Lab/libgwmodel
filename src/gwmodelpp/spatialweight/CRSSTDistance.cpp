@@ -12,7 +12,7 @@ vec CRSSTDistance::OrthogonalSTDistance(Distance* spatial, Distance* temporal, u
     (void)angle;
     vec sdist = spatial->distance(focus);
     vec tdist = temporal->distance(focus);
-    uvec idx=arma::find(tdist<0);
+    uvec idx=arma::find(tdist<0);//因为tdist计算中有绝对值的部分，所以其实没有发挥作用。
     // tdist.print("td");
     // neg.print("neg");
     vec stdist = (lambda) * sdist + (1-lambda) * tdist + 2 * sqrt(lambda * (1 - lambda) * sdist % tdist);
@@ -66,6 +66,7 @@ CRSSTDistance::CRSSTDistance(CRSSTDistance &distance)
     mSpatialDistance = distance.mSpatialDistance->clone();
     //mSpatialDistance = static_cast<gwm::CRSDistance*>(distance.mSpatialDistance->clone());
     mTemporalDistance = static_cast<gwm::OneDimDistance*>(distance.mTemporalDistance->clone());
+    mCalculator=distance.mCalculator;
 }
 
 void CRSSTDistance::makeParameter(initializer_list<DistParamVariant> plist)

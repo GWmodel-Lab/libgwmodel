@@ -39,7 +39,7 @@ TEST_CASE("GTWR: londonhp100")
     OneDimDistance tdist;
 
     SECTION("adaptive bandwidth | no bandwidth optimization | lambda=1 ") {
-        CRSSTDistance distance(&sdist, &tdist, 0.05);
+        CRSSTDistance distance(&sdist, &tdist, 1);
         BandwidthWeight bandwidth(36,true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
         algorithm.setSpatialWeight(spatial);
@@ -53,15 +53,15 @@ TEST_CASE("GTWR: londonhp100")
         // REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.6872921780938, 1e-8));
         // REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.65184964517969, 1e-8));
         ////lambda=1
-        // REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2436.6044573089, 1e-8));
-        // REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2448.2720652516, 1e-8));
-        // REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.7080106320292, 1e-8));
-        // REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.67497534170905, 1e-8));
+        REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2436.6044573089, 1e-8));
+        REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2448.2720652516, 1e-8));
+        REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.7080106320292, 1e-8));
+        REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.67497534170905, 1e-8));
         ////lambda=0.05
-        REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2440.2982293126, 1e-8));
-        REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2453.0875630431 , 1e-8));
-        REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.69935365208496 , 1e-8));
-        REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.66296885453873, 1e-8));
+        // REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2440.2982293126, 1e-8));
+        // REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2453.0875630431 , 1e-8));
+        // REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.69935365208496 , 1e-8));
+        // REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.66296885453873, 1e-8));
     }
     SECTION("fixed bandwidth | no bandwidth optimization | lambda=1 ") {
         CRSSTDistance distance(&sdist, &tdist, 1);
