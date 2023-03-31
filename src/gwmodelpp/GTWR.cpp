@@ -280,3 +280,208 @@ bool GTWR::isValid()
     }
     else return false;
 }
+
+#ifdef ENABLE_OPENMP
+mat GTWR::predictOmp(const mat& locations, const mat& x, const vec& y)
+{
+    uword nRp = locations.n_rows, nVar = x.n_cols;
+    mat betas(nVar, nRp, arma::fill::zeros);
+    bool success = true;
+    std::exception except;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; (uword)i < nRp; i++)
+    {
+        if (success)
+        {
+            vec w = mSpatialWeight.weightVector(i);
+            mat xtw = trans(x.each_col() % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+            }
+            catch (const exception& e)
+            {
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
+            }
+        }
+    }
+    if (!success)
+    {
+        throw except;
+    }
+    return betas.t();
+}
+
+mat GTWR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
+{
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
+    mat betas(nVar, nDp, fill::zeros);
+    betasSE = mat(nVar, nDp, fill::zeros);
+    S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
+    mat shat_all(2, mOmpThreadNum, fill::zeros);
+    mat qDiag_all(nDp, mOmpThreadNum, fill::zeros);
+    bool success = true;
+    std::exception except;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; (uword)i < nDp; i++)
+    {
+        if (success)
+        {
+            int thread = omp_get_thread_num();
+            vec w = mSpatialWeight.weightVector(i);
+            mat xtw = trans(x.each_col() % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                mat ci = xtwx_inv * xtw;
+                betasSE.col(i) = sum(ci % ci, 1);
+                mat si = x.row(i) * ci;
+                shat_all(0, thread) += si(0, i);
+                shat_all(1, thread) += det(si * si.t());
+                vec p = - si.t();
+                p(i) += 1.0;
+                qDiag_all.col(thread) += p % p;
+                S.row(isStoreS() ? i : 0) = si;
+            }
+            catch (const exception& e)
+            {
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
+            }
+        }
+    }
+    if (!success)
+    {
+        throw except;
+    }
+    shat = sum(shat_all, 1);
+    qDiag = sum(qDiag_all, 1);
+    betasSE = betasSE.t();
+    return betas.t();
+}
+#endif
+
+#ifdef ENABLE_OPENMP
+double GTWR::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight)
+{
+    uword nDp = mCoords.n_rows;
+    vec shat(2, fill::zeros);
+    vec cv_all(mOmpThreadNum, fill::zeros);
+    bool flag = true;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; (uword)i < nDp; i++)
+    {
+        if (flag)
+        {
+            int thread = omp_get_thread_num();
+            vec d = mSpatialWeight.distance()->distance(i);
+            vec w = bandwidthWeight->weight(d);
+            w(i) = 0.0;
+            mat xtw = trans(mX.each_col() % w);
+            mat xtwx = xtw * mX;
+            mat xtwy = xtw * mY;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                vec beta = xtwx_inv * xtwy;
+                double res = mY(i) - det(mX.row(i) * beta);
+                if (isfinite(res))
+                    cv_all(thread) += res * res;
+                else
+                    flag = false;
+            }
+            catch (const exception& e)
+            {
+                GWM_LOG_ERROR(e.what());
+                flag = false;
+            }
+        }
+    }
+    if (flag)
+    {
+        double cv = sum(cv_all);
+        return cv;
+    }
+    else return DBL_MAX;
+}
+
+double GTWR::bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight)
+{
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
+    mat betas(nVar, nDp, fill::zeros);
+    mat shat_all(2, mOmpThreadNum, fill::zeros);
+    bool flag = true;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (int i = 0; (uword)i < nDp; i++)
+    {
+        if (flag)
+        {
+            int thread = omp_get_thread_num();
+            vec d = mSpatialWeight.distance()->distance(i);
+            vec w = bandwidthWeight->weight(d);
+            mat xtw = trans(mX.each_col() % w);
+            mat xtwx = xtw * mX;
+            mat xtwy = xtw * mY;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                mat ci = xtwx_inv * xtw;
+                mat si = mX.row(i) * ci;
+                shat_all(0, thread) += si(0, i);
+                shat_all(1, thread) += det(si * si.t());
+            }
+            catch (const exception& e)
+            {
+                GWM_LOG_ERROR(e.what());
+                flag = false;
+            }
+        }
+    }
+    if (flag)
+    {
+        vec shat = sum(shat_all, 1);
+        double value = GWRBase::AICc(mX, mY, betas.t(), shat);
+        if (isfinite(value))
+        {
+            return value;
+        }
+        else return DBL_MAX;
+    }
+    else return DBL_MAX;
+}
+#endif
+
+void GTWR::setParallelType(const ParallelType& type)
+{
+    if (type & parallelAbility())
+    {
+        mParallelType = type;
+        switch (type) {
+        case ParallelType::SerialOnly:
+            mPredictFunction = &GTWR::predictSerial;
+            mFitFunction = &GTWR::fitSerial;
+            break;
+#ifdef ENABLE_OPENMP
+        case ParallelType::OpenMP:
+            mPredictFunction = &GTWR::predictOmp;
+            mFitFunction = &GTWR::fitOmp;
+            break;
+#endif
+        default:
+            mPredictFunction = &GTWR::predictSerial;
+            mFitFunction = &GTWR::fitSerial;
+            break;
+        }
+        setBandwidthSelectionCriterion(mBandwidthSelectionCriterion);
+    }
+}

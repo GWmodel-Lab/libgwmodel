@@ -24,7 +24,7 @@ namespace gwm
  * 该算法可以自动选带宽。
  * 
  */
-class GTWR :  public GWRBase, public IBandwidthSelectable
+class GTWR :  public GWRBase, public IBandwidthSelectable, public IParallelizable, public IParallelOpenmpEnabled
 {
 public:
 
@@ -355,6 +355,51 @@ private:
      */
     arma::mat fitSerial(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qDiag, arma::mat& S);
     
+#ifdef ENABLE_OPENMP
+    /**
+     * \~english 
+     * @brief Predict coefficients on specified locations (OpenMP implementation).
+     * 
+     * @param locations Locations where to predict coefficients.
+     * @param x Independent variables.
+     * @param y Dependent variable.
+     * @return mat Predicted coefficients.
+     * 
+     * \~chinese 
+     * @brief 在指定位置处进行回归系数预测（OpenMP 实现）。
+     * 
+     * @param locations 指定位置。
+     * @param x 自变量矩阵。
+     * @param y 因变量。
+     * @return mat 回归系数预测值。
+     */
+    arma::mat predictOmp(const arma::mat& locations, const arma::mat& x, const arma::vec& y);
+    
+    /**
+     * \~english
+     * @brief Fit coefficients (OpenMP implementation).
+     * 
+     * @param x Independent variables.
+     * @param y Dependent variable.
+     * @param betasSE [out] Standard errors of coefficient estimates.
+     * @param shat [out] A vector of \f$tr(S)\f$ and \f$tr(SS^T)\f$.
+     * @param qDiag [out] The diagonal elements of matrix \f$Q\f$.
+     * @param S [out] The hat-matrix \f$S\f$.
+     * @return mat Coefficient estimates.
+     * 
+     * \~chinese
+     * @brief 回归系数估计值（OpenMP 实现）。
+     * 
+     * @param x 自变量矩阵。
+     * @param y 因变量。
+     * @param betasSE [out] 回归系数估计值的标准差。
+     * @param shat [out] 由 \f$tr(S)\f$ 和 \f$tr(SS^T)\f$ 组成的向量。
+     * @param qDiag [out] 矩阵 \f$Q\f$ 的对角线元素。
+     * @param S [out] 帽子矩阵 \f$S\f$。
+     * @return mat 回归系数估计值
+     */
+    arma::mat fitOmp(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qDiag, arma::mat& S);
+#endif
 
 public:     // Implement IBandwidthSelectable
     double getCriterion(BandwidthWeight* weight) override
@@ -394,8 +439,55 @@ private:
      */
     double bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeight);
 
-// private:
-//     double indepVarsSelectionCriterionSerial(const std::vector<std::size_t>& indepVars);
+#ifdef ENABLE_OPENMP
+    /**
+     * \~english
+     * @brief Get CV value with given bandwidth for bandwidth optimization (OpenMP implementation).
+     * 
+     * @param weight Given bandwidth
+     * @return double Criterion value
+     * 
+     * \~chinese
+     * @brief 根据指定的带宽计算带宽优选的CV值（OpenMP 实现）。
+     * 
+     * @param weight 指定的带宽。
+     * @return double 带宽优选的指标值。
+     */
+    double bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight);
+    
+    /**
+     * \~english
+     * @brief Get AIC value with given bandwidth for bandwidth optimization (OpenMP implementation).
+     * 
+     * @param weight Given bandwidth
+     * @return double Criterion value
+     * 
+     * \~chinese
+     * @brief 根据指定的带宽计算带宽优选的AIC值（OpenMP 实现）。
+     * 
+     * @param weight 指定的带宽。
+     * @return double 带宽优选的指标值。
+     */
+    double bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight);
+#endif
+
+
+public:     // Implement IParallelizable
+    int parallelAbility() const override
+    {
+        return ParallelType::SerialOnly
+#ifdef ENABLE_OPENMP
+            | ParallelType::OpenMP
+#endif        
+        ;
+    }
+
+    ParallelType parallelType() const override { return mParallelType; }
+
+    void setParallelType(const ParallelType& type) override;
+
+public:     // Implement IGwmParallelOpenmpEnabled
+    void setOmpThreadNum(const int threadNum) override { mOmpThreadNum = threadNum; }
 
 protected:
 
@@ -438,6 +530,8 @@ protected:
      */
     void createDistanceParameter();
 
+    // double LambdaAutoSelection();
+
 protected:
 
     bool mHasHatMatrix = true;  //!< \~english Whether has hat-matrix. \~chinese 是否具有帽子矩阵。
@@ -457,7 +551,8 @@ protected:
     PredictCalculator mPredictFunction = &GTWR::predictSerial;
     FitCalculator mFitFunction = &GTWR::fitSerial;
 
-    // ParallelType mParallelType = ParallelType::SerialOnly;
+    ParallelType mParallelType = ParallelType::SerialOnly; //!< \~english Type of parallel method. \~chinese 并行方法类型。
+    int mOmpThreadNum = 8;  //!< \~english Number of threads to create. \~chinese 并行计算创建的线程数。
 
     arma::mat mBetasSE; //!< \~english Standard errors of coefficient estimates. \~chinese 回归系数估计值的标准差。
     arma::vec mSHat;    //!< \~english A vector of \f$tr(S)\f$ and \f$tr(SS^T)\f$. \~chinese 由 \f$tr(S)\f$ 和 \f$tr(SS^T)\f$ 组成的向量。
