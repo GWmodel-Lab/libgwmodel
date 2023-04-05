@@ -57,8 +57,11 @@ jobs:
       - name: Install Vcpkg Dependencies
         if: steps.cache-dep.outputs.cache-hit != 'true'
         run: |
-          C:/vcpkg/vcpkg.exe update
-          C:/vcpkg/vcpkg.exe install gsl:x64-windows openblas[threads]:x64-windows armadillo:x64-windows catch2:x64-windows
+          git pull --rebase
+          ./bootstrap-vcpkg.bat
+          ./vcpkg.exe update
+          ./vcpkg.exe install gsl:x64-windows openblas[threads]:x64-windows armadillo:x64-windows catch2:x64-windows
+        working-directory: C:/vcpkg
       - name: CMake build and test
         run: |
           mkdir build
