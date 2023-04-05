@@ -103,6 +103,14 @@ public:
 
     typedef void (GWSS::*SummaryCalculator)();  //!< \~english Calculator for summary statistics \~chinese 汇总统计计算函数
 
+    /**
+     * @brief \~english GWSS working mode. \~chinese GWSS 工作模式。
+     */
+    enum class GWSSMode {
+        Average,        //!< \~english Average mode (for one variable) \~chinese 均值模式（针对单变量）
+        Correlation     //!< \~english Correlation mode (for variable pairs) \~chinese 相关模式（针对双变量）
+    };
+
 protected:
     static arma::vec findq(const arma::mat& x, const arma::vec& w);
 
@@ -279,18 +287,14 @@ public:     // IMultivariableAnalysis
      */
     void setVariables(const arma::mat& x) override { mX = x; }
 
-    // void setSummaryFunction(bool SummaryFunc)
+
     /**
-     * @brief \~english set gwss Function, true for GWAverage, false for GWCorrelation 
-     * \~chinese 设置GWSS的函数mSummaryFunction，ture使用GWAverage，false使用GWCorrelation。
+     * @brief \~english set GWSS working mode.
+     * \~chinese 设置GWSS的工作模式。
      * 
-     * @param SummaryFunc \~english true for GWAverage, false for GWCorrelation \~chinese ture使用GWAverage，false使用GWCorrelation。
+     * @param mode \~english GWSS working mode \~chinese GWSS的工作模式
      */
-    void isGWSSAverage(bool SummaryFunc)
-    {
-        gwssFunc = SummaryFunc;
-        mSummaryFunction=gwssFunc? &GWSS::GWAverageSerial : &GWSS::GWCorrelationSerial;
-    }
+    void setGWSSMode(GWSSMode mode);
 
     void run() override;
 
@@ -324,6 +328,11 @@ public:     // IParallelOpenmpEnabled
      * @param threadNum Number of threads.
      */
     void setOmpThreadNum(const int threadNum) override { mOmpThreadNum = threadNum; }
+
+    /**
+     * @brief \~english Update calculator function according to parallel type and mode.
+     */
+    void updateCalculator();
 
 private:
     /**
@@ -365,7 +374,7 @@ private:
     arma::mat mCorrmat;       //!< \~english Local correlations (Pearson's) \~chinese 局部皮尔逊相关系数
     arma::mat mSCorrmat;      //!< \~english Local correlations (Spearman's) \~chinese 局部斯皮尔曼相关系数
 
-    bool gwssFunc=true;       //!< \~english Which GWSS method to use, true for GWAverage, False for GWCorrelation \~chinese 使用哪一种GWSS方法，true代表GWAverage，False代表GWCorrelation
+    GWSSMode mGWSSMode = GWSSMode::Average;       //!< \~english GWSS working mode \~chinese GWSS的工作模式
 
     SummaryCalculator mSummaryFunction = &GWSS::GWAverageSerial;  //!< \~english Calculator for summary statistics \~chinese 计算函数
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Parallel type \~chinese 并行方法

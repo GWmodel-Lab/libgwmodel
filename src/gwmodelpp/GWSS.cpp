@@ -1,10 +1,12 @@
 #include "GWSS.h"
 #include <assert.h>
+#include <map>
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
 
+using namespace std;
 using namespace arma;
 using namespace gwm;
 
@@ -63,7 +65,19 @@ void GWSS::run()
     createDistanceParameter();
     uword nRp = mCoords.n_rows, nVar = mX.n_cols;
     //gwssFunc是true则为GWAverage
-    if(gwssFunc){
+    switch (mGWSSMode)
+    {
+    case GWSSMode::Correlation:
+    {
+        mLVar = mat(nRp, nVar, fill::zeros);
+        uword nCol = mIsCorrWithFirstOnly ? (nVar - 1) : (nVar + 1) * nVar / 2 - nVar;
+        mLocalMean = mat(nRp, nVar, fill::zeros);
+        mCovmat = mat(nRp, nCol, fill::zeros);
+        mCorrmat = mat(nRp, nCol, fill::zeros);
+        mSCorrmat = mat(nRp, nCol, fill::zeros);
+    }
+        break;
+    default:
         mLocalMean = mat(nRp, nVar, fill::zeros);
         mStandardDev = mat(nRp, nVar, fill::zeros);
         mLocalSkewness = mat(nRp, nVar, fill::zeros);
@@ -75,15 +89,7 @@ void GWSS::run()
             mIQR = mat(nRp, nVar, fill::zeros);
             mQI = mat(nRp, nVar, fill::zeros);
         }
-    }
-    else
-    {
-        mLVar = mat(nRp, nVar, fill::zeros);
-        uword nCol = mIsCorrWithFirstOnly ? (nVar - 1) : (nVar + 1) * nVar / 2 - nVar;
-        mLocalMean = mat(nRp, nVar, fill::zeros);
-        mCovmat = mat(nRp, nCol, fill::zeros);
-        mCorrmat = mat(nRp, nCol, fill::zeros);
-        mSCorrmat = mat(nRp, nCol, fill::zeros);
+        break;
     }
     (this->*mSummaryFunction)();
 }
@@ -236,28 +242,63 @@ void GWSS::setParallelType(const ParallelType &type)
     if (type & parallelAbility())
     {
         mParallelType = type;
-        switch (type) {
-        case ParallelType::SerialOnly:
-            if (gwssFunc){
-                mSummaryFunction = &GWSS::GWAverageSerial;
-            }
-            else{
-                mSummaryFunction = &GWSS::GWCorrelationSerial;
-            }
+        updateCalculator();
+    }
+}
+
+void GWSS::setGWSSMode(GWSSMode mode)
+{
+    mGWSSMode = mode;
+    updateCalculator();
+}
+
+void GWSS::updateCalculator()
+{
+    switch (mParallelType)
+    {
+    case ParallelType::SerialOnly:
+        switch (mGWSSMode)
+        {
+        case GWSSMode::Average:
+            mSummaryFunction = &GWSS::GWAverageSerial;
             break;
-#ifdef ENABLE_OPENMP
-        case ParallelType::OpenMP:
-            if (gwssFunc){
-                mSummaryFunction = &GWSS::GWAverageOmp;
-            }
-            else{
-                mSummaryFunction = &GWSS::GWCorrelationOmp;
-            }
+        case GWSSMode::Correlation:
+            mSummaryFunction = &GWSS::GWCorrelationSerial;
             break;
-#endif
         default:
             mSummaryFunction = &GWSS::GWAverageSerial;
             break;
         }
+        break;
+#ifdef ENABLE_OPENMP
+    case ParallelType::OpenMP:
+        switch (mGWSSMode)
+        {
+        case GWSSMode::Average:
+            mSummaryFunction = &GWSS::GWAverageOmp;
+            break;
+        case GWSSMode::Correlation:
+            mSummaryFunction = &GWSS::GWCorrelationOmp;
+            break;
+        default:
+            mSummaryFunction = &GWSS::GWAverageOmp;
+            break;
+        }
+        break;
+#endif
+    default:
+        switch (mGWSSMode)
+        {
+        case GWSSMode::Average:
+            mSummaryFunction = &GWSS::GWAverageSerial;
+            break;
+        case GWSSMode::Correlation:
+            mSummaryFunction = &GWSS::GWCorrelationSerial;
+            break;
+        default:
+            mSummaryFunction = &GWSS::GWAverageSerial;
+            break;
+        }
+        break;
     }
 }

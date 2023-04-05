@@ -34,7 +34,7 @@ TEST_CASE("GWSS: londonhp100")
         GWSS algorithm;
         algorithm.setCoords(londonhp100_coord);
         algorithm.setVariables(x);
-        algorithm.isGWSSAverage(true);
+        algorithm.setGWSSMode(GWSS::GWSSMode::Average);
         algorithm.setSpatialWeight(spatial);
         REQUIRE_NOTHROW(algorithm.run());
 
@@ -91,7 +91,7 @@ TEST_CASE("GWSS: londonhp100")
         algorithm.setVariables(x);
         // algorithm.setVariables(y);        
         algorithm.setSpatialWeight(spatial);
-        algorithm.isGWSSAverage(false);
+        algorithm.setGWSSMode(GWSS::GWSSMode::Correlation);
         REQUIRE_NOTHROW(algorithm.run());
 
         vec p = {0.0, 0.25, 0.5, 0.75, 1.0};
@@ -127,7 +127,7 @@ TEST_CASE("GWSS: londonhp100")
         GWSS algorithm;
         algorithm.setCoords(londonhp100_coord);
         algorithm.setVariables(x);
-        algorithm.isGWSSAverage(false);
+        algorithm.setGWSSMode(GWSS::GWSSMode::Correlation);
         algorithm.setSpatialWeight(spatial);
         algorithm.setIsCorrWithFirstOnly(true);
         REQUIRE_NOTHROW(algorithm.run());
@@ -156,7 +156,7 @@ TEST_CASE("GWSS: londonhp100")
         GWSS algorithm;
         algorithm.setCoords(londonhp100_coord);
         algorithm.setVariables(x);
-        algorithm.isGWSSAverage(true);
+        algorithm.setGWSSMode(GWSS::GWSSMode::Average);
         algorithm.setSpatialWeight(spatial);
         algorithm.setParallelType(ParallelType::OpenMP);
         algorithm.setOmpThreadNum(6);
@@ -215,7 +215,7 @@ TEST_CASE("GWSS: londonhp100")
         algorithm.setCoords(londonhp100_coord);
         algorithm.setVariables(x);
         algorithm.setSpatialWeight(spatial);
-        algorithm.isGWSSAverage(false);
+        algorithm.setGWSSMode(GWSS::GWSSMode::Correlation);
         algorithm.setParallelType(ParallelType::OpenMP);
         algorithm.setOmpThreadNum(6);
         REQUIRE_NOTHROW(algorithm.run());
