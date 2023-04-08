@@ -168,9 +168,10 @@ void GWSS::GWAverageOmp()
 {
     mat rankX = mX;
     rankX.each_col([&](vec &x) { x = rank(x); });
-    uword nVar = mX.n_cols, nRp = mCoords.n_rows;
+    uword nVar = mX.n_cols;
+    int nRp = mCoords.n_rows;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (uword i = 0; i < nRp; i++)
+    for (int i = 0; i < nRp; i++)
     {
         vec w = mSpatialWeight.weightVector(i);
         double sumw = sum(w);
@@ -201,12 +202,13 @@ void GWSS::GWCorrelationOmp()
 {
     mat rankX = mX;
     rankX.each_col([&](vec &x) { x = rank(x); });
-    uword nVar = mX.n_cols, nRp = mCoords.n_rows;
+    uword nVar = mX.n_cols;
+    int nRp = mCoords.n_rows;
     uword corrSize = mIsCorrWithFirstOnly ? 1 : nVar - 1;
     if (nVar >= 2)
     {
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (uword i = 0; i < nRp; i++)
+        for (int i = 0; i < nRp; i++)
         {
             vec w = mSpatialWeight.weightVector(i);
             double sumw = sum(w);
