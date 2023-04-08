@@ -46,6 +46,8 @@ mat GTWR::fit()
         }
     }
 
+
+
     mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
     mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
     double trS = mSHat(0), trStS = mSHat(1);

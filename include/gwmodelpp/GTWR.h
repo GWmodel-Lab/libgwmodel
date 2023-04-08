@@ -543,7 +543,9 @@ protected:
     // VariablesCriterionList mIndepVarsSelectionCriterionList;
     // std::vector<std::size_t> mSelectedIndepVars;
 
-    bool mIsAutoselectBandwidth = false;
+    bool mIsAutoselectBandwidth = false;//!< \~english Whether need bandwidth autoselect. \~chinese 是否需要自动优选带宽。
+    bool mIsAutoselectLambda = false;//!< \~english Whether need lambda autoselect. \~chinese 是否需要自动优选lambda。
+
     BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::AIC;
     BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &GTWR::bandwidthSizeCriterionCVSerial;
     BandwidthCriterionList mBandwidthSelectionCriterionList;
