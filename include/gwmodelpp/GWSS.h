@@ -103,6 +103,14 @@ public:
 
     typedef void (GWSS::*SummaryCalculator)();  //!< \~english Calculator for summary statistics \~chinese 汇总统计计算函数
 
+    /**
+     * @brief \~english GWSS working mode. \~chinese GWSS 工作模式。
+     */
+    enum class GWSSMode {
+        Average,        //!< \~english Average mode (for one variable) \~chinese 均值模式（针对单变量）
+        Correlation     //!< \~english Correlation mode (for variable pairs) \~chinese 相关模式（针对双变量）
+    };
+
 protected:
     static arma::vec findq(const arma::mat& x, const arma::vec& w);
 
@@ -271,7 +279,23 @@ public:     // SpatialAlgorithm interface
 
 public:     // IMultivariableAnalysis
     arma::mat variables() const override { return mX; }
+    
+    /**
+     * @brief \~english set variables \~chinese 设置变量x。
+     * 
+     * @param x \~english variables for gwss \~chinese 进行GWSS的变量，如果只有一列，只能进行GWAverage。
+     */
     void setVariables(const arma::mat& x) override { mX = x; }
+
+
+    /**
+     * @brief \~english set GWSS working mode.
+     * \~chinese 设置GWSS的工作模式。
+     * 
+     * @param mode \~english GWSS working mode \~chinese GWSS的工作模式
+     */
+    void setGWSSMode(GWSSMode mode);
+
     void run() override;
 
 public:     // IParallelizable
@@ -305,18 +329,32 @@ public:     // IParallelOpenmpEnabled
      */
     void setOmpThreadNum(const int threadNum) override { mOmpThreadNum = threadNum; }
 
+    /**
+     * @brief \~english Update calculator function according to parallel type and mode.
+     */
+    void updateCalculator();
+
 private:
+    /**
+     * @brief \~english GWAverage algorithm implemented with no parallel methods. \~chinese GWAverage算法的单线程实现。
+     */
+    void GWAverageSerial();
 
     /**
-     * @brief \~english Summary algorithm implemented with no parallel methods. \~chinese 统计算法的单线程实现。
+     * @brief \~english GWCorrelation algorithm implemented with no parallel methods. \~chinese GWCorrelation算法的单线程实现。
      */
-    void summarySerial();
+    void GWCorrelationSerial();
 
 #ifdef ENABLE_OPENMP
     /**
-     * @brief \~english Summary algorithm implemented with OpenMP. \~chinese 统计算法的多线程实现。
+     * @brief \~english GWAverage algorithm implemented with OpenMP. \~chinese GWAverage算法的多线程实现。
      */
-    void summaryOmp();
+    void GWAverageOmp();
+
+    /**
+     * @brief \~english GWCorrelation algorithm implemented with OpenMP. \~chinese GWCorrelation算法的多线程实现。
+     */
+    void GWCorrelationOmp();
 #endif
 
 private:
@@ -335,9 +373,10 @@ private:
     arma::mat mCovmat;        //!< \~english Local covariances \~chinese 局部协方差
     arma::mat mCorrmat;       //!< \~english Local correlations (Pearson's) \~chinese 局部皮尔逊相关系数
     arma::mat mSCorrmat;      //!< \~english Local correlations (Spearman's) \~chinese 局部斯皮尔曼相关系数
-    
-    SummaryCalculator mSummaryFunction = &GWSS::summarySerial;  //!< \~english Calculator for summary statistics \~chinese 汇总统计计算函数
-    
+
+    GWSSMode mGWSSMode = GWSSMode::Average;       //!< \~english GWSS working mode \~chinese GWSS的工作模式
+
+    SummaryCalculator mSummaryFunction = &GWSS::GWAverageSerial;  //!< \~english Calculator for summary statistics \~chinese 计算函数
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Parallel type \~chinese 并行方法
     int mOmpThreadNum = 8;                                  //!< \~english Numbers of threads to be created while paralleling \~chinese 多线程所使用的线程数
 };
