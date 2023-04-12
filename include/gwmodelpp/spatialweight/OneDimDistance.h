@@ -92,6 +92,7 @@ public:
     virtual void makeParameter(std::initializer_list<DistParamVariant> plist) override;
 
     virtual arma::vec distance(arma::uword focus) override;
+    arma::vec noAbsdistance(arma::uword focus);
     virtual double maxDistance() override;
     virtual double minDistance() override;
 

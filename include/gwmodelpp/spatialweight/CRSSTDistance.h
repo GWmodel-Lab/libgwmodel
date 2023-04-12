@@ -18,7 +18,7 @@ public:
      * @brief \~english parameters used in calculating. 
      * \~chinese 距离计算的输入参数类型：空间距离，时间距离，计算序号，λ，余弦值的角度（默认为π/2）
      */
-    typedef arma::vec (*CalculatorType)(Distance*, Distance*, arma::uword, double, double);
+    typedef arma::vec (*CalculatorType)(Distance*, gwm::OneDimDistance*, arma::uword, double, double);
 
     /**
      * @brief \~english Calculate temporal and spatial distance, Orthogonal Distance 
@@ -36,7 +36,7 @@ public:
      * \~chinese 参数取默认值。
      * @return arma::vec \~english Distance vector \~chinese 计算得到的距离向量
      */
-    static arma::vec OrthogonalSTDistance(Distance* spatial, Distance* temporal, arma::uword focus, double lambda, double angle);
+    static arma::vec OrthogonalSTDistance(Distance* spatial, gwm::OneDimDistance* temporal, arma::uword focus, double lambda, double angle);
 
     /**
      * @brief \~english Calculate temporal and spatial distance with angle, Oblique Distance 
@@ -54,7 +54,7 @@ public:
      * \~chinese 默认值是π/2，给函数提供angle值，计算斜交时空距离
      * @return arma::vec \~english Distance vector \~chinese 计算得到的距离向量
      */
-    static arma::vec ObliqueSTDistance(Distance* spatial, Distance* temporal, arma::uword focus, double lambda, double angle);
+    static arma::vec ObliqueSTDistance(Distance* spatial, gwm::OneDimDistance* temporal, arma::uword focus, double lambda, double angle);
 
 public:
 

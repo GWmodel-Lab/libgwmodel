@@ -7,23 +7,29 @@ using namespace std;
 using namespace arma;
 using namespace gwm;
 
-vec CRSSTDistance::OrthogonalSTDistance(Distance* spatial, Distance* temporal, uword focus, double lambda, double angle)
+vec CRSSTDistance::OrthogonalSTDistance(Distance* spatial, gwm::OneDimDistance* temporal, uword focus, double lambda, double angle)
 {
     (void)angle;
     vec sdist = spatial->distance(focus);
-    vec tdist = temporal->distance(focus);
+    vec tdist;
+    if (abs(lambda - 1.0) < 1e-16){
+        tdist = temporal->distance(focus);
+    }
+    else{
+        tdist = temporal->noAbsdistance(focus);
+    }
     uvec idx=arma::find(tdist<0);//因为tdist计算中有绝对值的部分，所以其实没有发挥作用。
     // tdist.print("td");
-    // neg.print("neg");
+    // idx.print("idx");
     vec stdist = (lambda) * sdist + (1-lambda) * tdist + 2 * sqrt(lambda * (1 - lambda) * sdist % tdist);
-    stdist.rows(idx).fill(0);
+    stdist.rows(idx).fill(10000000000000);
     // stdist.print("std");
     return stdist;
     // //former gwmodels code:
     // return sqrt(sdist % sdist + lambda * (tdist % tdist));
 }
 
-vec CRSSTDistance::ObliqueSTDistance(Distance* spatial, Distance* temporal, uword focus, double lambda, double angle)
+vec CRSSTDistance::ObliqueSTDistance(Distance* spatial, gwm::OneDimDistance* temporal, uword focus, double lambda, double angle)
 {
     vec sdist = spatial->distance(focus);
     vec tdist = temporal->distance(focus);

@@ -537,11 +537,6 @@ protected:
     bool mHasHatMatrix = true;  //!< \~english Whether has hat-matrix. \~chinese 是否具有帽子矩阵。
     bool mHasFTest = false;     //!< @todo \~english Whether has F-test \~chinese 是否具有F检验。
     bool mHasPredict = false;   //!< @deprecated \~english Whether has variables to predict dependent variable. \~chinese 是否有预测位置处的变量。
-    // bool mIsAutoselectIndepVars = false;
-    // double mIndepVarSelectionThreshold = 3.0;
-    // IndepVarsSelectCriterionCalculator mIndepVarsSelectionCriterionFunction = &GTWR::indepVarsSelectionCriterionSerial;
-    // VariablesCriterionList mIndepVarsSelectionCriterionList;
-    // std::vector<std::size_t> mSelectedIndepVars;
 
     bool mIsAutoselectBandwidth = false;//!< \~english Whether need bandwidth autoselect. \~chinese 是否需要自动优选带宽。
     bool mIsAutoselectLambda = false;//!< \~english Whether need lambda autoselect. \~chinese 是否需要自动优选lambda。
