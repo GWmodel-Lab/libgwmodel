@@ -37,9 +37,17 @@ TEST_CASE("GTWR: londonhp100")
     algorithm.setIndependentVariables(x);
     CRSDistance sdist(false);
     OneDimDistance tdist;
+    //lambda是空间距离的权重
 
-    SECTION("adaptive bandwidth 36 | no bandwidth optimization | lambda=1 | serial") {
-        CRSSTDistance distance(&sdist, &tdist, 1);
+    // SECTION(" lambda>1 | serial") {
+    //     CRSSTDistance distance(&sdist, &tdist, 1.5);
+    //     BandwidthWeight bandwidth(36,true, BandwidthWeight::Gaussian);
+    //     SpatialWeight spatial(&bandwidth, &distance);
+    //     // REQUIRE_THROWS(algorithm.fit());
+    //     REQUIRE_THROWS(spatial);
+    // }
+    SECTION("adaptive bandwidth 36 | no bandwidth optimization | lambda=1 | angle=5/2*pi | serial") {
+        CRSSTDistance distance(&sdist, &tdist, 1, 5 * arma::datum::pi / 2);
         BandwidthWeight bandwidth(36,true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
         algorithm.setSpatialWeight(spatial);
@@ -47,7 +55,7 @@ TEST_CASE("GTWR: londonhp100")
         REQUIRE_NOTHROW(algorithm.fit());
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
-        ////lambda=1//lambda是空间距离的权重
+        ////lambda=1
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2436.6044573089, 1e-8));
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2448.2720652516, 1e-8));
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.7080106320292, 1e-8));
@@ -62,11 +70,6 @@ TEST_CASE("GTWR: londonhp100")
         REQUIRE_NOTHROW(algorithm.fit());
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
-        // //lambda=0 
-        // REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2446.5997303835, 1e-8));
-        // REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2459.7590133515, 1e-8));
-        // REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.68059760629758, 1e-8));
-        // REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.64293541233815, 1e-8));
         //lambda=0.05
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2442.2013929832, 1e-8));
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2454.3785650481, 1e-8));
@@ -97,18 +100,13 @@ TEST_CASE("GTWR: londonhp100")
         REQUIRE_NOTHROW(algorithm.fit());
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
-        //lambda=0 
-        // REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2442.8835541887, 1e-8));
-        // REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2459.9539442025, 1e-8));
-        // REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.69986948293885, 1e-8));
-        // REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.66120599247943, 1e-8));
         // lambda=0.05
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2442.8360028579, 1e-8));
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2459.9274395074, 1e-8));
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.70005079437906, 1e-8));
         REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.66131126771988, 1e-8));
     }
-    SECTION("fixed bandwidth | CV bandwidth optimization | lambda=1 ") {
+    SECTION("fixed bandwidth | CV Gaussian bandwidth optimization | lambda=1 ") {
         CRSSTDistance distance(&sdist, &tdist, 1);
         BandwidthWeight bandwidth(0, false, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
@@ -119,20 +117,19 @@ TEST_CASE("GTWR: londonhp100")
         size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
         REQUIRE(bw == 5076);
     }
-
-    SECTION("adaptive bandwidth | CV bandwidth optimization | lambda=0.05 ") {
+    SECTION("adaptive bandwidth | AICc Bisquare bandwidth optimization | lambda=0.05 ") {
         CRSSTDistance distance(&sdist, &tdist, 0.05);
-        BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
+        BandwidthWeight bandwidth(0, true, BandwidthWeight::Bisquare);
         SpatialWeight spatial(&bandwidth, &distance);
         algorithm.setSpatialWeight(spatial);
         algorithm.setIsAutoselectBandwidth(true);
-        algorithm.setBandwidthSelectionCriterion(GTWR::BandwidthSelectionCriterionType::CV);
+        algorithm.setBandwidthSelectionCriterion(GTWR::BandwidthSelectionCriterionType::AIC);
         REQUIRE_NOTHROW(algorithm.fit());
         size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
-        REQUIRE(bw == 46);
+        REQUIRE(bw == 70);
     }
-    SECTION("adaptive bandwidth | CV bandwidth optimization | lambda=1 | omp parallel ") {
-        CRSSTDistance distance(&sdist, &tdist, 1);
+    SECTION("adaptive bandwidth | CV bandwidth optimization | lambda=0.05 | omp parallel ") {
+        CRSSTDistance distance(&sdist, &tdist, 0.05);
         BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
         algorithm.setSpatialWeight(spatial);
@@ -145,15 +142,15 @@ TEST_CASE("GTWR: londonhp100")
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
         size_t bw = algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
-        REQUIRE(bw == 67);
-        REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2441.2315087567, 1e-8));
-        REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2449.8586368193, 1e-8));
-        REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.68733847322056, 1e-8));
-        REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.66436287969348, 1e-8));
+        REQUIRE(bw == 46);
+        REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2443.5498915432, 1e-8));
+        REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2453.2551390127, 1e-8));
+        REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.6825745728157, 1e-8));
+        REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.6551810065492, 1e-8));
     }
-    SECTION("adaptive bandwidth | no bandwidth optimization | lambda=0.05 | omp parallel ") {
-        CRSSTDistance distance(&sdist, &tdist, 0.05);
-        BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
+    SECTION("adaptive bandwidth | no bandwidth optimization | lambda=0.5 | omp parallel ") {
+        CRSSTDistance distance(&sdist, &tdist, 0.5);
+        BandwidthWeight bandwidth(46, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
         algorithm.setSpatialWeight(spatial);
         algorithm.setHasHatMatrix(true);
@@ -162,9 +159,9 @@ TEST_CASE("GTWR: londonhp100")
         REQUIRE_NOTHROW(algorithm.fit());
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
-        REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2442.2013929832, 1e-8));
-        REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2454.3785650481, 1e-8));
-        REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.69229184128813, 1e-8));
-        REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.65696299229674, 1e-8));
+        REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2443.4855135383, 1e-8));
+        REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2453.2073732101, 1e-8));
+        REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.68281765798389, 1e-8));
+        REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.65541987797358, 1e-8));
     }
 }

@@ -18,13 +18,14 @@ vec CRSSTDistance::OrthogonalSTDistance(Distance* spatial, gwm::OneDimDistance* 
     else{
         tdist = temporal->noAbsdistance(focus);
     }
-    uvec idx=arma::find(tdist<0);//因为tdist计算中有绝对值的部分，所以其实没有发挥作用。
+    uvec idx=arma::find(tdist<0);//get index of values under 0
     // tdist.print("td");
     // idx.print("idx");
     vec stdist = (lambda) * sdist + (1-lambda) * tdist + 2 * sqrt(lambda * (1 - lambda) * sdist % tdist);
     stdist.rows(idx).fill(10000000000000);
     // stdist.print("std");
     return stdist;
+    
     // //former gwmodels code:
     // return sqrt(sdist % sdist + lambda * (tdist % tdist));
 }
@@ -32,8 +33,17 @@ vec CRSSTDistance::OrthogonalSTDistance(Distance* spatial, gwm::OneDimDistance* 
 vec CRSSTDistance::ObliqueSTDistance(Distance* spatial, gwm::OneDimDistance* temporal, uword focus, double lambda, double angle)
 {
     vec sdist = spatial->distance(focus);
-    vec tdist = temporal->distance(focus);
-    return (lambda) * sdist + (1-lambda) * tdist + 2 * sqrt(lambda * (1 - lambda) * sdist % tdist) * cos(angle);
+    vec tdist;
+    if (abs(lambda - 1.0) < 1e-16){
+        tdist = temporal->distance(focus);
+    }
+    else{
+        tdist = temporal->noAbsdistance(focus);
+    }
+    uvec idx=arma::find(tdist<0);
+    vec stdist = (lambda) * sdist + (1-lambda) * tdist + 2 * sqrt(lambda * (1 - lambda) * sdist % tdist) * cos(angle);
+    stdist.rows(idx).fill(10000000000000);
+    return stdist;
 }
 
 CRSSTDistance::CRSSTDistance() : 
@@ -57,18 +67,22 @@ CRSSTDistance::CRSSTDistance(Distance* spatialDistance, gwm::OneDimDistance* tem
 
 CRSSTDistance::CRSSTDistance(Distance* spatialDistance, gwm::OneDimDistance* temporalDistance, double lambda, double angle) :
     mLambda(lambda),
-    mAngle(angle)
+    mAngle(atan(tan(angle)))
 {
     mSpatialDistance = spatialDistance->clone();
     //mSpatialDistance = static_cast<gwm::CRSDistance*>(spatialDistance->clone());
     mTemporalDistance = static_cast<gwm::OneDimDistance*>(temporalDistance->clone());
-    mCalculator = (abs(angle - datum::pi / 2.0) < 1e-16) ? &OrthogonalSTDistance : &ObliqueSTDistance;
+    mCalculator = (abs(mAngle - datum::pi / 2.0) < 1e-15) ? &OrthogonalSTDistance : &ObliqueSTDistance;
 }
 
 CRSSTDistance::CRSSTDistance(CRSSTDistance &distance)
 {
     mAngle=distance.mAngle;
-    mLambda = distance.mLambda;
+    if (distance.mLambda >= 0 && distance.mLambda <= 1){
+            mLambda = distance.mLambda;
+    }
+    else throw std::runtime_error("The lambda must be in [0,1].");
+    // mLambda = distance.mLambda;
     mSpatialDistance = distance.mSpatialDistance->clone();
     //mSpatialDistance = static_cast<gwm::CRSDistance*>(distance.mSpatialDistance->clone());
     mTemporalDistance = static_cast<gwm::OneDimDistance*>(distance.mTemporalDistance->clone());

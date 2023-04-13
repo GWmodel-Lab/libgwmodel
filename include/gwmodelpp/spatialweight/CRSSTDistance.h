@@ -3,6 +3,7 @@
 
 #include "CRSDistance.h"
 #include "OneDimDistance.h"
+#include <math.h>
 
 namespace gwm
 {
@@ -116,9 +117,16 @@ public:
 
     const gwm::OneDimDistance* temporalDistance() const { return mTemporalDistance; }
 
-    double lambda() const { return mLambda; }
-
-    void setLambda(const double lambda) { mLambda = lambda; }
+    // unused code to set lambda
+    // double lambda() const { return mLambda; }
+    // void setLambda(const double lambda)    {
+    //     if (lambda >= 0 && lambda <= 1)
+    //     {
+    //         mLambda = lambda;
+    //     }
+    //     else
+    //         throw std::runtime_error("The lambda must be in [0,1].");
+    // }
 
 protected:
 
