@@ -11,6 +11,8 @@
 #include "IParallelizable.h"
 #include "spatialweight/CRSSTDistance.h"
 
+#include <gsl/gsl_multimin.h>
+
 namespace gwm
 {
 
@@ -530,7 +532,13 @@ protected:
      */
     void createDistanceParameter();
 
-    // double LambdaAutoSelection();
+    /**
+     * \~english
+     * @brief Lambda and bandwidth auto selection. not complete.
+     * \~chinese
+     * @brief lambda和带宽自动选择。函数还没写好。
+     */
+    // void LambdaBwAutoSelection();
 
 protected:
 

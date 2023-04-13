@@ -46,8 +46,6 @@ mat GTWR::fit()
         }
     }
 
-
-
     mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
     mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
     double trS = mSHat(0), trStS = mSHat(1);
@@ -456,3 +454,59 @@ void GTWR::setParallelType(const ParallelType& type)
         setBandwidthSelectionCriterion(mBandwidthSelectionCriterion);
     }
 }
+
+// void GTWR::LambdaBwAutoSelection()
+// {
+
+//     // uword nDp = mCoords.n_rows;
+//     double lambda = 0.05;    // lambda输入初始值，输出也要考虑控制范围[0,1]
+//     double bandwidth = 0;    // 带宽输入初始值，输出考虑考虑范围[0,nDp]
+//     size_t max_iter = 10000; // 最大迭代次数，设置为函数输入的参数。
+//     double min_eps = 1e-5;   // 满足条件时的降低的最小值，设置为输入的参数进行控制。
+
+//     const gsl_multimin_fminimizer_type *T = gsl_multimin_fminimizer_nmsimplex2; // 优化方法：N-M算法
+//     gsl_multimin_fminimizer *s = NULL;
+//     gsl_vector *ss, *x;
+//     gsl_multimin_function minex_func; // 这个需要写好
+
+//     size_t iter = 0;
+//     int status;
+//     double size;
+
+//     /* Starting point */
+//     x = gsl_vector_alloc(2);
+//     gsl_vector_set(x, 0, lambda);    // 设置第一个参数为lambda
+//     gsl_vector_set(x, 1, bandwidth); // 设置第二个参数为bandwidth
+
+//     /* Set initial step sizes to 1 */
+//     ss = gsl_vector_alloc(2);
+//     gsl_vector_set_all(ss, 1.0);
+
+//     /* Initialize method and iterate */
+//     minex_func.n = 2; // 优化的个数为2，仍需定义优化的函数。
+//     // minex_func.f ;//优化函数：需要联系lambda，bw，输出结果为AIC或CV
+
+//     s = gsl_multimin_fminimizer_alloc(T, 2);
+//     gsl_multimin_fminimizer_set(s, &minex_func, x, ss);
+
+//     do
+//     {
+//         iter++;
+//         status = gsl_multimin_fminimizer_iterate(s);
+
+//         if (status)
+//             break;
+
+//         size = gsl_multimin_fminimizer_size(s);
+//         status = gsl_multimin_test_size(size, min_eps); // 是否满足最小
+
+//         // if (status == GSL_SUCCESS)//计算完成
+
+//     } while (status == GSL_CONTINUE && iter < max_iter);
+
+//     gsl_vector_free(x);
+//     gsl_vector_free(ss);
+//     gsl_multimin_fminimizer_free(s);
+
+//     return;
+// }
