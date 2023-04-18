@@ -12,6 +12,7 @@
 #include "spatialweight/CRSSTDistance.h"
 
 #include <gsl/gsl_multimin.h>
+#include <gsl/gsl_min.h>
 
 namespace gwm
 {
@@ -120,9 +121,10 @@ public:
      */
     ~GTWR(){};
 
-private:
-    Weight* mWeight = nullptr;      //!< \~english weight pointer. \~chinese 权重指针。
-    Distance* mDistance = nullptr;  //!< \~english distance pointer. \~chinese 距离指针。
+// not used
+// private:
+//     Weight* mWeight = nullptr;      //!< \~english weight pointer. \~chinese 权重指针。
+//     Distance* mDistance = nullptr;  //!< \~english distance pointer. \~chinese 距离指针。
 
 //public:
 //    arma::vec weightVector(uword focus);//recalculate weight using spatial temporal distance
@@ -540,6 +542,41 @@ protected:
      */
     // void LambdaBwAutoSelection();
 
+    /**
+     * \~english
+     * @brief Lambda auto selection.
+     * \~chinese
+     * @brief lambda自动选择。
+     */
+    // double LambdaAutoSelection();
+
+        /**
+     * \~english
+     * @brief Rsquare calculate by lambda.
+     * \~chinese
+     * @brief lambda获得R方，作为优选的函数。
+     */
+    // double RsquareByLambda(double lambda, void * params);
+    double RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda);
+
+    // double selFunc(double x, void* params){
+    //     (void)(params);
+    //     return x;
+    // }
+
+public:
+    void getDistance(CRSSTDistance* distance)
+    {
+        if (mIsAutoselectLambda){
+            if (distance){
+                mStdistance = distance;
+            }
+        }
+        else return;
+    }
+
+    void setIsAutoselectLambda(bool isAutoSelect) { mIsAutoselectLambda = isAutoSelect; }
+
 protected:
 
     bool mHasHatMatrix = true;  //!< \~english Whether has hat-matrix. \~chinese 是否具有帽子矩阵。
@@ -566,6 +603,9 @@ protected:
 
     arma::vec vTimes;   //!< \~english vectors for timestamp input. \~chinese 输入时间的向量。
 
+    CRSSTDistance* mStdistance;//use to change lambda
+
+    // gsl_function F;
 };
 
 }

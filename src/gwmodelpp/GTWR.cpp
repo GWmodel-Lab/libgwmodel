@@ -32,19 +32,28 @@ mat GTWR::fit()
 
     uword nDp = mCoords.n_rows;
 
+
     if (mIsAutoselectBandwidth)
     {
-        BandwidthWeight* bw0 = mSpatialWeight.weight<BandwidthWeight>();
+        BandwidthWeight *bw0 = mSpatialWeight.weight<BandwidthWeight>();
         double lower = bw0->adaptive() ? 20 : 0.0;
         double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
         BandwidthSelector selector(bw0, lower, upper);
-        BandwidthWeight* bw = selector.optimize(this);
+        BandwidthWeight *bw = selector.optimize(this);
         if (bw)
         {
             mSpatialWeight.setWeight(bw);
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
         }
     }
+
+    // if(mIsAutoselectLambda)
+    // {
+    //     // BandwidthWeight *bw = mSpatialWeight.weight<BandwidthWeight>();
+    //     // double lambda=0.1;
+    //     // double r2=RsquareByLambda(bw,lambda);
+    //     LambdaAutoSelection();
+    // }
 
     mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
     mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
@@ -454,6 +463,92 @@ void GTWR::setParallelType(const ParallelType& type)
         setBandwidthSelectionCriterion(mBandwidthSelectionCriterion);
     }
 }
+
+// double GTWR::RsquareByLambda(double lambda, void *params)
+double GTWR::RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda)
+{
+    // (void)(params);
+    double r2;
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
+    mat betas(nVar, nDp, fill::zeros);
+    mStdistance->setLambda(lambda);
+    mStdistance->makeParameter({ mCoords, mCoords, vTimes, vTimes });
+    for (uword i = 0; i < nDp; i++)
+    {
+        mat d=mStdistance->distance(i);
+        // vec w = mSpatialWeight.weightVector(i);
+        vec w = bandwidthWeight->weight(d);
+        mat xtw = trans(mX.each_col() % w);
+        mat xtwx = xtw * mX;
+        mat xtwy = xtw * mY;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            betas.col(i) = xtwx_inv * xtwy;
+        }
+        catch (const exception &e)
+        {
+            GWM_LOG_ERROR(e.what());
+            throw e;
+        }
+    }
+    betas = betas.t();
+    vec r = mY - sum(betas % mX, 1);
+    double rss = sum(r % r);
+    double yss = sum((mY - mean(mY)) % (mY - mean(mY)));
+    r2 = 1 - rss / yss;
+    return r2;
+}
+
+// double GTWR::LambdaAutoSelection()
+// {
+//     int status;
+//     int iter = 0, max_iter = 100;
+//     const gsl_min_fminimizer_type *T;
+//     gsl_min_fminimizer *s;
+//     double m = 0.05;
+//     double a = 0.0, b = 1.0;
+//     gsl_function F;
+
+//     // F.function = &GTWR::RsquareByLambda;
+//     // F.function=&GTWR::selFunc;
+
+//     T = gsl_min_fminimizer_brent;
+//     s = gsl_min_fminimizer_alloc(T);
+//     gsl_min_fminimizer_set(s, &F, m, a, b);
+
+//     printf("using %s method\n",
+//            gsl_min_fminimizer_name(s));
+//     printf("%5s [%9s, %9s] %9s %10s %9s\n",
+//            "iter", "lower", "upper", "min",
+//            "err", "err(est)");
+//     printf("%5d [%.7f, %.7f] %.7f %.7f\n",
+//            iter, a, b,
+//            m, b - a);
+
+//     do
+//     {
+//         iter++;
+//         status = gsl_min_fminimizer_iterate(s);
+
+//         m = gsl_min_fminimizer_x_minimum(s);
+//         a = gsl_min_fminimizer_x_lower(s);
+//         b = gsl_min_fminimizer_x_upper(s);
+
+//         status = gsl_min_test_interval(a, b, 0.001, 0.0);
+
+//         if (status == GSL_SUCCESS)
+//             printf("Converged:\n");
+
+//         printf("%5d [%.7f, %.7f] "
+//                "%.7f %+.7f\n",
+//                iter, a, b,
+//                m, b - a);
+//     } while (status == GSL_CONTINUE && iter < max_iter);
+
+//     gsl_min_fminimizer_free(s);
+//     return m;
+// }
 
 // void GTWR::LambdaBwAutoSelection()
 // {
