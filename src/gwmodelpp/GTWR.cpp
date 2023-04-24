@@ -50,12 +50,11 @@ mat GTWR::fit()
     if(mIsAutoselectLambda)
     {
         BandwidthWeight *bw = mSpatialWeight.weight<BandwidthWeight>();
+        mStdistance=mSpatialWeight.distance<CRSSTDistance>();
         double lambda;
         lambda=LambdaAutoSelection(bw);
         mStdistance->setLambda(lambda);
-        // mSpatialWeight.setDistance(mStdistance);
-        // mSpatialWeight.setWeight(bw);
-        printf("the best lambda is %.7f",lambda);
+        printf("the best lambda is %.7f\n",lambda);
     }
 
     mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
@@ -77,10 +76,6 @@ mat GTWR::fit()
         double rss = sum(dyhat2 % w);
         localR2(i) = (tss - rss) / tss;
     }
-    // if(mIsAutoselectLambda){
-    //     Distance* dist=mSpatialWeight.distance();
-    //     mSpatialWeight.setDistance(dist);
-    // }
     return mBetas;
 }
 
@@ -470,7 +465,6 @@ void GTWR::setParallelType(const ParallelType& type)
     }
 }
 
-// double GTWR::RsquareByLambda(double lambda, void *params)
 double GTWR::RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda)
 {
     // (void)(params);

@@ -54,15 +54,15 @@ TEST_CASE("GTWR: londonhp100")
         algorithm.setSpatialWeight(spatial);
         algorithm.setHasHatMatrix(true);
         algorithm.setIsAutoselectLambda(true);
-        algorithm.getDistance(&distance);
+        // algorithm.getDistance(&distance);
         REQUIRE_NOTHROW(algorithm.fit());
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
-        ////lambda=1
-        // REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2436.6044573089, 1e-8));
-        // REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2448.2720652516, 1e-8));
-        // REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.7080106320292, 1e-8));
-        // REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.67497534170905, 1e-8));
+        ////lambda=0.8519019
+        REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2442.1827485575, 1e-8));
+        REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2454.3397429928, 1e-8));
+        REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.69230641334398, 1e-8));
+        REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.65717667453514, 1e-8));
     }
     SECTION("adaptive bandwidth 36 | no bandwidth optimization | lambda=1 | angle=5/2*pi | serial") {
         CRSSTDistance distance(&sdist, &tdist, 1, 5 * arma::datum::pi / 2);

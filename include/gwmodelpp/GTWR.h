@@ -121,12 +121,11 @@ public:
      */
     ~GTWR(){};
 
-// not used
+// //also unused
 // private:
 //     Weight* mWeight = nullptr;      //!< \~english weight pointer. \~chinese 权重指针。
 //     Distance* mDistance = nullptr;  //!< \~english distance pointer. \~chinese 距离指针。
-
-//public:
+// public:
 //    arma::vec weightVector(uword focus);//recalculate weight using spatial temporal distance
 
 public:
@@ -556,20 +555,9 @@ protected:
      * \~chinese
      * @brief lambda获得R方，作为优选的函数。
      */
-    // double RsquareByLambda(double lambda, void * params);
     double RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda);
 
 public:
-    void getDistance(CRSSTDistance* distance)
-    {
-        if (mIsAutoselectLambda){
-            if (distance){
-                mStdistance = distance;
-            }
-        }
-        else return;
-    }
-
     void setIsAutoselectLambda(bool isAutoSelect) { mIsAutoselectLambda = isAutoSelect; }
 
 protected:
@@ -598,7 +586,7 @@ protected:
 
     arma::vec vTimes;   //!< \~english vectors for timestamp input. \~chinese 输入时间的向量。
 
-    CRSSTDistance* mStdistance;//use to change lambda
+    CRSSTDistance* mStdistance;//use to change spatial temporal distance including lambda
 
     // gsl_function F;
 };
