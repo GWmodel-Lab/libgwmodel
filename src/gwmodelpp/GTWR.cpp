@@ -47,13 +47,16 @@ mat GTWR::fit()
         }
     }
 
-    // if(mIsAutoselectLambda)
-    // {
-    //     // BandwidthWeight *bw = mSpatialWeight.weight<BandwidthWeight>();
-    //     // double lambda=0.1;
-    //     // double r2=RsquareByLambda(bw,lambda);
-    //     LambdaAutoSelection();
-    // }
+    if(mIsAutoselectLambda)
+    {
+        BandwidthWeight *bw = mSpatialWeight.weight<BandwidthWeight>();
+        double lambda;
+        lambda=LambdaAutoSelection(bw);
+        mStdistance->setLambda(lambda);
+        // mSpatialWeight.setDistance(mStdistance);
+        // mSpatialWeight.setWeight(bw);
+        printf("the best lambda is %.7f",lambda);
+    }
 
     mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
     mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
@@ -74,7 +77,10 @@ mat GTWR::fit()
         double rss = sum(dyhat2 % w);
         localR2(i) = (tss - rss) / tss;
     }
-
+    // if(mIsAutoselectLambda){
+    //     Distance* dist=mSpatialWeight.distance();
+    //     mSpatialWeight.setDistance(dist);
+    // }
     return mBetas;
 }
 
@@ -500,55 +506,68 @@ double GTWR::RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda)
     return r2;
 }
 
-// double GTWR::LambdaAutoSelection()
-// {
-//     int status;
-//     int iter = 0, max_iter = 100;
-//     const gsl_min_fminimizer_type *T;
-//     gsl_min_fminimizer *s;
-//     double m = 0.05;
-//     double a = 0.0, b = 1.0;
-//     gsl_function F;
+double GTWR::LambdaAutoSelection(BandwidthWeight* bw)
+{
+    // int status;
+    // int iter = 0, max_iter = 1000;
+    // const gsl_min_fminimizer_type *T;
+    // gsl_min_fminimizer *s;
+    // double mini = 0.05, lower = 0.0, upper = 1.0;
+    // gsl_function F;
+    // F.function = &GTWR::RsquareByLambda;//this make error
+    // T = gsl_min_fminimizer_brent;
+    // s = gsl_min_fminimizer_alloc(T);
+    // gsl_min_fminimizer_set(s, &F, mini, lower, upper);
+    // do {
+    //     iter++;
+    //     status = gsl_min_fminimizer_iterate(s);
+    //     mini = gsl_min_fminimizer_x_minimum(s);
+    //     lower = gsl_min_fminimizer_x_lower(s);
+    //     upper = gsl_min_fminimizer_x_upper(s);
+    //     status = gsl_min_test_interval(lower, upper, 0.001, 0.0);
+    //     if (status == GSL_SUCCESS)
+    //         printf("Converged:\n");
 
-//     // F.function = &GTWR::RsquareByLambda;
-//     // F.function=&GTWR::selFunc;
-
-//     T = gsl_min_fminimizer_brent;
-//     s = gsl_min_fminimizer_alloc(T);
-//     gsl_min_fminimizer_set(s, &F, m, a, b);
-
-//     printf("using %s method\n",
-//            gsl_min_fminimizer_name(s));
-//     printf("%5s [%9s, %9s] %9s %10s %9s\n",
-//            "iter", "lower", "upper", "min",
-//            "err", "err(est)");
-//     printf("%5d [%.7f, %.7f] %.7f %.7f\n",
-//            iter, a, b,
-//            m, b - a);
-
-//     do
-//     {
-//         iter++;
-//         status = gsl_min_fminimizer_iterate(s);
-
-//         m = gsl_min_fminimizer_x_minimum(s);
-//         a = gsl_min_fminimizer_x_lower(s);
-//         b = gsl_min_fminimizer_x_upper(s);
-
-//         status = gsl_min_test_interval(a, b, 0.001, 0.0);
-
-//         if (status == GSL_SUCCESS)
-//             printf("Converged:\n");
-
-//         printf("%5d [%.7f, %.7f] "
-//                "%.7f %+.7f\n",
-//                iter, a, b,
-//                m, b - a);
-//     } while (status == GSL_CONTINUE && iter < max_iter);
-
-//     gsl_min_fminimizer_free(s);
-//     return m;
-// }
+    //     printf("%5d [%.7f, %.7f] %.7f %+.7f\n",iter, lower, upper,mini, upper - lower);
+    // } while (status == GSL_CONTINUE && iter < max_iter);
+    // gsl_min_fminimizer_free(s);
+    // return mini;
+    int iter = 0, max_iter = 100;
+    double eps = 1e-12;
+    double ratio = (sqrt(5) - 1) / 2;
+    // [a, p, q, b]
+    double a = 0.0, b = 1.0;
+    double step = b - a;
+    double p = a + (1 - ratio) * step, q = a + ratio * step;
+    double f_a, f_b, f_p, f_q;
+    f_a = RsquareByLambda(bw, a);
+    f_b = RsquareByLambda(bw, b);
+    f_p = RsquareByLambda(bw, p);
+    f_q = RsquareByLambda(bw, q);
+    // r方越大越好
+    while (abs(f_a - f_b) >= eps && iter < max_iter)
+    {
+        if (f_p > f_q)
+        {
+            b = q; f_b = f_q;
+            q = p; f_q = f_p;
+            step = b - a;
+            p = a + (1 - ratio) * step;
+            f_p = RsquareByLambda(bw, p);
+        }
+        else
+        {
+            a = p; f_a = f_p;
+            p = q; f_p = f_q;
+            step = b - a;
+            q = a + ratio * step;
+            f_q = RsquareByLambda(bw, q);
+        }
+        iter++;
+    }
+    double golden = (b + a) / 2;
+    return golden;
+}
 
 // void GTWR::LambdaBwAutoSelection()
 // {

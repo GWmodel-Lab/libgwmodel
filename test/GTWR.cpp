@@ -18,6 +18,7 @@ using namespace std;
 using namespace arma;
 using namespace gwm;
 
+
 TEST_CASE("GTWR: londonhp100")
 {
     mat londonhp100_coord, londonhp100_data;
@@ -46,23 +47,23 @@ TEST_CASE("GTWR: londonhp100")
     //     // REQUIRE_THROWS(algorithm.fit());
     //     REQUIRE_THROWS(spatial);
     // }
-    // SECTION("adaptive bandwidth 36 | no bandwidth optimization | auto select lambda") {
-    //     CRSSTDistance distance(&sdist, &tdist, 1);
-    //     BandwidthWeight bandwidth(36,true, BandwidthWeight::Gaussian);
-    //     SpatialWeight spatial(&bandwidth, &distance);
-    //     algorithm.setSpatialWeight(spatial);
-    //     algorithm.setHasHatMatrix(true);
-    //     algorithm.setIsAutoselectLambda(true);
-    //     algorithm.getDistance(&distance);
-    //     REQUIRE_NOTHROW(algorithm.fit());
-    //     RegressionDiagnostic diagnostic = algorithm.diagnostic();
-    //     REQUIRE(algorithm.hasIntercept() == true);
-    //     ////lambda=1
-    //     REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2436.6044573089, 1e-8));
-    //     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2448.2720652516, 1e-8));
-    //     REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.7080106320292, 1e-8));
-    //     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.67497534170905, 1e-8));
-    // }
+    SECTION("adaptive bandwidth 36 | no bandwidth optimization | auto select lambda") {
+        CRSSTDistance distance(&sdist, &tdist, 1);
+        BandwidthWeight bandwidth(36,true, BandwidthWeight::Gaussian);
+        SpatialWeight spatial(&bandwidth, &distance);
+        algorithm.setSpatialWeight(spatial);
+        algorithm.setHasHatMatrix(true);
+        algorithm.setIsAutoselectLambda(true);
+        algorithm.getDistance(&distance);
+        REQUIRE_NOTHROW(algorithm.fit());
+        RegressionDiagnostic diagnostic = algorithm.diagnostic();
+        REQUIRE(algorithm.hasIntercept() == true);
+        ////lambda=1
+        // REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2436.6044573089, 1e-8));
+        // REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2448.2720652516, 1e-8));
+        // REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.7080106320292, 1e-8));
+        // REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.67497534170905, 1e-8));
+    }
     SECTION("adaptive bandwidth 36 | no bandwidth optimization | lambda=1 | angle=5/2*pi | serial") {
         CRSSTDistance distance(&sdist, &tdist, 1, 5 * arma::datum::pi / 2);
         BandwidthWeight bandwidth(36,true, BandwidthWeight::Gaussian);

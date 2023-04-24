@@ -548,7 +548,7 @@ protected:
      * \~chinese
      * @brief lambda自动选择。
      */
-    // double LambdaAutoSelection();
+    double LambdaAutoSelection(BandwidthWeight* bandwidthWeight);
 
         /**
      * \~english
@@ -558,11 +558,6 @@ protected:
      */
     // double RsquareByLambda(double lambda, void * params);
     double RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda);
-
-    // double selFunc(double x, void* params){
-    //     (void)(params);
-    //     return x;
-    // }
 
 public:
     void getDistance(CRSSTDistance* distance)
