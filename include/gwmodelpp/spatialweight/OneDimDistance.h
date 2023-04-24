@@ -92,6 +92,18 @@ public:
     virtual void makeParameter(std::initializer_list<DistParamVariant> plist) override;
 
     virtual arma::vec distance(arma::uword focus) override;
+
+    /**
+     * @brief Calculate distance for points (focus) just like distance.
+     * 
+     * @param focus the index of points to be calculated.
+     *   A list of parameters should be contained, and 2 items:
+     *   Matrix of focus point' coordinate & Matrix of data point' coordinate.
+     * 
+     * @return arma::vec Distance vector with not absolute value.
+     */
+    arma::vec noAbsdistance(arma::uword focus);
+
     virtual double maxDistance() override;
     virtual double minDistance() override;
 

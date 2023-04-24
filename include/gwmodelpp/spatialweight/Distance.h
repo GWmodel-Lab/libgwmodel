@@ -41,6 +41,7 @@ public:
      */
     enum DistanceType
     {
+        CRSSTDistance,
         CRSDistance,        //!< \~english Distance according to coordinate reference system \~chinese 坐标系距离
         MinkwoskiDistance,  //!< \~english Minkwoski distance \~chinese Minkwoski 距离
         DMatDistance,       //!< \~english Distance according to a .dmat file \~chinese 从 .dmat 文件读取距离

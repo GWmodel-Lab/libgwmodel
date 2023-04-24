@@ -44,6 +44,20 @@ vec OneDimDistance::distance(uword focus)
     else throw std::runtime_error("Target is out of bounds of data points.");
 }
 
+vec OneDimDistance::noAbsdistance(uword focus)
+{
+    if (mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
+
+    if (focus < mParameter->total)
+    {
+        const double& out_loc=mParameter->focusPoints(focus);
+        const arma::vec& in_locs=mParameter->dataPoints;
+        return out_loc - in_locs;
+    }
+    else throw std::runtime_error("Target is out of bounds of data points.");
+}
+
+
 double OneDimDistance::maxDistance()
 {
     if (mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");

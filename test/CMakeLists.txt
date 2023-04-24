@@ -92,3 +92,10 @@ add_test(
     NAME testGWRLocalCollinearity 
     COMMAND $<TARGET_FILE:testGWRLocalCollinearity> --success
 )
+
+add_executable(testGTWR GTWR.cpp ${SAMPL_LONDONHP100})
+target_link_libraries(testGTWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_test(
+    NAME testGTWR 
+    COMMAND $<TARGET_FILE:testGTWR> --success
+)

@@ -10,6 +10,7 @@
 #include "MinkwoskiDistance.h"
 #include "DMatDistance.h"
 #include "OneDimDistance.h"
+#include "CRSSTDistance.h"
 
 namespace gwm
 {
@@ -374,6 +375,23 @@ template<>
 inline CRSDistance* SpatialWeight::distance<CRSDistance>() const
 {
     return static_cast<CRSDistance*>(mDistance);
+}
+
+/**
+ * \~english
+ * @brief Get the pointer to CGwmSpatialWeight::mDistance and cast it to CGwmCRSSTDistance type.
+ * 
+ * @return Casted pointer to CGwmSpatialWeight::mDistance.
+ * 
+ * \~chinese
+ * @brief 获得指针 CGwmSpatialWeight::mDistance 并将其转换到所要求的类型 CGwmCRSSTDistance 。
+ * 
+ * @return 转换后的 CGwmSpatialWeight::mDistance 指针。
+ */
+template<>
+inline CRSSTDistance* SpatialWeight::distance<CRSSTDistance>() const
+{
+    return static_cast<CRSSTDistance*>(mDistance);
 }
 
 /**
