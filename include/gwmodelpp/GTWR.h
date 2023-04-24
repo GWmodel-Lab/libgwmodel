@@ -544,20 +544,42 @@ protected:
     /**
      * \~english
      * @brief Lambda auto selection.
+     * @param bandwidthWeight bandwidth parameters to create weight.
+     * @return double best lambda after selection.
      * \~chinese
      * @brief lambda自动选择。
+     * @param bandwidthWeight 传入带宽值，来获取权重，后续更方便改成多元优化.
+     * @return double 返回优选以后的lambda值.
      */
     double LambdaAutoSelection(BandwidthWeight* bandwidthWeight);
 
         /**
      * \~english
      * @brief Rsquare calculate by lambda.
+     * @param bandwidthWeight bandwidth weight parameters,     
+     * @param lambda the lambda value.
+     * @return double R-square by lambda.
      * \~chinese
      * @brief lambda获得R方，作为优选的函数。
+     * @param bandwidthWeight 输入带宽权重,     
+     * @param lambda 输入要获取R方的lambda值。
+     * @return double 根据输入的lambda值和带宽获取的R方值.
      */
     double RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda);
 
 public:
+    /**
+     * \~english
+     * @brief Get whether auto select lambda.
+     * 
+     * @return true if auto select lambda.
+     * @return false if not auto select lambda.
+     * \~chinese
+     * @brief 获取是否自动优选lambda。
+     * 
+     * @return true 如果自动优选lambda。
+     * @return false 如果不自动优选lambda。
+     */
     void setIsAutoselectLambda(bool isAutoSelect) { mIsAutoselectLambda = isAutoSelect; }
 
 protected:
@@ -569,12 +591,12 @@ protected:
     bool mIsAutoselectBandwidth = false;//!< \~english Whether need bandwidth autoselect. \~chinese 是否需要自动优选带宽。
     bool mIsAutoselectLambda = false;//!< \~english Whether need lambda autoselect. \~chinese 是否需要自动优选lambda。
 
-    BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::AIC;
-    BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &GTWR::bandwidthSizeCriterionCVSerial;
-    BandwidthCriterionList mBandwidthSelectionCriterionList;
+    BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::AIC;//!< \~english Bandwidth Selection Criterion Type. \~chinese 默认的带宽优选方式。
+    BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &GTWR::bandwidthSizeCriterionCVSerial;//!< \~english Bandwidth Selection Criterion Function. \~chinese 默认的带宽优选函数。
+    BandwidthCriterionList mBandwidthSelectionCriterionList;//!< \~english Bandwidth Selection Criterion List. \~chinese 默认的带宽优选参数列表。
 
-    PredictCalculator mPredictFunction = &GTWR::predictSerial;
-    FitCalculator mFitFunction = &GTWR::fitSerial;
+    PredictCalculator mPredictFunction = &GTWR::predictSerial;//!< \~english Predict Function. \~chinese 默认的Predict函数。
+    FitCalculator mFitFunction = &GTWR::fitSerial;//!< \~english Fit Function. \~chinese 默认的Fit函数。
 
     ParallelType mParallelType = ParallelType::SerialOnly; //!< \~english Type of parallel method. \~chinese 并行方法类型。
     int mOmpThreadNum = 8;  //!< \~english Number of threads to create. \~chinese 并行计算创建的线程数。

@@ -54,7 +54,7 @@ mat GTWR::fit()
         double lambda;
         lambda=LambdaAutoSelection(bw);
         mStdistance->setLambda(lambda);
-        printf("the best lambda is %.7f\n",lambda);
+        printf("the best lambda is %.6f\n",lambda);
     }
 
     mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
