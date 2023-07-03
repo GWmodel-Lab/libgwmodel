@@ -40,6 +40,10 @@
  */
 #define GWM_LOG_ERROR(MESSAGE) gwm::Logger::printer((MESSAGE), Logger::LogLevel::LOG_ERR, __FUNCTION__, __FILE__)
 
+#define GWM_LOG_STOPPER { if (gwm::Logger::stopper()) break; }
+
+#define GWM_LOG_STOPPER_CONTINUE { if (gwm::Logger::stopper()) continue; }
+
 namespace gwm
 {
 
@@ -85,6 +89,19 @@ public:
     {
         printer(message, level, fun_name, file_name);
     }
+
+    using Progresser = std::function<void (std::size_t, std::size_t)>;
+
+    static Progresser progresser;
+
+    static void progressing(std::size_t progress, std::size_t total)
+    {
+        progresser(progress, total);
+    }
+
+    using Stopper = std::function<bool ()>;
+
+    static Stopper stopper;
 };
 
 }

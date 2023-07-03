@@ -10,3 +10,13 @@ Logger::Printer Logger::printer = [](string message, Logger::LogLevel level, str
     (void)fun_name;
     (void)file_name;
 };
+
+Logger::Progresser Logger::progresser = [](std::size_t progress, std::size_t total)
+{
+    (void)progress;
+    (void)total;
+};
+
+Logger::Stopper Logger::stopper = [](){
+    return true;
+};
