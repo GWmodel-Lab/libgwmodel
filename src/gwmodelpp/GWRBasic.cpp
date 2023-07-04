@@ -52,8 +52,8 @@ mat GWRBasic::fit()
             mIndepVarsSelectionCriterionList = selector.indepVarsCriterion();
         }
     }
-
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
     if (mIsAutoselectBandwidth)
     {
         BandwidthWeight* bw0 = mSpatialWeight.weight<BandwidthWeight>();
@@ -67,11 +67,11 @@ mat GWRBasic::fit()
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
         }
     }
-
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
     mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
-
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
     mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
     double trS = mSHat(0), trStS = mSHat(1);
     double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
@@ -97,9 +97,10 @@ mat GWRBasic::fit()
 mat GWRBasic::predict(const mat& locations)
 {
     createPredictionDistanceParameter(locations);
+    GWM_LOG_STOP_RETURN(mStatus, mat());
     
-    if (mStatus != Status::Success) return;
     mBetas = (this->*mPredictFunction)(locations, mX, mY);
+    GWM_LOG_STOP_RETURN(mStatus, mat());
 
     return mBetas;
 }
@@ -301,7 +302,7 @@ double GWRBasic::bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight
     }
     if (mStatus == Status::Success && isfinite(cv))
     {
-        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - cv)));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
     }
@@ -339,7 +340,7 @@ double GWRBasic::bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeigh
     double value = GWRBase::AICc(mX, mY, betas.t(), shat);
     if (mStatus == Status::Success && isfinite(value))
     {
-        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - value)));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
         mBandwidthLastCriterion = value;
         return value;
     }
@@ -386,7 +387,7 @@ double GWRBasic::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight)
     if (mStatus == Status::Success && flag)
     {
         double cv = sum(cv_all);
-        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - cv)));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
     }
@@ -433,7 +434,7 @@ double GWRBasic::bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight)
         double value = GWRBase::AICc(mX, mY, betas.t(), shat);
         if (isfinite(value))
         {
-            mTelegram->progress(exp(- abs(mBandwidthLastCriterion - value)));
+            GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
             mBandwidthLastCriterion = value;
             return value;
         }

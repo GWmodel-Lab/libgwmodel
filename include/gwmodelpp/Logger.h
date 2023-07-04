@@ -47,14 +47,14 @@ struct ITelegram
      * @param current \~english Current progress. \~chinese 当前进度。
      * @param total \~english Total number of progress. \~chinese 进度刻度总数。
      */
-    virtual void progress(std::size_t current, std::size_t total) = 0;
+    virtual void progress(std::size_t current, std::size_t total, std::string fun_name, std::string file_name) = 0;
 
     /**
      * @brief \~english Report the progress of this algorithm. \~Chinese 报告该算法执行的进度。
      * 
      * @param percent \~english Current percentage of total progress. \~chinese 当前进度相对于总进度的百分比。
      */
-    virtual void progress(double percent) = 0;
+    virtual void progress(double percent, std::string fun_name, std::string file_name) = 0;
 
     /**
      * @brief \~english Tell the algorithm whether to stop. \~chinese 告诉算法是否要终止计算。
@@ -96,15 +96,19 @@ public:
         (void)file_name;
     }
 
-    void progress(std::size_t current, std::size_t total) override
+    void progress(std::size_t current, std::size_t total, std::string fun_name, std::string file_name) override
     {
         (void)current;
         (void)total;
+        (void)fun_name;
+        (void)file_name;
     }
 
-    void progress(double percent) override
+    void progress(double percent, std::string fun_name, std::string file_name) override
     {
         (void)percent;
+        (void)fun_name;
+        (void)file_name;
     }
 
     bool stop() override { return false; }

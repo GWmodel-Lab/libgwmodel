@@ -30,6 +30,8 @@ RegressionDiagnostic GWRRobust::CalcDiagnostic(const mat &x, const vec &y, const
 mat GWRRobust::fit()
 {
     createDistanceParameter();
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     if (mIsAutoselectIndepVars)
     {
@@ -38,16 +40,19 @@ mat GWRRobust::fit()
         {
             indep_vars.push_back(i);
         }
+        size_t k = indep_vars.size();
+        mIndepVarSelectionProgressTotal = (k + 1) * k / 2;
+        mIndepVarSelectionProgressCurrent = 0;
         VariableForwardSelector selector(indep_vars, mIndepVarSelectionThreshold);
         mSelectedIndepVars = selector.optimize(this);
         if (mSelectedIndepVars.size() > 0)
         {
             mX = mX.cols(VariableForwardSelector::index2uvec(mSelectedIndepVars, mHasIntercept));
+            nVar = mX.n_cols;
             mIndepVarsSelectionCriterionList = selector.indepVarsCriterion();
         }
     }
-
-    uword nDp = mCoords.n_rows;
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     if (mIsAutoselectBandwidth)
     {
@@ -62,9 +67,12 @@ mat GWRRobust::fit()
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
         }
     }
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     mWeightMask = vec(nDp, fill::ones);
-    mBetas =regressionHatmatrix(mX, mY, mBetasSE, mSHat, mQDiag, mS);
+    mBetas = regressionHatmatrix(mX, mY, mBetasSE, mSHat, mQDiag, mS);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
+
     mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
     double trS = mSHat(0), trStS = mSHat(1);
     double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
@@ -89,8 +97,14 @@ mat GWRRobust::fit()
 
 mat GWRRobust::predict(const mat& locations)
 {
+    size_t nDp = locations.n_rows, nVar = mX.n_cols;
+
     createPredictionDistanceParameter(locations);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
+
     mBetas = (this->*mPredictFunction)(locations, mX, mY);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
+    
     return mBetas;
 }
 
@@ -113,6 +127,7 @@ mat GWRRobust::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, ve
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec w = mSpatialWeight.weightVector(i) % mWeightMask;
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
@@ -136,6 +151,7 @@ mat GWRRobust::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, ve
             GWM_LOG_ERROR(e.what());
             throw e;
         }
+        GWM_LOG_PROGRESS(i, nDp);
     }
     betasSE = betasSE.t();
     return betas.t();
@@ -155,6 +171,7 @@ mat GWRRobust::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (success)
         {
             int thread = omp_get_thread_num();
@@ -183,6 +200,7 @@ mat GWRRobust::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
                 success = false;
             }
         }
+        GWM_LOG_PROGRESS(i, nRp);
     }
     if (!success)
     {
@@ -251,6 +269,8 @@ mat GWRRobust::robustGWRCaliSecond(const mat &x, const vec &y, mat &betasSE, vec
     double delta = 1.0e-5;
     double maxiter = 20;
     mat betas = (this->*mfitFunction)(x, y, betasSE, shat, qDiag, S);
+    GWM_LOG_STOP_RETURN(mStatus, betas);
+
     //计算residual
     // vec yHat = fitted(x, betas);
     vec yHat = sum(betas % x, 1);
@@ -262,6 +282,7 @@ mat GWRRobust::robustGWRCaliSecond(const mat &x, const vec &y, mat &betasSE, vec
     //mDiagnostic = CalcDiagnostic(x, y, betas, shat);
     while (diffmse > delta && iter < maxiter)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         double oldmse = mse;
         betas = (this->*mfitFunction)(x, y, betasSE, shat, qDiag, S);
         //计算residual

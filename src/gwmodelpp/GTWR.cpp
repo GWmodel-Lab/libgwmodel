@@ -201,7 +201,7 @@ double GTWR::bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight)
     }
     if (mStatus == Status::Success && isfinite(cv))
     {
-        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - cv)));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
     }
@@ -239,7 +239,7 @@ double GTWR::bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeight)
     double value = GWRBase::AICc(mX, mY, betas.t(), shat);
     if (mStatus == Status::Success && isfinite(value))
     {
-        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - value)));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
         mBandwidthLastCriterion = value;
         return value;
     }
@@ -404,7 +404,7 @@ double GTWR::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight)
     if (mStatus == Status::Success && flag)
     {
         double cv = sum(cv_all);
-        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - cv)));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
     }
@@ -451,7 +451,7 @@ double GTWR::bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight)
         double value = GWRBase::AICc(mX, mY, betas.t(), shat);
         if (isfinite(value))
         {
-            mTelegram->progress(exp(- abs(mBandwidthLastCriterion - value)));
+            GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
             mBandwidthLastCriterion = value;
             return value;
         }

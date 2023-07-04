@@ -60,7 +60,9 @@ namespace gwm
 
 #define GWM_LOG_STOP_RETURN(STATUS, REVAL) { if (this->mTelegram->stop()) { STATUS = gwm::Status::Terminated; return (REVAL);} }
 
-#define GWM_LOG_PROGRESS(CURRENT, TOTAL) { this->mTelegram->progress((CURRENT), (TOTAL)); };
+#define GWM_LOG_PROGRESS(CURRENT, TOTAL) { this->mTelegram->progress((CURRENT), (TOTAL), (__FUNCTION__), (__FILE__)); };
+
+#define GWM_LOG_PROGRESS_PERCENT(PERCENT) { this->mTelegram->progress((PERCENT), (__FUNCTION__), (__FILE__)); };
 
 /**
  * \~english

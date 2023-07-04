@@ -31,9 +31,9 @@ struct MyLogger : Logger
         called = true;
     }
 
-    void progress(size_t current, size_t total) override
+    void progress(size_t current, size_t total, string fun_name, string file_name) override
     {
-        cout << "[progress]:" << current << "/" << total << "\n";
+        cout << "[progress]:" << current << "/" << total << "(in file " << file_name << "): " << fun_name << "\n";
         progressed = true;
     }
 
