@@ -553,19 +553,21 @@ protected:
      */
     double LambdaAutoSelection(BandwidthWeight* bandwidthWeight);
 
-        /**
+    /**
      * \~english
      * @brief Rsquare calculate by lambda.
      * @param bandwidthWeight bandwidth weight parameters,     
      * @param lambda the lambda value.
-     * @return double R-square by lambda.
+     * @param rsquare R-square by lambda.
+     * @return Status Algorithm status.
      * \~chinese
      * @brief lambda获得R方，作为优选的函数。
      * @param bandwidthWeight 输入带宽权重,     
      * @param lambda 输入要获取R方的lambda值。
-     * @return double 根据输入的lambda值和带宽获取的R方值.
+     * @param rsquare 根据输入的lambda值和带宽获取的R方值.
+     * @return Status 算法运行状态。
      */
-    double RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda);
+    Status RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda, double& rsquare);
 
 public:
     /**
@@ -594,6 +596,7 @@ protected:
     BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::AIC;//!< \~english Bandwidth Selection Criterion Type. \~chinese 默认的带宽优选方式。
     BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &GTWR::bandwidthSizeCriterionCVSerial;//!< \~english Bandwidth Selection Criterion Function. \~chinese 默认的带宽优选函数。
     BandwidthCriterionList mBandwidthSelectionCriterionList;//!< \~english Bandwidth Selection Criterion List. \~chinese 默认的带宽优选参数列表。
+    double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
 
     PredictCalculator mPredictFunction = &GTWR::predictSerial;//!< \~english Predict Function. \~chinese 默认的Predict函数。
     FitCalculator mFitFunction = &GTWR::fitSerial;//!< \~english Fit Function. \~chinese 默认的Fit函数。

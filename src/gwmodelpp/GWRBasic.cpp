@@ -259,7 +259,7 @@ mat GWRBasic::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& q
                 success = false;
             }
         }
-        GWM_LOG_PROGRESS(i, nRp);
+        GWM_LOG_PROGRESS(i, nDp);
     }
     if (!success)
     {
