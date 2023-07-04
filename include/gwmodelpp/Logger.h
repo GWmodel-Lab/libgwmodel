@@ -10,53 +10,53 @@
  * @param MESSAGE \~english Message \~chinese 日志消息
  * @param LEVEL \~english Level of this message \~chinese 消息等级
  */
-#define GWM_LOGGING(MESSAGE, LEVEL) gwm::Logger::printer((MESSAGE), (LEVEL), __FUNCTION__, __FILE__)
+#define GWM_LOGGING(MESSAGE, LEVEL) this->mTelegram->print((MESSAGE), (LEVEL), __FUNCTION__, __FILE__);
 
 /**
  * @brief \~english Shortcut to print debug log with function name and file name. \~chinese 用于输出带有函数名和文件名的调试日志的快捷宏函数。
  * 
  * @param MESSAGE \~english Message \~chinese 日志消息
  */
-#define GWM_LOG_DEBUG(MESSAGE) gwm::Logger::printer((MESSAGE), Logger::LogLevel::LOG_DEBUG, __FUNCTION__, __FILE__)
+#define GWM_LOG_DEBUG(MESSAGE) this->mTelegram->print((MESSAGE), Logger::LogLevel::LOG_DEBUG, __FUNCTION__, __FILE__);
 
 /**
  * @brief \~english Shortcut to print info log with function name and file name. \~chinese 用于输出带有函数名和文件名的消息日志的快捷宏函数。
  * 
  * @param MESSAGE \~english Message \~chinese 日志消息
  */
-#define GWM_LOG_INFO(MESSAGE) gwm::Logger::printer((MESSAGE), Logger::LogLevel::LOG_INFO, __FUNCTION__, __FILE__)
+#define GWM_LOG_INFO(MESSAGE) this->mTelegram->print((MESSAGE), Logger::LogLevel::LOG_INFO, __FUNCTION__, __FILE__);
 
 /**
  * @brief \~english Shortcut to print warning log with function name and file name. \~chinese 用于输出带有函数名和文件名的警告日志的快捷宏函数。
  * 
  * @param MESSAGE \~english Message \~chinese 日志消息
  */
-#define GWM_LOG_WARNNING(MESSAGE) gwm::Logger::printer((MESSAGE), Logger::LogLevel::LOG_WARNING, __FUNCTION__, __FILE__)
+#define GWM_LOG_WARNNING(MESSAGE) this->mTelegram->print((MESSAGE), Logger::LogLevel::LOG_WARNING, __FUNCTION__, __FILE__);
 
 /**
  * @brief \~english Shortcut to print error log with function name and file name. \~chinese 用于输出带有函数名和文件名的错误日志的快捷宏函数。
  * 
  * @param MESSAGE \~english Message \~chinese 日志消息
  */
-#define GWM_LOG_ERROR(MESSAGE) gwm::Logger::printer((MESSAGE), Logger::LogLevel::LOG_ERR, __FUNCTION__, __FILE__)
+#define GWM_LOG_ERROR(MESSAGE) this->mTelegram->print((MESSAGE), Logger::LogLevel::LOG_ERR, __FUNCTION__, __FILE__);
 
-#define GWM_LOG_STOPPER { if (gwm::Logger::stopper()) break; }
+#define GWM_LOG_STOP_BREAK { if (this->mTelegram->stop()) break; };
 
-#define GWM_LOG_STOPPER_CONTINUE { if (gwm::Logger::stopper()) continue; }
+#define GWM_LOG_STOP_CONTINUE { if (this->mTelegram->stop()) continue; };
+
+#define GWM_LOG_PROGRESS(CURRENT, TOTAL) { this->mTelegram->progress((CURRENT), (TOTAL)); };
 
 namespace gwm
 {
 
 /**
- * @brief \~english Logger. Used to pass logging messages to outer printer functions.
- * To accept messages, set the static member printer to self-defined functions.
- * \~chinese 日志记录器。用于向外部打印函数传递日志信息。
- * 如果要接受消息，将类中的静态成员变量 printer 设置为自定义的函数。
+ * @brief \~english Interface for controller of algorithm. \~chinese 算法控制器接口
  * 
  */
-class Logger
+struct ITelegram
 {
-public:
+
+    virtual ~ITelegram() {}
 
     /**
      * @brief \~english Level of logs. \~chinese 日志等级。
@@ -73,10 +73,6 @@ public:
         LOG_DEBUG = 7 //!< \~english The message is only for debugging purposes \~chinese 调试
     };
 
-    using Printer = std::function<void (std::string, LogLevel, std::string, std::string)>; //!< Printer type.
-
-    static Printer printer;  //!< Printer used to print logging messages.
-
     /**
      * @brief \~english Call printer to print a log. \~chinese 调用打印函数输出日志
      * 
@@ -85,23 +81,51 @@ public:
      * @param fun_name \~english Caller function name \~chinese 调用者名称
      * @param file_name \~english The file where caller function is defined \~chinese 调用者位于的文件
      */
-    static void logging(std::string message, LogLevel level, std::string fun_name, std::string file_name)
+    virtual void print(std::string message, ITelegram::LogLevel level, std::string fun_name, std::string file_name) = 0;
+
+    virtual void progress(std::size_t current, std::size_t total) = 0;
+
+    virtual bool stop() = 0;
+};
+
+/**
+ * @brief \~english Logger. Used to pass logging messages to outer printer functions.
+ * To accept messages, set the static member printer to self-defined functions.
+ * \~chinese 日志记录器。用于向外部打印函数传递日志信息。
+ * 如果要接受消息，将类中的静态成员变量 printer 设置为自定义的函数。
+ * 
+ */
+class Logger : public ITelegram
+{
+public:
+
+    /**
+     * @brief \~english Construct a new Logger object. \~chinese 构造一个 Logger 对象。
+     * 
+     */
+    Logger() {}
+
+    /**
+     * @brief \~english Destroy the Logger object. \~chinese 销毁一个 Logger 对象。
+     * 
+     */
+    ~Logger() {}
+
+    void print(std::string message, LogLevel level, std::string fun_name, std::string file_name) override
     {
-        printer(message, level, fun_name, file_name);
+        (void)message;
+        (void)level;
+        (void)fun_name;
+        (void)file_name;
     }
 
-    using Progresser = std::function<void (std::size_t, std::size_t)>;
-
-    static Progresser progresser;
-
-    static void progressing(std::size_t progress, std::size_t total)
+    void progress(std::size_t current, std::size_t total) override
     {
-        progresser(progress, total);
+        (void)current;
+        (void)total;
     }
 
-    using Stopper = std::function<bool ()>;
-
-    static Stopper stopper;
+    bool stop() override { return true; }
 };
 
 }

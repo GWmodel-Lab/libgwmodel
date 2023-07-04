@@ -58,7 +58,6 @@ set(SOURCES_CXX
     gwmodelpp/GWPCA.cpp
     gwmodelpp/GWDR.cpp
     gwmodelpp/GWRMultiscale.cpp
-    gwmodelpp/Logger.cpp
     gwmodelpp/GWRRobust.cpp
     gwmodelpp/GWRGeneralized.cpp
     gwmodelpp/BinomialModel.cpp

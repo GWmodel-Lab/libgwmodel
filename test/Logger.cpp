@@ -17,15 +17,25 @@ using namespace std;
 using namespace arma;
 using namespace gwm;
 
-void printer(string message, Logger::LogLevel level, string fun_name, string file_name)
+struct MyLogger : Logger
 {
-    cout << "[" << fun_name << "] (in file " << file_name << "): " << message << "\n";
-}
+    ~MyLogger()
+    {
+        cout << "[MyLogger] Logger destructed!";
+    }
+
+    void print(string message, ITelegram::LogLevel level, string fun_name, string file_name) override
+    {
+        cout << "[" << fun_name << "] (in file " << file_name << "): " << message << "\n";
+        called = true;
+    }
+
+    bool called = false;
+};
 
 TEST_CASE("MGWR: basic flow")
 {
-    Logger::printer = printer;
-
+    MyLogger* logger = new MyLogger();
     mat londonhp100_coord, londonhp100_data;
     vector<string> londonhp100_fields;
     if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
@@ -47,15 +57,19 @@ TEST_CASE("MGWR: basic flow")
         bandwidthInitialize.push_back(GWRMultiscale::BandwidthInitilizeType::Null);
         bandwidthSelectionApproach.push_back(GWRMultiscale::BandwidthSelectionCriterionType::CV);
     }
+    bandwidthInitialize.pop_back();
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
     GWRMultiscale algorithm;
+    algorithm.setTelegram(logger);
     algorithm.setCoords(londonhp100_coord);
     algorithm.setDependentVariable(y);
     algorithm.setIndependentVariables(x);
     algorithm.setSpatialWeights(spatials);
     algorithm.setHasHatMatrix(true);
-    REQUIRE_THROWS(algorithm.setBandwidthInitilize(bandwidthInitialize));
+    algorithm.setBandwidthInitilize(bandwidthInitialize);
+
+    REQUIRE(logger->called);
 }

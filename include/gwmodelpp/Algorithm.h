@@ -1,6 +1,9 @@
 #ifndef ALGORITHM_H
 #define ALGORITHM_H
 
+#include <memory>
+#include "Logger.h"
+
 namespace gwm
 {
 
@@ -27,7 +30,7 @@ public:
      * @brief 构造一个新的 Algorithm 类对象。
      * 
      */
-    Algorithm() {}
+    Algorithm() : mTelegram(new Logger()) {}
 
     /**
      * \~english 
@@ -37,6 +40,12 @@ public:
      * @brief 销毁 Algorithm 类对象。
      */
     virtual ~Algorithm() {}
+
+public:
+    void setTelegram(ITelegram* telegram)
+    {
+        mTelegram.reset(telegram);
+    }
 
 public:
 
@@ -54,6 +63,9 @@ public:
      * @return false 如果算法配置不合法。
      */
     virtual bool isValid() = 0;
+
+protected:
+    std::unique_ptr<ITelegram> mTelegram = nullptr;
 };
 
 }
