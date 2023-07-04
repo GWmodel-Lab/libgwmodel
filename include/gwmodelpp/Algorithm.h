@@ -1,6 +1,7 @@
 #ifndef ALGORITHM_H
 #define ALGORITHM_H
 
+#include <cfloat>
 #include <memory>
 #include "Status.h"
 #include "Logger.h"

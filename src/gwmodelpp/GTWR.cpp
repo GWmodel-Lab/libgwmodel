@@ -567,9 +567,9 @@ double GTWR::LambdaAutoSelection(BandwidthWeight* bw)
     Status s_b = RsquareByLambda(bw, b, f_b);
     Status s_p = RsquareByLambda(bw, p, f_p);
     Status s_q = RsquareByLambda(bw, q, f_q);
-    arma::Mat<Status> sm = { s_a, s_b, s_p, s_q };
+    umat sm = { (u64)s_a, (u64)s_b, (u64)s_p, (u64)s_q };
     // r方越大越好
-    while (all(vectorise(sm) == Status::Success) && abs(f_a - f_b) >= eps && iter < max_iter)
+    while (all(vectorise(sm) == 0) && abs(f_a - f_b) >= eps && iter < max_iter)
     {
         if (f_p > f_q)
         {
@@ -577,7 +577,7 @@ double GTWR::LambdaAutoSelection(BandwidthWeight* bw)
             q = p; f_q = f_p;
             step = b - a;
             p = a + (1 - ratio) * step;
-            sm(2) = RsquareByLambda(bw, p, f_p);
+            sm(2) = u64(RsquareByLambda(bw, p, f_p));
         }
         else
         {
@@ -585,11 +585,11 @@ double GTWR::LambdaAutoSelection(BandwidthWeight* bw)
             p = q; f_p = f_q;
             step = b - a;
             q = a + ratio * step;
-            sm(3) = RsquareByLambda(bw, q, f_q);
+            sm(3) = u64(RsquareByLambda(bw, q, f_q));
         }
         iter++;
     }
-    if (all(vectorise(sm) == Status::Success))
+    if (all(vectorise(sm) == u64(Status::Success)))
     {
         double golden = (b + a) / 2;
         return golden;

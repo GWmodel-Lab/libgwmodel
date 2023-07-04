@@ -348,7 +348,7 @@ double GWDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidt
     }
     if (mStatus == Status::Success && success && isfinite(cv))
     {
-        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - cv - mBandwidthOptimizeEps)));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = cv;
         return cv;
     }
@@ -446,7 +446,7 @@ double GWDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwid
     double value = GWDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
     if (mStatus == Status::Success && isfinite(value))
     {
-        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - value - mBandwidthOptimizeEps)));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = value;
         return value;
     }
@@ -580,7 +580,7 @@ double GWDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
     if (mStatus == Status::Success && success)
     {
         double value = success ? GWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
-        GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressCurrent);
+        GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressTotal);
         return isfinite(value) ? value : DBL_MAX;
     }
     else return DBL_MAX;
@@ -665,7 +665,7 @@ double GWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
     if (mStatus == Status::Success && success)
     {
         double value = success ? GWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
-        GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressCurrent);
+        GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressTotal);
         return isfinite(value) ? value : DBL_MAX;
     }
     else return DBL_MAX;

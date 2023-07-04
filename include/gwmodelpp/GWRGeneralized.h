@@ -126,9 +126,10 @@ public:
     ~GWRGeneralized(){};
 
 public: // IBandwidthSizeSelectable interface
-    double getCriterion(BandwidthWeight *bandwidthWeight) override
+    Status getCriterion(BandwidthWeight *bandwidthWeight, double& criterion) override
     {
-        return (this->*mBandwidthSelectCriterionFunction)(bandwidthWeight);
+        criterion = (this->*mBandwidthSelectCriterionFunction)(bandwidthWeight);
+        return mStatus;
     }
 
 public: // IRegressionAnalysis interface

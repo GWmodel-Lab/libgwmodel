@@ -405,9 +405,10 @@ private:
 #endif
 
 public:     // Implement IBandwidthSelectable
-    double getCriterion(BandwidthWeight* weight) override
+    Status getCriterion(BandwidthWeight* weight, double& criterion) override
     {
-        return (this->*mBandwidthSelectionCriterionFunction)(weight);
+        criterion = (this->*mBandwidthSelectionCriterionFunction)(weight);
+        return mStatus;
     }
 
 private:

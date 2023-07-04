@@ -198,9 +198,10 @@ public:
      */
     void setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion);
 
-    double getCriterion(BandwidthWeight* weight) override
+    Status getCriterion(BandwidthWeight *bandwidthWeight, double& criterion) override
     {
-        return (this->*mBandwidthSelectionCriterionFunction)(weight);
+        criterion = (this->*mBandwidthSelectionCriterionFunction)(bandwidthWeight);
+        return mStatus;
     }
 
 public:
