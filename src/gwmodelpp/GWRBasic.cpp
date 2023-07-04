@@ -135,7 +135,7 @@ mat GWRBasic::predictSerial(const mat& locations, const mat& x, const vec& y)
             GWM_LOG_ERROR(e.what());
             throw e;
         }
-        GWM_LOG_PROGRESS(i, nRp);
+        GWM_LOG_PROGRESS(i + 1, nRp);
     }
     return betas.t();
 }
@@ -174,7 +174,7 @@ mat GWRBasic::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec
             GWM_LOG_ERROR(e.what());
             throw e;
         }
-        GWM_LOG_PROGRESS(i, nDp);
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     betasSE = betasSE.t();
     return betas.t();
@@ -209,7 +209,7 @@ mat GWRBasic::predictOmp(const mat& locations, const mat& x, const vec& y)
                 success = false;
             }
         }
-        GWM_LOG_PROGRESS(i, nRp);
+        GWM_LOG_PROGRESS(i + 1, nRp);
     }
     if (!success)
     {
@@ -260,7 +260,7 @@ mat GWRBasic::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& q
                 success = false;
             }
         }
-        GWM_LOG_PROGRESS(i, nDp);
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     if (!success)
     {

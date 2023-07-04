@@ -151,7 +151,7 @@ mat GWRRobust::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, ve
             GWM_LOG_ERROR(e.what());
             throw e;
         }
-        GWM_LOG_PROGRESS(i, nDp);
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     betasSE = betasSE.t();
     return betas.t();
@@ -200,7 +200,7 @@ mat GWRRobust::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
                 success = false;
             }
         }
-        GWM_LOG_PROGRESS(i, nRp);
+        GWM_LOG_PROGRESS(i + 1, nRp);
     }
     if (!success)
     {

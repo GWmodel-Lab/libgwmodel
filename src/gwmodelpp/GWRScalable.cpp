@@ -232,6 +232,7 @@ double GWRScalable::optimize(const mat &Mx0, const mat &My0, double& b_tilde, do
         do
         {
             iter++;
+            GWM_LOG_STOP_BREAK(mStatus);
             status = gsl_multimin_fminimizer_iterate(minizer);
             if (status) break;
             size = gsl_multimin_fminimizer_size(minizer);
@@ -262,18 +263,23 @@ void GWRScalable::prepare()
     mMy0 = mat((mPolynomial + 1)*k, n, fill::zeros);
     mat spanXnei(1, mPolynomial + 1, fill::ones);
     mat spanXtG(1, k, fill::ones);
-    for (uword i = 0; i < n; i++) {
+    for (uword i = 0; i < n; i++) 
+    {
+        GWM_LOG_STOP_BREAK(mStatus);
         mat G(mPolynomial + 1, knn, fill::ones);
-        for (uword p = 0; p < mPolynomial; p++) {
+        for (uword p = 0; p < mPolynomial; p++)
+        {
             G.row(p + 1) = pow(G0.row(i), pow(2.0, mPolynomial/2.0)/pow(2.0, p + 1));
         }
         G = trans(G);
         mat xnei = x.rows(mDpNNIndex.row(i));
         vec ynei = y.rows(mDpNNIndex.row(i));
-        for (uword k1 = 0; k1 < k; k1++) {
+        for (uword k1 = 0; k1 < k; k1++)
+        {
             mat XtG = xnei.col(k1) * spanXnei % G;
             mat XtG2 = xnei.col(k1) * spanXnei % G % G;
-            for (uword p = 0; p < (mPolynomial + 1); p++) {
+            for (uword p = 0; p < (mPolynomial + 1); p++)
+            {
                 mat XtGX = XtG.col(p) * spanXtG % xnei;
                 mat XtG2X = XtG2.col(p) * spanXtG % xnei;
                 for (uword k2 = 0; k2 < k; k2++) {
@@ -286,6 +292,7 @@ void GWRScalable::prepare()
                 mMy0(yindex, i) = sum(XtGY);
             }
         }
+        GWM_LOG_PROGRESS(i + 1, n);
     }
 }
 
@@ -295,7 +302,7 @@ mat GWRScalable::predict(const mat& locations)
     mDpSpatialWeight = mSpatialWeight;
     findDataPointNeighbours();
     BandwidthWeight* bandwidth = mSpatialWeight.weight<BandwidthWeight>();
-    arma::uword nDp = mX.n_rows, nBw = (uword)bandwidth->bandwidth();
+    arma::uword nDp = mX.n_rows, nRp = locations.n_rows, nVar = mX.n_rows, nBw = (uword)bandwidth->bandwidth();
     if (nBw >= nDp) 
     {
         nBw = nDp - 1;
@@ -316,13 +323,18 @@ mat GWRScalable::predict(const mat& locations)
         return mBetas;
     }
     prepare();
+    GWM_LOG_STOP_RETURN(mStatus, mat(nRp, nVar, fill::zeros));
+
     double b_tilde = 1.0, alpha = 0.01;
     mCV = optimize(mMx0, mMy0, b_tilde, alpha);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nRp, nVar, fill::zeros));
+
     if (mCV < DBL_MAX)
     {
         mScale = b_tilde * b_tilde;
         mPenalty = alpha * alpha;
         mBetas = predictSerial(locations, mX, mY);
+        GWM_LOG_STOP_RETURN(mStatus, mat(nRp, nVar, fill::zeros));
     }
     return mBetas;
 }
@@ -364,20 +376,25 @@ mat GWRScalable::predictSerial(const mat& locations, const arma::mat &x, const a
     mat spanXtG(1, nVar, fill::ones);
     for (arma::uword i = 0; i < nRp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         mat G(mPolynomial + 1, nBw, fill::ones);
-        for (uword p = 0; p < mPolynomial; p++) {
+        for (uword p = 0; p < mPolynomial; p++) 
+        {
             G.row(p + 1) = pow(G0.row(i), pow(2.0, mPolynomial/2.0)/pow(2.0, p + 1));
         }
         G = trans(G);
         mat xnei = x.rows(rpNNIndex.row(i));
         vec ynei = y.rows(rpNNIndex.row(i));
-        for (arma::uword k1 = 0; k1 < nVar; k1++) {
+        for (arma::uword k1 = 0; k1 < nVar; k1++) 
+        {
             mat XtG = xnei.col(k1) * spanXnei % G;
             mat XtG2 = xnei.col(k1) * spanXnei % G % G;
-            for (uword p = 0; p < (mPolynomial + 1); p++) {
+            for (uword p = 0; p < (mPolynomial + 1); p++) 
+            {
                 mat XtGX = XtG.col(p) * spanXtG % xnei;
                 mat XtG2X = XtG2.col(p) * spanXtG % xnei;
-                for (arma::uword k2 = 0; k2 < nVar; k2++) {
+                for (arma::uword k2 = 0; k2 < nVar; k2++) 
+                {
                     uword xindex = (k1 * (mPolynomial + 1) + p) * nVar + k2;
                     mMx0(xindex, i) = sum(XtGX.col(k2));
                     mMxx0(xindex, i) = sum(XtG2X.col(k2));
@@ -387,6 +404,7 @@ mat GWRScalable::predictSerial(const mat& locations, const arma::mat &x, const a
                 mMy0(yindex, i) = sum(XtGY);
             }
         }
+        GWM_LOG_PROGRESS((i + 1) / 2, nRp);
     }
 
     uword poly1 = mPolynomial + 1;
@@ -411,12 +429,17 @@ mat GWRScalable::predictSerial(const mat& locations, const arma::mat &x, const a
     mat Mx2 = 2 * a * Mx + ((Rx % Rx) * mat(1, nRp, fill::ones) % mMx0);
 
     mat betas(nVar, nRp, fill::zeros);
-    for (uword i = 0; i < nRp; i++) {
+    for (uword i = 0; i < nRp; i++) 
+    {
+        GWM_LOG_STOP_BREAK(mStatus);
         mat sumMx(nVar, nVar, fill::zeros), sumMx2(nVar, nVar, fill::zeros);
         vec sumMy(nVar, fill::zeros);
-        for (uword k2 = 0; k2 < nVar; k2++) {
-            for (uword p = 0; p < poly1; p++) {
-                for (uword k1 = 0; k1 < nVar; k1++) {
+        for (uword k2 = 0; k2 < nVar; k2++) 
+        {
+            for (uword p = 0; p < poly1; p++) 
+            {
+                for (uword k1 = 0; k1 < nVar; k1++) 
+                {
                     uword xindex = k1*poly1*nVar + p*nVar + k2;
                     sumMx(k1, k2) += Mx(xindex, i);
                     sumMx2(k1, k2) += Mx2(xindex, i);
@@ -430,6 +453,7 @@ mat GWRScalable::predictSerial(const mat& locations, const arma::mat &x, const a
         sumMy += a * (x.t() * y);
         mat sumMxR = inv(sumMx.t() * sumMx);
         betas.col(i) = sumMxR * (sumMx.t() * sumMy);
+        GWM_LOG_PROGRESS((nRp + i + 1) / 2, nRp);
     }
 
     return betas.t();
@@ -441,7 +465,7 @@ mat GWRScalable::fit()
     mDpSpatialWeight = mSpatialWeight;
     findDataPointNeighbours();
     BandwidthWeight* bandwidth = mSpatialWeight.weight<BandwidthWeight>();
-    arma::uword nDp = mX.n_rows, nBw = (uword)bandwidth->bandwidth();
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols, nBw = (uword)bandwidth->bandwidth();
     if (nBw >= nDp) 
     {
         nBw = nDp - 1;
@@ -462,13 +486,19 @@ mat GWRScalable::fit()
         return mBetas;
     }
     prepare();
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, fill::zeros));
+
     double b_tilde = 1.0, alpha = 0.01;
     mCV = optimize(mMx0, mMy0, b_tilde, alpha);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, fill::zeros));
+
     if (mCV < DBL_MAX)
     {
         mScale = b_tilde * b_tilde;
         mPenalty = alpha * alpha;
         mBetas = fitSerial(mX, mY);
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, fill::zeros));
+        
         mDiagnostic = CalcDiagnostic( mX,mY, mBetas, mShat);
         double trS = mShat(0), trStS = mShat(1);
         double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
@@ -476,7 +506,6 @@ mat GWRScalable::fit()
         vec residual = mY - yhat;
         mBetasSE = sqrt(sigmaHat * mBetasSE);
         mat betasTV = mBetas / mBetasSE;
-        
     }
     return mBetas;
 }
@@ -517,21 +546,27 @@ arma::mat GWRScalable::fitSerial(const arma::mat &x, const arma::vec &y)
     mMy0 = mat((mPolynomial + 1)*k, n, fill::zeros);
     mat spanXnei(1, mPolynomial + 1, fill::ones);
     mat spanXtG(1, k, fill::ones);
-    for (uword i = 0; i < n; i++) {
+    for (uword i = 0; i < n; i++) 
+    {
+        GWM_LOG_STOP_BREAK(mStatus);
         mat G(mPolynomial + 1, bw, fill::ones);
-        for (uword p = 0; p < mPolynomial; p++) {
+        for (uword p = 0; p < mPolynomial; p++) 
+        {
             G.row(p + 1) = pow(mG0.row(i), pow(2.0, mPolynomial/2.0)/pow(2.0, p + 1));
         }
         G = trans(G);
         mat xnei = x.rows(dpNNIndex.row(i));
         vec ynei = y.rows(dpNNIndex.row(i));
-        for (uword k1 = 0; k1 < k; k1++) {
+        for (uword k1 = 0; k1 < k; k1++) 
+        {
             mat XtG = xnei.col(k1) * spanXnei % G;
             mat XtG2 = xnei.col(k1) * spanXnei % G % G;
-            for (uword p = 0; p < (mPolynomial + 1); p++) {
+            for (uword p = 0; p < (mPolynomial + 1); p++) 
+            {
                 mat XtGX = XtG.col(p) * spanXtG % xnei;
                 mat XtG2X = XtG2.col(p) * spanXtG % xnei;
-                for (uword k2 = 0; k2 < k; k2++) {
+                for (uword k2 = 0; k2 < k; k2++) 
+                {
                     uword xindex = (k1 * (mPolynomial + 1) + p) * k + k2;
                     mMx0(xindex, i) = sum(XtGX.col(k2));
                     mMxx0(xindex, i) = sum(XtG2X.col(k2));
@@ -541,17 +576,22 @@ arma::mat GWRScalable::fitSerial(const arma::mat &x, const arma::vec &y)
                 mMy0(yindex, i) = sum(XtGY);
             }
         }
+        GWM_LOG_PROGRESS((i + 1) / 2, n);
     }
 
     vec R0 = vec(poly1, fill::ones) * b;
-    for (uword p = 1; p < poly1; p++) {
+    for (uword p = 1; p < poly1; p++) 
+    {
         R0(p) = pow(b, p + 1);
     }
     R0 = R0 / sum(R0);
     vec Rx(k*k*poly1, fill::zeros), Ry(k*poly1, fill::zeros);
-    for (uword p = 0; p < poly1; p++) {
-        for (uword k2 = 0; k2 < k; k2++) {
-            for (uword k1 = 0; k1 < k; k1++) {
+    for (uword p = 0; p < poly1; p++) 
+    {
+        for (uword k2 = 0; k2 < k; k2++) 
+        {
+            for (uword k1 = 0; k1 < k; k1++) 
+            {
                 uword xindex = k1*poly1*k + p*k + k2;
                 Rx(xindex) = R0(p);
             }
@@ -564,12 +604,17 @@ arma::mat GWRScalable::fitSerial(const arma::mat &x, const arma::vec &y)
 
     mat bse(k, n, fill::zeros);
     double trS = 0.0, trStS = 0.0;
-    for (uword i = 0; i < n; i++) {
+    for (uword i = 0; i < n; i++) 
+    {
+        GWM_LOG_STOP_BREAK(mStatus);
         mat sumMx(k, k, fill::zeros), sumMx2(k, k, fill::zeros);
         vec sumMy(k, fill::zeros);
-        for (uword k2 = 0; k2 < k; k2++) {
-            for (uword p = 0; p < poly1; p++) {
-                for (uword k1 = 0; k1 < k; k1++) {
+        for (uword k2 = 0; k2 < k; k2++) 
+        {
+            for (uword p = 0; p < poly1; p++) 
+            {
+                for (uword k1 = 0; k1 < k; k1++) 
+                {
                     uword xindex = k1*poly1*k + p*k + k2;
                     sumMx(k1, k2) += Mx(xindex, i);
                     sumMx2(k1, k2) += Mx2(xindex, i);
@@ -581,7 +626,8 @@ arma::mat GWRScalable::fitSerial(const arma::mat &x, const arma::vec &y)
         sumMx += a * (x.t() * x);
         sumMx2 += a * a * (x.t() * x);
         sumMy += a * (x.t() * y);
-        try {
+        try 
+        {
             mat sumMxR = inv(trans(sumMx) * sumMx);
             vec trS00 = sumMxR * trans(x.row(i));
             mat trS0 = x.row(i) * trS00;
@@ -597,9 +643,12 @@ arma::mat GWRScalable::fitSerial(const arma::mat &x, const arma::vec &y)
             mat bse00 = sumMxR * sumMx2 * sumMxR;
             vec bse0 = sqrt(diagvec(bse00));
             bse.col(i) = bse0;
-        } catch (const exception& e) {
+        }
+        catch (const exception& e) 
+        {
             GWM_LOG_ERROR(e.what());
         }
+        GWM_LOG_PROGRESS((n + i + 1) / 2, n);
     }
     mBetasSE = bse.t();
     mShat = { trS, trStS };

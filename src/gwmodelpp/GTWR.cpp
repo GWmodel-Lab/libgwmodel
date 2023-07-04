@@ -127,7 +127,7 @@ mat GTWR::predictSerial(const mat& locations, const mat& x, const vec& y)
             GWM_LOG_ERROR(e.what());
             throw e;
         }
-        GWM_LOG_PROGRESS(i, nRp);
+        GWM_LOG_PROGRESS(i + 1, nRp);
     }
     return betas.t();
 }
@@ -166,7 +166,7 @@ mat GTWR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qD
             GWM_LOG_ERROR(e.what());
             throw e;
         }
-        GWM_LOG_PROGRESS(i, nDp);
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     betasSE = betasSE.t();
     return betas.t();
@@ -301,7 +301,7 @@ mat GTWR::predictOmp(const mat& locations, const mat& x, const vec& y)
                 success = false;
             }
         }
-        GWM_LOG_PROGRESS(i, nRp);
+        GWM_LOG_PROGRESS(i + 1, nRp);
     }
     if (!success)
     {
@@ -352,7 +352,7 @@ mat GTWR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag
                 success = false;
             }
         }
-        GWM_LOG_PROGRESS(i, nDp);
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     if (!success)
     {
