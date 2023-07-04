@@ -107,7 +107,7 @@ public:
         (void)percent;
     }
 
-    bool stop() override { return true; }
+    bool stop() override { return false; }
 };
 
 }
