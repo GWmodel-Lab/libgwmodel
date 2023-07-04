@@ -324,9 +324,10 @@ public: // IRegressionAnalysis
     virtual arma::mat fit() override;
 
 public:  // IVariableSelectable
-    double getCriterion(const std::vector<std::size_t>& variables) override
+    Status getCriterion(const std::vector<std::size_t>& variables, double& criterion) override
     {
-        return (this->*mIndepVarCriterionFunction)(variables);
+        criterion = (this->*mIndepVarCriterionFunction)(variables);
+        return mStatus;
     }
 
     std::vector<std::size_t> selectedVariables() override
@@ -500,12 +501,15 @@ private:
     double mBandwidthOptimizeEps = 1e-6;    //!< \~english Threshold for bandwidth optimization \~chinese 带宽优选阈值
     std::size_t mBandwidthOptimizeMaxIter = 100000; //!< \~english Maximum iteration for bandwidth optimization \~chinese 带宽优选最大迭代次数
     double mBandwidthOptimizeStep = 0.01;   //!< \~english Step size for bandwidth optimization \~chinese 带宽优选步长
+    double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
 
     bool mEnableIndepVarSelect = false;     //!< \~english Whether independent variable selection is enabled \~chinese 是否优选变量
     double mIndepVarSelectThreshold = 3.0;  //!< \~english Threshold for independent variable selection \~chinese 变量优选阈值
     VariablesCriterionList mIndepVarCriterionList;  //!< \~english List of criterion values for each variable combination in independent variable selection \~chinese 变量优选过程中每种变量组合对应的指标值列表
     IndepVarCriterionCalculator mIndepVarCriterionFunction = &GWDR::indepVarCriterionSerial;    //!< \~english Calculator to get criterion for given independent variable combination \~chinese 用于根据给定变量组合计算指标值的函数
     std::vector<std::size_t> mSelectedIndepVars;    //!< \~english Selected independent variable \~chinese 选中的变量组合
+    std::size_t mIndepVarSelectionProgressTotal = 0; //!< \~english Total number of independent variable combination. \~chinese 自变量所有组合总数。
+    std::size_t mIndepVarSelectionProgressCurrent = 0; //!< \~english Current progress of independent variable selection. \~chinese 当前自变量优选的进度。
 
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Type of parallelization \~chinese 并行方法类型
     int mOmpThreadNum = 8;  //!< \~english Number of threads used in multithreading \~chinese 多线程所使用的线程数
