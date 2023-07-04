@@ -17,8 +17,17 @@ BandwidthWeight* BandwidthSelector::optimize(IBandwidthSelectable* instance)
     double x2 = adaptBw ? round(xU - d) : (xU - d);
     w1->setBandwidth(x1);
     w2->setBandwidth(x2);
-    double f1 = instance->getCriterion(w1);
-    double f2 = instance->getCriterion(w2);
+    double f1 = DBL_MAX, f2 = DBL_MAX;
+    Status s1 = instance->getCriterion(w1, f1);
+    Status s2 = instance->getCriterion(w2, f2);
+    if (!(s1 == Status::Success && s1 == Status::Success))
+    {
+        return mBandwidth;
+    }
+    if (f1 == DBL_MAX && f2 == DBL_MAX)
+    {
+        throw std::runtime_error("Invalid initial values.");
+    }
     if (f1 < DBL_MAX)
         mBandwidthCriterion[x1] = f1;
     if (f2 < DBL_MAX)
@@ -26,7 +35,7 @@ BandwidthWeight* BandwidthSelector::optimize(IBandwidthSelectable* instance)
     double d1 = f2 - f1;
     double xopt = f1 < f2 ? x1 : x2;
     double ea = 100;
-    while ((fabs(d) > eps) && (fabs(d1) > eps) && iter < ea)
+    while ((s1 == Status::Success) && (s2 == Status::Success) && (fabs(d) > eps) && (fabs(d1) > eps) && iter < ea)
     {
         d = R * d;
         if (f1 < f2)
@@ -36,7 +45,7 @@ BandwidthWeight* BandwidthSelector::optimize(IBandwidthSelectable* instance)
             x1 = adaptBw ? round(xL + d) : (xL + d);
             f2 = f1;
             w1->setBandwidth(x1);
-            f1 = instance->getCriterion(w1);
+            s1 = instance->getCriterion(w1, f1);
             if (f1 < DBL_MAX)
                 mBandwidthCriterion[x1] = f1;
         }
@@ -47,7 +56,7 @@ BandwidthWeight* BandwidthSelector::optimize(IBandwidthSelectable* instance)
             x2 = adaptBw ? floor(xU - d) : (xU - d);
             f1 = f2;
             w2->setBandwidth(x2);
-            f2 = instance->getCriterion(w2);
+            s2 = instance->getCriterion(w2, f2);
             if (f2 < DBL_MAX)
                 mBandwidthCriterion[x2] = f2;
         }
@@ -57,11 +66,18 @@ BandwidthWeight* BandwidthSelector::optimize(IBandwidthSelectable* instance)
     }
     delete w1;
     delete w2;
-    BandwidthWeight* wopt = new BandwidthWeight();
-    wopt->setKernel(mBandwidth->kernel());
-    wopt->setAdaptive(mBandwidth->adaptive());
-    wopt->setBandwidth(xopt);
-    return wopt;
+    if (s1 == Status::Success && s2 == Status::Success)
+    {
+        BandwidthWeight* wopt = new BandwidthWeight();
+        wopt->setKernel(mBandwidth->kernel());
+        wopt->setAdaptive(mBandwidth->adaptive());
+        wopt->setBandwidth(xopt);
+        return wopt;
+    }
+    else
+    {
+        return mBandwidth;
+    }
 }
 
 BandwidthCriterionList BandwidthSelector::bandwidthCriterion() const

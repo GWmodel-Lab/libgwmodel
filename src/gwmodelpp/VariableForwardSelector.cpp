@@ -14,13 +14,17 @@ vector<size_t> VariableForwardSelector::optimize(IVarialbeSelectable *instance)
         restIndex.push_back(i);
     }
     vector<pair<vector<size_t>, double> > modelCriterions;
+    Status status = Status::Success;
     for (size_t i = 0; i < mVariables.size(); i++)
     {
+        if (status != Status::Success) break;
         vec criterions = vec(mVariables.size() - i);
         for (size_t j = 0; j < restIndex.size(); j++)
         {
+            if (status != Status::Success) break;
             curIndex.push_back(restIndex[j]);
-            double aic = instance->getCriterion(convertIndexToVariables(curIndex));
+            double aic = DBL_MAX;
+            status = instance->getCriterion(convertIndexToVariables(curIndex), aic);
             criterions(j) = aic;
             modelCriterions.push_back(make_pair(curIndex, aic));
             curIndex.pop_back();
@@ -29,8 +33,12 @@ vector<size_t> VariableForwardSelector::optimize(IVarialbeSelectable *instance)
         curIndex.push_back(restIndex[iBestVar]);
         restIndex.erase(restIndex.begin() + iBestVar);
     }
-    mVarsCriterion = sort(modelCriterions);
-    return convertIndexToVariables(select(mVarsCriterion).first);
+    if (status == Status::Success)
+    {
+        mVarsCriterion = sort(modelCriterions);
+        return convertIndexToVariables(select(mVarsCriterion).first);
+    }
+    else return mVariables;
 }
 
 std::vector<std::size_t> VariableForwardSelector::convertIndexToVariables(std::vector<std::size_t> index)

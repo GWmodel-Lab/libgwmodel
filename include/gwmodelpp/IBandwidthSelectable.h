@@ -1,6 +1,7 @@
 #ifndef IBANDWIDTHSELECTABLE_H
 #define IBANDWIDTHSELECTABLE_H
 
+#include "Status.h"
 #include "spatialweight/BandwidthWeight.h"
 
 namespace gwm
@@ -20,16 +21,18 @@ struct IBandwidthSelectable
      * \~english
      * @brief Get criterion value with given bandwidth for bandwidth optimization.
      * 
-     * @param weight Given bandwidth
-     * @return double Criterion value
+     * @param weight Given bandwidth.
+     * @param criterion [out] Criterion value.
+     * @return Status Algorithm status.
      * 
      * \~chinese
      * @brief 根据指定的带宽计算带宽优选的指标值。
      * 
      * @param weight 指定的带宽。
-     * @return double 带宽优选的指标值。
+     * @param criterion [出参] 带宽优选的指标值。
+     * @param Status 算法运行状态。
      */
-    virtual double getCriterion(BandwidthWeight* weight) = 0;
+    virtual Status getCriterion(BandwidthWeight* weight, double& criterion) = 0;
 };
 
 typedef std::vector<std::pair<double, double> >  BandwidthCriterionList; //!< \~english A list of bandwidth criterions for all attempt bandwidth values. \~chinese 所有尝试的带宽对应的指标值列表

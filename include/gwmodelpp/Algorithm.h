@@ -2,6 +2,7 @@
 #define ALGORITHM_H
 
 #include <memory>
+#include "Status.h"
 #include "Logger.h"
 
 namespace gwm
@@ -53,9 +54,11 @@ namespace gwm
  */
 #define GWM_LOG_ERROR(MESSAGE) this->mTelegram->print((MESSAGE), Logger::LogLevel::LOG_ERR, __FUNCTION__, __FILE__);
 
-#define GWM_LOG_STOP_BREAK(STATUS) { if (this->mTelegram->stop()) { STATUS = gwm::Algorithm::Status::Terminated; break;} };
+#define GWM_LOG_STOP_BREAK(STATUS) { if (this->mTelegram->stop()) { STATUS = gwm::Status::Terminated; break;} };
 
-#define GWM_LOG_STOP_CONTINUE(STATUS) { if (this->mTelegram->stop()) { STATUS = gwm::Algorithm::Status::Terminated; continue;} };
+#define GWM_LOG_STOP_CONTINUE(STATUS) { if (this->mTelegram->stop()) { STATUS = gwm::Status::Terminated; continue;} };
+
+#define GWM_LOG_STOP_RETURN(STATUS, REVAL) { if (this->mTelegram->stop()) { STATUS = gwm::Status::Terminated; return (REVAL);} }
 
 #define GWM_LOG_PROGRESS(CURRENT, TOTAL) { this->mTelegram->progress((CURRENT), (TOTAL)); };
 
@@ -72,17 +75,6 @@ namespace gwm
  */
 class Algorithm
 {
-public:
-
-    /**
-     * @brief \~english Status of this algorithm. \~chinese 当前算法运行的状态。
-     * 
-     */
-    enum class Status
-    {
-        Success = 0,
-        Terminated
-    };
 
 public:
 

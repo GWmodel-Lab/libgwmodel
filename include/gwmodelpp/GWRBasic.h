@@ -448,9 +448,10 @@ private:
 #endif
 
 public:     // Implement IBandwidthSelectable
-    double getCriterion(BandwidthWeight* weight) override
+    Status getCriterion(BandwidthWeight* weight, double& criterion) override
     {
-        return (this->*mBandwidthSelectionCriterionFunction)(weight);
+        criterion = (this->*mBandwidthSelectionCriterionFunction)(weight);
+        return mStatus;
     }
 
 private:
@@ -518,9 +519,10 @@ private:
 #endif
 
 public:     // Implement IVariableSelectable
-    double getCriterion(const std::vector<size_t>& variables) override
+    Status getCriterion(const std::vector<size_t>& variables, double& criterion) override
     {
-        return (this->*mIndepVarsSelectionCriterionFunction)(variables);
+        criterion = (this->*mIndepVarsSelectionCriterionFunction)(variables);
+        return mStatus;
     }
 
     std::vector<std::size_t> selectedVariables() override
@@ -621,11 +623,14 @@ protected:
     IndepVarsSelectCriterionCalculator mIndepVarsSelectionCriterionFunction = &GWRBasic::indepVarsSelectionCriterionSerial; //!< \~english Criterion calculator for variable selection. \~chinese 变量优选的指标计算函数。
     VariablesCriterionList mIndepVarsSelectionCriterionList;    //!< \~english Criterion list of each variable combination. \~chinese 每种变量组合对应的指标值。
     std::vector<std::size_t> mSelectedIndepVars;    //!< \~english Selected variables. \~chinese 优选得到的变量。
+    std::size_t mIndepVarSelectionProgressTotal = 0; //!< \~english Total number of independent variable combination. \~chinese 自变量所有组合总数。
+    std::size_t mIndepVarSelectionProgressCurrent = 0; //!< \~english Current progress of independent variable selection. \~chinese 当前自变量优选的进度。
 
     bool mIsAutoselectBandwidth = false;    //!< \~english Whether to auto select bandwidth. \~chinese 是否自动优选带宽。
     BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::AIC;    //!< \~english Type criterion for bandwidth selection. \~chinese 带宽优选的指标值类型。
     BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &GWRBasic::bandwidthSizeCriterionCVSerial; //!< \~english Criterion calculator for bandwidth selection. \~chinese 带宽优选的指标计算函数。
     BandwidthCriterionList mBandwidthSelectionCriterionList;    //!< \~english Criterion list of each bandwidth. \~chinese 每种带宽组合对应的指标值。
+    double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
 
     PredictCalculator mPredictFunction = &GWRBasic::predictSerial;  //!< \~english Implementation of predict function. \~chinese 预测的具体实现函数。
     FitCalculator mFitFunction = &GWRBasic::fitSerial;  //!< \~english Implementation of fit function. \~chinese 拟合的具体实现函数。
