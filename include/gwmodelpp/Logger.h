@@ -4,48 +4,6 @@
 #include <functional>
 #include <string>
 
-/**
- * @brief \~english Shortcut to print log with function name and file name. \~chinese 用于输出带有函数名和文件名的日志的快捷宏函数。
- * 
- * @param MESSAGE \~english Message \~chinese 日志消息
- * @param LEVEL \~english Level of this message \~chinese 消息等级
- */
-#define GWM_LOGGING(MESSAGE, LEVEL) this->mTelegram->print((MESSAGE), (LEVEL), __FUNCTION__, __FILE__);
-
-/**
- * @brief \~english Shortcut to print debug log with function name and file name. \~chinese 用于输出带有函数名和文件名的调试日志的快捷宏函数。
- * 
- * @param MESSAGE \~english Message \~chinese 日志消息
- */
-#define GWM_LOG_DEBUG(MESSAGE) this->mTelegram->print((MESSAGE), Logger::LogLevel::LOG_DEBUG, __FUNCTION__, __FILE__);
-
-/**
- * @brief \~english Shortcut to print info log with function name and file name. \~chinese 用于输出带有函数名和文件名的消息日志的快捷宏函数。
- * 
- * @param MESSAGE \~english Message \~chinese 日志消息
- */
-#define GWM_LOG_INFO(MESSAGE) this->mTelegram->print((MESSAGE), Logger::LogLevel::LOG_INFO, __FUNCTION__, __FILE__);
-
-/**
- * @brief \~english Shortcut to print warning log with function name and file name. \~chinese 用于输出带有函数名和文件名的警告日志的快捷宏函数。
- * 
- * @param MESSAGE \~english Message \~chinese 日志消息
- */
-#define GWM_LOG_WARNNING(MESSAGE) this->mTelegram->print((MESSAGE), Logger::LogLevel::LOG_WARNING, __FUNCTION__, __FILE__);
-
-/**
- * @brief \~english Shortcut to print error log with function name and file name. \~chinese 用于输出带有函数名和文件名的错误日志的快捷宏函数。
- * 
- * @param MESSAGE \~english Message \~chinese 日志消息
- */
-#define GWM_LOG_ERROR(MESSAGE) this->mTelegram->print((MESSAGE), Logger::LogLevel::LOG_ERR, __FUNCTION__, __FILE__);
-
-#define GWM_LOG_STOP_BREAK { if (this->mTelegram->stop()) break; };
-
-#define GWM_LOG_STOP_CONTINUE { if (this->mTelegram->stop()) continue; };
-
-#define GWM_LOG_PROGRESS(CURRENT, TOTAL) { this->mTelegram->progress((CURRENT), (TOTAL)); };
-
 namespace gwm
 {
 

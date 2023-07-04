@@ -8,6 +8,58 @@ namespace gwm
 {
 
 /**
+ * @brief 
+ * \~english Shortcut to print log with function name and file name. 
+ * \~chinese 用于输出带有函数名和文件名的日志的快捷宏函数。
+ * 
+ * @param MESSAGE \~english Message \~chinese 日志消息
+ * @param LEVEL \~english Level of this message \~chinese 消息等级
+ */
+#define GWM_LOGGING(MESSAGE, LEVEL) this->mTelegram->print((MESSAGE), (LEVEL), __FUNCTION__, __FILE__);
+
+/**
+ * @brief 
+ * \~english Shortcut to print debug log with function name and file name. 
+ * \~chinese 用于输出带有函数名和文件名的调试日志的快捷宏函数。
+ * 
+ * @param MESSAGE \~english Message \~chinese 日志消息
+ */
+#define GWM_LOG_DEBUG(MESSAGE) this->mTelegram->print((MESSAGE), Logger::LogLevel::LOG_DEBUG, __FUNCTION__, __FILE__);
+
+/**
+ * @brief 
+ * \~english Shortcut to print info log with function name and file name. 
+ * \~chinese 用于输出带有函数名和文件名的消息日志的快捷宏函数。
+ * 
+ * @param MESSAGE \~english Message \~chinese 日志消息
+ */
+#define GWM_LOG_INFO(MESSAGE) this->mTelegram->print((MESSAGE), Logger::LogLevel::LOG_INFO, __FUNCTION__, __FILE__);
+
+/**
+ * @brief 
+ * \~english Shortcut to print warning log with function name and file name. 
+ * \~chinese 用于输出带有函数名和文件名的警告日志的快捷宏函数。
+ * 
+ * @param MESSAGE \~english Message \~chinese 日志消息
+ */
+#define GWM_LOG_WARNNING(MESSAGE) this->mTelegram->print((MESSAGE), Logger::LogLevel::LOG_WARNING, __FUNCTION__, __FILE__);
+
+/**
+ * @brief 
+ * \~english Shortcut to print error log with function name and file name. 
+ * \~chinese 用于输出带有函数名和文件名的错误日志的快捷宏函数。
+ * 
+ * @param MESSAGE \~english Message \~chinese 日志消息
+ */
+#define GWM_LOG_ERROR(MESSAGE) this->mTelegram->print((MESSAGE), Logger::LogLevel::LOG_ERR, __FUNCTION__, __FILE__);
+
+#define GWM_LOG_STOP_BREAK(STATUS) { if (this->mTelegram->stop()) { STATUS = gwm::Algorithm::Status::Terminated; break;} };
+
+#define GWM_LOG_STOP_CONTINUE(STATUS) { if (this->mTelegram->stop()) { STATUS = gwm::Algorithm::Status::Terminated; continue;} };
+
+#define GWM_LOG_PROGRESS(CURRENT, TOTAL) { this->mTelegram->progress((CURRENT), (TOTAL)); };
+
+/**
  * \~english
  * @brief Abstract algorithm class.
  * This class cannot been constructed.
@@ -20,6 +72,18 @@ namespace gwm
  */
 class Algorithm
 {
+public:
+
+    /**
+     * @brief \~english Status of this algorithm. \~chinese 当前算法运行的状态。
+     * 
+     */
+    enum class Status
+    {
+        Success = 0,
+        Terminated
+    };
+
 public:
 
     /**
@@ -42,10 +106,23 @@ public:
     virtual ~Algorithm() {}
 
 public:
+
+    /**
+     * @brief Set the Telegram object
+     * 
+     * @param telegram The new Telegram. This instance will take the management of pointer `telegram`.
+     */
     void setTelegram(ITelegram* telegram)
     {
         mTelegram.reset(telegram);
     }
+
+    /**
+     * @brief Get the status of this algorithm.
+     * 
+     * @return const Status of this algorithm.
+     */
+    const Status status() const { return mStatus; }
 
 public:
 
@@ -65,7 +142,17 @@ public:
     virtual bool isValid() = 0;
 
 protected:
+
+    /**
+     * @brief Set the Status of this algorithm.
+     * 
+     * @param status Status of this algorithm
+     */
+    void setStatus(Status status) { mStatus = status; }
+
+protected:
     std::unique_ptr<ITelegram> mTelegram = nullptr;
+    Status mStatus = Status::Success;
 };
 
 }
