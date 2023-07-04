@@ -83,8 +83,27 @@ struct ITelegram
      */
     virtual void print(std::string message, ITelegram::LogLevel level, std::string fun_name, std::string file_name) = 0;
 
+    /**
+     * @brief \~english Report the progress of this algorithm. \~Chinese 报告该算法执行的进度。
+     * 
+     * @param current \~english Current progress. \~chinese 当前进度。
+     * @param total \~english Total number of progress. \~chinese 进度刻度总数。
+     */
     virtual void progress(std::size_t current, std::size_t total) = 0;
 
+    /**
+     * @brief \~english Report the progress of this algorithm. \~Chinese 报告该算法执行的进度。
+     * 
+     * @param percent \~english Current percentage of total progress. \~chinese 当前进度相对于总进度的百分比。
+     */
+    virtual void progress(double percent) = 0;
+
+    /**
+     * @brief \~english Tell the algorithm whether to stop. \~chinese 告诉算法是否要终止计算。
+     * 
+     * @return true \~english Yes, stop progress. \~chinese 是，停止计算。
+     * @return false \~english No, don't stop progress. \~chinese 不，继续计算。
+     */
     virtual bool stop() = 0;
 };
 
@@ -123,6 +142,11 @@ public:
     {
         (void)current;
         (void)total;
+    }
+
+    void progress(double percent) override
+    {
+        (void)percent;
     }
 
     bool stop() override { return true; }
