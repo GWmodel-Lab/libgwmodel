@@ -555,9 +555,10 @@ public:     // SpatialMultiscaleAlgorithm interface
 
 
 public:     // IBandwidthSizeSelectable interface
-    double getCriterion(BandwidthWeight* weight) override
+    Status getCriterion(BandwidthWeight* weight, double& criterion) override
     {
-        return (this->*mBandwidthSizeCriterion)(weight);
+        criterion = (this->*mBandwidthSizeCriterion)(weight);
+        return mStatus;
     }
 
 
@@ -851,6 +852,7 @@ private:
     SpatialWeight mInitSpatialWeight;   //!< \~english Spatial weighting sheme for initializing bandwidth. \~chinese 计算初始带宽值时所用的空间权重配置。
     BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &GWRMultiscale::bandwidthSizeCriterionAllCVSerial; //!< \~english The criterion calculator for given bandwidth size. \~chinese 根据指定带宽值计算指标值的函数。
     size_t mBandwidthSelectionCurrentIndex = 0; //!< \~english The index of variable which currently the algorithm select bandwidth for. \~chinese 当前正在选带宽的变量索引值。
+    double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
 
 
     std::vector<BandwidthInitilizeType> mBandwidthInitilize;    //!< \~english Type of bandwidth initilization values. \~chinese 带宽初始值类型。

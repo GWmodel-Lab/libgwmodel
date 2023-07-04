@@ -63,6 +63,7 @@ mat GWRMultiscale::fit()
     createInitialDistanceParameter();
     
     uword nDp = mX.n_rows, nVar = mX.n_cols;
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     // ********************************
     // Centering and scaling predictors
@@ -76,6 +77,7 @@ mat GWRMultiscale::fit()
             mX.col(i) = mX.col(i) - mean(mX.col(i));
         }
     }
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     // ***********************
     // Intialize the bandwidth
@@ -83,6 +85,7 @@ mat GWRMultiscale::fit()
     mYi = mY;
     for (uword i = 0; i < nVar ; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         if (mBandwidthInitilize[i] == BandwidthInitilizeType::Null)
         {
             mBandwidthSizeCriterion = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
@@ -101,12 +104,16 @@ mat GWRMultiscale::fit()
             }
         }
     }
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
+
     // *****************************************************
     // Calculate the initial beta0 from the above bandwidths
     // *****************************************************
     BandwidthWeight* bw0 = bandwidth(0);
     bool adaptive = bw0->adaptive();
     mBandwidthSizeCriterion = bandwidthSizeCriterionAll(mBandwidthSelectionApproach[0]);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
+    
     BandwidthSelector initBwSelector;
     initBwSelector.setBandwidth(bw0);
     double maxDist = mSpatialWeights[0].distance()->maxDistance();
@@ -118,6 +125,7 @@ mat GWRMultiscale::fit()
         throw std::runtime_error("Cannot select initial bandwidth.");
     }
     mInitSpatialWeight.setWeight(initBw);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     // 初始化诊断信息矩阵
     if (mHasHatMatrix)
@@ -128,6 +136,7 @@ mat GWRMultiscale::fit()
     }
 
     mBetas = backfitting(mX, mY);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     // Diagnostic
     vec shat = { 
@@ -158,8 +167,9 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
 {
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas = (this->*mFitAll)(x, y);
-    mat idm = eye(nVar, nVar);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
+    mat idm = eye(nVar, nVar);
     if (mHasHatMatrix)
     {
         for (uword i = 0; i < nVar; ++i)
@@ -180,8 +190,10 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
     double criterion = DBL_MAX;
     for (size_t iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold; iteration++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         for (uword i = 0; i < nVar  ; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             vec fi = betas.col(i) % x.col(i);
             vec yi = resid + fi;
             if (mBandwidthInitilize[i] != BandwidthInitilizeType::Specified)
@@ -214,6 +226,7 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
                 mSpatialWeights[i].setWeight(bwi);
             }
 
+            GWM_LOG_STOP_BREAK(mStatus);
             mat S;
             betas.col(i) = (this->*mFitVar)(x.col(i), yi, i, S);
             if (mHasHatMatrix)
@@ -230,6 +243,8 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
                     sqrt(abs(RSS1 - RSS0) / RSS1);
         RSS0 = RSS1;
     }
+    GWM_LOG_STOP_RETURN(mStatus, betas);
+
     mRSS0 = RSS0;
     return betas;
 }
@@ -287,6 +302,7 @@ mat GWRMultiscale::fitAllSerial(const mat& x, const vec& y)
         mat betasSE(nVar, nDp, fill::zeros);
         for (uword i = 0; i < nDp ; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
             mat xtwx = xtw * x;
@@ -313,6 +329,7 @@ mat GWRMultiscale::fitAllSerial(const mat& x, const vec& y)
     {
         for (int i = 0; (uword)i < nDp ; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
             mat xtwx = xtw * x;
@@ -345,6 +362,7 @@ mat GWRMultiscale::fitAllOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; (uword)i < nDp; i++)
         {
+            GWM_LOG_STOP_CONTINUE(mStatus);
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
             mat xtwx = xtw * x;
@@ -373,6 +391,7 @@ mat GWRMultiscale::fitAllOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; (uword)i < nDp; i++)
         {
+            GWM_LOG_STOP_CONTINUE(mStatus);
             vec w = mInitSpatialWeight.weightVector(i);
             mat xtw = trans(x.each_col() % w);
             mat xtwx = xtw * x;
@@ -410,6 +429,7 @@ vec GWRMultiscale::fitVarSerial(const vec &x, const vec &y, const uword var, mat
         S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
         for (uword i = 0; i < nDp  ; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
             mat xtwx = xtw * x;
@@ -434,6 +454,7 @@ vec GWRMultiscale::fitVarSerial(const vec &x, const vec &y, const uword var, mat
     {
         for (int i = 0; (uword)i < nDp  ; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
             mat xtwx = xtw * x;
@@ -471,6 +492,7 @@ vec GWRMultiscale::fitVarOmp(const vec &x, const vec &y, const uword var, mat &S
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; (uword)i < nDp; i++)
         {
+            GWM_LOG_STOP_CONTINUE(mStatus);
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
             mat xtwx = xtw * x;
@@ -496,6 +518,7 @@ vec GWRMultiscale::fitVarOmp(const vec &x, const vec &y, const uword var, mat &S
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; (uword)i < nDp; i++)
         {
+            GWM_LOG_STOP_CONTINUE(mStatus);
             vec w = mSpatialWeights[var].weightVector(i);
             mat xtw = trans(x % w);
             mat xtwx = xtw * x;
@@ -528,6 +551,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVSerial(BandwidthWeight *bandwid
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec d = mInitSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         w(i) = 0.0;
@@ -547,7 +571,13 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVSerial(BandwidthWeight *bandwid
             return DBL_MAX;
         }
     }
-    return isfinite(cv) ? cv : DBL_MAX;
+    if (mStatus == Status::Success && isfinite(cv))
+    {
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
+        mBandwidthLastCriterion = cv;
+        return cv;
+    }
+    else return DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -560,6 +590,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVOmp(BandwidthWeight *bandwidthW
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
         {
             int thread = omp_get_thread_num();
@@ -583,7 +614,14 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVOmp(BandwidthWeight *bandwidthW
             }
         }
     }
-    return flag ? sum(cv_all) : DBL_MAX;
+    if (mStatus == Status::Success && flag)
+    {
+        double cv = sum(cv_all)
+        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - cv)));
+        mBandwidthLastCriterion = cv;
+        return cv;
+    }
+    else return DBL_MAX;
 }
 #endif
 
@@ -594,6 +632,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllAICSerial(BandwidthWeight *bandwi
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp ; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec d = mInitSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         mat xtw = trans(mX.each_col() % w);
@@ -615,7 +654,13 @@ double GWRMultiscale::bandwidthSizeCriterionAllAICSerial(BandwidthWeight *bandwi
         }
     }
     double value = GWRMultiscale::AICc(mX, mY, betas.t(), shat);
-    return isfinite(value) ? value : DBL_MAX;
+    if (mStatus == Status::Success && isfinite(value))
+    {
+        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - value)));
+        mBandwidthLastCriterion = value;
+        return value;
+    }
+    else return DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -628,6 +673,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllAICOmp(BandwidthWeight *bandwidth
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         if (flag)
         {
             int thread = omp_get_thread_num();
@@ -652,11 +698,17 @@ double GWRMultiscale::bandwidthSizeCriterionAllAICOmp(BandwidthWeight *bandwidth
             }
         }
     }
-    if (flag)
+    if (mStatus == Status::Success && flag)
     {
         vec shat = sum(shat_all, 1);
         double value = GWRMultiscale::AICc(mX, mY, betas.t(), shat);
-        return value;
+        if (isfinite(value))
+        {
+            mTelegram->progress(exp(- abs(mBandwidthLastCriterion - value)));
+            mBandwidthLastCriterion = value;
+            return value;
+        }
+        else return DBL_MAX;
     }
     else return DBL_MAX;
 }
@@ -670,6 +722,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVSerial(BandwidthWeight *bandwid
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec d = mSpatialWeights[var].distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         w(i) = 0.0;
@@ -689,7 +742,13 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVSerial(BandwidthWeight *bandwid
             return DBL_MAX;
         }
     }
-    return isfinite(cv) ? cv : DBL_MAX;
+    if (mStatus == Status::Success && isfinite(cv))
+    {
+        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - cv)));
+        mBandwidthLastCriterion = cv;
+        return cv;
+    }
+    else return DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -703,6 +762,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVOmp(BandwidthWeight *bandwidthW
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
         {
             int thread = omp_get_thread_num();
@@ -726,7 +786,14 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVOmp(BandwidthWeight *bandwidthW
             }
         }
     }
-    return flag ? sum(cv_all) : DBL_MAX;
+    if (mStatus == Status::Success && flag)
+    {
+        double cv = sum(cv_all)
+        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - cv)));
+        mBandwidthLastCriterion = cv;
+        return cv;
+    }
+    else return DBL_MAX;
 }
 #endif
 
@@ -738,6 +805,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICSerial(BandwidthWeight *bandwi
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp ; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec d = mSpatialWeights[var].distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         mat xtw = trans(mXi % w);
@@ -759,6 +827,12 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICSerial(BandwidthWeight *bandwi
         }
     }
     double value = GWRMultiscale::AICc(mXi, mYi, betas.t(), shat);
+    if (mStatus == Status::Success && isfinite(value))
+    {
+        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - value)));
+        mBandwidthLastCriterion = value;
+        return value;
+    }
     return isfinite(value) ? value : DBL_MAX;
 }
 
@@ -773,6 +847,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICOmp(BandwidthWeight *bandwidth
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         if (flag)
         {
             int thread = omp_get_thread_num();
@@ -801,7 +876,13 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICOmp(BandwidthWeight *bandwidth
     {
         vec shat = sum(shat_all, 1);
         double value = GWRMultiscale::AICc(mXi, mYi, betas.t(), shat);
-        return value;
+        if (isfinite(value))
+        {
+            mTelegram->progress(exp(- abs(mBandwidthLastCriterion - value)));
+            mBandwidthLastCriterion = value;
+            return value;
+        }
+        else return DBL_MAX;
     }
     return DBL_MAX;
 }
