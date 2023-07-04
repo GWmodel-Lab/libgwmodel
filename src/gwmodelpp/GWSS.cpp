@@ -101,6 +101,7 @@ void GWSS::GWAverageSerial()
     uword nVar = mX.n_cols, nRp = mCoords.n_rows;
     for (uword i = 0; i < nRp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec w = mSpatialWeight.weightVector(i);
         double sumw = sum(w);
         vec Wi = w / sumw;
@@ -120,6 +121,7 @@ void GWSS::GWAverageSerial()
         mLVar.row(i) = Wi.t() * (centerized % centerized);
         mStandardDev.row(i) = sqrt(mLVar.row(i));
         mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
+        GWM_LOG_PROGRESS(i + 1, nRp);
     }
     mLCV = mStandardDev / mLocalMean;
 }
@@ -134,6 +136,7 @@ void GWSS::GWCorrelationSerial()
     {
         for (uword i = 0; i < nRp; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             vec w = mSpatialWeight.weightVector(i);
             double sumw = sum(w);
             vec Wi = w / sumw;
@@ -155,6 +158,7 @@ void GWSS::GWCorrelationSerial()
                     tag++;
                 }
             }
+            GWM_LOG_PROGRESS(i + 1, nRp);
         }
     }
     else{
@@ -173,6 +177,7 @@ void GWSS::GWAverageOmp()
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword) i < nRp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         vec w = mSpatialWeight.weightVector(i);
         double sumw = sum(w);
         vec Wi = w / sumw;
@@ -192,6 +197,7 @@ void GWSS::GWAverageOmp()
         mLVar.row(i) = Wi.t() * (centerized % centerized);
         mStandardDev.row(i) = sqrt(mLVar.row(i));
         mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
+        GWM_LOG_PROGRESS(i + 1, nRp);
     }
     mLCV = mStandardDev / mLocalMean;
 }
@@ -210,6 +216,7 @@ void GWSS::GWCorrelationOmp()
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; (uword) i < nRp; i++)
         {
+            GWM_LOG_STOP_CONTINUE(mStatus);
             vec w = mSpatialWeight.weightVector(i);
             double sumw = sum(w);
             vec Wi = w / sumw;
@@ -231,6 +238,7 @@ void GWSS::GWCorrelationOmp()
                     tag++;
                 }
             }
+            GWM_LOG_PROGRESS(i + 1, nRp);
         }
     }
     else{
