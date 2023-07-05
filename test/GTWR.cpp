@@ -160,7 +160,7 @@ TEST_CASE("GTWR: londonhp100")
         REQUIRE_NOTHROW(algorithm.fit());
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
-        size_t bw = algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
+        size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
         REQUIRE(bw == 46);
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2443.5498915432, 1e-8));
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2453.2551390127, 1e-8));
