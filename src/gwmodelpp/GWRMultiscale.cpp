@@ -623,7 +623,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVOmp(BandwidthWeight *bandwidthW
     }
     if (mStatus == Status::Success && flag)
     {
-        double cv = sum(cv_all)
+        double cv = sum(cv_all);
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -680,7 +680,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllAICOmp(BandwidthWeight *bandwidth
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
-        GWM_LOG_STOP_BREAK(mStatus);
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
         {
             int thread = omp_get_thread_num();
@@ -795,7 +795,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVOmp(BandwidthWeight *bandwidthW
     }
     if (mStatus == Status::Success && flag)
     {
-        double cv = sum(cv_all)
+        double cv = sum(cv_all);
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -854,7 +854,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICOmp(BandwidthWeight *bandwidth
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
-        GWM_LOG_STOP_BREAK(mStatus);
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
         {
             int thread = omp_get_thread_num();
