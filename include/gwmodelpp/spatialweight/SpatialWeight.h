@@ -116,8 +116,11 @@ public:
      */
     void setWeight(Weight *weight)
     {
-        if (mWeight) delete mWeight;
-        mWeight = weight;
+        if (weight && weight != mWeight)
+        {
+            if (mWeight) delete mWeight;
+            mWeight = weight->clone();
+        }
     }
 
     /**
@@ -205,8 +208,11 @@ public:
      */
     void setDistance(Distance *distance)
     {
-        if (mDistance) delete mDistance;
-        mDistance = distance;
+        if (distance && distance != mDistance)
+        {
+            if (mDistance) delete mDistance;
+            mDistance = distance->clone();
+        }
     }
 
     /**
