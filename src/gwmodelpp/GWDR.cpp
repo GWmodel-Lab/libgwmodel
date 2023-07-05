@@ -400,7 +400,7 @@ double GWDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
     double cv = sum(cv_all);
     if (mStatus == Status::Success && success && isfinite(cv))
     {
-        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - cv - mBandwidthOptimizeEps)));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = cv;
         return cv;
     }
@@ -501,7 +501,7 @@ double GWDR::bandwidthCriterionAICOmp(const vector<BandwidthWeight*>& bandwidths
     double value = GWDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
     if (mStatus == Status::Success && isfinite(value))
     {
-        mTelegram->progress(exp(- abs(mBandwidthLastCriterion - value - mBandwidthOptimizeEps)));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = value;
         return value;
     }
