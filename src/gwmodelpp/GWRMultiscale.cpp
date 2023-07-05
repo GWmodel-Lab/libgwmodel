@@ -322,6 +322,7 @@ mat GWRMultiscale::fitAllSerial(const mat& x, const vec& y)
                 GWM_LOG_ERROR(e.what());
                 throw e;
             }
+            GWM_LOG_PROGRESS(i + 1, nDp);
         }
         mBetasSE = betasSE.t();
     }
@@ -344,6 +345,7 @@ mat GWRMultiscale::fitAllSerial(const mat& x, const vec& y)
                 GWM_LOG_ERROR(e.what());
                 throw e;
             }
+            GWM_LOG_PROGRESS(i + 1, nDp);
         }
     }
     return betas.t();
@@ -383,6 +385,7 @@ mat GWRMultiscale::fitAllOmp(const mat &x, const vec &y)
                 except = e;
                 success = false;
             }
+            GWM_LOG_PROGRESS(i + 1, nDp);
         }
         mBetasSE = betasSE.t();
     }
@@ -407,6 +410,7 @@ mat GWRMultiscale::fitAllOmp(const mat &x, const vec &y)
                 except = e;
                 success = false;
             }
+            GWM_LOG_PROGRESS(i + 1, nDp);
         }
     }
     if (!success)
@@ -448,6 +452,7 @@ vec GWRMultiscale::fitVarSerial(const vec &x, const vec &y, const uword var, mat
                 except = e;
                 success = false;
             }
+            GWM_LOG_PROGRESS(i + 1, nDp);
         }
     }
     else
@@ -470,6 +475,7 @@ vec GWRMultiscale::fitVarSerial(const vec &x, const vec &y, const uword var, mat
                 except = e;
                 success = false;
             }
+            GWM_LOG_PROGRESS(i + 1, nDp);
         }
     }
     if (!success)
