@@ -228,7 +228,10 @@ mat GWRRobust::regressionHatmatrix(const mat &x, const vec &y, mat &betasSE, vec
 
 mat GWRRobust::robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
+    uword nDp = x.n_rows, nVar = x.n_cols;
     mat betas = (this->*mfitFunction)(x, y, betasSE, shat, qDiag, S);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
+
     //  ------------- 计算W.vect
     // vec yhat = fitted(x, betas);
     vec yhat = sum(betas % x, 1);
@@ -237,7 +240,6 @@ mat GWRRobust::robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, vec 
     RegressionDiagnostic diagnostic;
     diagnostic = CalcDiagnostic(x, y, betas, shat);
     double trS = shat(0), trStS = shat(1);
-    uword nDp = x.n_rows;
     double sigmaHat = diagnostic.RSS / (1.0 * nDp - 2 * trS + trStS);
     vec studentizedResidual = residual / sqrt(sigmaHat * qDiag);
 
@@ -257,13 +259,15 @@ mat GWRRobust::robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, vec 
     }
     mWeightMask = WVect;
     betas = (this->*mfitFunction)(x, y, betasSE, shat, qDiag, S);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
+
     mSHat=shat;
     return betas;
 }
 
 mat GWRRobust::robustGWRCaliSecond(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
-    
+    uword nDp = x.n_rows, nVar = x.n_cols;
     double iter = 0;
     double diffmse = 1;
     double delta = 1.0e-5;
@@ -282,9 +286,9 @@ mat GWRRobust::robustGWRCaliSecond(const mat &x, const vec &y, mat &betasSE, vec
     //mDiagnostic = CalcDiagnostic(x, y, betas, shat);
     while (diffmse > delta && iter < maxiter)
     {
-        GWM_LOG_STOP_BREAK(mStatus);
         double oldmse = mse;
         betas = (this->*mfitFunction)(x, y, betasSE, shat, qDiag, S);
+        GWM_LOG_STOP_BREAK(mStatus);
         //计算residual
         // yHat = fitted(x, betas);
         yHat = sum(betas % x, 1);
@@ -294,6 +298,7 @@ mat GWRRobust::robustGWRCaliSecond(const mat &x, const vec &y, mat &betasSE, vec
         diffmse = abs(oldmse - mse) / mse;
         iter = iter + 1;
     }
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
     mSHat=shat;
     return betas;
 }
