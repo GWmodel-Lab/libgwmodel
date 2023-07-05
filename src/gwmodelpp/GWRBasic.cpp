@@ -29,10 +29,9 @@ RegressionDiagnostic GWRBasic::CalcDiagnostic(const mat& x, const vec& y, const 
 mat GWRBasic::fit()
 {
     uword nDp = mCoords.n_rows, nVars = mX.n_cols;
-
     createDistanceParameter();
-
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
     if (mIsAutoselectIndepVars)
     {
         vector<size_t> indep_vars;
@@ -96,11 +95,12 @@ mat GWRBasic::fit()
 
 mat GWRBasic::predict(const mat& locations)
 {
+    uword nDp = mCoords.n_rows, nVars = mX.n_cols;
     createPredictionDistanceParameter(locations);
-    GWM_LOG_STOP_RETURN(mStatus, mat());
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     
     mBetas = (this->*mPredictFunction)(locations, mX, mY);
-    GWM_LOG_STOP_RETURN(mStatus, mat());
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
 
     return mBetas;
 }
