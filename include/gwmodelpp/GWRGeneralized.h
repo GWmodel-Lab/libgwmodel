@@ -446,6 +446,7 @@ protected:
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;    //!< \~english Type of criterion for bandwidth optimization \~chinese 带宽优选指标类型
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GWRGeneralized::bandwidthSizeGGWRCriterionCVSerial;   //!< \~english Calculator to get criterion for given bandwidth value \~chinese 用于根据给定带宽值计算指标值的函数
     BandwidthSelector mBandwidthSizeSelector;   //!< \~english Bandwidth size selector \~chinese 带宽选择器
+    double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
 
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Type of parallelization \~chinese 并行方法类型
     int mOmpThreadNum = 8;  //!< \~english Number of threads used in multithreading \~chinese 多线程所使用的线程数

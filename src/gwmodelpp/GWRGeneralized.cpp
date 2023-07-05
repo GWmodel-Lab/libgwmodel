@@ -167,6 +167,7 @@ void GWRGeneralized::createPredictionDistanceParameter(const arma::mat &location
 mat GWRGeneralized::predict(const mat& locations)
 {
     uword nDp = mCoords.n_rows, nVars = mX.n_cols;
+    mHasHatMatrix = false;
     createPredictionDistanceParameter(locations);
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
 
@@ -596,7 +597,13 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionCVSerial(BandwidthWeight *bandw
 
     vec cvsquare = trans(cv) * cv;
     double res = sum(cvsquare);
-    return res;
+    if (mStatus == Status::Success && isfinite(res))
+    {
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - res)));
+        mBandwidthLastCriterion = res;
+        return res;
+    }
+    else return DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -646,9 +653,13 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionCVOmp(BandwidthWeight *bandwidt
 
     vec cvsquare = trans(cv) * cv;
     double res = sum(cvsquare);
-    //    this->mBwScore.insert(bw,res);
-
-    return res;
+    if (mStatus == Status::Success && isfinite(res))
+    {
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - res)));
+        mBandwidthLastCriterion = res;
+        return res;
+    }
+    else return DBL_MAX;
 }
 #endif
 
@@ -681,17 +692,15 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionAICSerial(BandwidthWeight *band
     }
     GWM_LOG_STOP_RETURN(mStatus, DBL_MAX);
 
-    double AICc;
-    if (S.is_finite())
+    if (mStatus == Status::Success && S.is_finite())
     {
         double trs = double(trS(0));
-        AICc = -2 * mLLik + 2 * trs + 2 * trs * (trs + 1) / (n - trs - 1);
+        double AICc = -2 * mLLik + 2 * trs + 2 * trs * (trs + 1) / (n - trs - 1);
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - AICc)));
+        mBandwidthLastCriterion = AICc;
+        return AICc;
     }
-    else
-    {
-        AICc = INFINITY;
-    }
-    return AICc;
+    else return DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -734,10 +743,13 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionAICOmp(BandwidthWeight *bandwid
     }
     GWM_LOG_STOP_RETURN(mStatus, DBL_MAX);
 
-    if (S.is_finite())
+    if (mStatus == Status::Success && S.is_finite())
     {
-        double trs = double(sum(trS));
-        return -2 * mLLik + 2 * trs + 2 * trs * (trs + 1) / (n - trs - 1);
+        double trs = double(trS(0));
+        double AICc = -2 * mLLik + 2 * trs + 2 * trs * (trs + 1) / (n - trs - 1);
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - AICc)));
+        mBandwidthLastCriterion = AICc;
+        return AICc;
     }
     else return DBL_MAX;
 }

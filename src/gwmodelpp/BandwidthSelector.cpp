@@ -20,7 +20,7 @@ BandwidthWeight* BandwidthSelector::optimize(IBandwidthSelectable* instance)
     double f1 = DBL_MAX, f2 = DBL_MAX;
     Status s1 = instance->getCriterion(w1, f1);
     Status s2 = instance->getCriterion(w2, f2);
-    if (!(s1 == Status::Success && s1 == Status::Success))
+    if (!(s1 == Status::Success && s2 == Status::Success))
     {
         return mBandwidth;
     }
