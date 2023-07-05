@@ -172,12 +172,13 @@ TEST_CASE("LcGWR: cancel")
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
-    auto parallel = GENERATE(
+    const initializer_list<ParallelType> parallel_list = {
         ParallelType::SerialOnly
 #ifdef ENABLE_OPENMP
         , ParallelType::OpenMP
-#endif // ENABLE_OPENMP        
-    );
+#endif // ENABLE_OPENMP     
+    };
+    auto parallel = GENERATE_REF(values(parallel_list));
 
     SECTION("fit")
     {

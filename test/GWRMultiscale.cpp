@@ -373,12 +373,14 @@ TEST_CASE("Multiscale GWR: cancel")
         make_pair("fitVar", 10)
     };
 
-    auto parallel = GENERATE(
+    const initializer_list<ParallelType> parallel_list = {
         ParallelType::SerialOnly
 #ifdef ENABLE_OPENMP
         , ParallelType::OpenMP
-#endif // ENABLE_OPENMP        
-    );
+#endif // ENABLE_OPENMP     
+    };
+    auto parallel = GENERATE_REF(values(parallel_list));
+    
     auto stage = GENERATE(as<std::string>{}, "bandwidthSizeCriterionVar", "bandwidthSizeCriterionAll", "fitAll", "fitVar");
     auto progress = GENERATE(0, 10);
     auto bandwidthCriterion = GENERATE(GWRMultiscale::BandwidthSelectionCriterionType::CV, GWRMultiscale::BandwidthSelectionCriterionType::AIC);

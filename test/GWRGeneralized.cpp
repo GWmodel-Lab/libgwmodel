@@ -185,12 +185,14 @@ const map<GWRGeneralized::Family, string> FamilyDict = {
 TEST_CASE("GGWR: cancel")
 {
     auto family = GENERATE(GWRGeneralized::Family::Poisson, GWRGeneralized::Family::Binomial);
-    auto parallel = GENERATE(
+    
+    const initializer_list<ParallelType> parallel_list = {
         ParallelType::SerialOnly
 #ifdef ENABLE_OPENMP
         , ParallelType::OpenMP
-#endif  // ENABLE_OPENMP
-    );
+#endif // ENABLE_OPENMP     
+    };
+    auto parallel = GENERATE_REF(values(parallel_list));
 
     SECTION("fit")
     {
