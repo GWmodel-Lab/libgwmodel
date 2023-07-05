@@ -234,6 +234,7 @@ TEST_CASE("Basic GWR: cancel")
             algorithm.setIsAutoselectIndepVars(true);
             algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::CV);
             algorithm.setParallelType(ParallelType::OpenMP);
+            algorithm.setOmpThreadNum(6);
             REQUIRE_NOTHROW(algorithm.fit());
             REQUIRE(algorithm.status() == Status::Terminated);
         }
@@ -254,6 +255,7 @@ TEST_CASE("Basic GWR: cancel")
             algorithm.setIsAutoselectIndepVars(true);
             algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
             algorithm.setParallelType(ParallelType::OpenMP);
+            algorithm.setOmpThreadNum(6);
             REQUIRE_NOTHROW(algorithm.fit());
             REQUIRE(algorithm.status() == Status::Terminated);
         }
@@ -274,6 +276,7 @@ TEST_CASE("Basic GWR: cancel")
             algorithm.setIsAutoselectIndepVars(true);
             algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
             algorithm.setParallelType(ParallelType::OpenMP);
+            algorithm.setOmpThreadNum(6);
             REQUIRE_NOTHROW(algorithm.fit());
             REQUIRE_NOTHROW(algorithm.predict(londonhp100_coord));
             REQUIRE(algorithm.status() == Status::Terminated);

@@ -240,6 +240,7 @@ double GWRScalable::optimize(const mat &Mx0, const mat &My0, double& b_tilde, do
             b_tilde = gsl_vector_get(minizer->x, 0);
             alpha = gsl_vector_get(minizer->x, 1);
             cv = minizer->fval;
+            GWM_LOG_PROGRESS_PERCENT(exp(- (size - 1e-6)));
         }
         while (status == GSL_CONTINUE && iter < mMaxIter);
         b_tilde = gsl_vector_get(minizer->x, 0);

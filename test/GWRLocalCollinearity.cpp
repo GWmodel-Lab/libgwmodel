@@ -9,6 +9,7 @@
 #include "gwmodelpp/spatialweight/BandwidthWeight.h"
 #include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
+#include "TerminateCheckTelegram.h"
 
 using namespace std;
 using namespace arma;
@@ -154,3 +155,50 @@ TEST_CASE("LocalCollinearityGWR: multithread basic flow")
     REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::MatchersWithinAbs(0.66436287, 1e-6));
 }
 #endif*/
+
+TEST_CASE("LcGWR: cancel")
+{
+    mat londonhp100_coord, londonhp100_data;
+    vector<string> londonhp100_fields;
+    if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
+    {
+        FAIL("Cannot load londonhp100 data.");
+    }
+
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
+
+    vec y = londonhp100_data.col(0);
+    mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
+
+    auto parallel = GENERATE(
+        ParallelType::SerialOnly
+#ifdef ENABLE_OPENMP
+        , ParallelType::OpenMP
+#endif // ENABLE_OPENMP        
+    );
+
+    SECTION("fit")
+    {
+        auto stage = GENERATE(as<std::string>{}, "bandwidthSize", "fit");
+        auto progress = GENERATE(0, 10);
+        INFO("Settings: " << "Parallel:" << parallel << ", Stage:" << stage << ", " << progress);
+
+        TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage, progress);
+        GWRLocalCollinearity algorithm;
+        algorithm.setTelegram(telegram);
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
+        algorithm.setSpatialWeight(spatial);
+        algorithm.setHasHatMatrix(true);
+        algorithm.setIsAutoselectBandwidth(true);
+        algorithm.setBandwidthSelectionCriterion(GWRLocalCollinearity::BandwidthSelectionCriterionType::CV);
+        algorithm.setParallelType(parallel);
+        algorithm.setOmpThreadNum(6);
+        REQUIRE_NOTHROW(algorithm.fit());
+        REQUIRE(algorithm.status() == Status::Terminated);
+    }
+    
+}

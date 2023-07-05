@@ -107,27 +107,28 @@ void GWRLocalCollinearity::setBandwidthSelectionCriterion(const BandwidthSelecti
 {
     //setBandwidthSelectionCriterionType
     mBandwidthSelectionCriterion = criterion;
-    unordered_map<ParallelType, BandwidthSelectionCriterionCalculator> mapper;
-    switch (mBandwidthSelectionCriterion)
+    unordered_map<BandwidthSelectionCriterionType, BandwidthSelectionCriterionCalculator> mapper;
+    switch (mParallelType)
     {
-    case BandwidthSelectionCriterionType::CV:
+    case ParallelType::SerialOnly:
         mapper = {
-            make_pair(ParallelType::SerialOnly, &GWRLocalCollinearity::bandwidthSizeCriterionCVSerial),
-#ifdef ENABLE_OPENMP
-            make_pair(ParallelType::OpenMP, &GWRLocalCollinearity::bandwidthSizeCriterionCVOmp)
-#endif
+            make_pair(BandwidthSelectionCriterionType::CV, &GWRLocalCollinearity::bandwidthSizeCriterionCVSerial),
         };
         break;
+#ifdef ENABLE_OPENMP
+    case ParallelType::OpenMP:
+        mapper = {
+            make_pair(BandwidthSelectionCriterionType::CV, &GWRLocalCollinearity::bandwidthSizeCriterionCVOmp)
+        };
+        break;
+#endif
     default:
         mapper = {
-            make_pair(ParallelType::SerialOnly, &GWRLocalCollinearity::bandwidthSizeCriterionCVSerial),
-#ifdef ENABLE_OPENMP
-            make_pair(ParallelType::OpenMP, &GWRLocalCollinearity::bandwidthSizeCriterionCVOmp)
-#endif
+            make_pair(BandwidthSelectionCriterionType::CV, &GWRLocalCollinearity::bandwidthSizeCriterionCVSerial),
         };
         break;
     }
-    mBandwidthSelectionCriterionFunction = mapper[mParallelType];
+    mBandwidthSelectionCriterionFunction = mapper[mBandwidthSelectionCriterion];
 }
 
 vec GWRLocalCollinearity::ridgelm(const vec& w,double lambda)
