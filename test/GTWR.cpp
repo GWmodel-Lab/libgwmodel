@@ -13,6 +13,7 @@
 #include "gwmodelpp/GTWR.h"
 
 #include "include/londonhp100.h"
+#include "TerminateCheckTelegram.h"
 
 using namespace std;
 using namespace arma;
@@ -182,4 +183,154 @@ TEST_CASE("GTWR: londonhp100")
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.68281765798389, 1e-8));
         REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.65541987797358, 1e-8));
     }
+}
+
+
+
+
+TEST_CASE("GTWR: cancel")
+{
+    mat londonhp100_coord, londonhp100_data;
+    vec londonhp100_times;
+    vector<string> londonhp100_fields;
+    if (!read_londonhp100temporal(londonhp100_coord, londonhp100_times, londonhp100_data, londonhp100_fields))
+    {
+        FAIL("Cannot load londonhp100temporal data.");
+    }
+
+    vec y = londonhp100_data.col(0);
+    mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
+
+    CRSDistance sdist(false);
+    OneDimDistance tdist;
+    CRSSTDistance distance(&sdist, &tdist, 1);
+    BandwidthWeight bandwidth(36,true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
+
+    vector<pair<string, size_t>> fit_stages = {
+        make_pair("bandwidthSize", 0),
+        make_pair("bandwidthSize", 10),
+        make_pair("fit", 0),
+        make_pair("fit", 10)
+    };
+
+    vector<pair<string, size_t>> predict_stages = {
+        make_pair("predict", 0),
+        make_pair("predict", 10)
+    };
+
+    SECTION("fit | CV Bandwidth | serial")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            GTWR algorithm;
+            algorithm.setTelegram(telegram);
+            algorithm.setCoords(londonhp100_coord,londonhp100_times);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeight(spatial);
+            algorithm.setIsAutoselectBandwidth(true);
+            algorithm.setBandwidthSelectionCriterion(GTWR::BandwidthSelectionCriterionType::CV);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+    SECTION("fit | AIC Bandwidth | serial")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            GTWR algorithm;
+            algorithm.setTelegram(telegram);
+            algorithm.setCoords(londonhp100_coord,londonhp100_times);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeight(spatial);
+            algorithm.setIsAutoselectBandwidth(true);
+            algorithm.setBandwidthSelectionCriterion(GTWR::BandwidthSelectionCriterionType::AIC);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+    SECTION("predict | serial")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            GTWR algorithm;
+            algorithm.setTelegram(telegram);
+            algorithm.setCoords(londonhp100_coord,londonhp100_times);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeight(spatial);
+            algorithm.setIsAutoselectBandwidth(true);
+            algorithm.setBandwidthSelectionCriterion(GTWR::BandwidthSelectionCriterionType::CV);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE_NOTHROW(algorithm.predict(londonhp100_coord));
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+#ifdef ENABLE_OPENMP
+    SECTION("fit | CV Bandwidth | openmp")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            GTWR algorithm;
+            algorithm.setTelegram(telegram);
+            algorithm.setCoords(londonhp100_coord,londonhp100_times);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeight(spatial);
+            algorithm.setIsAutoselectBandwidth(true);
+            algorithm.setBandwidthSelectionCriterion(GTWR::BandwidthSelectionCriterionType::CV);
+            algorithm.setParallelType(ParallelType::OpenMP);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+    SECTION("fit | AIC Bandwidth | openmp")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            GTWR algorithm;
+            algorithm.setTelegram(telegram);
+            algorithm.setCoords(londonhp100_coord,londonhp100_times);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeight(spatial);
+            algorithm.setIsAutoselectBandwidth(true);
+            algorithm.setBandwidthSelectionCriterion(GTWR::BandwidthSelectionCriterionType::AIC);
+            algorithm.setParallelType(ParallelType::OpenMP);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+    SECTION("predict | openmp")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            GTWR algorithm;
+            algorithm.setTelegram(telegram);
+            algorithm.setCoords(londonhp100_coord,londonhp100_times);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeight(spatial);
+            algorithm.setIsAutoselectBandwidth(true);
+            algorithm.setBandwidthSelectionCriterion(GTWR::BandwidthSelectionCriterionType::CV);
+            algorithm.setParallelType(ParallelType::OpenMP);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE_NOTHROW(algorithm.predict(londonhp100_coord));
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+#endif  // ENABLE_OPENMP
 }
