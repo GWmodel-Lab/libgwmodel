@@ -26,7 +26,7 @@ void TerminateCheckTelegram::progress(std::size_t current, std::size_t total, st
     (void)total;
     (void)file_name;
     std::unique_lock<std::mutex> locker(Lock);
-    if (fun_name.find(mBreakStage, 0) > 0)
+    if (fun_name.find(mBreakStage, 0) >= 0)
     {
         mCancelled = true;
     }
@@ -40,7 +40,7 @@ void TerminateCheckTelegram::progress(double percent, std::string fun_name, std:
     (void)percent;
     (void)file_name;
     std::unique_lock<std::mutex> locker(Lock);
-    if (fun_name.find(mBreakStage, 0) > 0)
+    if (fun_name.find(mBreakStage, 0) >= 0)
     {
         mCancelled = true;
     }
