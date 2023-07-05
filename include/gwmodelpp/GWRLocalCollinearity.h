@@ -273,6 +273,7 @@ protected:
     BandwidthCriterionList mBandwidthSelectionCriterionList;
     BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::CV;
     BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &GWRLocalCollinearity::bandwidthSizeCriterionCVSerial;
+    double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
 
 
     /**
