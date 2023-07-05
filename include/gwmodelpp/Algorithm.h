@@ -113,6 +113,18 @@ public:
     }
 
     /**
+     * @brief Manually send a debug message via telegram.
+     * 
+     * @param message Telegram message.
+     * @param function Caller's name.
+     * @param file Name of the file where caller defined.
+     */
+    void debug(std::string message, std::string function, std::string file)
+    { 
+        mTelegram->print(message, ITelegram::LogLevel::LOG_DEBUG, function, file);
+    }
+
+    /**
      * @brief Get the status of this algorithm.
      * 
      * @return const Status of this algorithm.

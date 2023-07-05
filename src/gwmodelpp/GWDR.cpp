@@ -32,6 +32,7 @@ RegressionDiagnostic GWDR::CalcDiagnostic(const mat& x, const vec& y, const mat&
 mat GWDR::fit()
 {
     uword nDims = mCoords.n_cols, nDp = mCoords.n_rows, nVars = mX.n_cols;
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     
     // Set coordinates matrices.
     for (size_t m = 0; m < nDims; m++)
@@ -40,7 +41,6 @@ mat GWDR::fit()
     }
 
     // Select Independent Variable
-    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     if (mEnableIndepVarSelect)
     {
         vector<size_t> indep_vars;
@@ -60,8 +60,8 @@ mat GWDR::fit()
             mIndepVarCriterionList = selector.indepVarsCriterion();
         }
     }
-
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
     if (mEnableBandwidthOptimize)
     {
         for (auto&& sw : mSpatialWeights)
@@ -82,16 +82,18 @@ mat GWDR::fit()
         }
         GWDRBandwidthOptimizer optimizer(bws);
         int status = optimizer.optimize(this, mCoords.n_rows, mBandwidthOptimizeMaxIter, mBandwidthOptimizeEps, mBandwidthOptimizeStep);
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+        
         if (status)
         {
-            throw runtime_error("[GWDR::run] Bandwidth optimization invoke failed.");
+            throw runtime_error("[GWDR::fit] Bandwidth optimization invoke failed.");
         }
     }
-
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
     mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
-
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
     mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
     double trS = mSHat(0), trStS = mSHat(1);
     double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
@@ -783,30 +785,32 @@ const int GWDRBandwidthOptimizer::optimize(GWDR* instance, uword featureCount, s
         do
         {
             iter++;
-            if (instance->status() != Status::Success)
-                break;
             status = gsl_multimin_fminimizer_iterate(minimizer);
-            if (status)
+            if (status && instance->status() != Status::Success)
                 break;
             size = gsl_multimin_fminimizer_size(minimizer);
             status = gsl_multimin_test_size(size, eps);
             #ifdef _DEBUG
+            stringstream sDebug;
             for (size_t m = 0; m < nDim; m++)
             {
-                cout << gsl_vector_get(minimizer->x, m) << ",";
+                sDebug << gsl_vector_get(minimizer->x, m) << ",";
             }
-            cout << minimizer->fval << ",";
-            cout << size << "\n";
+            sDebug << minimizer->fval << ",";
+            sDebug << size;
+            instance->debug(sDebug.str(), __FUNCTION__, __FILE__);
             #endif
         } 
         while (status == GSL_CONTINUE && iter < maxIter);
         #ifdef _DEBUG
+        stringstream sDebug;
         for (size_t m = 0; m < nDim; m++)
         {
-            cout << gsl_vector_get(minimizer->x, m) << ",";
+            sDebug << gsl_vector_get(minimizer->x, m) << ",";
         }
-        cout << minimizer->fval << ",";
-        cout << size << "\n";
+        sDebug << minimizer->fval << ",";
+        sDebug << size;
+        instance->debug(sDebug.str(), __FUNCTION__, __FILE__);
         #endif
         for (size_t m = 0; m < nDim; m++)
         {

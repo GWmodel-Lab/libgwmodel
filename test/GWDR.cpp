@@ -9,10 +9,29 @@
 #include "gwmodelpp/spatialweight/BandwidthWeight.h"
 #include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
+#include "TerminateCheckTelegram.h"
 
 using namespace std;
 using namespace arma;
 using namespace gwm;
+
+class GWDRTerminateCheckTelegram : public TerminateCheckTelegram
+{
+public:
+
+    GWDRTerminateCheckTelegram(std::string breakStage, std::size_t breakProgress) : TerminateCheckTelegram(breakStage, breakProgress) {}
+
+    void print(std::string message, LogLevel level, std::string fun_name, std::string file_name) override
+    {
+        if (message != last)
+        {
+            cout << size_t(level) << " " << fun_name << " : " << message << "\n";
+            last = message;
+        }
+    }
+
+    std::string last;
+};
 
 TEST_CASE("GWDR: basic flow")
 {
@@ -274,3 +293,172 @@ TEST_CASE("GWDR: basic flow (multithread)")
 //     // REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(2550816, 1e-12));
 // }
 // #endif
+
+
+TEST_CASE("GWDR: cancel")
+{
+    mat londonhp100_coord, londonhp100_data;
+    vector<string> londonhp100_fields;
+    if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
+    {
+        FAIL("Cannot load londonhp100 data.");
+    }
+
+    uword nDim = londonhp100_coord.n_cols;
+    vector<SpatialWeight> spatials;
+    for (size_t i = 0; i < nDim; i++)
+    {
+        OneDimDistance distance;
+        BandwidthWeight bandwidth(0.618 * londonhp100_coord.n_rows, true, BandwidthWeight::Gaussian);
+        spatials.push_back(SpatialWeight(&bandwidth, &distance));
+    }
+
+    vec y = londonhp100_data.col(0);
+    mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
+
+    vector<pair<string, size_t>> fit_stages = {
+        // make_pair("indepVar", 0),
+        // make_pair("indepVar", 10),
+        make_pair("bandwidthCriterion", 0),
+        make_pair("fit", 0),
+        make_pair("fit", 10)
+    };
+
+    vector<pair<string, size_t>> predict_stages = {
+        make_pair("predict", 0),
+        make_pair("predict", 10)
+    };
+
+    SECTION("fit | CV Bandwidth | serial")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            cout << "Stage: " << stage.first << " (" << stage.second << ")\n";
+            GWDRTerminateCheckTelegram *telegram = new GWDRTerminateCheckTelegram(stage.first, stage.second);
+            GWDR algorithm;
+            algorithm.setTelegram(telegram);
+            algorithm.setCoords(londonhp100_coord);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeights(spatials);
+            algorithm.setEnableBandwidthOptimize(true);
+            algorithm.setEnableIndepVarSelect(true);
+            algorithm.setBandwidthCriterionType(GWDR::CV);
+            algorithm.setHasHatMatrix(true);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+    SECTION("fit | AIC Bandwidth | serial")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            cout << "Stage: " << stage.first << " (" << stage.second << ")\n";
+            GWDRTerminateCheckTelegram *telegram = new GWDRTerminateCheckTelegram(stage.first, stage.second);
+            GWDR algorithm;
+            algorithm.setTelegram(telegram);
+            algorithm.setCoords(londonhp100_coord);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeights(spatials);
+            algorithm.setEnableBandwidthOptimize(true);
+            algorithm.setEnableIndepVarSelect(true);
+            algorithm.setBandwidthCriterionType(GWDR::AIC);
+            algorithm.setHasHatMatrix(true);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+    SECTION("predict | serial")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            GWDRTerminateCheckTelegram *telegram = new GWDRTerminateCheckTelegram(stage.first, stage.second);
+            GWDR algorithm;
+            algorithm.setTelegram(telegram);
+            algorithm.setCoords(londonhp100_coord);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeights(spatials);
+            algorithm.setEnableBandwidthOptimize(true);
+            algorithm.setEnableIndepVarSelect(true);
+            algorithm.setBandwidthCriterionType(GWDR::AIC);
+            algorithm.setHasHatMatrix(true);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE_NOTHROW(algorithm.predict(londonhp100_coord));
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+#ifdef ENABLE_OPENMP
+    SECTION("fit | CV Bandwidth | openmp")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            cout << "Stage: " << stage.first << " (" << stage.second << ")\n";
+            GWDRTerminateCheckTelegram *telegram = new GWDRTerminateCheckTelegram(stage.first, stage.second);
+            GWDR algorithm;
+            algorithm.setTelegram(telegram);
+            algorithm.setCoords(londonhp100_coord);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeights(spatials);
+            algorithm.setEnableBandwidthOptimize(true);
+            algorithm.setEnableIndepVarSelect(true);
+            algorithm.setBandwidthCriterionType(GWDR::CV);
+            algorithm.setHasHatMatrix(true);
+            algorithm.setParallelType(ParallelType::OpenMP);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+    SECTION("fit | AIC Bandwidth | openmp")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            cout << "Stage: " << stage.first << " (" << stage.second << ")\n";
+            GWDRTerminateCheckTelegram *telegram = new GWDRTerminateCheckTelegram(stage.first, stage.second);
+            GWDR algorithm;
+            algorithm.setTelegram(telegram);
+            algorithm.setCoords(londonhp100_coord);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeights(spatials);
+            algorithm.setEnableBandwidthOptimize(true);
+            algorithm.setEnableIndepVarSelect(true);
+            algorithm.setBandwidthCriterionType(GWDR::AIC);
+            algorithm.setHasHatMatrix(true);
+            algorithm.setParallelType(ParallelType::OpenMP);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+    SECTION("predict | openmp")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            GWDRTerminateCheckTelegram *telegram = new GWDRTerminateCheckTelegram(stage.first, stage.second);
+            GWDR algorithm;
+            algorithm.setTelegram(telegram);
+            algorithm.setCoords(londonhp100_coord);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeights(spatials);
+            algorithm.setEnableBandwidthOptimize(true);
+            algorithm.setEnableIndepVarSelect(true);
+            algorithm.setBandwidthCriterionType(GWDR::CV);
+            algorithm.setHasHatMatrix(true);
+            algorithm.setParallelType(ParallelType::OpenMP);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE_NOTHROW(algorithm.predict(londonhp100_coord));
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+#endif  // ENABLE_OPENMP
+
+}
+
