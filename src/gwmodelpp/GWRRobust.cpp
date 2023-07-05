@@ -200,7 +200,7 @@ mat GWRRobust::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
                 success = false;
             }
         }
-        GWM_LOG_PROGRESS(i + 1, nRp);
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     if (!success)
     {

@@ -459,7 +459,7 @@ mat GWRLocalCollinearity::fitOmp(const mat& x, const vec& y)
         shat_all(1, thread) += sum(hatrow % hatrow);
         this->mTrS += hatrow(i);
         this->mTrStS += sum(hatrow % hatrow);
-        GWM_LOG_PROGRESS(i + 1, nRp);
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     vec shat = sum(shat_all,1);
     this->mTrS = sum(shat.row(0));
