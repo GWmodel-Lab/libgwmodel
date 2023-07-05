@@ -241,6 +241,7 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
         criterion = (mCriterionType == BackFittingCriterionType::CVR) ?
                     abs(RSS1 - RSS0) :
                     sqrt(abs(RSS1 - RSS0) / RSS1);
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(criterion - mCriterionThreshold)));
         RSS0 = RSS1;
     }
     GWM_LOG_STOP_RETURN(mStatus, betas);

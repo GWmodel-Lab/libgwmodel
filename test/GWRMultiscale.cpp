@@ -350,8 +350,6 @@ TEST_CASE("Multiscale GWR: cancel")
     vector<SpatialWeight> spatials;
     vector<bool> preditorCentered;
     vector<GWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
-    vector<GWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproachCV;
-    vector<GWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproachAIC;
     for (size_t i = 0; i < nVar; i++)
     {
         CRSDistance distance;
@@ -359,8 +357,6 @@ TEST_CASE("Multiscale GWR: cancel")
         spatials.push_back(SpatialWeight(&bandwidth, &distance));
         preditorCentered.push_back(i != 0);
         bandwidthInitialize.push_back(GWRMultiscale::BandwidthInitilizeType::Null);
-        bandwidthSelectionApproachCV.push_back(GWRMultiscale::BandwidthSelectionCriterionType::CV);
-        bandwidthSelectionApproachAIC.push_back(GWRMultiscale::BandwidthSelectionCriterionType::AIC);
     }
 
     vec y = londonhp100_data.col(0);
@@ -377,96 +373,41 @@ TEST_CASE("Multiscale GWR: cancel")
         make_pair("fitVar", 10)
     };
 
-    SECTION("fit | CV Bandwidth | serial")
-    {
-        for (auto &&stage : fit_stages)
-        {
-            cout << "Stage: " << stage.first << " (" << stage.second << ")\n";
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
-            GWRMultiscale algorithm;
-            algorithm.setTelegram(telegram);
-            algorithm.setCoords(londonhp100_coord);
-            algorithm.setDependentVariable(y);
-            algorithm.setIndependentVariables(x);
-            algorithm.setSpatialWeights(spatials);
-            algorithm.setHasHatMatrix(true);
-            algorithm.setPreditorCentered(preditorCentered);
-            algorithm.setBandwidthInitilize(bandwidthInitialize);
-            algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproachCV);
-            algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
-            REQUIRE_NOTHROW(algorithm.fit());
-            REQUIRE(algorithm.status() == Status::Terminated);
-        }
-    }
-
-    SECTION("fit | AIC Bandwidth | serial")
-    {
-        for (auto &&stage : fit_stages)
-        {
-            cout << "Stage: " << stage.first << " (" << stage.second << ")\n";
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
-            GWRMultiscale algorithm;
-            algorithm.setTelegram(telegram);
-            algorithm.setCoords(londonhp100_coord);
-            algorithm.setDependentVariable(y);
-            algorithm.setIndependentVariables(x);
-            algorithm.setSpatialWeights(spatials);
-            algorithm.setHasHatMatrix(true);
-            algorithm.setPreditorCentered(preditorCentered);
-            algorithm.setBandwidthInitilize(bandwidthInitialize);
-            algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproachAIC);
-            algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
-            REQUIRE_NOTHROW(algorithm.fit());
-            REQUIRE(algorithm.status() == Status::Terminated);
-        }
-    }
-
+    auto parallel = GENERATE(
+        ParallelType::SerialOnly
 #ifdef ENABLE_OPENMP
-    SECTION("fit | CV Bandwidth | openmp")
-    {
-        for (auto &&stage : fit_stages)
-        {
-            cout << "Stage: " << stage.first << " (" << stage.second << ")\n";
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
-            GWRMultiscale algorithm;
-            algorithm.setTelegram(telegram);
-            algorithm.setCoords(londonhp100_coord);
-            algorithm.setDependentVariable(y);
-            algorithm.setIndependentVariables(x);
-            algorithm.setSpatialWeights(spatials);
-            algorithm.setHasHatMatrix(true);
-            algorithm.setPreditorCentered(preditorCentered);
-            algorithm.setBandwidthInitilize(bandwidthInitialize);
-            algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproachCV);
-            algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
-            algorithm.setParallelType(ParallelType::OpenMP);
-            REQUIRE_NOTHROW(algorithm.fit());
-            REQUIRE(algorithm.status() == Status::Terminated);
-        }
-    }
+        , ParallelType::OpenMP
+#endif // ENABLE_OPENMP        
+    );
+    auto stage = GENERATE(as<std::string>{}, "bandwidthSizeCriterionVar", "bandwidthSizeCriterionAll", "fitAll", "fitVar");
+    auto progress = GENERATE(0, 10);
+    auto bandwidthCriterion = GENERATE(GWRMultiscale::BandwidthSelectionCriterionType::CV, GWRMultiscale::BandwidthSelectionCriterionType::AIC);
 
-    SECTION("fit | AIC Bandwidth | openmp")
+    SECTION("fit")
     {
-        for (auto &&stage : fit_stages)
+        INFO("Stage: " << stage << " (" << progress << ")");
+        vector<GWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
+        for (size_t i = 0; i < nVar; i++)
         {
-            cout << "Stage: " << stage.first << " (" << stage.second << ")\n";
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
-            GWRMultiscale algorithm;
-            algorithm.setTelegram(telegram);
-            algorithm.setCoords(londonhp100_coord);
-            algorithm.setDependentVariable(y);
-            algorithm.setIndependentVariables(x);
-            algorithm.setSpatialWeights(spatials);
-            algorithm.setHasHatMatrix(true);
-            algorithm.setPreditorCentered(preditorCentered);
-            algorithm.setBandwidthInitilize(bandwidthInitialize);
-            algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproachCV);
-            algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
-            algorithm.setParallelType(ParallelType::OpenMP);
-            REQUIRE_NOTHROW(algorithm.fit());
-            REQUIRE(algorithm.status() == Status::Terminated);
+            bandwidthSelectionApproach.push_back(bandwidthCriterion);
         }
+
+        TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage, progress);
+        GWRMultiscale algorithm;
+        algorithm.setTelegram(telegram);
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
+        algorithm.setSpatialWeights(spatials);
+        algorithm.setHasHatMatrix(true);
+        algorithm.setPreditorCentered(preditorCentered);
+        algorithm.setBandwidthInitilize(bandwidthInitialize);
+        algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
+        algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
+        algorithm.setParallelType(parallel);
+        algorithm.setOmpThreadNum(6);
+        REQUIRE_NOTHROW(algorithm.fit());
+        REQUIRE(algorithm.status() == Status::Terminated);
     }
-#endif  // ENABLE_OPENMP
 
 }
