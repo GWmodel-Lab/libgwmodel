@@ -19,7 +19,7 @@ public:
         {
             mCancelled = true;
         }
-        INFO("Progress" << fun_name << ": " << current << "/" << total << "\n");
+        // INFO("Progress" << fun_name << ": " << current << "/" << total << "\n");
     }
 
     void progress(double percent, std::string fun_name, std::string file_name) override
@@ -30,7 +30,7 @@ public:
         {
             mCancelled = true;
         }
-        INFO("Progress" << fun_name << ": " << percent << "%\n");
+        // INFO("Progress" << fun_name << ": " << percent << "%\n");
     }
 
 private:
