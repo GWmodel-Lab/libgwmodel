@@ -9,6 +9,7 @@
 #include "gwmodelpp/spatialweight/BandwidthWeight.h"
 #include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
+#include "TerminateCheckTelegram.h"
 
 using namespace std;
 using namespace arma;
@@ -75,4 +76,35 @@ TEST_CASE("GWPCA: basic flow")
     loadings_pc2.each_col([&loadings_pc2_sign](colvec& c) { c %= loadings_pc2_sign; });
     mat loadings_pc2_q = quantile(loadings_pc2, p, 0);
     REQUIRE(approx_equal(loadings_pc2_q, loadings_pc2_q0, "absdiff", 1e-8));
+}
+
+
+TEST_CASE("GWSS: cancel")
+{
+    mat londonhp100_coord, londonhp100_data;
+    vector<string> londonhp100_fields;
+    if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
+    {
+        FAIL("Cannot load londonhp100 data.");
+    }
+
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
+
+    mat x = londonhp100_data.cols(1, 3);
+
+    string stage = "solve";
+    auto progress = GENERATE(0, 10);
+
+    TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage, progress);
+    GWPCA algorithm;
+    algorithm.setTelegram(telegram);
+    algorithm.setCoords(londonhp100_coord);
+    algorithm.setVariables(x);
+    algorithm.setSpatialWeight(spatial);
+    algorithm.setKeepComponents(2);
+    REQUIRE_NOTHROW(algorithm.run());
+    REQUIRE(algorithm.status() == Status::Terminated);
+    
 }
