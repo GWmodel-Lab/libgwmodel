@@ -169,7 +169,7 @@ mat GWRRobust::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
     bool success = true;
     std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; (uword)i < nDp; i++)
+    for (int i = 0; i < (int)nDp; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (success)

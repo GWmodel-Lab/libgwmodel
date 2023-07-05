@@ -518,6 +518,7 @@ vec GWRMultiscale::fitVarOmp(const vec &x, const vec &y, const uword var, mat &S
                 except = e;
                 success = false;
             }
+            GWM_LOG_PROGRESS(i + 1, nDp);
         }
     }
     else
@@ -541,6 +542,7 @@ vec GWRMultiscale::fitVarOmp(const vec &x, const vec &y, const uword var, mat &S
                 except = e;
                 success = false;
             }
+            GWM_LOG_PROGRESS(i + 1, nDp);
         }
     }
     if (!success)
