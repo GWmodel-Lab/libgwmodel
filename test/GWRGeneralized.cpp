@@ -181,12 +181,6 @@ const map<GWRGeneralized::Family, string> FamilyDict = {
     make_pair(GWRGeneralized::Family::Poisson, "Poisson")
 };
 
-const map<ParallelType, string> ParallelTypeDict = {
-    make_pair(ParallelType::SerialOnly, "SerialOnly"),
-    make_pair(ParallelType::OpenMP, "OpenMP"),
-    make_pair(ParallelType::CUDA, "CUDA")
-};
-
 
 TEST_CASE("GGWR: cancel")
 {

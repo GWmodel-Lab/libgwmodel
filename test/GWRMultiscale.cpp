@@ -385,7 +385,7 @@ TEST_CASE("Multiscale GWR: cancel")
 
     SECTION("fit")
     {
-        INFO("Stage: " << stage << " (" << progress << ")");
+        INFO("Parallel:" << ParallelTypeDict.at(parallel) << ", BandwidthCriterion:" << bandwidthCriterion << ", Stage:" << stage << "(" << progress << ")");
         vector<GWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
         for (size_t i = 0; i < nVar; i++)
         {

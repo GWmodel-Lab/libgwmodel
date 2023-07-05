@@ -38,3 +38,9 @@ private:
     std::string mBreakStage = "";
     std::size_t mBreakProgress = 0;
 };
+
+const std::map<ParallelType, std::string> ParallelTypeDict = {
+    std::make_pair(ParallelType::SerialOnly, "SerialOnly"),
+    std::make_pair(ParallelType::OpenMP, "OpenMP"),
+    std::make_pair(ParallelType::CUDA, "CUDA")
+};
