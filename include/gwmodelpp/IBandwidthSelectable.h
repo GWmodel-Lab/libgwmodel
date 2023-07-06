@@ -19,17 +19,17 @@ namespace gwm
  */
 struct IBandwidthSelectable
 {
-    static std::stringstream infoBandwidthCriterion()
+    static std::stringstream infoBandwidthCriterion(const BandwidthWeight* weight)
     {
-        return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << "type" << "," << "size" << "," << "criterion";
+        return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << (weight->adaptive() ? "adaptive" : "fixed") << "," << "criterion";
     }
 
     static std::stringstream infoBandwidthCriterion(const BandwidthWeight* weight, const double value)
     {
         if (weight->adaptive())
-            return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << "adaptive" << "," << int(weight->bandwidth()) << "," << value;
+            return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << int(weight->bandwidth()) << "," << value;
         else 
-            return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << "fixed" << "," << weight->bandwidth() << "," << value;
+            return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << weight->bandwidth() << "," << value;
     }
 
     /**

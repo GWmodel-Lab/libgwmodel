@@ -9,6 +9,7 @@
 #include "IRegressionAnalysis.h"
 #include "VariableForwardSelector.h"
 #include "IParallelizable.h"
+#include "IBandwidthSelectable.h"
 
 namespace gwm
 {
@@ -544,6 +545,25 @@ public:
      * @return double \~english Criterion value \~chinese 指标值
      */
     static double criterion_function(const gsl_vector* bws, void* params);
+
+    static std::stringstream infoBandwidthCriterion(const std::vector<BandwidthWeight*>& weights)
+    {
+        std::size_t number = 1;
+        std::string types = std::accumulate(weights.cbegin(), weights.cend(), std::string(), [&number](const std::string& ss, const BandwidthWeight* bw)
+        {
+            return ss + std::to_string(number++) + ":" + (bw->adaptive() ? "adaptive" : "fixed") + ",";
+        });
+        return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << types << "criterion";
+    }
+
+    static std::stringstream infoBandwidthCriterion(const std::vector<BandwidthWeight*>& weights, const double criterion)
+    {
+        std::string infoWeight = std::accumulate(weights.cbegin(), weights.cend(), std::string(), [](const std::string& ss, const BandwidthWeight* bw)
+        {
+            return ss + std::to_string(bw->bandwidth()) + ",";
+        });
+        return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << infoWeight << "," << criterion;
+    }
 
 public:
 

@@ -24,7 +24,7 @@ struct IVarialbeSelectable
     {
         std::string formula = std::accumulate(variables.cbegin(), variables.cend(), std::string(""), [](std::string x0, std::size_t x)
         {
-            return x0 + "+" + to_string(x);
+            return x0 + "+" + std::to_string(x);
         });
         return std::stringstream() << "#variable-criterion " << formula << "," << criterion;
     }
