@@ -65,6 +65,10 @@ namespace gwm
 
 #define GWM_LOG_PROGRESS_PERCENT(PERCENT) { this->mTelegram->progress((PERCENT), (__FUNCTION__), (__FILE__)); };
 
+#define GWM_LOG_TAG_STAGE "#stage "
+
+#define GWM_LOG_STAGE(STAGE) { GWM_LOG_INFO((std::stringstream() << (GWM_LOG_TAG_STAGE) << (STAGE)).str()); }
+
 /**
  * \~english
  * @brief Abstract algorithm class.

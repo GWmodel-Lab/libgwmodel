@@ -7,6 +7,8 @@
 namespace gwm
 {
 
+#define GWM_LOG_TAG_BANDWIDTH_CIRTERION "#bandwidth-criterion "
+
 /**
  * \~english
  * @brief Interface for bandwidth-selectable algorithm.
@@ -17,6 +19,19 @@ namespace gwm
  */
 struct IBandwidthSelectable
 {
+    static std::stringstream infoBandwidthCriterion()
+    {
+        return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << "type" << "," << "size" << "," << "criterion";
+    }
+
+    static std::stringstream infoBandwidthCriterion(const BandwidthWeight* weight, const double value)
+    {
+        if (weight->adaptive())
+            return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << "adaptive" << "," << int(weight->bandwidth()) << "," << value;
+        else 
+            return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << "fixed" << "," << weight->bandwidth() << "," << value;
+    }
+
     /**
      * \~english
      * @brief Get criterion value with given bandwidth for bandwidth optimization.

@@ -7,12 +7,27 @@
 namespace gwm
 {
 
+#define GWM_LOG_TAG_VARIABLE_CRITERION "#variable-criterion "
+
 /**
  * @brief \~english Interface for variable selectable algorithms. \~chinese 可变量优选接口。
  * 
  */
 struct IVarialbeSelectable
 {
+    static std::stringstream infoVariableCriterion()
+    {
+        return std::stringstream() << GWM_LOG_TAG_VARIABLE_CRITERION << "variables" << "," << "criterion";
+    }
+
+    static std::stringstream infoVariableCriterion(const std::vector<std::size_t>& variables, const double criterion)
+    {
+        std::string formula = std::accumulate(variables.cbegin(), variables.cend(), std::string(""), [](std::string x0, std::size_t x)
+        {
+            return x0 + "+" + to_string(x);
+        });
+        return std::stringstream() << "#variable-criterion " << formula << "," << criterion;
+    }
     
     /**
      * \~english
