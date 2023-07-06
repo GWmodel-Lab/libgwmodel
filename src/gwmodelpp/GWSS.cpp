@@ -62,8 +62,11 @@ bool GWSS::isValid()
 
 void GWSS::run()
 {
-    createDistanceParameter();
+    GWM_LOG_STAGE("Initializing");
     uword nRp = mCoords.n_rows, nVar = mX.n_cols;
+    createDistanceParameter();
+    GWM_LOG_STOP_RETURN(mStatus, void());
+
     //gwssFunc是true则为GWAverage
     switch (mGWSSMode)
     {
@@ -91,6 +94,8 @@ void GWSS::run()
         }
         break;
     }
+    
+    GWM_LOG_STAGE("Calculating");
     (this->*mSummaryFunction)();
 }
 

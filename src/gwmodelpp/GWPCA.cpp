@@ -5,9 +5,11 @@ using namespace gwm;
 
 void GWPCA::run()
 {
+    GWM_LOG_STAGE("Initialization");
     createDistanceParameter();
     GWM_LOG_STOP_RETURN(mStatus, void());
 
+    GWM_LOG_STAGE("Solving");
     mLocalPV = pca(mX, mLoadings, mSDev);
     GWM_LOG_STOP_RETURN(mStatus, void());
     

@@ -28,7 +28,7 @@ RegressionDiagnostic GWRBasic::CalcDiagnostic(const mat& x, const vec& y, const 
 
 mat GWRBasic::fit()
 {
-    GWM_LOG_STAGE("Initialization");
+    GWM_LOG_STAGE("Initializing");
     uword nDp = mCoords.n_rows, nVars = mX.n_cols;
     createDistanceParameter();
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
