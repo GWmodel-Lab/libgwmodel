@@ -2,7 +2,9 @@
 #define IVARIALBESELECTABLE_H
 
 #include <vector>
+#include <sstream>
 #include "Status.h"
+#include "Logger.h"
 
 namespace gwm
 {
@@ -23,12 +25,11 @@ struct IVarialbeSelectable
     static std::stringstream infoVariableCriterion(const std::vector<std::size_t>& variables, const double criterion)
     {
         std::vector<std::string> var_labels(variables.size());
-        std::transform(variables.cbegin(), variables.cend(), var_labels.cbegin(), [](const std::size_t& var)
+        std::transform(variables.cbegin(), variables.cend(), var_labels.begin(), [](const std::size_t& var)
         {
-            return to_string(var);
+            return std::to_string(var);
         });
-        std::string formula = strjoin("+", var_labels);
-        return std::stringstream() << "#variable-criterion " << formula << "," << criterion;
+        return std::stringstream() << "#variable-criterion " << strjoin("+", var_labels) << "," << criterion;
     }
     
     /**
