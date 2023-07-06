@@ -549,20 +549,22 @@ public:
     static std::stringstream infoBandwidthCriterion(const std::vector<BandwidthWeight*>& weights)
     {
         std::size_t number = 1;
-        std::string types = std::accumulate(weights.cbegin(), weights.cend(), std::string(), [&number](const std::string& ss, const BandwidthWeight* bw)
+        std::vector<std::string> labels(weights.size());
+        std::transform(weights.cbegin(), weights.cend(), labels.begin(), [&number](const BandwidthWeight* bw)
         {
-            return ss + std::to_string(number++) + ":" + (bw->adaptive() ? "adaptive" : "fixed") + ",";
+            return std::to_string(number++) + ":" + (bw->adaptive() ? "adaptive" : "fixed");
         });
-        return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << types << "criterion";
+        return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << strjoin(",", labels) << "," << "criterion";
     }
 
     static std::stringstream infoBandwidthCriterion(const std::vector<BandwidthWeight*>& weights, const double criterion)
     {
-        std::string infoWeight = std::accumulate(weights.cbegin(), weights.cend(), std::string(), [](const std::string& ss, const BandwidthWeight* bw)
+        std::vector<std::string> labels(weights.size());
+        std::transform(weights.cbegin(), weights.cend(), labels.begin(), [](const BandwidthWeight* bw)
         {
-            return ss + std::to_string(bw->bandwidth()) + ",";
+            return std::to_string(bw->bandwidth());
         });
-        return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << infoWeight << "," << criterion;
+        return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << strjoin(",", labels) << "," << criterion;
     }
 
 public:

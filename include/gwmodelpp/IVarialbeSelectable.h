@@ -22,10 +22,12 @@ struct IVarialbeSelectable
 
     static std::stringstream infoVariableCriterion(const std::vector<std::size_t>& variables, const double criterion)
     {
-        std::string formula = std::accumulate(variables.cbegin(), variables.cend(), std::string(""), [](std::string x0, std::size_t x)
+        std::vector<std::string> var_labels(variables.size());
+        std::transform(variables.cbegin(), variables.cend(), var_labels.cbegin(), [](const std::size_t& var)
         {
-            return x0 + "+" + std::to_string(x);
+            return to_string(var);
         });
+        std::string formula = strjoin("+", var_labels);
         return std::stringstream() << "#variable-criterion " << formula << "," << criterion;
     }
     
