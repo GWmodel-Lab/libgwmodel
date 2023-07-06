@@ -1,7 +1,7 @@
 #ifndef GWMLOGGER_H
 #define GWMLOGGER_H
 
-#include <functional>
+#include <vector>
 #include <string>
 #include <numeric>
 
@@ -10,8 +10,8 @@ namespace gwm
 
 inline std::string strjoin(const std::string& delm, const std::vector<std::string>& str_array)
 {
-    std::string ss = *str_array.begin();
-    for (auto it = str_array.begin() + 1; it != str_array.end(); it++)
+    std::string ss = *str_array.cbegin();
+    for (auto it = str_array.cbegin() + 1; it != str_array.cend(); it++)
         ss += (delm + *it);
     return ss;
 }
