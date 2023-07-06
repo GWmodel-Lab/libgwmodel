@@ -19,24 +19,26 @@ using namespace gwm;
 
 mat GWRGeneralized::fit()
 {
-    // 点位初始化
-    createDistanceParameter();
-
+    GWM_LOG_STAGE("Initializing");
     // 初始化
     // setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
     uword nVar = mX.n_cols;
     uword nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
+    // 点位初始化
+    createDistanceParameter();
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
-
 
     // 优选带宽
     if (mIsAutoselectBandwidth)
     {
+        GWM_LOG_STAGE("Bandwidth selection");
         // emit message(string("Automatically selecting bandwidth ..."));
         // emit tick(0, 0);
         BandwidthWeight *bw0 = mSpatialWeight.weight<BandwidthWeight>();
         double lower = bw0->adaptive() ? 20 : 0.0;
         double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
+        
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0).str());
         BandwidthSelector selector(bw0, lower, upper);
         BandwidthWeight *bw = selector.optimize(this);
         if (bw)
@@ -44,12 +46,11 @@ mat GWRGeneralized::fit()
             mSpatialWeight.setWeight(bw);
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
         }
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
     }
-    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
+    GWM_LOG_STAGE("Preparing");
     mBetas = mat(nVar, nRp, fill::zeros);
-    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
-
     if (mHasHatMatrix)
     {
         mBetasSE = mat(nVar, nDp, fill::zeros);
@@ -81,10 +82,14 @@ mat GWRGeneralized::fit()
     }
 
     //bool isAllCorrect = true;
+    GWM_LOG_STAGE("Calibrating GLM model");
     CalGLMModel(mX, mY);
+
+    GWM_LOG_STAGE("Model fitting");
     mBetas = (this->*mGGWRfitFunction)(mX, mY);
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
+    GWM_LOG_STAGE("Model Diagnostic");
     if (mHasHatMatrix)
     {
         if (mFamily == Family::Poisson)
