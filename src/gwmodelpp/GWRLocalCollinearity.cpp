@@ -38,6 +38,7 @@ GWRLocalCollinearity::~GWRLocalCollinearity()
 
 mat GWRLocalCollinearity::fit()
 {
+    GWM_LOG_STAGE("Initializing");
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     createDistanceParameter();
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
@@ -47,9 +48,12 @@ mat GWRLocalCollinearity::fit()
     //这里判断是否选带宽
     if(mIsAutoselectBandwidth)
     {
+        GWM_LOG_STAGE("Bandwidth selection");
         BandwidthWeight* bw0 = mSpatialWeight.weight<BandwidthWeight>();
         double lower = bw0->adaptive() ? 20 : 0.0;
         double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
+        
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0).str());
         BandwidthSelector selector(bw0, lower, upper);
         BandwidthWeight* bw = selector.optimize(this);
         if (bw)
@@ -57,17 +61,19 @@ mat GWRLocalCollinearity::fit()
             mSpatialWeight.setWeight(bw);
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
         }
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
     }
-    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     mat betas(nDp,mX.n_cols,fill::zeros);
     vec localcn(nDp,fill::zeros);
     vec locallambda(nDp,fill::zeros);
     vec hatrow(nDp,fill::zeros);
     
+    GWM_LOG_STAGE("Model fitting");
     mBetas = (this->*mFitFunction)(mX, mY);
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
+    GWM_LOG_STAGE("Model Diagnostic");
     vec mYHat = sum(mBetas % mX,1);
     vec mResidual = mY - mYHat;
     mDiagnostic.RSS = sum(mResidual % mResidual);
