@@ -3,6 +3,8 @@
 #include <omp.h>
 #endif
 #include <exception>
+#include <vector>
+#include <string>
 #include <spatialweight/CRSDistance.h>
 #include "BandwidthSelector.h"
 #include "VariableForwardSelector.h"
@@ -59,10 +61,10 @@ RegressionDiagnostic GWRMultiscale::CalcDiagnostic(const mat &x, const vec &y, c
 
 mat GWRMultiscale::fit()
 {
-    createDistanceParameter(mX.n_cols);
-    createInitialDistanceParameter();
-    
+    GWM_LOG_STAGE("Initializing");
     uword nDp = mX.n_rows, nVar = mX.n_cols;
+    createDistanceParameter(nVar);
+    createInitialDistanceParameter();
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     // ********************************
@@ -82,6 +84,7 @@ mat GWRMultiscale::fit()
     // ***********************
     // Intialize the bandwidth
     // ***********************
+    GWM_LOG_STAGE("Calculating initial bandwidths");
     mYi = mY;
     for (uword i = 0; i < nVar ; i++)
     {
@@ -93,6 +96,8 @@ mat GWRMultiscale::fit()
             mXi = mX.col(i);
             BandwidthWeight* bw0 = bandwidth(i);
             bool adaptive = bw0->adaptive();
+
+            GWM_LOG_INFO(string(GWM_LOG_TAG_MGWR_INITIAL_BW) + IVarialbeSelectable::infoVariableCriterion().str());
             BandwidthSelector selector;
             selector.setBandwidth(bw0);
             selector.setLower(adaptive ? mAdaptiveLower : 0.0);
@@ -102,18 +107,21 @@ mat GWRMultiscale::fit()
             {
                 mSpatialWeights[i].setWeight(bw);
             }
+            GWM_LOG_INFO((stringstream(GWM_LOG_TAG_MGWR_INITIAL_BW) << to_string(i) << "," << bw->bandwidth()).str());
         }
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
     }
-    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     // *****************************************************
     // Calculate the initial beta0 from the above bandwidths
     // *****************************************************
+    GWM_LOG_STAGE("Calculating initial beta0 from initial bandwidths");
     BandwidthWeight* bw0 = bandwidth(0);
     bool adaptive = bw0->adaptive();
     mBandwidthSizeCriterion = bandwidthSizeCriterionAll(mBandwidthSelectionApproach[0]);
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
     
+    GWM_LOG_STAGE("Calculating initial bandwidth");
     BandwidthSelector initBwSelector;
     initBwSelector.setBandwidth(bw0);
     double maxDist = mSpatialWeights[0].distance()->maxDistance();
@@ -135,10 +143,12 @@ mat GWRMultiscale::fit()
         mC = cube(nVar, nDp, nDp, fill::zeros);
     }
 
+    GWM_LOG_STAGE("Model fitting");
     mBetas = backfitting(mX, mY);
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     // Diagnostic
+    GWM_LOG_STAGE("Model Diagnostic");
     vec shat = { 
         mHasHatMatrix ? trace(mS0) : 0,
         mHasHatMatrix ? trace(mS0.t() * mS0) : 0
@@ -165,6 +175,7 @@ void GWRMultiscale::createInitialDistanceParameter()
 
 mat GWRMultiscale::backfitting(const mat &x, const vec &y)
 {
+    GWM_LOG_MGWR_BACKFITTING("Model fitting with inital bandwidth");
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas = (this->*mFitAll)(x, y);
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
@@ -184,6 +195,7 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
     // ***********************************************************
     // Select the optimum bandwidths for each independent variable
     // ***********************************************************
+    GWM_LOG_MGWR_BACKFITTING("Selecting the optimum bandwidths for each independent variable");
     uvec bwChangeNo(nVar, fill::zeros);
     vec resid = y - Fitted(x, betas);
     double RSS0 = sum(resid % resid), RSS1 = DBL_MAX;
@@ -191,6 +203,7 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
     for (size_t iteration = 1; iteration <= mMaxIteration && criterion > mCriterionThreshold; iteration++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
+        GWM_LOG_MGWR_BACKFITTING("#iteration " + to_string(iteration));
         for (uword i = 0; i < nVar  ; i++)
         {
             GWM_LOG_STOP_BREAK(mStatus);
@@ -198,6 +211,7 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
             vec yi = resid + fi;
             if (mBandwidthInitilize[i] != BandwidthInitilizeType::Specified)
             {
+                GWM_LOG_MGWR_BACKFITTING("#variable-bandwidth-selection " + to_string(i));
                 mBandwidthSizeCriterion = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
                 mBandwidthSelectionCurrentIndex = i;
                 mYi = yi;
@@ -211,9 +225,16 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
                 selector.setUpper(adaptive ? mCoords.n_rows : maxDist);
                 BandwidthWeight* bwi = selector.optimize(this);
                 double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
+                vector<string> vbs_args {
+                    to_string(i),
+                    to_string(bwi0s),
+                    to_string(bwi1s),
+                    to_string(abs(bwi1s - bwi0s))
+                };
                 if (abs(bwi1s - bwi0s) > mBandwidthSelectThreshold[i])
                 {
                     bwChangeNo(i) = 0;
+                    vbs_args.push_back("false");
                 }
                 else
                 {
@@ -221,12 +242,19 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
                     if (bwChangeNo(i) >= mBandwidthSelectRetryTimes)
                     {
                         mBandwidthInitilize[i] = BandwidthInitilizeType::Specified;
+                        vbs_args.push_back("true");
+                    }
+                    else
+                    {
+                        vbs_args.push_back(to_string(bwChangeNo(i)));
+                        vbs_args.push_back(to_string(mBandwidthSelectRetryTimes - bwChangeNo(i)));
                     }
                 }
                 mSpatialWeights[i].setWeight(bwi);
+                GWM_LOG_MGWR_BACKFITTING("#variable-bandwidth-selection " + strjoin(",", vbs_args));
             }
-
             GWM_LOG_STOP_BREAK(mStatus);
+
             mat S;
             betas.col(i) = (this->*mFitVar)(x.col(i), yi, i, S);
             if (mHasHatMatrix)
@@ -241,11 +269,13 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
         criterion = (mCriterionType == BackFittingCriterionType::CVR) ?
                     abs(RSS1 - RSS0) :
                     sqrt(abs(RSS1 - RSS0) / RSS1);
+        GWM_LOG_MGWR_BACKFITTING("#backfitting-criterion " + to_string(criterion));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(criterion - mCriterionThreshold)));
         RSS0 = RSS1;
     }
     GWM_LOG_STOP_RETURN(mStatus, betas);
 
+    GWM_LOG_MGWR_BACKFITTING("Finished");
     mRSS0 = RSS0;
     return betas;
 }
@@ -582,6 +612,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVSerial(BandwidthWeight *bandwid
     }
     if (mStatus == Status::Success && isfinite(cv))
     {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv).str());
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -626,6 +657,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVOmp(BandwidthWeight *bandwidthW
     if (mStatus == Status::Success && flag)
     {
         double cv = sum(cv_all);
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv).str());
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -665,6 +697,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllAICSerial(BandwidthWeight *bandwi
     double value = GWRMultiscale::AICc(mX, mY, betas.t(), shat);
     if (mStatus == Status::Success && isfinite(value))
     {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value).str());
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
         mBandwidthLastCriterion = value;
         return value;
@@ -713,6 +746,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllAICOmp(BandwidthWeight *bandwidth
         double value = GWRMultiscale::AICc(mX, mY, betas.t(), shat);
         if (isfinite(value))
         {
+            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value).str());
             GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
             mBandwidthLastCriterion = value;
             return value;
@@ -753,6 +787,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVSerial(BandwidthWeight *bandwid
     }
     if (mStatus == Status::Success && isfinite(cv))
     {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv).str());
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -798,6 +833,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVOmp(BandwidthWeight *bandwidthW
     if (mStatus == Status::Success && flag)
     {
         double cv = sum(cv_all);
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv).str());
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -838,6 +874,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICSerial(BandwidthWeight *bandwi
     double value = GWRMultiscale::AICc(mXi, mYi, betas.t(), shat);
     if (mStatus == Status::Success && isfinite(value))
     {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value).str());
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
         mBandwidthLastCriterion = value;
         return value;
@@ -887,6 +924,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICOmp(BandwidthWeight *bandwidth
         double value = GWRMultiscale::AICc(mXi, mYi, betas.t(), shat);
         if (isfinite(value))
         {
+            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value).str());
             GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
             mBandwidthLastCriterion = value;
             return value;

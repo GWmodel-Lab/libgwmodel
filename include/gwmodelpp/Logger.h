@@ -3,9 +3,18 @@
 
 #include <functional>
 #include <string>
+#include <numeric>
 
 namespace gwm
 {
+
+inline std::string strjoin(const std::string& delm, const std::vector<std::string>& str_array)
+{
+    std::string ss = *str_array.begin();
+    for (auto it = str_array.begin() + 1; it != str_array.end(); it++)
+        ss += (delm + *it);
+    return ss;
+}
 
 /**
  * @brief \~english Interface for controller of algorithm. \~chinese 算法控制器接口

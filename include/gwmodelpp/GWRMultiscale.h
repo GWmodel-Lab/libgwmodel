@@ -15,6 +15,10 @@
 namespace gwm
 {
 
+#define GWM_LOG_TAG_MGWR_INITIAL_BW "#initial-bandwidth "
+#define GWM_LOG_TAG_MGWR_BACKFITTING "#back-fitting "
+#define GWM_LOG_MGWR_BACKFITTING(MESSAGE) { GWM_LOG_INFO((std::stringstream() << (GWM_LOG_TAG_MGWR_BACKFITTING) << (MESSAGE)).str()); }
+
 /**
  * \~english
  * @brief Multiscale GWR Algorithm

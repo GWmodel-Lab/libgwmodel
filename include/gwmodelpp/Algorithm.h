@@ -3,6 +3,7 @@
 
 #include <cfloat>
 #include <memory>
+#include <sstream>
 #include "Status.h"
 #include "Logger.h"
 

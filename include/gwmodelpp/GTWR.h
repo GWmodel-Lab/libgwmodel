@@ -55,12 +55,12 @@ public:
 
     static std::stringstream infoLambdaCriterion()
     {
-        std::stringstream() << GWM_LOG_TAG_LAMBDA_OPTIMIZATION << "lambda" << "," << "criterion";
+        return std::stringstream() << GWM_LOG_TAG_LAMBDA_OPTIMIZATION << "lambda" << "," << "criterion";
     }
 
     static std::stringstream infoLambdaCriterion(const double& lambda, const double& criterion)
     {
-        std::stringstream() << GWM_LOG_TAG_LAMBDA_OPTIMIZATION << lambda << "," << criterion;
+        return std::stringstream() << GWM_LOG_TAG_LAMBDA_OPTIMIZATION << lambda << "," << criterion;
     }
 
 private:
