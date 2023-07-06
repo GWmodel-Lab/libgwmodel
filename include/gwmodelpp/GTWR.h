@@ -17,6 +17,8 @@
 namespace gwm
 {
 
+#define GWM_LOG_TAG_LAMBDA_OPTIMIZATION "#lambda-optimization "
+
 /**
  * \~english
  * @brief Basic implementation of geographically temporally weighted regression.
@@ -50,6 +52,16 @@ public:
 
     typedef double (GTWR::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);//!< \~english Declaration of criterion calculator for bandwidth selection. \~chinese 带宽优选指标计算函数声明。
     typedef double (GTWR::*IndepVarsSelectCriterionCalculator)(const std::vector<std::size_t>&);//!< \~english Declaration of criterion calculator for variable selection. \~chinese 变量优选指标计算函数声明。
+
+    static std::stringstream infoLambdaCriterion()
+    {
+        std::stringstream() << GWM_LOG_TAG_LAMBDA_OPTIMIZATION << "lambda" << "," << "criterion";
+    }
+
+    static std::stringstream infoLambdaCriterion(const double& lambda, const double& criterion)
+    {
+        std::stringstream() << GWM_LOG_TAG_LAMBDA_OPTIMIZATION << lambda << "," << criterion;
+    }
 
 private:
 

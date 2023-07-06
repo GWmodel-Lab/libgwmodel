@@ -28,16 +28,19 @@ RegressionDiagnostic GTWR::CalcDiagnostic(const mat& x, const vec& y, const mat&
 
 mat GTWR::fit()
 {
+    GWM_LOG_STAGE("Initializing")
     createDistanceParameter();
-
     uword nDp = mCoords.n_rows, nVars = mX.n_cols;
-
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
     if (mIsAutoselectBandwidth)
     {
+        GWM_LOG_STAGE("Bandwidth optimization")
         BandwidthWeight *bw0 = mSpatialWeight.weight<BandwidthWeight>();
         double lower = bw0->adaptive() ? 20 : 0.0;
         double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
+
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0).str());
         BandwidthSelector selector(bw0, lower, upper);
         BandwidthWeight *bw = selector.optimize(this);
         if (bw)
@@ -45,22 +48,26 @@ mat GTWR::fit()
             mSpatialWeight.setWeight(bw);
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
         }
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     }
 
-    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     if (mIsAutoselectLambda)
     {
+        GWM_LOG_STAGE("Lambda optimization")
         BandwidthWeight *bw = mSpatialWeight.weight<BandwidthWeight>();
         mStdistance = mSpatialWeight.distance<CRSSTDistance>();
-        double lambda;
-        lambda = LambdaAutoSelection(bw);
+
+        GWM_LOG_INFO(infoLambdaCriterion().str());
+        double lambda = LambdaAutoSelection(bw);
         mStdistance->setLambda(lambda);
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     }
 
-    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+    GWM_LOG_STAGE("Model fitting")
     mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
-
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
+    GWM_LOG_STAGE("Model Diagnostic");
     mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
     double trS = mSHat(0), trStS = mSHat(1);
     double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
@@ -521,6 +528,7 @@ Status GTWR::RsquareByLambda(BandwidthWeight* bandwidthWeight, double lambda, do
         double yss = sum((mY - mean(mY)) % (mY - mean(mY)));
         r2 = 1 - rss / yss;
         rsquare = r2;
+        GWM_LOG_INFO(infoLambdaCriterion(lambda, rsquare).str());
     }
     else
     {
