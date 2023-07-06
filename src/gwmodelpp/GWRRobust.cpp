@@ -29,12 +29,14 @@ RegressionDiagnostic GWRRobust::CalcDiagnostic(const mat &x, const vec &y, const
 
 mat GWRRobust::fit()
 {
-    createDistanceParameter();
+    GWM_LOG_STAGE("Initializing");
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
+    createDistanceParameter();
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     if (mIsAutoselectIndepVars)
     {
+        GWM_LOG_STAGE("Independent variable selection");
         vector<size_t> indep_vars;
         for (size_t i = (mHasIntercept ? 1 : 0); i < mX.n_cols; i++)
         {
@@ -43,6 +45,8 @@ mat GWRRobust::fit()
         size_t k = indep_vars.size();
         mIndepVarSelectionProgressTotal = (k + 1) * k / 2;
         mIndepVarSelectionProgressCurrent = 0;
+
+        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion().str());
         VariableForwardSelector selector(indep_vars, mIndepVarSelectionThreshold);
         mSelectedIndepVars = selector.optimize(this);
         if (mSelectedIndepVars.size() > 0)
@@ -51,14 +55,17 @@ mat GWRRobust::fit()
             nVar = mX.n_cols;
             mIndepVarsSelectionCriterionList = selector.indepVarsCriterion();
         }
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
     }
-    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     if (mIsAutoselectBandwidth)
     {
+        GWM_LOG_STAGE("Bandwidth selection");
         BandwidthWeight* bw0 = mSpatialWeight.weight<BandwidthWeight>();
         double lower = bw0->adaptive() ? 20 : 0.0;
         double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
+        
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0).str());
         BandwidthSelector selector(bw0, lower, upper);
         BandwidthWeight* bw = selector.optimize(this);
         if (bw)
@@ -66,13 +73,15 @@ mat GWRRobust::fit()
             mSpatialWeight.setWeight(bw);
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
         }
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
     }
-    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
+    GWM_LOG_STAGE("Model fitting");
     mWeightMask = vec(nDp, fill::ones);
     mBetas = regressionHatmatrix(mX, mY, mBetasSE, mSHat, mQDiag, mS);
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
+    GWM_LOG_STAGE("Model Diagnostic");
     mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
     double trS = mSHat(0), trStS = mSHat(1);
     double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
@@ -228,7 +237,7 @@ mat GWRRobust::regressionHatmatrix(const mat &x, const vec &y, mat &betasSE, vec
 
 mat GWRRobust::robustGWRCaliFirst(const mat &x, const vec &y, mat &betasSE, vec &shat, vec &qDiag, mat &S)
 {
-    uword nDp = x.n_rows, nVar = x.n_cols;
+    uword nDp = x.n_rows, nVar = x.n_cols;    
     mat betas = (this->*mfitFunction)(x, y, betasSE, shat, qDiag, S);
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 

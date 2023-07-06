@@ -462,6 +462,7 @@ mat GWRScalable::predictSerial(const mat& locations, const arma::mat &x, const a
 
 mat GWRScalable::fit()
 {
+    GWM_LOG_STAGE("Initializing");
     createDistanceParameter();
     mDpSpatialWeight = mSpatialWeight;
     findDataPointNeighbours();
@@ -486,20 +487,25 @@ mat GWRScalable::fit()
     default:
         return mBetas;
     }
+
+    GWM_LOG_STAGE("Preparing");
     prepare();
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, fill::zeros));
 
+    GWM_LOG_STAGE("Optimizing parameters");
     double b_tilde = 1.0, alpha = 0.01;
     mCV = optimize(mMx0, mMy0, b_tilde, alpha);
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, fill::zeros));
 
     if (mCV < DBL_MAX)
     {
+        GWM_LOG_STAGE("Model fitting");
         mScale = b_tilde * b_tilde;
         mPenalty = alpha * alpha;
         mBetas = fitSerial(mX, mY);
         GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, fill::zeros));
         
+        GWM_LOG_STAGE("Model diagnostic");
         mDiagnostic = CalcDiagnostic( mX,mY, mBetas, mShat);
         double trS = mShat(0), trStS = mShat(1);
         double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
