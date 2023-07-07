@@ -201,8 +201,8 @@ protected:
     void setStatus(Status status) { mStatus = status; }
 
 protected:
-    std::unique_ptr<ITelegram> mTelegram = nullptr;
-    Status mStatus = Status::Success;
+    std::unique_ptr<ITelegram> mTelegram = nullptr; //!< \~english Pointer to the `ITelegram` instance \~chinese 指向 `ITelegram` 实例的指针
+    Status mStatus = Status::Success; //!< \~english Algorithm status \~chinese 算法状态
 };
 
 }

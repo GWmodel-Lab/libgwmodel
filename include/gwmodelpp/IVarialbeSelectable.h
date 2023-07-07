@@ -51,14 +51,14 @@ struct IVarialbeSelectable
      * \~english
      * @brief Get criterion value with given variables for variable optimization.
      * 
-     * @param weight Given variables
+     * @param variables Given variables
      * @param criterion [out] Criterion value.
      * @return Status Algorithm status.
      * 
      * \~chinese
      * @brief 根据指定的变量计算变量优选的指标值。
      * 
-     * @param weight 指定的变量。
+     * @param variables 指定的变量。
      * @param criterion [出参] 带宽优选的指标值。
      * @param Status 算法运行状态。
      */

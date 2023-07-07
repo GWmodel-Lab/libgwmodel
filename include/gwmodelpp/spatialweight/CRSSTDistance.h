@@ -129,18 +129,15 @@ public:
     }
 
 protected:
+    Distance* mSpatialDistance = nullptr;  //!< \~english Pointer to instance for spatial distance \~chinese 指向空间距离的指针
+    gwm::OneDimDistance* mTemporalDistance = nullptr;  //!< \~english Pointer to instance for temporal distance \~chinese 指向时间距离的指针
 
-    //gwm::CRSDistance* mSpatialDistance = nullptr;
-    
-    Distance* mSpatialDistance = nullptr;
-    gwm::OneDimDistance* mTemporalDistance = nullptr;
-
-    double mLambda = 0.0;
-    double mAngle = arma::datum::pi / 2;
+    double mLambda = 0.0;  //!< \~english Weight of temporal distance \~chinese 时间距离的权重
+    double mAngle = arma::datum::pi / 2;  //!< \~english Angle of spatial distance and temporal distance \~chinese 斜交时空距离的角度
 
 private:
-    std::unique_ptr<Parameter> mParameter;
-    CalculatorType mCalculator = &OrthogonalSTDistance;
+    std::unique_ptr<Parameter> mParameter;  //!< \~english Parameters \~chinese 参数
+    CalculatorType mCalculator = &OrthogonalSTDistance;  //!< \~english Calculator \~chinese 计算器
 };
 
 }

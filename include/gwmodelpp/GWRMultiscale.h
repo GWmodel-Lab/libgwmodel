@@ -220,7 +220,7 @@ public:
      * @param x Independent variables.
      * @param y Dependent variable.
      * @param coords Coordinate matrix.
-     * @param spatialWeight Spatial weighting configuration.
+     * @param spatialWeights Spatial weighting configuration.
      * 
      * \~chinese
      * @brief 构造一个新的 GWRMultiscale 对象。
@@ -228,7 +228,7 @@ public:
      * @param x 自变量矩阵。
      * @param y 因变量。
      * @param coords 坐标矩阵。
-     * @param spatialWeight 空间权重配置。
+     * @param spatialWeights 空间权重配置。
      */
     GWRMultiscale(const arma::mat& x, const arma::vec& y, const arma::mat& coords, const std::vector<SpatialWeight>& spatialWeights)
         : SpatialMultiscaleAlgorithm(coords, spatialWeights)

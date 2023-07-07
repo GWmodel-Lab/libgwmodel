@@ -133,7 +133,7 @@ public:
      * \~english
      * @brief Destroy the CGwmGWRBase object.
      * 
-     * \chinese
+     * \~chinese
      * @brief 析构 CGwmGWRBase 对象。
      * 
      */

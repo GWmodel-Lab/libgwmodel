@@ -460,13 +460,13 @@ private:
      * \~english
      * @brief Get CV value with given bandwidth for bandwidth optimization (serial implementation).
      * 
-     * @param weight Given bandwidth
+     * @param bandwidthWeight Given bandwidth
      * @return double Criterion value
      * 
      * \~chinese
      * @brief 根据指定的带宽计算带宽优选的CV值（串行实现）。
      * 
-     * @param weight 指定的带宽。
+     * @param bandwidthWeight 指定的带宽。
      * @return double 带宽优选的指标值。
      */
     double bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight);
@@ -475,13 +475,13 @@ private:
      * \~english
      * @brief Get AIC value with given bandwidth for bandwidth optimization (serial implementation).
      * 
-     * @param weight Given bandwidth
+     * @param bandwidthWeight Given bandwidth
      * @return double Criterion value
      * 
      * \~chinese
      * @brief 根据指定的带宽计算带宽优选的AIC值（串行实现）。
      * 
-     * @param weight 指定的带宽。
+     * @param bandwidthWeight 指定的带宽。
      * @return double 带宽优选的指标值。
      */
     double bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeight);
@@ -491,13 +491,13 @@ private:
      * \~english
      * @brief Get CV value with given bandwidth for bandwidth optimization (OpenMP implementation).
      * 
-     * @param weight Given bandwidth
+     * @param bandwidthWeight Given bandwidth
      * @return double Criterion value
      * 
      * \~chinese
      * @brief 根据指定的带宽计算带宽优选的CV值（OpenMP 实现）。
      * 
-     * @param weight 指定的带宽。
+     * @param bandwidthWeight 指定的带宽。
      * @return double 带宽优选的指标值。
      */
     double bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight);
@@ -506,13 +506,13 @@ private:
      * \~english
      * @brief Get AIC value with given bandwidth for bandwidth optimization (OpenMP implementation).
      * 
-     * @param weight Given bandwidth
+     * @param bandwidthWeight Given bandwidth
      * @return double Criterion value
      * 
      * \~chinese
      * @brief 根据指定的带宽计算带宽优选的AIC值（OpenMP 实现）。
      * 
-     * @param weight 指定的带宽。
+     * @param bandwidthWeight 指定的带宽。
      * @return double 带宽优选的指标值。
      */
     double bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight);
@@ -536,13 +536,13 @@ private:
      * \~english
      * @brief Get AIC value with given variables for variable optimization (serial implementation).
      * 
-     * @param weight Given variables
+     * @param indepVars Given variables
      * @return double Criterion value
      * 
      * \~chinese
      * @brief 根据指定的变量计算变量优选的AIC值（串行实现）。
      * 
-     * @param weight 指定的变量。
+     * @param indepVars 指定的变量。
      * @return double 变量优选的指标值。
      */
     double indepVarsSelectionCriterionSerial(const std::vector<size_t>& indepVars);
@@ -552,13 +552,13 @@ private:
      * \~english
      * @brief Get AIC value with given variables for variable optimization (OpenMP implementation).
      * 
-     * @param weight Given bandwidth
+     * @param indepVars Given bandwidth
      * @return double Criterion value
      * 
      * \~chinese
      * @brief 根据指定的变量计算变量优选的AIC值（OpenMP 实现）。
      * 
-     * @param weight 指定的变量。
+     * @param indepVars 指定的变量。
      * @return double 变量优选的指标值。
      */
     double indepVarsSelectionCriterionOmp(const std::vector<size_t>& indepVars);

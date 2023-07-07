@@ -184,11 +184,11 @@ public:
     virtual double minDistance() override;
 
 protected:
-    bool mGeographic;
-    std::unique_ptr<Parameter> mParameter;
+    bool mGeographic;  //!< \~english Whether the CRS is geographic \~chinese 坐标系是否是地理坐标系
+    std::unique_ptr<Parameter> mParameter;  //!< \~english Parameters \~chinese 计算参数
 
 private:
-    CalculatorType mCalculator = &EuclideanDistance;
+    CalculatorType mCalculator = &EuclideanDistance;  //!< \~english Calculator \~chinese 距离计算方法
 };
 
 }
