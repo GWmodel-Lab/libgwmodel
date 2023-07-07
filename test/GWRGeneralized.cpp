@@ -233,9 +233,9 @@ TEST_CASE("GGWR: cancel")
         BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
 
-        TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage, progress);
+        auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
         GWRGeneralized algorithm;
-        algorithm.setTelegram(telegram);
+        algorithm.setTelegram(std::move(telegram));
         algorithm.setCoords(londonhp_coord);
         algorithm.setDependentVariable(y);
         algorithm.setIndependentVariables(x);

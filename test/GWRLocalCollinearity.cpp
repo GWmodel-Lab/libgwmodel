@@ -186,9 +186,9 @@ TEST_CASE("LcGWR: cancel")
         auto progress = GENERATE(0, 10);
         INFO("Settings: " << "Parallel:" << parallel << ", Stage:" << stage << ", " << progress);
 
-        TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage, progress);
+        auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
         GWRLocalCollinearity algorithm;
-        algorithm.setTelegram(telegram);
+        algorithm.setTelegram(std::move(telegram));
         algorithm.setCoords(londonhp100_coord);
         algorithm.setDependentVariable(y);
         algorithm.setIndependentVariables(x);

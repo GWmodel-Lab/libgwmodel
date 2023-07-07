@@ -334,9 +334,9 @@ TEST_CASE("GWDR: cancel")
         for (auto &&stage : fit_stages)
         {
             cout << "Stage: " << stage.first << " (" << stage.second << ")\n";
-            GWDRTerminateCheckTelegram *telegram = new GWDRTerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<GWDRTerminateCheckTelegram>(stage.first, stage.second);
             GWDR algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -355,9 +355,9 @@ TEST_CASE("GWDR: cancel")
         for (auto &&stage : fit_stages)
         {
             cout << "Stage: " << stage.first << " (" << stage.second << ")\n";
-            GWDRTerminateCheckTelegram *telegram = new GWDRTerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<GWDRTerminateCheckTelegram>(stage.first, stage.second);
             GWDR algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -375,9 +375,9 @@ TEST_CASE("GWDR: cancel")
     {
         for (auto &&stage : fit_stages)
         {
-            GWDRTerminateCheckTelegram *telegram = new GWDRTerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<GWDRTerminateCheckTelegram>(stage.first, stage.second);
             GWDR algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -398,9 +398,9 @@ TEST_CASE("GWDR: cancel")
         for (auto &&stage : fit_stages)
         {
             cout << "Stage: " << stage.first << " (" << stage.second << ")\n";
-            GWDRTerminateCheckTelegram *telegram = new GWDRTerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<GWDRTerminateCheckTelegram>(stage.first, stage.second);
             GWDR algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -420,9 +420,9 @@ TEST_CASE("GWDR: cancel")
         for (auto &&stage : fit_stages)
         {
             cout << "Stage: " << stage.first << " (" << stage.second << ")\n";
-            GWDRTerminateCheckTelegram *telegram = new GWDRTerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<GWDRTerminateCheckTelegram>(stage.first, stage.second);
             GWDR algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -441,9 +441,9 @@ TEST_CASE("GWDR: cancel")
     {
         for (auto &&stage : fit_stages)
         {
-            GWDRTerminateCheckTelegram *telegram = new GWDRTerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<GWDRTerminateCheckTelegram>(stage.first, stage.second);
             GWDR algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);

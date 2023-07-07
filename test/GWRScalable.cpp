@@ -147,9 +147,9 @@ TEST_CASE("Scalable GWR: cancel")
         auto progress = GENERATE(0, 10);
         INFO("Settings: " << stage << ", " << progress);
 
-        TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage, progress);
+        auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
         GWRScalable algorithm;
-        algorithm.setTelegram(telegram);
+        algorithm.setTelegram(std::move(telegram));
         algorithm.setCoords(londonhp100_coord);
         algorithm.setDependentVariable(y);
         algorithm.setIndependentVariables(x);
@@ -166,9 +166,9 @@ TEST_CASE("Scalable GWR: cancel")
         auto progress = GENERATE(0, 10);
         INFO("Settings: " << stage << ", " << progress);
 
-        TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage, progress);
+        auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
         GWRScalable algorithm;
-        algorithm.setTelegram(telegram);
+        algorithm.setTelegram(std::move(telegram));
         algorithm.setCoords(londonhp100_coord);
         algorithm.setDependentVariable(y);
         algorithm.setIndependentVariables(x);

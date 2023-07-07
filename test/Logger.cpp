@@ -18,27 +18,31 @@ using namespace std;
 using namespace arma;
 using namespace gwm;
 
+struct MyLoggerInspector
+{
+    bool called = false;
+    bool progressed = false;
+};
+
 struct MyLogger : Logger
 {
-    ~MyLogger()
-    {
-        cout << "[MyLogger] Logger destructed!";
-    }
+    MyLogger(MyLoggerInspector* pInspector): inspector(pInspector) {}
+
+    ~MyLogger() {}
 
     void print(string message, ITelegram::LogLevel level, string fun_name, string file_name) override
     {
         cout << "[" << fun_name << "] (in file " << file_name << "): " << message << "\n";
-        called = true;
+        inspector->called = true;
     }
 
     void progress(size_t current, size_t total, string fun_name, string file_name) override
     {
         cout << "[progress]:" << current << "/" << total << "(in file " << file_name << "): " << fun_name << "\n";
-        progressed = true;
+        inspector->progressed = true;
     }
 
-    bool called = false;
-    bool progressed = false;
+    MyLoggerInspector* inspector;
 };
 
 TEST_CASE("Logging")
@@ -55,7 +59,8 @@ TEST_CASE("Logging")
 
     SECTION("printer")
     {
-        MyLogger* logger = new MyLogger();
+        MyLoggerInspector* inspector = new MyLoggerInspector();
+        auto logger = make_unique<MyLogger>(inspector);
 
         uword nVar = 3;
         vector<SpatialWeight> spatials;
@@ -74,7 +79,7 @@ TEST_CASE("Logging")
         bandwidthInitialize.pop_back();
 
         GWRMultiscale algorithm;
-        algorithm.setTelegram(logger);
+        algorithm.setTelegram(std::move(logger));
         algorithm.setCoords(londonhp100_coord);
         algorithm.setDependentVariable(y);
         algorithm.setIndependentVariables(x);
@@ -90,23 +95,24 @@ TEST_CASE("Logging")
         }
         
 
-        REQUIRE(logger->called);
+        REQUIRE(inspector->called);
     }
 
     SECTION("progress")
     {
-        MyLogger* logger = new MyLogger();
+        MyLoggerInspector* inspector = new MyLoggerInspector();
+        auto logger = make_unique<MyLogger>(inspector);
 
         CRSDistance distance(false);
         BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
 
         GWSS algorithm;
-        algorithm.setTelegram(logger);
+        algorithm.setTelegram(std::move(logger));
         algorithm.setCoords(londonhp100_coord);
         algorithm.setVariables(x);
         algorithm.setSpatialWeight(spatial);
         algorithm.run();
-        REQUIRE(logger->progressed);
+        REQUIRE(inspector->progressed);
     }
 }

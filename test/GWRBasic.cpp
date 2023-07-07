@@ -164,9 +164,9 @@ TEST_CASE("Basic GWR: cancel")
     {
         for (auto &&stage : fit_stages)
         {
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
             GWRBasic algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -183,9 +183,9 @@ TEST_CASE("Basic GWR: cancel")
     {
         for (auto &&stage : fit_stages)
         {
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
             GWRBasic algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -202,9 +202,9 @@ TEST_CASE("Basic GWR: cancel")
     {
         for (auto &&stage : fit_stages)
         {
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
             GWRBasic algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -223,9 +223,9 @@ TEST_CASE("Basic GWR: cancel")
     {
         for (auto &&stage : fit_stages)
         {
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
             GWRBasic algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -244,9 +244,9 @@ TEST_CASE("Basic GWR: cancel")
     {
         for (auto &&stage : fit_stages)
         {
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
             GWRBasic algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -265,9 +265,9 @@ TEST_CASE("Basic GWR: cancel")
     {
         for (auto &&stage : fit_stages)
         {
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
             GWRBasic algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);

@@ -97,9 +97,9 @@ TEST_CASE("GWSS: cancel")
     string stage = "solve";
     auto progress = GENERATE(0, 10);
 
-    TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage, progress);
+    auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
     GWPCA algorithm;
-    algorithm.setTelegram(telegram);
+    algorithm.setTelegram(std::move(telegram));
     algorithm.setCoords(londonhp100_coord);
     algorithm.setVariables(x);
     algorithm.setSpatialWeight(spatial);

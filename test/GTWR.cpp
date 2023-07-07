@@ -223,9 +223,9 @@ TEST_CASE("GTWR: cancel")
     {
         for (auto &&stage : fit_stages)
         {
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
             GTWR algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord,londonhp100_times);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -241,9 +241,9 @@ TEST_CASE("GTWR: cancel")
     {
         for (auto &&stage : fit_stages)
         {
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
             GTWR algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord,londonhp100_times);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -259,9 +259,9 @@ TEST_CASE("GTWR: cancel")
     {
         for (auto &&stage : fit_stages)
         {
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
             GTWR algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord,londonhp100_times);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -279,9 +279,9 @@ TEST_CASE("GTWR: cancel")
     {
         for (auto &&stage : fit_stages)
         {
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
             GTWR algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord,londonhp100_times);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -298,9 +298,9 @@ TEST_CASE("GTWR: cancel")
     {
         for (auto &&stage : fit_stages)
         {
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
             GTWR algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord,londonhp100_times);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
@@ -317,9 +317,9 @@ TEST_CASE("GTWR: cancel")
     {
         for (auto &&stage : fit_stages)
         {
-            TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage.first, stage.second);
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
             GTWR algorithm;
-            algorithm.setTelegram(telegram);
+            algorithm.setTelegram(std::move(telegram));
             algorithm.setCoords(londonhp100_coord,londonhp100_times);
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);

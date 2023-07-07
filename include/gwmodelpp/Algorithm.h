@@ -146,13 +146,24 @@ public:
 public:
 
     /**
-     * @brief Set the Telegram object
+     * @brief \~english Ge the reference of pointer to Telegram object. \~chinese 返回 Telegram 指针的引用。
      * 
-     * @param telegram The new Telegram. This instance will take the management of pointer `telegram`.
+     * @return const std::unique_ptr<ITelegram>& \~english Reference of pointer to Telegram object \~chinese Telegram 指针的引用
      */
-    void setTelegram(ITelegram* telegram)
+    const std::unique_ptr<ITelegram>& telegram() const
     {
-        mTelegram.reset(telegram);
+        return mTelegram;
+    }
+
+    /**
+     * @brief \~english Set the Telegram pointer. \~chinese 设置 Telegram 指针。
+     * 
+     * @param telegram \~english The pointer to the new Telegram object. This instance will take the management of pointer `telegram`.
+     * \~chinese 新的 Telegram 对象的指针。所有权将被该 Algorithm 实例接管。
+     */
+    void setTelegram(std::unique_ptr<ITelegram> telegram)
+    {
+        mTelegram = std::move(telegram);
     }
 
     /**

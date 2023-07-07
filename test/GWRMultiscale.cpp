@@ -394,9 +394,9 @@ TEST_CASE("Multiscale GWR: cancel")
             bandwidthSelectionApproach.push_back(bandwidthCriterion);
         }
 
-        TerminateCheckTelegram *telegram = new TerminateCheckTelegram(stage, progress);
+        auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
         GWRMultiscale algorithm;
-        algorithm.setTelegram(telegram);
+        algorithm.setTelegram(std::move(telegram));
         algorithm.setCoords(londonhp100_coord);
         algorithm.setDependentVariable(y);
         algorithm.setIndependentVariables(x);
