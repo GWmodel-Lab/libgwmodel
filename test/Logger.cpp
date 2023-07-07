@@ -59,8 +59,8 @@ TEST_CASE("Logging")
 
     SECTION("printer")
     {
-        MyLoggerInspector* inspector = new MyLoggerInspector();
-        auto logger = make_unique<MyLogger>(inspector);
+        MyLoggerInspector inspector;
+        auto logger = make_unique<MyLogger>(&inspector);
 
         uword nVar = 3;
         vector<SpatialWeight> spatials;
@@ -95,13 +95,13 @@ TEST_CASE("Logging")
         }
         
 
-        REQUIRE(inspector->called);
+        REQUIRE(inspector.called);
     }
 
     SECTION("progress")
     {
-        MyLoggerInspector* inspector = new MyLoggerInspector();
-        auto logger = make_unique<MyLogger>(inspector);
+        MyLoggerInspector inspector;
+        auto logger = make_unique<MyLogger>(&inspector);
 
         CRSDistance distance(false);
         BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
@@ -113,6 +113,6 @@ TEST_CASE("Logging")
         algorithm.setVariables(x);
         algorithm.setSpatialWeight(spatial);
         algorithm.run();
-        REQUIRE(inspector->progressed);
+        REQUIRE(inspector.progressed);
     }
 }
