@@ -64,9 +64,8 @@ void GWDA::run()
     mat probs = tmp.each_col() / sum(tmp, 1); // / sum(tmp, 1);
     vec pmax = max(probs, 1);
     // double pnorm=0;
-    vec p(NV - 1, fill::value(1 / (NV - 1)));
-    double entMax;
-    entMax = shannonEntropy(p);
+    vec p = vec(NV - 1, fill::ones) / (NV - 1.0);
+    double entMax = shannonEntropy(p);
     vec entropy(nRp, fill::zeros);
     for (uword i = 0; i < nRp; i++)
     {
@@ -123,7 +122,7 @@ void GWDA::discriminantAnalysisOmp()
     vector<string> lev = levels(mY);
     mat wt(nRp, nRp, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (uword i = 0; i < nRp; i++)
+    for (int i = 0; (uword)i < nRp; i++)
     {
         wt.col(i) = mSpatialWeight.weightVector(i);
     }
