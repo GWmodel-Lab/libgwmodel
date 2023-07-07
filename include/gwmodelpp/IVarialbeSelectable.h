@@ -17,11 +17,26 @@ namespace gwm
  */
 struct IVarialbeSelectable
 {
+    
+    /**
+     * @brief \~english Get meta infomation of variable combination and the corresponding criterion value.
+     * \~chinese 获取当前带宽值和对应指标值的元信息。
+     * 
+     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     */
     static std::stringstream infoVariableCriterion()
     {
         return std::stringstream() << GWM_LOG_TAG_VARIABLE_CRITERION << "variables" << "," << "criterion";
     }
 
+    /**
+     * @brief \~english Get infomation of variable combination and the corresponding criterion value.
+     * \~chinese 获取当前带宽值和对应指标值的信息。
+     * 
+     * @param variables \~english Variable combination \~chinese 变量组合
+     * @param criterion \~english Criterion value \~chinese 指标值
+     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     */
     static std::stringstream infoVariableCriterion(const std::vector<std::size_t>& variables, const double criterion)
     {
         std::vector<std::string> var_labels(variables.size());

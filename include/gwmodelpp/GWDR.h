@@ -546,6 +546,13 @@ public:
      */
     static double criterion_function(const gsl_vector* bws, void* params);
 
+    /**
+     * @brief \~english Get meta infomation of current bandwidth value and the corresponding criterion value.
+     * \~chinese 获取当前带宽值和对应指标值的元信息。
+     * 
+     * @param weights \~english Bandwidth weight \~chinese 带宽设置
+     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     */
     static std::stringstream infoBandwidthCriterion(const std::vector<BandwidthWeight*>& weights)
     {
         std::size_t number = 1;
@@ -557,6 +564,14 @@ public:
         return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << strjoin(",", labels) << "," << "criterion";
     }
 
+    /**
+     * @brief \~english Get infomation of current bandwidth value and the corresponding criterion value.
+     * \~chinese 获取当前带宽值和对应指标值的信息。
+     * 
+     * @param weights \~english Bandwidth weight \~chinese 带宽设置
+     * @param criterion \~english Criterion value \~chinese 指标值
+     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     */
     static std::stringstream infoBandwidthCriterion(const std::vector<BandwidthWeight*>& weights, const double criterion)
     {
         std::vector<std::string> labels(weights.size());

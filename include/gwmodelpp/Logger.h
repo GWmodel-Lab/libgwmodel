@@ -8,6 +8,14 @@
 namespace gwm
 {
 
+/**
+ * @brief \~english Join string vector with the specified delimeter.
+ * \~chinese 使用指定的分隔符链接字符串向量。
+ * 
+ * @param delm \~english Delimeter \~chinese 分隔符
+ * @param str_array \~english String vector to be joined \~chinese 要链接的字符串向量
+ * @return std::string \~english Joined string \~chinese 链接的字符串
+ */
 inline std::string strjoin(const std::string& delm, const std::vector<std::string>& str_array)
 {
     std::string ss = *str_array.cbegin();

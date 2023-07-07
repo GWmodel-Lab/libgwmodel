@@ -56,18 +56,56 @@ namespace gwm
  */
 #define GWM_LOG_ERROR(MESSAGE) this->mTelegram->print((MESSAGE), Logger::LogLevel::LOG_ERR, __FUNCTION__, __FILE__);
 
+/**
+ * @brief 
+ * \~english Check whether to stop. If yes, set the `STATUS` to `gwm::Status::Terminated` and call `break` to stop.
+ * \~chinese 检查是否需要停止。如果要，将 `STATUS` 设置为 `gwm::Status::Terminated` 并使用 `break` 停止。
+ * 
+ * @param STATUS \~english Variable to store status value \~chinese 保存状态值的变量
+ */
 #define GWM_LOG_STOP_BREAK(STATUS) { if (this->mTelegram->stop()) { STATUS = gwm::Status::Terminated; break;} };
 
+/**
+ * @brief 
+ * \~english Check whether to stop. If yes, set the `STATUS` to `gwm::Status::Terminated` and call `continue` to skip loop.
+ * \~chinese 检查是否需要停止。如果要，将 `STATUS` 设置为 `gwm::Status::Terminated` 并使用 `continue` 跳过循环。
+ * 
+ * @param STATUS \~english Variable to store status value \~chinese 保存状态值的变量
+ */
 #define GWM_LOG_STOP_CONTINUE(STATUS) { if (this->mTelegram->stop()) { STATUS = gwm::Status::Terminated; continue;} };
 
+/**
+ * @brief 
+ * \~english Check whether to stop. If yes, set the `STATUS` to `gwm::Status::Terminated` and call `return` to stop.
+ * \~chinese 检查是否需要停止。如果要，将 `STATUS` 设置为 `gwm::Status::Terminated` 并使用 `return` 停止。
+ * 
+ * @param STATUS \~english Variable to store status value \~chinese 保存状态值的变量
+ * @param REVAL \~english Value to return \~chinese 返回值
+ */
 #define GWM_LOG_STOP_RETURN(STATUS, REVAL) { if (this->mTelegram->stop()) { STATUS = gwm::Status::Terminated; return (REVAL);} }
 
+/**
+ * @brief Shortcut to report progress of current and total numbers with function name and file name. 
+ * 
+ * @param CURRENT \~english Current progress \~chinese 当前进度值
+ * @param TOTAL \~english Progress total value \~chinese 总进度值
+ */
 #define GWM_LOG_PROGRESS(CURRENT, TOTAL) { this->mTelegram->progress((CURRENT), (TOTAL), (__FUNCTION__), (__FILE__)); };
 
+/**
+ * @brief Shortcut to report progress of percentage numbers with function name and file name. 
+ * 
+ * @param PERCENT \~english Current percentage of progress \~chinese 当前进度的百分比
+ */
 #define GWM_LOG_PROGRESS_PERCENT(PERCENT) { this->mTelegram->progress((PERCENT), (__FUNCTION__), (__FILE__)); };
 
 #define GWM_LOG_TAG_STAGE "#stage "
 
+/**
+ * @brief Shortcut to report stages of an algorithm.
+ * 
+ * @param STAGE \~english Stage description \~chinese 当前阶段的描述
+ */
 #define GWM_LOG_STAGE(STAGE) { GWM_LOG_INFO((std::stringstream() << (GWM_LOG_TAG_STAGE) << (STAGE)).str()); }
 
 /**
