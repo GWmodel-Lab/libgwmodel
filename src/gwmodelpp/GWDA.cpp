@@ -34,6 +34,7 @@ void GWDA::run()
         throw std::runtime_error("Two or more variables should be specfied for analysis");
     }
     // vec lev = levels(mY);
+    mHasPredict = !(mprX.is_empty() && mprY.empty());
     if (mprX.is_empty())
     {
         mprX = mX;
@@ -100,8 +101,9 @@ void GWDA::discriminantAnalysisSerial()
     for (uword i = 0; i < nRp; i++)
     {
         // vec w=mSpatialWeight.weightVector(i);
-        wt.row(i) = mSpatialWeight.weightVector(i).t();
+        wt.col(i) = mSpatialWeight.weightVector(i);
     }
+    if (!mHasPredict) wt.diag().zeros();
     if (mIsWqda)
     {
         mRes = wqda(mX, mY, wt, mprX, mHascov, mHasmean, mHasprior);
@@ -138,20 +140,12 @@ void GWDA::discriminantAnalysisOmp()
 
 uvec GWDA::findSameString(std::vector<std::string> &y, std::string s)
 {
-    uword n = y.size();
-    uvec idx;
-    uword index = 1;
-    for (uword i = 0; i < n; i++)
+    uvec flags(y.size());
+    transform(y.cbegin(), y.cend(), flags.begin(), [&s](const string& ys)
     {
-        // uword d = std::find(y.begin(), y.end(), s) - y.begin();
-        if (y[i] == s)
-        {
-            idx.resize(index);
-            idx(index - 1) = i;
-            index++;
-        }
-    }
-    return idx;
+        return uword(ys == s ? 1 : 0); 
+    });
+    return find(flags == 1);
 }
 
 // template<class T>
@@ -299,8 +293,8 @@ mat GWDA::wqda(arma::mat &x, std::vector<std::string> &y, arma::mat &wt, arma::m
     vector<string> groupPr;
     for (uword i = 0; i < nPr; i++)
     {
-        uvec index = find(logPf.row(i) == min(logPf.row(i)));
-        groupPr.push_back((lev[index(0)]));
+        uword index = index_min(logPf.row(i));
+        groupPr.push_back((lev[index]));
     }
     mGroup = groupPr;
     return logPf;
@@ -395,8 +389,8 @@ mat GWDA::wlda(arma::mat &x, std::vector<std::string> &y, arma::mat &wt, arma::m
     vector<string> groupPr;
     for (uword i = 0; i < nPr; i++)
     {
-        uvec index = find(logPf.row(i) == min(logPf.row(i)));
-        groupPr.push_back((lev[index(0)]));
+        uword index = index_min(logPf.row(i));
+        groupPr.push_back((lev[index]));
     }
     mGroup = groupPr;
     return logPf;
@@ -432,9 +426,6 @@ cube GWDA::wVarCov(arma::mat &x, arma::mat &wt)
         if (nVar >= 2)
         {
             Covmat.row(i) = covwtmat(x, wi);
-        }
-        else
-        {
         }
     }
     return Covmat;

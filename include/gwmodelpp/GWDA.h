@@ -33,7 +33,21 @@ namespace gwm
          * @return \~english Weighted covariances \f[ cov(X_1,X_2) = \frac{\sum_{i=1}^n w_i(x_{1i} - \bar{x}_1) \sum_{i=1}^n w_i(x_{2i} - \bar{x}_2)}{1 - \sum_{i=1}^n w_i} \f]
          * \~chinese 加权协方差 \f[ cov(X_1,X_2) = \frac{\sum_{i=1}^n w_i(x_{1i} - \bar{x}_1) \sum_{i=1}^n w_i(x_{2i} - \bar{x}_2)}{1 - \sum_{i=1}^n w_i} \f]
          */
-        arma::mat covwtmat(const arma::mat &x, const arma::vec &wt);
+        static arma::mat covwtmat(const arma::mat &x, const arma::vec &wt);
+
+        /**
+         * @brief \~english Calculate weighted covariances for two matrices. \~chinese 计算两个矩阵的加权协方差。
+         * 
+         * @param x1 \~english Matrix \f$ X_1 \f$ \~chinese 矩阵 \f$ X_1 \f$
+         * @param x2 \~english Matrix \f$ X_2 \f$ \~chinese 矩阵 \f$ X_2 \f$
+         * @param w \~english Weight vector \f$ w \f$ \~chinese 权重向量 \f$ w \f$
+         * @return \~english Weighted covariances \f[ cov(X_1,X_2) = \frac{\sum_{i=1}^n w_i(x_{1i} - \bar{x}_1) \sum_{i=1}^n w_i(x_{2i} - \bar{x}_2)}{1 - \sum_{i=1}^n w_i} \f]
+         * \~chinese 加权协方差 \f[ cov(X_1,X_2) = \frac{\sum_{i=1}^n w_i(x_{1i} - \bar{x}_1) \sum_{i=1}^n w_i(x_{2i} - \bar{x}_2)}{1 - \sum_{i=1}^n w_i} \f]
+         */
+        static double covwt(const arma::mat &x1, const arma::mat &x2, const arma::vec &w)
+        {
+            return sum((sqrt(w) % (x1 - sum(x1 % w))) % (sqrt(w) % (x2 - sum(x2 % w)))) / (1 - sum(w % w));
+        }
 
         /**
          * @brief \~english Calculate weighted correlation for two matrices. \~chinese 计算两个矩阵的加权相关系数。
@@ -379,8 +393,6 @@ namespace gwm
 #endif
 
     private:
-        bool mQuantile = false;            //!< \~english Indicator of whether calculate quantile statistics. \~chinese 是否使用基于排序的算法
-        bool mIsCorrWithFirstOnly = false; //!< \~english Indicator of whether calculate local correlations and covariances between the first variable and the other variables. \~chinese 是否仅为第一个变量计算与其他变量的相关系数
         bool mIsWqda = false;        //!< \~english Whether weighted quadratic discriminant analysis will be applied. \~chinese 是否应用加权二次判别分析；否则将应用加权线性判别分析。
         bool mHascov = true;  //!< \~english Whether localised variance-covariance matrix is used for GW discriminant analysis; otherwise, global variance-covariance matrix is used. \~chinese 是否将局部方差协方差矩阵用于GW判别分析；否则，使用全局方差协方差矩阵。
         bool mHasmean = true; //!< \~english Whether localised mean is used for GW discriminant analysis; otherwise, global mean is used. \~chinese 是否使用局部平均值进行GW判别分析；否则，使用全局平均值。
@@ -390,6 +402,7 @@ namespace gwm
            
         arma::mat mX; //!< \~english Independent variable matrix for training \~chinese 自变量矩阵
         std::vector<std::string> mY; //!< \~english Dependent variable vector \~chinese 因变量矩阵
+        bool mHasPredict; //!< \~english Whether prediction data are provided \~chinese 是否提供了预测数据
         arma::mat mprX; //!< \~english Variable Prediction independent variable matrix \~chinese 预测自变量矩阵
         std::vector<std::string> mprY; //!< \~english Prediction dependent variable matrix \~chinese 预测因变量矩阵
         arma::mat mRes; // !< \~english the result matrix of geographical weighted discriminant analysis \~chinese 地理加权判别分析结果矩阵
