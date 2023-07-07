@@ -108,7 +108,7 @@ public:
     virtual double minDistance() override;
 
 protected:
-    std::unique_ptr<Parameter> mParameter = nullptr;
+    std::unique_ptr<Parameter> mParameter = nullptr;  //!< \~english Parameters \~chinese 参数
 };
 
 }

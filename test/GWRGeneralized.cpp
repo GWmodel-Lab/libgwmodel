@@ -10,6 +10,7 @@
 #include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
 #include "londonhp.h"
+#include "TerminateCheckTelegram.h"
 
 using namespace std;
 using namespace arma;
@@ -170,3 +171,82 @@ TEST_CASE("GGWR: multithread basic flow")
 #endif
 
 
+const map<GWRGeneralized::BandwidthSelectionCriterionType, string> BandwidthCriterionDict = {
+    make_pair(GWRGeneralized::BandwidthSelectionCriterionType::AIC, "AIC"),
+    make_pair(GWRGeneralized::BandwidthSelectionCriterionType::CV, "CV")
+};
+
+const map<GWRGeneralized::Family, string> FamilyDict = {
+    make_pair(GWRGeneralized::Family::Binomial, "Binomial"),
+    make_pair(GWRGeneralized::Family::Poisson, "Poisson")
+};
+
+
+TEST_CASE("GGWR: cancel")
+{
+    auto family = GENERATE(GWRGeneralized::Family::Poisson, GWRGeneralized::Family::Binomial);
+    
+    const initializer_list<ParallelType> parallel_list = {
+        ParallelType::SerialOnly
+#ifdef ENABLE_OPENMP
+        , ParallelType::OpenMP
+#endif // ENABLE_OPENMP     
+    };
+    auto parallel = GENERATE_REF(values(parallel_list));
+
+    SECTION("fit")
+    {
+        auto bandwidthCriterion = GENERATE(GWRGeneralized::BandwidthSelectionCriterionType::AIC, GWRGeneralized::BandwidthSelectionCriterionType::CV);
+        auto stage = GENERATE(as<std::string>{}, "bandwidthSize", "fit");
+        auto progress = GENERATE(0, 10);
+        INFO("Settings: " << BandwidthCriterionDict.at(bandwidthCriterion) << ", " << FamilyDict.at(family) << ", " << ParallelTypeDict.at(parallel) << ", " << stage << ", " << progress);
+
+        mat londonhp_coord, londonhp_data;
+        vector<string> londonhp_fields;
+        vec y;
+        mat x;
+        
+        switch (family)
+        {
+        case GWRGeneralized::Family::Binomial:
+            if (!read_londonhp(londonhp_coord, londonhp_data, londonhp_fields))
+            {
+                FAIL("Cannot load londonhp data.");
+            }
+            y = londonhp_data.col(13);
+            x = join_rows(ones(londonhp_coord.n_rows), londonhp_data.cols(1,1));
+            break;
+        case GWRGeneralized::Family::Poisson:
+            if (!read_londonhp100(londonhp_coord, londonhp_data, londonhp_fields))
+            {
+                FAIL("Cannot load londonhp data.");
+            }
+            y = londonhp_data.col(0);
+            x = join_rows(ones(londonhp_coord.n_rows), londonhp_data.cols(1, 3));
+            break;
+        default:
+            FAIL("Unknown family");
+            break;
+        }
+
+        CRSDistance distance(false);
+        BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
+        SpatialWeight spatial(&bandwidth, &distance);
+
+        auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
+        GWRGeneralized algorithm;
+        algorithm.setTelegram(std::move(telegram));
+        algorithm.setCoords(londonhp_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
+        algorithm.setSpatialWeight(spatial);
+        algorithm.setHasHatMatrix(true);
+        algorithm.setIsAutoselectBandwidth(true);
+        algorithm.setBandwidthSelectionCriterionType(bandwidthCriterion);
+        algorithm.setFamily(family);
+        algorithm.setParallelType(parallel);
+        REQUIRE_NOTHROW(algorithm.fit());
+        REQUIRE(algorithm.status() == Status::Terminated);
+    }
+
+}

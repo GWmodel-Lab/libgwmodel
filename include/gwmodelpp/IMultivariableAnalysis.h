@@ -29,7 +29,7 @@ struct IMultivariableAnalysis
     /**
      * @brief Set variables.
      * 
-     * @param variables Vector of variables.
+     * @param x Vector of variables.
      */
     virtual void setVariables(const arma::mat& x) = 0;
 

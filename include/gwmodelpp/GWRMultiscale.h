@@ -15,6 +15,15 @@
 namespace gwm
 {
 
+#define GWM_LOG_TAG_MGWR_INITIAL_BW "#initial-bandwidth "
+#define GWM_LOG_TAG_MGWR_BACKFITTING "#back-fitting "
+
+/**
+ * @brief \~english Print log in `backfitting` function. \~chinese 输出 `backfitting` 函数中的日志。
+ * 
+ */
+#define GWM_LOG_MGWR_BACKFITTING(MESSAGE) { GWM_LOG_INFO((std::stringstream() << (GWM_LOG_TAG_MGWR_BACKFITTING) << (MESSAGE)).str()); }
+
 /**
  * \~english
  * @brief Multiscale GWR Algorithm
@@ -211,7 +220,7 @@ public:
      * @param x Independent variables.
      * @param y Dependent variable.
      * @param coords Coordinate matrix.
-     * @param spatialWeight Spatial weighting configuration.
+     * @param spatialWeights Spatial weighting configuration.
      * 
      * \~chinese
      * @brief 构造一个新的 GWRMultiscale 对象。
@@ -219,7 +228,7 @@ public:
      * @param x 自变量矩阵。
      * @param y 因变量。
      * @param coords 坐标矩阵。
-     * @param spatialWeight 空间权重配置。
+     * @param spatialWeights 空间权重配置。
      */
     GWRMultiscale(const arma::mat& x, const arma::vec& y, const arma::mat& coords, const std::vector<SpatialWeight>& spatialWeights)
         : SpatialMultiscaleAlgorithm(coords, spatialWeights)
@@ -555,9 +564,10 @@ public:     // SpatialMultiscaleAlgorithm interface
 
 
 public:     // IBandwidthSizeSelectable interface
-    double getCriterion(BandwidthWeight* weight) override
+    Status getCriterion(BandwidthWeight* weight, double& criterion) override
     {
-        return (this->*mBandwidthSizeCriterion)(weight);
+        criterion = (this->*mBandwidthSizeCriterion)(weight);
+        return mStatus;
     }
 
 
@@ -851,6 +861,7 @@ private:
     SpatialWeight mInitSpatialWeight;   //!< \~english Spatial weighting sheme for initializing bandwidth. \~chinese 计算初始带宽值时所用的空间权重配置。
     BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &GWRMultiscale::bandwidthSizeCriterionAllCVSerial; //!< \~english The criterion calculator for given bandwidth size. \~chinese 根据指定带宽值计算指标值的函数。
     size_t mBandwidthSelectionCurrentIndex = 0; //!< \~english The index of variable which currently the algorithm select bandwidth for. \~chinese 当前正在选带宽的变量索引值。
+    double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
 
 
     std::vector<BandwidthInitilizeType> mBandwidthInitilize;    //!< \~english Type of bandwidth initilization values. \~chinese 带宽初始值类型。

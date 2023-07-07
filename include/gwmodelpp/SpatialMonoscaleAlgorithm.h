@@ -36,11 +36,13 @@ public:
      * @brief Construct a new CGwmSpatialMonoscaleAlgorithm object
      * 
      * @param spatialWeight Spatial weighting configuration.
+     * @param coords Coordinates
      * 
      * \~chinese
-     * @brief 构造一个 CGwmSpatialMonoscaleAlgorithm 类型。     * 
-     * @param spatialWeight 空间权重配置。
+     * @brief 构造一个 CGwmSpatialMonoscaleAlgorithm 类型。
      * 
+     * @param spatialWeight 空间权重配置。
+     * @param coords 坐标
      */
     SpatialMonoscaleAlgorithm(const SpatialWeight& spatialWeight, arma::mat coords) : SpatialAlgorithm(coords)
     {

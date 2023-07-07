@@ -32,7 +32,8 @@ public:
     /**
      * @brief Construct a new SpatialMultiscaleAlgorithm object
      * 
-     * @param spatialWeights 
+     * @param coords \~english Coordinates \~chinese 坐标
+     * @param spatialWeights \~english Spatial weighting schemes \~chinese 空间加权配置
      */
     SpatialMultiscaleAlgorithm(const arma::mat& coords, const std::vector<SpatialWeight>& spatialWeights) : SpatialAlgorithm(coords)
     {
@@ -64,6 +65,11 @@ public:
      */
     virtual void setSpatialWeights(const std::vector<SpatialWeight> &spatialWeights);
     
+    /**
+     * @brief \~english Create parameter for distance calculator. \~chinese 为距离计算函数创建参数
+     * 
+     * @param size \~english Number of parameters \~chinese 参数数量
+     */
     void createDistanceParameter(size_t size);
 
 protected:

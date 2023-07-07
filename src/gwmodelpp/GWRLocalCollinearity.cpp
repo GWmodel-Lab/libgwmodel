@@ -38,18 +38,22 @@ GWRLocalCollinearity::~GWRLocalCollinearity()
 
 mat GWRLocalCollinearity::fit()
 {
+    GWM_LOG_STAGE("Initializing");
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     createDistanceParameter();
-
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     //setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
-    uword nDp = mCoords.n_rows;
     //选带宽
     //这里判断是否选带宽
     if(mIsAutoselectBandwidth)
     {
+        GWM_LOG_STAGE("Bandwidth selection");
         BandwidthWeight* bw0 = mSpatialWeight.weight<BandwidthWeight>();
         double lower = bw0->adaptive() ? 20 : 0.0;
         double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
+        
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0).str());
         BandwidthSelector selector(bw0, lower, upper);
         BandwidthWeight* bw = selector.optimize(this);
         if (bw)
@@ -57,14 +61,19 @@ mat GWRLocalCollinearity::fit()
             mSpatialWeight.setWeight(bw);
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
         }
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
     }
+
     mat betas(nDp,mX.n_cols,fill::zeros);
     vec localcn(nDp,fill::zeros);
     vec locallambda(nDp,fill::zeros);
     vec hatrow(nDp,fill::zeros);
-    //yhat赋值
+    
+    GWM_LOG_STAGE("Model fitting");
     mBetas = (this->*mFitFunction)(mX, mY);
-    //vec mYHat = fitted(mX,mBetas);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
+
+    GWM_LOG_STAGE("Model Diagnostic");
     vec mYHat = sum(mBetas % mX,1);
     vec mResidual = mY - mYHat;
     mDiagnostic.RSS = sum(mResidual % mResidual);
@@ -90,8 +99,13 @@ void GWRLocalCollinearity::createPredictionDistanceParameter(const arma::mat& lo
 
 mat GWRLocalCollinearity::predict(const mat& locations)
 {
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     createPredictionDistanceParameter(locations);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
+
     mBetas = (this->*mPredictFunction)(locations, mX, mY);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
+    
     return mBetas;
 }
 
@@ -99,27 +113,28 @@ void GWRLocalCollinearity::setBandwidthSelectionCriterion(const BandwidthSelecti
 {
     //setBandwidthSelectionCriterionType
     mBandwidthSelectionCriterion = criterion;
-    unordered_map<ParallelType, BandwidthSelectionCriterionCalculator> mapper;
-    switch (mBandwidthSelectionCriterion)
+    unordered_map<BandwidthSelectionCriterionType, BandwidthSelectionCriterionCalculator> mapper;
+    switch (mParallelType)
     {
-    case BandwidthSelectionCriterionType::CV:
+    case ParallelType::SerialOnly:
         mapper = {
-            make_pair(ParallelType::SerialOnly, &GWRLocalCollinearity::bandwidthSizeCriterionCVSerial),
-#ifdef ENABLE_OPENMP
-            make_pair(ParallelType::OpenMP, &GWRLocalCollinearity::bandwidthSizeCriterionCVOmp)
-#endif
+            make_pair(BandwidthSelectionCriterionType::CV, &GWRLocalCollinearity::bandwidthSizeCriterionCVSerial),
         };
         break;
+#ifdef ENABLE_OPENMP
+    case ParallelType::OpenMP:
+        mapper = {
+            make_pair(BandwidthSelectionCriterionType::CV, &GWRLocalCollinearity::bandwidthSizeCriterionCVOmp)
+        };
+        break;
+#endif
     default:
         mapper = {
-            make_pair(ParallelType::SerialOnly, &GWRLocalCollinearity::bandwidthSizeCriterionCVSerial),
-#ifdef ENABLE_OPENMP
-            make_pair(ParallelType::OpenMP, &GWRLocalCollinearity::bandwidthSizeCriterionCVOmp)
-#endif
+            make_pair(BandwidthSelectionCriterionType::CV, &GWRLocalCollinearity::bandwidthSizeCriterionCVSerial),
         };
         break;
     }
-    mBandwidthSelectionCriterionFunction = mapper[mParallelType];
+    mBandwidthSelectionCriterionFunction = mapper[mBandwidthSelectionCriterion];
 }
 
 vec GWRLocalCollinearity::ridgelm(const vec& w,double lambda)
@@ -199,6 +214,7 @@ double GWRLocalCollinearity::bandwidthSizeCriterionCVSerial(BandwidthWeight* ban
     //主循环
     for (uword i = 0; i < n ; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec distvi = mSpatialWeight.distance()->distance(i);
         vec wgt = bandwidthWeight->weight(distvi);
         //vec wgt = mSpatialWeight.spatialWeight(mDataPoints.row(i),mDataPoints);
@@ -235,8 +251,10 @@ double GWRLocalCollinearity::bandwidthSizeCriterionCVSerial(BandwidthWeight* ban
     //计算cv
 
     double cv = sum(residual % residual);
-    if (isfinite(cv))
+    if (mStatus == Status::Success && isfinite(cv))
     {
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
+        mBandwidthLastCriterion = cv;
         return cv;
     }
     else return DBL_MAX;
@@ -261,6 +279,7 @@ double GWRLocalCollinearity::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwi
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i <(int) n; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         //int thread = omp_get_thread_num();
         vec distvi = mSpatialWeight.distance()->distance(i);
         vec wgt = bandwidthWeight->weight(distvi);
@@ -290,7 +309,6 @@ double GWRLocalCollinearity::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwi
         }
         betas.row(i) = trans( ridgelm(wgt,locallambda(i)) );
         current++;
-
     }
     //yhat赋值
     //vec mYHat = fitted(mX,betas);
@@ -299,8 +317,10 @@ double GWRLocalCollinearity::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwi
     vec residual = mY - yhat;
     //计算cv
     double cv = sum(residual % residual);
-    if (isfinite(cv))
+    if (mStatus == Status::Success && isfinite(cv))
     {
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
+        mBandwidthLastCriterion = cv;
         return cv;
     }
     else return DBL_MAX;
@@ -316,6 +336,7 @@ mat GWRLocalCollinearity::fitSerial(const mat& x, const vec& y)
     vec hatrow(nDp, fill::zeros);
     for(uword i=0;i<nDp ;i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec wi =mSpatialWeight.weightVector(i);
         //计算xw
         //取mX不含第一列的部分
@@ -349,6 +370,7 @@ mat GWRLocalCollinearity::fitSerial(const mat& x, const vec& y)
         rowvec hatrow = x1w.row(i) * xtwxinv * trans(x1w);
         this->mTrS += hatrow(i);
         this->mTrStS += sum(hatrow % hatrow);
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     return betas;
 }
@@ -362,6 +384,7 @@ mat GWRLocalCollinearity::predictSerial(const arma::mat &locations, const mat& x
     vec hatrow(nRp, fill::zeros);
     for(uword i=0;i<nRp ;i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec wi =mSpatialWeight.weightVector(i);
         //计算xw
         //取mX不含第一列的部分
@@ -387,6 +410,7 @@ mat GWRLocalCollinearity::predictSerial(const arma::mat &locations, const mat& x
             }
         }
         betas.row(i) = trans(ridgelm(wi,locallambda(i)) );
+        GWM_LOG_PROGRESS(i + 1, nRp);
     }
     return betas;
 }
@@ -404,6 +428,7 @@ mat GWRLocalCollinearity::fitOmp(const mat& x, const vec& y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for(int i=0;i <(int)nDp;i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         int thread = omp_get_thread_num();
         vec wi = mSpatialWeight.weightVector(i);
         //计算xw
@@ -440,6 +465,7 @@ mat GWRLocalCollinearity::fitOmp(const mat& x, const vec& y)
         shat_all(1, thread) += sum(hatrow % hatrow);
         this->mTrS += hatrow(i);
         this->mTrStS += sum(hatrow % hatrow);
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     vec shat = sum(shat_all,1);
     this->mTrS = sum(shat.row(0));
@@ -460,6 +486,7 @@ mat GWRLocalCollinearity::predictOmp(const arma::mat &locations, const mat& x, c
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for(int i=0;i <(int)nRp;i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         vec wi = mSpatialWeight.weightVector(i);
         //计算xw
         //取mX不含第一列的部分
@@ -485,6 +512,7 @@ mat GWRLocalCollinearity::predictOmp(const arma::mat &locations, const mat& x, c
             }
         }
         betas.row(i) = trans( ridgelm(wi,locallambda(i)) );
+        GWM_LOG_PROGRESS(i + 1, nRp);
     }
     vec shat = sum(shat_all,1);
     this->mTrS = sum(shat.row(0));

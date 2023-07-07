@@ -9,6 +9,7 @@
 #include "gwmodelpp/spatialweight/BandwidthWeight.h"
 #include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
+#include "TerminateCheckTelegram.h"
 
 using namespace std;
 using namespace arma;
@@ -122,3 +123,61 @@ TEST_CASE("ScableGWR:  autoselection with CV")
     REQUIRE(algorithm.hasIntercept() == true);
     
 }
+
+TEST_CASE("Scalable GWR: cancel")
+{
+    mat londonhp100_coord, londonhp100_data;
+    vector<string> londonhp100_fields;
+    if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
+    {
+        FAIL("Cannot load londonhp100 data.");
+    }
+
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(60, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
+
+    vec y = londonhp100_data.col(0);
+    mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
+
+    SECTION("fit")
+    {
+        auto bwCriterion = GENERATE(as<GWRScalable::BandwidthSelectionCriterionType>{}, 0, 1);
+        auto stage = GENERATE(as<std::string>{}, "prepare", "optimize", "fit");
+        auto progress = GENERATE(0, 10);
+        INFO("Settings: " << stage << ", " << progress);
+
+        auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
+        GWRScalable algorithm;
+        algorithm.setTelegram(std::move(telegram));
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
+        algorithm.setSpatialWeight(spatial);
+        algorithm.setHasHatMatrix(true);
+        algorithm.setParameterOptimizeCriterion(bwCriterion);
+        REQUIRE_NOTHROW(algorithm.fit());
+        REQUIRE(algorithm.status() == Status::Terminated);
+    }
+
+    SECTION("predict")
+    {
+        auto stage = GENERATE(as<std::string>{}, "predict");
+        auto progress = GENERATE(0, 10);
+        INFO("Settings: " << stage << ", " << progress);
+
+        auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
+        GWRScalable algorithm;
+        algorithm.setTelegram(std::move(telegram));
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
+        algorithm.setSpatialWeight(spatial);
+        algorithm.setHasHatMatrix(true);
+        REQUIRE_NOTHROW(algorithm.fit());
+        REQUIRE_NOTHROW(algorithm.predict(londonhp100_coord));
+        REQUIRE(algorithm.status() == Status::Terminated);
+    }
+    
+}
+

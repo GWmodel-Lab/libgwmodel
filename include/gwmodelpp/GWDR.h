@@ -9,6 +9,7 @@
 #include "IRegressionAnalysis.h"
 #include "VariableForwardSelector.h"
 #include "IParallelizable.h"
+#include "IBandwidthSelectable.h"
 
 namespace gwm
 {
@@ -324,9 +325,10 @@ public: // IRegressionAnalysis
     virtual arma::mat fit() override;
 
 public:  // IVariableSelectable
-    double getCriterion(const std::vector<std::size_t>& variables) override
+    Status getCriterion(const std::vector<std::size_t>& variables, double& criterion) override
     {
-        return (this->*mIndepVarCriterionFunction)(variables);
+        criterion = (this->*mIndepVarCriterionFunction)(variables);
+        return mStatus;
     }
 
     std::vector<std::size_t> selectedVariables() override
@@ -500,12 +502,15 @@ private:
     double mBandwidthOptimizeEps = 1e-6;    //!< \~english Threshold for bandwidth optimization \~chinese 带宽优选阈值
     std::size_t mBandwidthOptimizeMaxIter = 100000; //!< \~english Maximum iteration for bandwidth optimization \~chinese 带宽优选最大迭代次数
     double mBandwidthOptimizeStep = 0.01;   //!< \~english Step size for bandwidth optimization \~chinese 带宽优选步长
+    double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
 
     bool mEnableIndepVarSelect = false;     //!< \~english Whether independent variable selection is enabled \~chinese 是否优选变量
     double mIndepVarSelectThreshold = 3.0;  //!< \~english Threshold for independent variable selection \~chinese 变量优选阈值
     VariablesCriterionList mIndepVarCriterionList;  //!< \~english List of criterion values for each variable combination in independent variable selection \~chinese 变量优选过程中每种变量组合对应的指标值列表
     IndepVarCriterionCalculator mIndepVarCriterionFunction = &GWDR::indepVarCriterionSerial;    //!< \~english Calculator to get criterion for given independent variable combination \~chinese 用于根据给定变量组合计算指标值的函数
     std::vector<std::size_t> mSelectedIndepVars;    //!< \~english Selected independent variable \~chinese 选中的变量组合
+    std::size_t mIndepVarSelectionProgressTotal = 0; //!< \~english Total number of independent variable combination. \~chinese 自变量所有组合总数。
+    std::size_t mIndepVarSelectionProgressCurrent = 0; //!< \~english Current progress of independent variable selection. \~chinese 当前自变量优选的进度。
 
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Type of parallelization \~chinese 并行方法类型
     int mOmpThreadNum = 8;  //!< \~english Number of threads used in multithreading \~chinese 多线程所使用的线程数
@@ -540,6 +545,42 @@ public:
      * @return double \~english Criterion value \~chinese 指标值
      */
     static double criterion_function(const gsl_vector* bws, void* params);
+
+    /**
+     * @brief \~english Get meta infomation of current bandwidth value and the corresponding criterion value.
+     * \~chinese 获取当前带宽值和对应指标值的元信息。
+     * 
+     * @param weights \~english Bandwidth weight \~chinese 带宽设置
+     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     */
+    static std::stringstream infoBandwidthCriterion(const std::vector<BandwidthWeight*>& weights)
+    {
+        std::size_t number = 1;
+        std::vector<std::string> labels(weights.size());
+        std::transform(weights.cbegin(), weights.cend(), labels.begin(), [&number](const BandwidthWeight* bw)
+        {
+            return std::to_string(number++) + ":" + (bw->adaptive() ? "adaptive" : "fixed");
+        });
+        return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << strjoin(",", labels) << "," << "criterion";
+    }
+
+    /**
+     * @brief \~english Get infomation of current bandwidth value and the corresponding criterion value.
+     * \~chinese 获取当前带宽值和对应指标值的信息。
+     * 
+     * @param weights \~english Bandwidth weight \~chinese 带宽设置
+     * @param criterion \~english Criterion value \~chinese 指标值
+     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     */
+    static std::stringstream infoBandwidthCriterion(const std::vector<BandwidthWeight*>& weights, const double criterion)
+    {
+        std::vector<std::string> labels(weights.size());
+        std::transform(weights.cbegin(), weights.cend(), labels.begin(), [](const BandwidthWeight* bw)
+        {
+            return std::to_string(bw->bandwidth());
+        });
+        return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << strjoin(",", labels) << "," << criterion;
+    }
 
 public:
 

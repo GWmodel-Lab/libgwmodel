@@ -9,6 +9,7 @@
 #include "gwmodelpp/spatialweight/BandwidthWeight.h"
 #include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
+#include "TerminateCheckTelegram.h"
 
 using namespace std;
 using namespace arma;
@@ -241,4 +242,63 @@ TEST_CASE("GWSS: londonhp100")
         REQUIRE(approx_equal(localscorr_q, localscorr_q0, "absdiff", 1e-1));
     }
     #endif
+}
+
+TEST_CASE("GWSS: cancel")
+{
+    mat londonhp100_coord, londonhp100_data;
+    vector<string> londonhp100_fields;
+    if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
+    {
+        FAIL("Cannot load londonhp100 data.");
+    }
+
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
+
+    mat x = londonhp100_data.cols(0, 3);
+
+    const initializer_list<ParallelType> parallel_list = {
+        ParallelType::SerialOnly
+#ifdef ENABLE_OPENMP
+        , ParallelType::OpenMP
+#endif // ENABLE_OPENMP     
+    };
+    auto parallel = GENERATE_REF(values(parallel_list));
+
+    SECTION("average")
+    {
+        string stage = "GWAverage";
+        auto progress = GENERATE(0, 10);
+        INFO("Settings: " << stage << ", " << progress);
+
+        auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
+        GWSS algorithm;
+        algorithm.setTelegram(std::move(telegram));
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setVariables(x);
+        algorithm.setGWSSMode(GWSS::GWSSMode::Average);
+        algorithm.setSpatialWeight(spatial);
+        REQUIRE_NOTHROW(algorithm.run());
+        REQUIRE(algorithm.status() == Status::Terminated);
+    }
+
+    SECTION("average")
+    {
+        string stage = "GWCorrelation";
+        auto progress = GENERATE(0, 10);
+        INFO("Settings: " << stage << ", " << progress);
+
+        auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
+        GWSS algorithm;
+        algorithm.setTelegram(std::move(telegram));
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setVariables(x);
+        algorithm.setGWSSMode(GWSS::GWSSMode::Correlation);
+        algorithm.setSpatialWeight(spatial);
+        REQUIRE_NOTHROW(algorithm.run());
+        REQUIRE(algorithm.status() == Status::Terminated);
+    }
+    
 }

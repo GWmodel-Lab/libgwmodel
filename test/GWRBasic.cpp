@@ -9,6 +9,7 @@
 #include "gwmodelpp/spatialweight/BandwidthWeight.h"
 #include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
+#include "TerminateCheckTelegram.h"
 
 using namespace std;
 using namespace arma;
@@ -127,5 +128,160 @@ TEST_CASE("BasicGWR: LondonHP")
         REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.678982114793865, 1e-8));
     }
 #endif
+
+}
+
+
+TEST_CASE("Basic GWR: cancel")
+{
+    mat londonhp100_coord, londonhp100_data;
+    vector<string> londonhp100_fields;
+    if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
+    {
+        FAIL("Cannot load londonhp100 data.");
+    }
+    vec y = londonhp100_data.col(0);
+    mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
+
+    vector<pair<string, size_t>> fit_stages = {
+        make_pair("indepVarsSelection", 0),
+        make_pair("indepVarsSelection", 10),
+        make_pair("bandwidthSize", 0),
+        make_pair("bandwidthSize", 10),
+        make_pair("fit", 0),
+        make_pair("fit", 10)
+    };
+
+    vector<pair<string, size_t>> predict_stages = {
+        make_pair("predict", 0),
+        make_pair("predict", 10)
+    };
+
+    SECTION("fit | CV Bandwidth | serial")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
+            GWRBasic algorithm;
+            algorithm.setTelegram(std::move(telegram));
+            algorithm.setCoords(londonhp100_coord);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeight(spatial);
+            algorithm.setIsAutoselectBandwidth(true);
+            algorithm.setIsAutoselectIndepVars(true);
+            algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::CV);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+    SECTION("fit | AIC Bandwidth | serial")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
+            GWRBasic algorithm;
+            algorithm.setTelegram(std::move(telegram));
+            algorithm.setCoords(londonhp100_coord);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeight(spatial);
+            algorithm.setIsAutoselectBandwidth(true);
+            algorithm.setIsAutoselectIndepVars(true);
+            algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+    SECTION("predict | serial")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
+            GWRBasic algorithm;
+            algorithm.setTelegram(std::move(telegram));
+            algorithm.setCoords(londonhp100_coord);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeight(spatial);
+            algorithm.setIsAutoselectBandwidth(true);
+            algorithm.setIsAutoselectIndepVars(true);
+            algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE_NOTHROW(algorithm.predict(londonhp100_coord));
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+#ifdef ENABLE_OPENMP
+    SECTION("fit | CV Bandwidth | openmp")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
+            GWRBasic algorithm;
+            algorithm.setTelegram(std::move(telegram));
+            algorithm.setCoords(londonhp100_coord);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeight(spatial);
+            algorithm.setIsAutoselectBandwidth(true);
+            algorithm.setIsAutoselectIndepVars(true);
+            algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::CV);
+            algorithm.setParallelType(ParallelType::OpenMP);
+            algorithm.setOmpThreadNum(6);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+    SECTION("fit | AIC Bandwidth | openmp")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
+            GWRBasic algorithm;
+            algorithm.setTelegram(std::move(telegram));
+            algorithm.setCoords(londonhp100_coord);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeight(spatial);
+            algorithm.setIsAutoselectBandwidth(true);
+            algorithm.setIsAutoselectIndepVars(true);
+            algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
+            algorithm.setParallelType(ParallelType::OpenMP);
+            algorithm.setOmpThreadNum(6);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+
+    SECTION("predict | openmp")
+    {
+        for (auto &&stage : fit_stages)
+        {
+            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
+            GWRBasic algorithm;
+            algorithm.setTelegram(std::move(telegram));
+            algorithm.setCoords(londonhp100_coord);
+            algorithm.setDependentVariable(y);
+            algorithm.setIndependentVariables(x);
+            algorithm.setSpatialWeight(spatial);
+            algorithm.setIsAutoselectBandwidth(true);
+            algorithm.setIsAutoselectIndepVars(true);
+            algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
+            algorithm.setParallelType(ParallelType::OpenMP);
+            algorithm.setOmpThreadNum(6);
+            REQUIRE_NOTHROW(algorithm.fit());
+            REQUIRE_NOTHROW(algorithm.predict(londonhp100_coord));
+            REQUIRE(algorithm.status() == Status::Terminated);
+        }
+    }
+#endif  // ENABLE_OPENMP
 
 }

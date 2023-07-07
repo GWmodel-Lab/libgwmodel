@@ -28,16 +28,19 @@ RegressionDiagnostic GTWR::CalcDiagnostic(const mat& x, const vec& y, const mat&
 
 mat GTWR::fit()
 {
+    GWM_LOG_STAGE("Initializing")
     createDistanceParameter();
-
-    uword nDp = mCoords.n_rows;
-
+    uword nDp = mCoords.n_rows, nVars = mX.n_cols;
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
 
     if (mIsAutoselectBandwidth)
     {
+        GWM_LOG_STAGE("Bandwidth optimization")
         BandwidthWeight *bw0 = mSpatialWeight.weight<BandwidthWeight>();
         double lower = bw0->adaptive() ? 20 : 0.0;
         double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
+
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0).str());
         BandwidthSelector selector(bw0, lower, upper);
         BandwidthWeight *bw = selector.optimize(this);
         if (bw)
@@ -45,19 +48,26 @@ mat GTWR::fit()
             mSpatialWeight.setWeight(bw);
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
         }
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     }
 
-    if(mIsAutoselectLambda)
+    if (mIsAutoselectLambda)
     {
+        GWM_LOG_STAGE("Lambda optimization")
         BandwidthWeight *bw = mSpatialWeight.weight<BandwidthWeight>();
-        mStdistance=mSpatialWeight.distance<CRSSTDistance>();
-        double lambda;
-        lambda=LambdaAutoSelection(bw);
+        mStdistance = mSpatialWeight.distance<CRSSTDistance>();
+
+        GWM_LOG_INFO(infoLambdaCriterion().str());
+        double lambda = LambdaAutoSelection(bw);
         mStdistance->setLambda(lambda);
-        printf("the best lambda is %.6f\n",lambda);
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     }
 
+    GWM_LOG_STAGE("Model fitting")
     mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
+    GWM_LOG_STAGE("Model Diagnostic");
     mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
     double trS = mSHat(0), trStS = mSHat(1);
     double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
@@ -109,6 +119,7 @@ mat GTWR::predictSerial(const mat& locations, const mat& x, const vec& y)
     mat betas(nVar, nRp, fill::zeros);
     for (uword i = 0; i < nRp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec w = mSpatialWeight.weightVector(i);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
@@ -123,6 +134,7 @@ mat GTWR::predictSerial(const mat& locations, const mat& x, const vec& y)
             GWM_LOG_ERROR(e.what());
             throw e;
         }
+        GWM_LOG_PROGRESS(i + 1, nRp);
     }
     return betas.t();
 }
@@ -137,8 +149,8 @@ mat GTWR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qD
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec w = mSpatialWeight.weightVector(i);
-        // w.print("w");
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
         mat xtwy = xtw * y;
@@ -161,6 +173,7 @@ mat GTWR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qD
             GWM_LOG_ERROR(e.what());
             throw e;
         }
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     betasSE = betasSE.t();
     return betas.t();
@@ -173,6 +186,7 @@ double GTWR::bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight)
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         w(i) = 0.0;
@@ -192,8 +206,10 @@ double GTWR::bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight)
             return DBL_MAX;
         }
     }
-    if (isfinite(cv))
+    if (mStatus == Status::Success && isfinite(cv))
     {
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
+        mBandwidthLastCriterion = cv;
         return cv;
     }
     else return DBL_MAX;
@@ -206,6 +222,7 @@ double GTWR::bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeight)
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         mat xtw = trans(mX.each_col() % w);
@@ -227,8 +244,10 @@ double GTWR::bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeight)
         }
     }
     double value = GWRBase::AICc(mX, mY, betas.t(), shat);
-    if (isfinite(value))
+    if (mStatus == Status::Success && isfinite(value))
     {
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
+        mBandwidthLastCriterion = value;
         return value;
     }
     else return DBL_MAX;
@@ -270,6 +289,7 @@ mat GTWR::predictOmp(const mat& locations, const mat& x, const vec& y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nRp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (success)
         {
             vec w = mSpatialWeight.weightVector(i);
@@ -288,6 +308,7 @@ mat GTWR::predictOmp(const mat& locations, const mat& x, const vec& y)
                 success = false;
             }
         }
+        GWM_LOG_PROGRESS(i + 1, nRp);
     }
     if (!success)
     {
@@ -309,6 +330,7 @@ mat GTWR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (success)
         {
             int thread = omp_get_thread_num();
@@ -337,6 +359,7 @@ mat GTWR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag
                 success = false;
             }
         }
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     if (!success)
     {
@@ -347,9 +370,8 @@ mat GTWR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag
     betasSE = betasSE.t();
     return betas.t();
 }
-#endif
 
-#ifdef ENABLE_OPENMP
+
 double GTWR::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight)
 {
     uword nDp = mCoords.n_rows;
@@ -359,6 +381,7 @@ double GTWR::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight)
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
         {
             int thread = omp_get_thread_num();
@@ -385,9 +408,11 @@ double GTWR::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight)
             }
         }
     }
-    if (flag)
+    if (mStatus == Status::Success && flag)
     {
         double cv = sum(cv_all);
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
+        mBandwidthLastCriterion = cv;
         return cv;
     }
     else return DBL_MAX;
@@ -402,6 +427,7 @@ double GTWR::bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight)
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
         {
             int thread = omp_get_thread_num();
@@ -426,12 +452,14 @@ double GTWR::bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight)
             }
         }
     }
-    if (flag)
+    if (mStatus == Status::Success && flag)
     {
         vec shat = sum(shat_all, 1);
         double value = GWRBase::AICc(mX, mY, betas.t(), shat);
         if (isfinite(value))
         {
+            GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
+            mBandwidthLastCriterion = value;
             return value;
         }
         else return DBL_MAX;
@@ -465,7 +493,7 @@ void GTWR::setParallelType(const ParallelType& type)
     }
 }
 
-double GTWR::RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda)
+Status GTWR::RsquareByLambda(BandwidthWeight* bandwidthWeight, double lambda, double& rsquare)
 {
     // (void)(params);
     double r2;
@@ -475,7 +503,8 @@ double GTWR::RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda)
     mStdistance->makeParameter({ mCoords, mCoords, vTimes, vTimes });
     for (uword i = 0; i < nDp; i++)
     {
-        mat d=mStdistance->distance(i);
+        GWM_LOG_STOP_BREAK(mStatus);
+        mat d = mStdistance->distance(i);
         // vec w = mSpatialWeight.weightVector(i);
         vec w = bandwidthWeight->weight(d);
         mat xtw = trans(mX.each_col() % w);
@@ -492,12 +521,20 @@ double GTWR::RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda)
             throw e;
         }
     }
-    betas = betas.t();
-    vec r = mY - sum(betas % mX, 1);
-    double rss = sum(r % r);
-    double yss = sum((mY - mean(mY)) % (mY - mean(mY)));
-    r2 = 1 - rss / yss;
-    return r2;
+    if (mStatus == Status::Success){
+        betas = betas.t();
+        vec r = mY - sum(betas % mX, 1);
+        double rss = sum(r % r);
+        double yss = sum((mY - mean(mY)) % (mY - mean(mY)));
+        r2 = 1 - rss / yss;
+        rsquare = r2;
+        GWM_LOG_INFO(infoLambdaCriterion(lambda, rsquare).str());
+    }
+    else
+    {
+        rsquare = 0.0;
+    }
+    return mStatus;
 }
 
 double GTWR::LambdaAutoSelection(BandwidthWeight* bw)
@@ -534,12 +571,13 @@ double GTWR::LambdaAutoSelection(BandwidthWeight* bw)
     double step = b - a;
     double p = a + (1 - ratio) * step, q = a + ratio * step;
     double f_a, f_b, f_p, f_q;
-    f_a = RsquareByLambda(bw, a);
-    f_b = RsquareByLambda(bw, b);
-    f_p = RsquareByLambda(bw, p);
-    f_q = RsquareByLambda(bw, q);
+    Status s_a = RsquareByLambda(bw, a, f_a);
+    Status s_b = RsquareByLambda(bw, b, f_b);
+    Status s_p = RsquareByLambda(bw, p, f_p);
+    Status s_q = RsquareByLambda(bw, q, f_q);
+    umat sm = { (u64)s_a, (u64)s_b, (u64)s_p, (u64)s_q };
     // r方越大越好
-    while (abs(f_a - f_b) >= eps && iter < max_iter)
+    while (all(vectorise(sm) == 0) && abs(f_a - f_b) >= eps && iter < max_iter)
     {
         if (f_p > f_q)
         {
@@ -547,7 +585,7 @@ double GTWR::LambdaAutoSelection(BandwidthWeight* bw)
             q = p; f_q = f_p;
             step = b - a;
             p = a + (1 - ratio) * step;
-            f_p = RsquareByLambda(bw, p);
+            sm(2) = u64(RsquareByLambda(bw, p, f_p));
         }
         else
         {
@@ -555,12 +593,16 @@ double GTWR::LambdaAutoSelection(BandwidthWeight* bw)
             p = q; f_p = f_q;
             step = b - a;
             q = a + ratio * step;
-            f_q = RsquareByLambda(bw, q);
+            sm(3) = u64(RsquareByLambda(bw, q, f_q));
         }
         iter++;
     }
-    double golden = (b + a) / 2;
-    return golden;
+    if (all(vectorise(sm) == u64(Status::Success)))
+    {
+        double golden = (b + a) / 2;
+        return golden;
+    }
+    else return 0.0;
 }
 
 // void GTWR::LambdaBwAutoSelection()

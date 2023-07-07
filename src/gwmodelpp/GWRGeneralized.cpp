@@ -19,22 +19,26 @@ using namespace gwm;
 
 mat GWRGeneralized::fit()
 {
-    // 点位初始化
-    createDistanceParameter();
-
+    GWM_LOG_STAGE("Initializing");
     // 初始化
     // setXY(mX, mY, mSourceLayer, mDepVar, mIndepVars);
     uword nVar = mX.n_cols;
     uword nDp = mCoords.n_rows, nRp = mHasRegressionData ? mRegressionData.n_rows : nDp;
+    // 点位初始化
+    createDistanceParameter();
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     // 优选带宽
     if (mIsAutoselectBandwidth)
     {
+        GWM_LOG_STAGE("Bandwidth selection");
         // emit message(string("Automatically selecting bandwidth ..."));
         // emit tick(0, 0);
         BandwidthWeight *bw0 = mSpatialWeight.weight<BandwidthWeight>();
         double lower = bw0->adaptive() ? 20 : 0.0;
         double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
+        
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0).str());
         BandwidthSelector selector(bw0, lower, upper);
         BandwidthWeight *bw = selector.optimize(this);
         if (bw)
@@ -42,15 +46,16 @@ mat GWRGeneralized::fit()
             mSpatialWeight.setWeight(bw);
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
         }
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
     }
 
+    GWM_LOG_STAGE("Preparing");
     mBetas = mat(nVar, nRp, fill::zeros);
     if (mHasHatMatrix)
     {
         mBetasSE = mat(nVar, nDp, fill::zeros);
         mShat = vec(2, fill::zeros);
     }
-
     mWtMat1 = mat(nDp, nDp, fill::zeros);
     mWtMat2 = mat(nRp, nDp, fill::zeros);
     if (mHasRegressionData)
@@ -77,9 +82,14 @@ mat GWRGeneralized::fit()
     }
 
     //bool isAllCorrect = true;
+    GWM_LOG_STAGE("Calibrating GLM model");
     CalGLMModel(mX, mY);
-    mBetas = (this->*mGGWRfitFunction)(mX, mY);
 
+    GWM_LOG_STAGE("Model fitting");
+    mBetas = (this->*mGGWRfitFunction)(mX, mY);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
+
+    GWM_LOG_STAGE("Model Diagnostic");
     if (mHasHatMatrix)
     {
         if (mFamily == Family::Poisson)
@@ -161,8 +171,14 @@ void GWRGeneralized::createPredictionDistanceParameter(const arma::mat &location
 }
 mat GWRGeneralized::predict(const mat& locations)
 {
+    uword nDp = mCoords.n_rows, nVars = mX.n_cols;
+    mHasHatMatrix = false;
     createPredictionDistanceParameter(locations);
-    mBetas = (this->*mGGWRfitFunction)( mX, mY);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
+    mBetas = (this->*mGGWRfitFunction)(mX, mY);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
     return mBetas;
 }
 
@@ -220,6 +236,7 @@ mat GWRGeneralized::fitPoissonSerial(const mat &x, const vec &y)
     {
         for (uword i = 0; i < nDp; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             try
             {
                 vec wi = mWtMat2.col(i);
@@ -246,12 +263,14 @@ mat GWRGeneralized::fitPoissonSerial(const mat &x, const vec &y)
                 isAllCorrect = false;
                 
             }
+            GWM_LOG_PROGRESS(i + 1, nDp);
         }
     }
     else
     {
         for (uword i = 0; i < nRp; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             try
             {
                 vec wi = mWtMat2.col(i);
@@ -264,9 +283,11 @@ mat GWRGeneralized::fitPoissonSerial(const mat &x, const vec &y)
                 except=e;
                 isAllCorrect = false;
             }
+            GWM_LOG_PROGRESS(i + 1, nDp);
         }
     }
-    if(!isAllCorrect){
+    if (!isAllCorrect)
+    {
         throw except;
     }
     return betas;
@@ -306,6 +327,7 @@ mat GWRGeneralized::fitPoissonOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < (int)nDp; i++)
         {
+            GWM_LOG_STOP_CONTINUE(mStatus);
             mat ci, s_ri;
             if (true)
             {
@@ -339,6 +361,7 @@ mat GWRGeneralized::fitPoissonOmp(const mat &x, const vec &y)
                     isAllCorrect = false;
                 }
             }
+            GWM_LOG_PROGRESS(i + 1, nDp);
         }
         mShat(0) = sum(trans(shat.row(0)));
         mShat(1) = sum(trans(shat.row(1)));
@@ -348,6 +371,7 @@ mat GWRGeneralized::fitPoissonOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < (int)nRp; i++)
         {
+            GWM_LOG_STOP_CONTINUE(mStatus);
             if (true)
             {
                 try
@@ -365,6 +389,7 @@ mat GWRGeneralized::fitPoissonOmp(const mat &x, const vec &y)
                     // emit error(e.what());
                 }
             }
+            GWM_LOG_PROGRESS(i + 1, nDp);
         }
     }
     if(!isAllCorrect){
@@ -398,6 +423,7 @@ mat GWRGeneralized::fitBinomialOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < (int)nDp; i++)
         {
+            GWM_LOG_STOP_CONTINUE(mStatus);
             mat ci, s_ri;
             if (true)
             {
@@ -427,6 +453,7 @@ mat GWRGeneralized::fitBinomialOmp(const mat &x, const vec &y)
                     // emit error(e.what());
                 }
             }
+            GWM_LOG_PROGRESS(i + 1, nDp);
         }
         mShat(0) = sum(shat.col(0));
         mShat(1) = sum(shat.col(1));
@@ -436,6 +463,7 @@ mat GWRGeneralized::fitBinomialOmp(const mat &x, const vec &y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; i < (int)nRp; i++)
         {
+            GWM_LOG_STOP_CONTINUE(mStatus);
             if (true)
             {
                 try
@@ -453,6 +481,7 @@ mat GWRGeneralized::fitBinomialOmp(const mat &x, const vec &y)
                     // emit error(e.what());
                 }
             }
+            GWM_LOG_PROGRESS(i + 1, nDp)
         }
     }
     if(!isAllCorrect){
@@ -482,6 +511,7 @@ mat GWRGeneralized::fitBinomialSerial(const mat &x, const vec &y)
     {
         for (uword i = 0; i < nDp; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             try
             {
                 vec wi = mWtMat1.col(i);
@@ -504,12 +534,14 @@ mat GWRGeneralized::fitBinomialSerial(const mat &x, const vec &y)
                 except=e;
                 isAllCorrect = false;
             }
+            GWM_LOG_PROGRESS(i + 1, nDp);
         }
     }
     else
     {
         for (uword i = 0; i < nRp; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             try
             {
                 vec wi = mWtMat2.col(i);
@@ -524,6 +556,7 @@ mat GWRGeneralized::fitBinomialSerial(const mat &x, const vec &y)
                 isAllCorrect = false;
                 // emit error(e.what());
             }
+            GWM_LOG_PROGRESS(i + 1, nRp);
         }
     }
     if(!isAllCorrect){
@@ -539,14 +572,20 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionCVSerial(BandwidthWeight *bandw
     mat wt = mat(n, n);
     for (uword i = 0; i < n; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         w.row(i) = 0;
         wt.col(i) = w;
     }
+    GWM_LOG_STOP_RETURN(mStatus, DBL_MAX);
+    
     (this->*mCalWtFunction)(mX, mY, wt);
+    GWM_LOG_STOP_RETURN(mStatus, DBL_MAX);
+
     for (uword i = 0; i < n; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         mat wi = wt.col(i) % mWt2;
         vec gwsi = gwPredict(mX, myAdj, wi);
         mat yhatnoi = mX.row(i) * gwsi;
@@ -559,9 +598,17 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionCVSerial(BandwidthWeight *bandw
             cv.row(i) = mY.row(i) - exp(yhatnoi) / (1 + exp(yhatnoi));
         }
     }
+    GWM_LOG_STOP_RETURN(mStatus, DBL_MAX);
+
     vec cvsquare = trans(cv) * cv;
     double res = sum(cvsquare);
-    return res;
+    if (mStatus == Status::Success && isfinite(res))
+    {
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - res)));
+        mBandwidthLastCriterion = res;
+        return res;
+    }
+    else return DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -574,6 +621,7 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionCVOmp(BandwidthWeight *bandwidt
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < (int)n; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (true)
         {
             vec d = mSpatialWeight.distance()->distance(i);
@@ -582,10 +630,15 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionCVOmp(BandwidthWeight *bandwidt
             wt.col(i) = w;
         }
     }
+    GWM_LOG_STOP_RETURN(mStatus, DBL_MAX);
+
     (this->*mCalWtFunction)(mX, mY, wt);
+    GWM_LOG_STOP_RETURN(mStatus, DBL_MAX);
+
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < (int)n; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (true)
         {
             mat wi = wt.col(i) % mWt2;
@@ -601,11 +654,17 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionCVOmp(BandwidthWeight *bandwidt
             }
         }
     }
+    GWM_LOG_STOP_RETURN(mStatus, DBL_MAX);
+
     vec cvsquare = trans(cv) * cv;
     double res = sum(cvsquare);
-    //    this->mBwScore.insert(bw,res);
-
-    return res;
+    if (mStatus == Status::Success && isfinite(res))
+    {
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - res)));
+        mBandwidthLastCriterion = res;
+        return res;
+    }
+    else return DBL_MAX;
 }
 #endif
 
@@ -617,32 +676,36 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionAICSerial(BandwidthWeight *band
     mat wt = mat(n, n);
     for (uword i = 0; i < n; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         wt.col(i) = w;
     }
+    GWM_LOG_STOP_RETURN(mStatus, DBL_MAX);
 
     (this->*mCalWtFunction)(mX, mY, wt);
+    GWM_LOG_STOP_RETURN(mStatus, DBL_MAX);
+
     vec trS = vec(1, fill::zeros);
     for (uword i = 0; i < n; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec wi = wt.col(i) % mWt2;
         mat Ci = CiMat(mX, wi);
         S.row(i) = mX.row(i) * Ci;
         trS(0) += S(i, i);
     }
-    double AICc;
+    GWM_LOG_STOP_RETURN(mStatus, DBL_MAX);
 
-    if (S.is_finite())
+    if (mStatus == Status::Success && S.is_finite())
     {
         double trs = double(trS(0));
-        AICc = -2 * mLLik + 2 * trs + 2 * trs * (trs + 1) / (n - trs - 1);
+        double AICc = -2 * mLLik + 2 * trs + 2 * trs * (trs + 1) / (n - trs - 1);
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - AICc)));
+        mBandwidthLastCriterion = AICc;
+        return AICc;
     }
-    else
-    {
-        AICc = INFINITY;
-    }
-    return AICc;
+    else return DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -656,6 +719,7 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionAICOmp(BandwidthWeight *bandwid
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < (int)n; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (true)
         {
             vec d = mSpatialWeight.distance()->distance(i);
@@ -663,11 +727,16 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionAICOmp(BandwidthWeight *bandwid
             wt.col(i) = w;
         }
     }
+    GWM_LOG_STOP_RETURN(mStatus, DBL_MAX);
+    
     (this->*mCalWtFunction)(mX, mY, wt);
+    GWM_LOG_STOP_RETURN(mStatus, DBL_MAX);
+
     vec trS = vec(mOmpThreadNum, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; i < (int)n; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (true)
         {
             int thread = omp_get_thread_num();
@@ -677,10 +746,15 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionAICOmp(BandwidthWeight *bandwid
             trS(thread) += S(i, i);
         }
     }
-    if (S.is_finite())
+    GWM_LOG_STOP_RETURN(mStatus, DBL_MAX);
+
+    if (mStatus == Status::Success && S.is_finite())
     {
-        double trs = double(sum(trS));
-        return -2 * mLLik + 2 * trs + 2 * trs * (trs + 1) / (n - trs - 1);
+        double trs = double(trS(0));
+        double AICc = -2 * mLLik + 2 * trs + 2 * trs * (trs + 1) / (n - trs - 1);
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - AICc)));
+        mBandwidthLastCriterion = AICc;
+        return AICc;
     }
     else return DBL_MAX;
 }
@@ -700,7 +774,7 @@ vec GWRGeneralized::PoissonWtSerial(const mat &x, const vec &y, mat wt)
     mWt2 = ones(dpn);
     mLLik = 0;
 
-    while (true)
+    while (itCount < mMaxiter)
     {
         myAdj = nu + (y - mu) / mu;
         for (uword i = 0; i < dpn; i++)
@@ -715,12 +789,14 @@ vec GWRGeneralized::PoissonWtSerial(const mat &x, const vec &y, mat wt)
         oldLLik = mLLik;
         vec lliktemp = dpois(y, mu);
         mLLik = sum(lliktemp);
-        if (abs((oldLLik - mLLik) / mLLik) < mTol)
+        double diff = abs((oldLLik - mLLik) / mLLik);
+        if (diff < mTol)
+        {
+            GWM_LOG_PROGRESS_PERCENT(exp(- (diff - mTol)));
             break;
+        }
         mWt2 = mu;
         itCount++;
-        if (itCount == mMaxiter)
-            break;
     }
     return mu;
 }
@@ -739,7 +815,7 @@ vec GWRGeneralized::PoissonWtOmp(const mat &x, const vec &y, mat wt)
     vec cv = vec(dpn);
     mWt2 = ones(dpn);
     mLLik = 0;
-    while (true)
+    while (itCount < mMaxiter)
     {
         myAdj = nu + (y - mu) / mu;
         for (uword i = 0; i < dpn; i++)
@@ -754,12 +830,14 @@ vec GWRGeneralized::PoissonWtOmp(const mat &x, const vec &y, mat wt)
         oldLLik = mLLik;
         vec lliktemp = dpois(y, mu);
         mLLik = sum(lliktemp);
-        if (abs((oldLLik - mLLik) / mLLik) < mTol)
+        double diff = abs((oldLLik - mLLik) / mLLik);
+        if (diff < mTol)
+        {
+            GWM_LOG_PROGRESS_PERCENT(exp(- (diff - mTol)));
             break;
+        }
         mWt2 = mu;
         itCount++;
-        if (itCount == mMaxiter)
-            break;
     }
     //    return cv;
     return mu;
@@ -781,7 +859,7 @@ vec GWRGeneralized::BinomialWtSerial(const mat &x, const vec &y, mat wt)
     //    vec cv = vec(dpn);
     mWt2 = ones(dpn);
     mLLik = 0;
-    while (true)
+    while (itCount < mMaxiter)
     {
         // 计算公式有调整
         myAdj = nu + (y - mu) / (mu % (1 - mu));
@@ -796,12 +874,14 @@ vec GWRGeneralized::BinomialWtSerial(const mat &x, const vec &y, mat wt)
         mu = exp(nu) / (1 + exp(nu));
         oldLLik = mLLik;
         mLLik = sum(lchoose(n, y) + (n - y) % log(1 - mu / n) + y % log(mu / n));
-        if (abs((oldLLik - mLLik) / mLLik) < mTol)
+        double diff = abs((oldLLik - mLLik) / mLLik);
+        if (diff < mTol)
+        {
+            GWM_LOG_PROGRESS_PERCENT(exp(- (diff - mTol)));
             break;
+        }
         mWt2 = n % mu % (1 - mu);
         itCount++;
-        if (itCount == mMaxiter)
-            break;
     }
     return mu;
 }
@@ -822,7 +902,7 @@ vec GWRGeneralized::BinomialWtOmp(const mat &x, const vec &y, mat wt)
     //    vec cv = vec(dpn);
     mWt2 = ones(dpn);
     mLLik = 0;
-    while (true)
+    while (itCount < mMaxiter)
     {
         // 计算公式有调整
         myAdj = nu + (y - mu) / (mu % (1 - mu));
@@ -837,12 +917,14 @@ vec GWRGeneralized::BinomialWtOmp(const mat &x, const vec &y, mat wt)
         mu = exp(nu) / (1 + exp(nu));
         oldLLik = mLLik;
         mLLik = sum(lchoose(n, y) + (n - y) % log(1 - mu / n) + y % log(mu / n));
-        if (abs((oldLLik - mLLik) / mLLik) < mTol)
+        double diff = abs((oldLLik - mLLik) / mLLik);
+        if (diff < mTol)
+        {
+            GWM_LOG_PROGRESS_PERCENT(exp(- (diff - mTol)));
             break;
+        }
         mWt2 = n % mu % (1 - mu);
         itCount++;
-        if (itCount == mMaxiter)
-            break;
     }
     return mu;
 }

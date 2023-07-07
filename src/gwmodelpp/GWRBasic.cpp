@@ -28,31 +28,43 @@ RegressionDiagnostic GWRBasic::CalcDiagnostic(const mat& x, const vec& y, const 
 
 mat GWRBasic::fit()
 {
+    GWM_LOG_STAGE("Initializing");
+    uword nDp = mCoords.n_rows, nVars = mX.n_cols;
     createDistanceParameter();
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
 
     if (mIsAutoselectIndepVars)
     {
+        GWM_LOG_STAGE("Independent variable selection");
         vector<size_t> indep_vars;
         for (size_t i = (mHasIntercept ? 1 : 0); i < mX.n_cols; i++)
         {
             indep_vars.push_back(i);
         }
+        size_t k = indep_vars.size();
+        mIndepVarSelectionProgressTotal = (k + 1) * k / 2;
+        mIndepVarSelectionProgressCurrent = 0;
+
+        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion().str());
         VariableForwardSelector selector(indep_vars, mIndepVarSelectionThreshold);
         mSelectedIndepVars = selector.optimize(this);
         if (mSelectedIndepVars.size() > 0)
         {
             mX = mX.cols(VariableForwardSelector::index2uvec(mSelectedIndepVars, mHasIntercept));
+            nVars = mX.n_cols;
             mIndepVarsSelectionCriterionList = selector.indepVarsCriterion();
         }
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     }
-
-    uword nDp = mCoords.n_rows;
 
     if (mIsAutoselectBandwidth)
     {
+        GWM_LOG_STAGE("Bandwidth selection");
         BandwidthWeight* bw0 = mSpatialWeight.weight<BandwidthWeight>();
         double lower = bw0->adaptive() ? 20 : 0.0;
         double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
+
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0).str());
         BandwidthSelector selector(bw0, lower, upper);
         BandwidthWeight* bw = selector.optimize(this);
         if (bw)
@@ -60,9 +72,14 @@ mat GWRBasic::fit()
             mSpatialWeight.setWeight(bw);
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
         }
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     }
 
+    GWM_LOG_STAGE("Model fitting");
     mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
+    GWM_LOG_STAGE("Model Diagnostic");
     mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
     double trS = mSHat(0), trStS = mSHat(1);
     double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
@@ -87,8 +104,15 @@ mat GWRBasic::fit()
 
 mat GWRBasic::predict(const mat& locations)
 {
+    GWM_LOG_STAGE("Initialization");
+    uword nDp = mCoords.n_rows, nVars = mX.n_cols;
     createPredictionDistanceParameter(locations);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+    
+    GWM_LOG_STAGE("Prediction");
     mBetas = (this->*mPredictFunction)(locations, mX, mY);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
     return mBetas;
 }
 
@@ -107,6 +131,7 @@ mat GWRBasic::predictSerial(const mat& locations, const mat& x, const vec& y)
     mat betas(nVar, nRp, fill::zeros);
     for (uword i = 0; i < nRp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec w = mSpatialWeight.weightVector(i);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
@@ -121,6 +146,7 @@ mat GWRBasic::predictSerial(const mat& locations, const mat& x, const vec& y)
             GWM_LOG_ERROR(e.what());
             throw e;
         }
+        GWM_LOG_PROGRESS(i + 1, nRp);
     }
     return betas.t();
 }
@@ -135,6 +161,7 @@ mat GWRBasic::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec
     S = mat(isStoreS() ? nDp : 1, nDp, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec w = mSpatialWeight.weightVector(i);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
@@ -158,6 +185,7 @@ mat GWRBasic::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec
             GWM_LOG_ERROR(e.what());
             throw e;
         }
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     betasSE = betasSE.t();
     return betas.t();
@@ -173,6 +201,7 @@ mat GWRBasic::predictOmp(const mat& locations, const mat& x, const vec& y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nRp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (success)
         {
             vec w = mSpatialWeight.weightVector(i);
@@ -191,6 +220,7 @@ mat GWRBasic::predictOmp(const mat& locations, const mat& x, const vec& y)
                 success = false;
             }
         }
+        GWM_LOG_PROGRESS(i + 1, nRp);
     }
     if (!success)
     {
@@ -212,6 +242,7 @@ mat GWRBasic::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& q
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (success)
         {
             int thread = omp_get_thread_num();
@@ -240,6 +271,7 @@ mat GWRBasic::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& q
                 success = false;
             }
         }
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     if (!success)
     {
@@ -259,6 +291,7 @@ double GWRBasic::bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight
     double cv = 0.0;
     for (uword i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         w(i) = 0.0;
@@ -278,8 +311,11 @@ double GWRBasic::bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight
             return DBL_MAX;
         }
     }
-    if (isfinite(cv))
+    if (mStatus == Status::Success && isfinite(cv))
     {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv).str());
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
+        mBandwidthLastCriterion = cv;
         return cv;
     }
     else return DBL_MAX;
@@ -292,6 +328,7 @@ double GWRBasic::bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeigh
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec d = mSpatialWeight.distance()->distance(i);
         vec w = bandwidthWeight->weight(d);
         mat xtw = trans(mX.each_col() % w);
@@ -313,8 +350,11 @@ double GWRBasic::bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeigh
         }
     }
     double value = GWRBase::AICc(mX, mY, betas.t(), shat);
-    if (isfinite(value))
+    if (mStatus == Status::Success && isfinite(value))
     {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value).str());
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
+        mBandwidthLastCriterion = value;
         return value;
     }
     else return DBL_MAX;
@@ -330,6 +370,7 @@ double GWRBasic::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight)
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
         {
             int thread = omp_get_thread_num();
@@ -356,9 +397,12 @@ double GWRBasic::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight)
             }
         }
     }
-    if (flag)
+    if (mStatus == Status::Success && flag)
     {
         double cv = sum(cv_all);
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv).str());
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
+        mBandwidthLastCriterion = cv;
         return cv;
     }
     else return DBL_MAX;
@@ -373,6 +417,7 @@ double GWRBasic::bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight)
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
         {
             int thread = omp_get_thread_num();
@@ -397,12 +442,15 @@ double GWRBasic::bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight)
             }
         }
     }
-    if (flag)
+    if (mStatus == Status::Success && flag)
     {
         vec shat = sum(shat_all, 1);
         double value = GWRBase::AICc(mX, mY, betas.t(), shat);
         if (isfinite(value))
         {
+            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value).str());
+            GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
+            mBandwidthLastCriterion = value;
             return value;
         }
         else return DBL_MAX;
@@ -420,6 +468,7 @@ double GWRBasic::indepVarsSelectionCriterionSerial(const vector<size_t>& indepVa
     vec shat(2, fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec w(nDp, fill::ones);
         mat xtw = trans(x.each_col() % w);
         mat xtwx = xtw * x;
@@ -439,8 +488,14 @@ double GWRBasic::indepVarsSelectionCriterionSerial(const vector<size_t>& indepVa
             return DBL_MAX;
         }
     }
-    double value = GWRBase::AICc(x, y, betas.t(), shat);    
-    return value;
+    GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressTotal);
+    if (mStatus == Status::Success)
+    {
+        double value = GWRBase::AICc(x, y, betas.t(), shat);
+        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value).str());
+        return value;
+    }
+    else return DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -455,6 +510,7 @@ double GWRBasic::indepVarsSelectionCriterionOmp(const vector<size_t>& indepVars)
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
         {
             int thread = omp_get_thread_num();
@@ -478,9 +534,11 @@ double GWRBasic::indepVarsSelectionCriterionOmp(const vector<size_t>& indepVars)
             }
         }
     }
-    if (flag)
+    GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressTotal);
+    if (mStatus == Status::Success && flag)
     {
         double value = GWRBase::AICc(x, y, betas.t(), sum(shat, 1));
+        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value).str());
         return value;
     }
     else return DBL_MAX;

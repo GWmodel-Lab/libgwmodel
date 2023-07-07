@@ -5,8 +5,14 @@ using namespace gwm;
 
 void GWPCA::run()
 {
+    GWM_LOG_STAGE("Initialization");
     createDistanceParameter();
+    GWM_LOG_STOP_RETURN(mStatus, void());
+
+    GWM_LOG_STAGE("Solving");
     mLocalPV = pca(mX, mLoadings, mSDev);
+    GWM_LOG_STOP_RETURN(mStatus, void());
+    
     mWinner = index_max(mLoadings.slice(0), 1);
 }
 
@@ -18,6 +24,7 @@ mat GWPCA::solveSerial(const mat& x, cube& loadings, mat& sdev)
     loadings = cube(nDp, nVar, mK, arma::fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec w = mSpatialWeight.weightVector(i);
         mat V;
         vec d;
@@ -28,6 +35,7 @@ mat GWPCA::solveSerial(const mat& x, cube& loadings, mat& sdev)
         {
             loadings.slice(j).row(i) = arma::trans(V.col(j));
         }
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     d_all = trans(d_all);
     mat variance = (d_all / sqrt(sum(w0))) % (d_all / sqrt(sum(w0)));

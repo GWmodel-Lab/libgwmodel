@@ -17,6 +17,8 @@
 namespace gwm
 {
 
+#define GWM_LOG_TAG_LAMBDA_OPTIMIZATION "#lambda-optimization "
+
 /**
  * \~english
  * @brief Basic implementation of geographically temporally weighted regression.
@@ -50,6 +52,30 @@ public:
 
     typedef double (GTWR::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);//!< \~english Declaration of criterion calculator for bandwidth selection. \~chinese 带宽优选指标计算函数声明。
     typedef double (GTWR::*IndepVarsSelectCriterionCalculator)(const std::vector<std::size_t>&);//!< \~english Declaration of criterion calculator for variable selection. \~chinese 变量优选指标计算函数声明。
+
+    /**
+     * @brief \~english Get meta infomation of lambda and the corresponding criterion value.
+     * \~chinese 获取当前 lambda 值和对应指标值的元信息。
+     * 
+     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     */
+    static std::stringstream infoLambdaCriterion()
+    {
+        return std::stringstream() << GWM_LOG_TAG_LAMBDA_OPTIMIZATION << "lambda" << "," << "criterion";
+    }
+
+    /**
+     * @brief \~english Get infomation of lambda and the corresponding criterion value.
+     * \~chinese 获取当前 lambda 值和对应指标值的信息。
+     * 
+     * @param lambda \~english Lambda value \~chinese Lambda 值
+     * @param criterion \~english Criterion value \~chinese 指标值
+     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     */
+    static std::stringstream infoLambdaCriterion(const double& lambda, const double& criterion)
+    {
+        return std::stringstream() << GWM_LOG_TAG_LAMBDA_OPTIMIZATION << lambda << "," << criterion;
+    }
 
 private:
 
@@ -405,9 +431,10 @@ private:
 #endif
 
 public:     // Implement IBandwidthSelectable
-    double getCriterion(BandwidthWeight* weight) override
+    Status getCriterion(BandwidthWeight* weight, double& criterion) override
     {
-        return (this->*mBandwidthSelectionCriterionFunction)(weight);
+        criterion = (this->*mBandwidthSelectionCriterionFunction)(weight);
+        return mStatus;
     }
 
 private:
@@ -416,13 +443,13 @@ private:
      * \~english
      * @brief Get CV value with given bandwidth for bandwidth optimization (serial implementation).
      * 
-     * @param weight Given bandwidth
+     * @param bandwidthWeight Given bandwidth
      * @return double Criterion value
      * 
      * \~chinese
      * @brief 根据指定的带宽计算带宽优选的CV值（串行实现）。
      * 
-     * @param weight 指定的带宽。
+     * @param bandwidthWeight 指定的带宽。
      * @return double 带宽优选的指标值。
      */
     double bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight);
@@ -431,13 +458,13 @@ private:
      * \~english
      * @brief Get AIC value with given bandwidth for bandwidth optimization (serial implementation).
      * 
-     * @param weight Given bandwidth
+     * @param bandwidthWeight Given bandwidth
      * @return double Criterion value
      * 
      * \~chinese
      * @brief 根据指定的带宽计算带宽优选的AIC值（串行实现）。
      * 
-     * @param weight 指定的带宽。
+     * @param weigbandwidthWeightht 指定的带宽。
      * @return double 带宽优选的指标值。
      */
     double bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeight);
@@ -447,13 +474,13 @@ private:
      * \~english
      * @brief Get CV value with given bandwidth for bandwidth optimization (OpenMP implementation).
      * 
-     * @param weight Given bandwidth
+     * @param bandwidthWeight Given bandwidth
      * @return double Criterion value
      * 
      * \~chinese
      * @brief 根据指定的带宽计算带宽优选的CV值（OpenMP 实现）。
      * 
-     * @param weight 指定的带宽。
+     * @param bandwidthWeight 指定的带宽。
      * @return double 带宽优选的指标值。
      */
     double bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight);
@@ -462,13 +489,13 @@ private:
      * \~english
      * @brief Get AIC value with given bandwidth for bandwidth optimization (OpenMP implementation).
      * 
-     * @param weight Given bandwidth
+     * @param bandwidthWeight Given bandwidth
      * @return double Criterion value
      * 
      * \~chinese
      * @brief 根据指定的带宽计算带宽优选的AIC值（OpenMP 实现）。
      * 
-     * @param weight 指定的带宽。
+     * @param bandwidthWeight 指定的带宽。
      * @return double 带宽优选的指标值。
      */
     double bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight);
@@ -553,19 +580,21 @@ protected:
      */
     double LambdaAutoSelection(BandwidthWeight* bandwidthWeight);
 
-        /**
+    /**
      * \~english
      * @brief Rsquare calculate by lambda.
      * @param bandwidthWeight bandwidth weight parameters,     
      * @param lambda the lambda value.
-     * @return double R-square by lambda.
+     * @param rsquare R-square by lambda.
+     * @return Status Algorithm status.
      * \~chinese
      * @brief lambda获得R方，作为优选的函数。
      * @param bandwidthWeight 输入带宽权重,     
      * @param lambda 输入要获取R方的lambda值。
-     * @return double 根据输入的lambda值和带宽获取的R方值.
+     * @param rsquare 根据输入的lambda值和带宽获取的R方值.
+     * @return Status 算法运行状态。
      */
-    double RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda);
+    Status RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda, double& rsquare);
 
 public:
     /**
@@ -594,6 +623,7 @@ protected:
     BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::AIC;//!< \~english Bandwidth Selection Criterion Type. \~chinese 默认的带宽优选方式。
     BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &GTWR::bandwidthSizeCriterionCVSerial;//!< \~english Bandwidth Selection Criterion Function. \~chinese 默认的带宽优选函数。
     BandwidthCriterionList mBandwidthSelectionCriterionList;//!< \~english Bandwidth Selection Criterion List. \~chinese 默认的带宽优选参数列表。
+    double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
 
     PredictCalculator mPredictFunction = &GTWR::predictSerial;//!< \~english Predict Function. \~chinese 默认的Predict函数。
     FitCalculator mFitFunction = &GTWR::fitSerial;//!< \~english Fit Function. \~chinese 默认的Fit函数。

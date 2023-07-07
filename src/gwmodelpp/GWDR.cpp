@@ -31,7 +31,9 @@ RegressionDiagnostic GWDR::CalcDiagnostic(const mat& x, const vec& y, const mat&
 
 mat GWDR::fit()
 {
-    uword nDims = mCoords.n_cols;
+    GWM_LOG_STAGE("Initialization");
+    uword nDims = mCoords.n_cols, nDp = mCoords.n_rows, nVars = mX.n_cols;
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     
     // Set coordinates matrices.
     for (size_t m = 0; m < nDims; m++)
@@ -42,24 +44,29 @@ mat GWDR::fit()
     // Select Independent Variable
     if (mEnableIndepVarSelect)
     {
+        GWM_LOG_STAGE("Independent variable selection");
         vector<size_t> indep_vars;
         for (size_t i = (mHasIntercept ? 1 : 0); i < mX.n_cols; i++)
         {
             indep_vars.push_back(i);
         }
+        size_t k = indep_vars.size();
+        mIndepVarSelectionProgressTotal = (k + 1) * k / 2;
+        mIndepVarSelectionProgressCurrent = 0;
         VariableForwardSelector selector(indep_vars, mIndepVarSelectThreshold);
         mSelectedIndepVars = selector.optimize(this);
         if (mSelectedIndepVars.size() > 0)
         {
             mX = mX.cols(VariableForwardSelector::index2uvec(mSelectedIndepVars, mHasIntercept));
+            nVars = mX.n_cols;
             mIndepVarCriterionList = selector.indepVarsCriterion();
         }
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     }
-
-    uword nDp = mCoords.n_rows, nVars = mX.n_cols;
 
     if (mEnableBandwidthOptimize)
     {
+        GWM_LOG_STAGE("Bandwidth selection");
         for (auto&& sw : mSpatialWeights)
         {
             BandwidthWeight* bw = sw.weight<BandwidthWeight>();
@@ -76,16 +83,24 @@ mat GWDR::fit()
         {
             bws.push_back(iter.weight<BandwidthWeight>());
         }
+        
+        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bws).str());
         GWDRBandwidthOptimizer optimizer(bws);
-        int status = optimizer.optimize(this, mCoords.n_rows, mBandwidthOptimizeMaxIter, mBandwidthOptimizeEps, mBandwidthOptimizeStep);
-        if (status)
+        int resultCode = optimizer.optimize(this, mCoords.n_rows, mBandwidthOptimizeMaxIter, mBandwidthOptimizeEps, mBandwidthOptimizeStep);
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+        
+        if (resultCode)
         {
-            throw runtime_error("[GWDR::run] Bandwidth optimization invoke failed.");
+            throw runtime_error("[GWDR::fit] Bandwidth optimization invoke failed.");
         }
+        GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     }
-    
-    // Has hatmatrix
+
+    GWM_LOG_STAGE("Model fitting");
     mBetas = (this->*mFitFunction)(mX, mY, mBetasSE, mSHat, mQDiag, mS);
+    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
+    GWM_LOG_STAGE("Model Diagnostic");
     mDiagnostic = CalcDiagnostic(mX, mY, mBetas, mSHat);
     double trS = mSHat(0), trStS = mSHat(1);
     double sigmaHat = mDiagnostic.RSS / (nDp - 2 * trS + trStS);
@@ -118,6 +133,7 @@ mat GWDR::predictSerial(const mat& locations, const mat& x, const vec& y)
     mat betas(nVar, nDp, arma::fill::zeros);
     for (size_t i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec w(nDp, arma::fill::ones);
         for (auto&& sw : mSpatialWeights)
         {
@@ -138,6 +154,7 @@ mat GWDR::predictSerial(const mat& locations, const mat& x, const vec& y)
             GWM_LOG_ERROR(e.what());
             throw e;
         }
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     return betas.t();
 }
@@ -152,6 +169,7 @@ mat GWDR::predictOmp(const mat& locations, const mat& x, const vec& y)
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         if (success)
         {
             vec w(nDp, arma::fill::ones);
@@ -176,6 +194,7 @@ mat GWDR::predictOmp(const mat& locations, const mat& x, const vec& y)
                 success = false;
             }
         }
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     if (!success)
     {
@@ -196,6 +215,7 @@ mat GWDR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qd
     vec s_hat1(nDp, arma::fill::zeros), s_hat2(nDp, arma::fill::zeros);
     for (size_t i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         vec w(nDp, arma::fill::ones);
         for (auto&& sw : mSpatialWeights)
         {
@@ -227,6 +247,7 @@ mat GWDR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qd
             GWM_LOG_ERROR(e.what());
             throw e;
         }
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     shat = {sum(s_hat1), sum(s_hat2)};
     betasSE = betasSE.t();
@@ -249,6 +270,7 @@ mat GWDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         int thread = omp_get_thread_num();
         if (success)
         {
@@ -284,6 +306,7 @@ mat GWDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag
                 except = e;
             }
         }
+        GWM_LOG_PROGRESS(i + 1, nDp);
     }
     if (!success)
     {
@@ -303,6 +326,7 @@ double GWDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidt
     bool success = true;
     for (size_t i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         if (success)
         {
             vec w(nDp, arma::fill::ones);
@@ -331,7 +355,14 @@ double GWDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidt
             }
         }
     }
-    return success ? cv : DBL_MAX;
+    if (mStatus == Status::Success && success && isfinite(cv))
+    {
+        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, cv).str());
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv - mBandwidthOptimizeEps)));
+        mBandwidthLastCriterion = cv;
+        return cv;
+    }
+    else return DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -343,6 +374,7 @@ double GWDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
     std::exception except;
     for (size_t i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         int thread = omp_get_thread_num();
         if (success)
         {
@@ -373,12 +405,15 @@ double GWDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
             }
         }
     }
-    if (!success)
-    {
-        throw except;
-    }
     double cv = sum(cv_all);
-    return success ? cv : DBL_MAX;
+    if (mStatus == Status::Success && success && isfinite(cv))
+    {
+        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, cv).str());
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv - mBandwidthOptimizeEps)));
+        mBandwidthLastCriterion = cv;
+        return cv;
+    }
+    else return DBL_MAX;
 }
 #endif
 
@@ -390,6 +425,7 @@ double GWDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwid
     bool flag = true;
     for (size_t i = 0; i < nDp; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         if (flag)
         {
             vec w(nDp, arma::fill::ones);
@@ -419,7 +455,14 @@ double GWDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwid
     }
     if (!flag) return DBL_MAX;
     double value = GWDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
-    return isfinite(value) ? value : DBL_MAX;
+    if (mStatus == Status::Success && isfinite(value))
+    {
+        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, value).str());
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value - mBandwidthOptimizeEps)));
+        mBandwidthLastCriterion = value;
+        return value;
+    }
+    else return DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -433,6 +476,7 @@ double GWDR::bandwidthCriterionAICOmp(const vector<BandwidthWeight*>& bandwidths
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (int i = 0; (uword)i < nDp; i++)
     {
+        GWM_LOG_STOP_CONTINUE(mStatus);
         int thread = omp_get_thread_num();
         if (success)
         {
@@ -462,13 +506,17 @@ double GWDR::bandwidthCriterionAICOmp(const vector<BandwidthWeight*>& bandwidths
             }
         }
     }
-    if (!success)
-    {
-        return DBL_MAX;
-    }
+    if (!success) return DBL_MAX;
     double trS = sum(trS_all);
     double value = GWDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
-    return isfinite(value) ? value : DBL_MAX;
+    if (mStatus == Status::Success && isfinite(value))
+    {
+        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, value).str());
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value - mBandwidthOptimizeEps)));
+        mBandwidthLastCriterion = value;
+        return value;
+    }
+    else return DBL_MAX;
 }
 #endif
 
@@ -514,6 +562,7 @@ double GWDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
     {
         for (uword i = 0; i < nDp; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             if (success)
             {
                 vec w(nDp, arma::fill::ones);
@@ -541,8 +590,14 @@ double GWDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
             }
         }
     }
-    double value = success ? GWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
-    return isfinite(value) ? value : DBL_MAX;
+    GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressTotal);
+    if (mStatus == Status::Success && success)
+    {
+        double value = success ? GWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
+        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value).str());
+        return isfinite(value) ? value : DBL_MAX;
+    }
+    else return DBL_MAX;
 }
 
 #ifdef ENABLE_OPENMP
@@ -591,6 +646,7 @@ double GWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
 #pragma omp parallel for num_threads(mOmpThreadNum)
         for (int i = 0; (uword)i < nDp; i++)
         {
+            GWM_LOG_STOP_CONTINUE(mStatus);
             int thread = omp_get_thread_num();
             if (success)
             {
@@ -620,8 +676,14 @@ double GWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
         }
         trS = sum(trS_all);
     }
-    double value = success ? GWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
-    return isfinite(value) ? value : DBL_MAX;
+    GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressTotal);
+    if (mStatus == Status::Success && success)
+    {
+        double value = success ? GWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
+        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value).str());
+        return isfinite(value) ? value : DBL_MAX;
+    }
+    else return DBL_MAX;
 }
 #endif
 
@@ -737,27 +799,31 @@ const int GWDRBandwidthOptimizer::optimize(GWDR* instance, uword featureCount, s
         {
             iter++;
             status = gsl_multimin_fminimizer_iterate(minimizer);
-            if (status)
+            if (status && instance->status() != Status::Success)
                 break;
             size = gsl_multimin_fminimizer_size(minimizer);
             status = gsl_multimin_test_size(size, eps);
             #ifdef _DEBUG
+            stringstream sDebug;
             for (size_t m = 0; m < nDim; m++)
             {
-                cout << gsl_vector_get(minimizer->x, m) << ",";
+                sDebug << gsl_vector_get(minimizer->x, m) << ",";
             }
-            cout << minimizer->fval << ",";
-            cout << size << "\n";
+            sDebug << minimizer->fval << ",";
+            sDebug << size;
+            instance->debug(sDebug.str(), __FUNCTION__, __FILE__);
             #endif
         } 
         while (status == GSL_CONTINUE && iter < maxIter);
         #ifdef _DEBUG
+        stringstream sDebug;
         for (size_t m = 0; m < nDim; m++)
         {
-            cout << gsl_vector_get(minimizer->x, m) << ",";
+            sDebug << gsl_vector_get(minimizer->x, m) << ",";
         }
-        cout << minimizer->fval << ",";
-        cout << size << "\n";
+        sDebug << minimizer->fval << ",";
+        sDebug << size;
+        instance->debug(sDebug.str(), __FUNCTION__, __FILE__);
         #endif
         for (size_t m = 0; m < nDim; m++)
         {

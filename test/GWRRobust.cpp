@@ -9,6 +9,7 @@
 #include "gwmodelpp/spatialweight/BandwidthWeight.h"
 #include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
+#include "TerminateCheckTelegram.h"
 
 using namespace std;
 using namespace arma;
@@ -238,3 +239,79 @@ TEST_CASE("RobustGWR: multithread basic flow")
  
 }
 #endif
+
+TEST_CASE("Robust GWR: cancel")
+{
+    mat londonhp100_coord, londonhp100_data;
+    vector<string> londonhp100_fields;
+    if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
+    {
+        FAIL("Cannot load londonhp100 data.");
+    }
+
+    vec y = londonhp100_data.col(0);
+    mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
+
+    CRSDistance distance(false);
+    BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
+    SpatialWeight spatial(&bandwidth, &distance);
+
+    const initializer_list<ParallelType> parallel_list = {
+        ParallelType::SerialOnly
+#ifdef ENABLE_OPENMP
+        , ParallelType::OpenMP
+#endif // ENABLE_OPENMP     
+    };
+    auto parallel = GENERATE_REF(values(parallel_list));
+
+    SECTION("fit")
+    {
+        auto bwCriterion = GENERATE(as<GWRRobust::BandwidthSelectionCriterionType>{}, 0, 1);
+        auto stage = GENERATE(as<std::string>{}, "indepVars", "bandwidthSize", "fit");
+        auto progress = GENERATE(0, 10);
+        INFO("Settings: " << stage << ", " << progress);
+
+        auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
+        GWRRobust algorithm;
+        algorithm.setTelegram(std::move(telegram));
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
+        algorithm.setSpatialWeight(spatial);
+        algorithm.setHasHatMatrix(true);
+        algorithm.setIsAutoselectIndepVars(true);
+        algorithm.setIndepVarSelectionThreshold(3.0);
+        algorithm.setIsAutoselectBandwidth(true);
+        algorithm.setBandwidthSelectionCriterion(bwCriterion);
+        algorithm.setParallelType(parallel);
+        algorithm.setOmpThreadNum(6);
+        REQUIRE_NOTHROW(algorithm.fit());
+        REQUIRE(algorithm.status() == Status::Terminated);
+    }
+
+    SECTION("predict")
+    {
+        auto stage = GENERATE(as<std::string>{}, "predict");
+        auto progress = GENERATE(0, 10);
+        INFO("Settings: " << stage << ", " << progress);
+
+        auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
+        GWRRobust algorithm;
+        algorithm.setTelegram(std::move(telegram));
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
+        algorithm.setSpatialWeight(spatial);
+        algorithm.setHasHatMatrix(true);
+        algorithm.setIsAutoselectIndepVars(true);
+        algorithm.setIndepVarSelectionThreshold(3.0);
+        algorithm.setIsAutoselectBandwidth(true);
+        algorithm.setBandwidthSelectionCriterion(GWRRobust::BandwidthSelectionCriterionType::AIC);
+        algorithm.setParallelType(parallel);
+        algorithm.setOmpThreadNum(6);
+        REQUIRE_NOTHROW(algorithm.fit());
+        REQUIRE_NOTHROW(algorithm.predict(londonhp100_coord));
+        REQUIRE(algorithm.status() == Status::Terminated);
+    }
+    
+}
