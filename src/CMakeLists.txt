@@ -66,6 +66,7 @@ set(SOURCES_CXX
     gwmodelpp/GWRScalable.cpp
     gwmodelpp/GWRLocalCollinearity.cpp
     gwmodelpp/GTWR.cpp
+    gwmodelpp/GWDA.cpp
 )
 
 set(SOURCES_C
@@ -105,6 +106,7 @@ set(HEADERS_CXX
     ../include/gwmodelpp/GWRScalable.h
     ../include/gwmodelpp/GWRLocalCollinearity.h
     ../include/gwmodelpp/GTWR.h
+    ../include/gwmodelpp/GWDA.h
 )
 
 set(HEADERS_C

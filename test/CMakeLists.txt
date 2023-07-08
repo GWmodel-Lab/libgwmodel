@@ -103,3 +103,10 @@ add_test(
     NAME testGTWR 
     COMMAND $<TARGET_FILE:testGTWR> --success
 )
+
+add_executable(testGWDA GWDA.cpp ${SAMPL_LONDONHP})
+target_link_libraries(testGWDA PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_test(
+    NAME testGWDA 
+    COMMAND $<TARGET_FILE:testGWDA> --success
+)
