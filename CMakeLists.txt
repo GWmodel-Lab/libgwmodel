@@ -48,6 +48,7 @@ set(LIBGWMODEL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_subdirectory(src)
 
 if(WITH_TESTS)
+option(GWMODEL_TEST_CMAKE_FIND_PACKAGE "Whether to test the cmake find package module" OFF)
 enable_testing()
 add_subdirectory(test)
 endif()

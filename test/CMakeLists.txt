@@ -129,3 +129,8 @@ add_test(
     COMMAND $<TARGET_FILE:testCuMat> --success --skip-benchmarks
 )
 endif()
+
+if(GWMODEL_TEST_CMAKE_FIND_PACKAGE)
+    add_subdirectory("./cmake")
+endif(GWMODEL_TEST_CMAKE_FIND_PACKAGE)
+
