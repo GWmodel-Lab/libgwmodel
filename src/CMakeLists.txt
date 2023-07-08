@@ -214,11 +214,18 @@ if(USE_CUDA_SHARED)
 endif(USE_CUDA_SHARED)
 
 install(TARGETS gwmodel
+    EXPORT GWmodelTargets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
 )
 install(DIRECTORY ../include/ DESTINATION include)
+install(
+    EXPORT GWmodelTargets
+    FILE GWmodelTargets.cmake
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/share/GWmodel/cmake"
+    NAMESPACE GWmodel::
+)
 
 # CPACK
 
