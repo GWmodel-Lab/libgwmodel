@@ -42,7 +42,6 @@ find_path(GWmodel_INCLUDE_DIRS
     NAMES gwmodel.h
     PATHS ${GWmodel_SEARCH_PATHS}
     PATH_SUFFIXES "include"
-    REQUIRED
 )
 
 
@@ -50,7 +49,6 @@ find_library(GWmodel_LIBRARIES
     NAMES gwmodel.lib libgwmodel.a libgwmodel.lib
     PATHS ${GWmodel_SEARCH_PATHS}
     PATH_SUFFIXES "lib"
-    REQUIRED
 )
 
 if(GWmodel_INCLUDE_DIRS AND GWmodel_LIBRARIES)
