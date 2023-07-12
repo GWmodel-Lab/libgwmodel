@@ -97,7 +97,7 @@ mat GWRMultiscale::fit()
             BandwidthWeight* bw0 = bandwidth(i);
             bool adaptive = bw0->adaptive();
 
-            GWM_LOG_INFO(string(GWM_LOG_TAG_MGWR_INITIAL_BW) + IVarialbeSelectable::infoVariableCriterion().str());
+            GWM_LOG_INFO(string(GWM_LOG_TAG_MGWR_INITIAL_BW) + to_string(i));
             BandwidthSelector selector;
             selector.setBandwidth(bw0);
             selector.setLower(adaptive ? mAdaptiveLower : 0.0);
@@ -107,7 +107,7 @@ mat GWRMultiscale::fit()
             {
                 mSpatialWeights[i].setWeight(bw);
             }
-            GWM_LOG_INFO((stringstream(GWM_LOG_TAG_MGWR_INITIAL_BW) << to_string(i) << "," << bw->bandwidth()).str());
+            GWM_LOG_INFO(string(GWM_LOG_TAG_MGWR_INITIAL_BW)  + to_string(i)  + "," + to_string(bw->bandwidth()));
         }
         GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
     }
