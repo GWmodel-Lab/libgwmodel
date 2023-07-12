@@ -115,11 +115,9 @@ mat GWRMultiscale::fit()
     // *****************************************************
     // Calculate the initial beta0 from the above bandwidths
     // *****************************************************
-    GWM_LOG_STAGE("Calculating initial beta0 from initial bandwidths");
     BandwidthWeight* bw0 = bandwidth(0);
     bool adaptive = bw0->adaptive();
     mBandwidthSizeCriterion = bandwidthSizeCriterionAll(mBandwidthSelectionApproach[0]);
-    GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
     
     GWM_LOG_STAGE("Calculating initial bandwidth");
     BandwidthSelector initBwSelector;
@@ -127,6 +125,8 @@ mat GWRMultiscale::fit()
     double maxDist = mSpatialWeights[0].distance()->maxDistance();
     initBwSelector.setLower(adaptive ? mAdaptiveLower : maxDist / 5000.0);
     initBwSelector.setUpper(adaptive ? mCoords.n_rows : maxDist);
+    
+    GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0).str());
     BandwidthWeight* initBw = initBwSelector.optimize(this);
     if (!initBw)
     {
