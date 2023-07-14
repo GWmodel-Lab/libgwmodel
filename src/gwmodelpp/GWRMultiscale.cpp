@@ -126,7 +126,7 @@ mat GWRMultiscale::fit()
     initBwSelector.setLower(adaptive ? mAdaptiveLower : maxDist / 5000.0);
     initBwSelector.setUpper(adaptive ? mCoords.n_rows : maxDist);
     
-    GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0).str());
+    GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0));
     BandwidthWeight* initBw = initBwSelector.optimize(this);
     if (!initBw)
     {
@@ -612,7 +612,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVSerial(BandwidthWeight *bandwid
     }
     if (mStatus == Status::Success && isfinite(cv))
     {
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv).str());
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -657,7 +657,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVOmp(BandwidthWeight *bandwidthW
     if (mStatus == Status::Success && flag)
     {
         double cv = sum(cv_all);
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv).str());
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -697,7 +697,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllAICSerial(BandwidthWeight *bandwi
     double value = GWRMultiscale::AICc(mX, mY, betas.t(), shat);
     if (mStatus == Status::Success && isfinite(value))
     {
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value).str());
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
         mBandwidthLastCriterion = value;
         return value;
@@ -746,7 +746,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllAICOmp(BandwidthWeight *bandwidth
         double value = GWRMultiscale::AICc(mX, mY, betas.t(), shat);
         if (isfinite(value))
         {
-            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value).str());
+            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value));
             GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
             mBandwidthLastCriterion = value;
             return value;
@@ -787,7 +787,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVSerial(BandwidthWeight *bandwid
     }
     if (mStatus == Status::Success && isfinite(cv))
     {
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv).str());
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -833,7 +833,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVOmp(BandwidthWeight *bandwidthW
     if (mStatus == Status::Success && flag)
     {
         double cv = sum(cv_all);
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv).str());
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -874,7 +874,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICSerial(BandwidthWeight *bandwi
     double value = GWRMultiscale::AICc(mXi, mYi, betas.t(), shat);
     if (mStatus == Status::Success && isfinite(value))
     {
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value).str());
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
         mBandwidthLastCriterion = value;
         return value;
@@ -924,7 +924,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICOmp(BandwidthWeight *bandwidth
         double value = GWRMultiscale::AICc(mXi, mYi, betas.t(), shat);
         if (isfinite(value))
         {
-            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value).str());
+            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value));
             GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
             mBandwidthLastCriterion = value;
             return value;

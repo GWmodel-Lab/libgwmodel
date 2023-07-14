@@ -84,7 +84,7 @@ mat GWDR::fit()
             bws.push_back(iter.weight<BandwidthWeight>());
         }
         
-        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bws).str());
+        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bws));
         GWDRBandwidthOptimizer optimizer(bws);
         int resultCode = optimizer.optimize(this, mCoords.n_rows, mBandwidthOptimizeMaxIter, mBandwidthOptimizeEps, mBandwidthOptimizeStep);
         GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
@@ -357,7 +357,7 @@ double GWDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidt
     }
     if (mStatus == Status::Success && success && isfinite(cv))
     {
-        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, cv).str());
+        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, cv));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -408,7 +408,7 @@ double GWDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
     double cv = sum(cv_all);
     if (mStatus == Status::Success && success && isfinite(cv))
     {
-        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, cv).str());
+        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, cv));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -457,7 +457,7 @@ double GWDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwid
     double value = GWDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
     if (mStatus == Status::Success && isfinite(value))
     {
-        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, value).str());
+        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, value));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = value;
         return value;
@@ -511,7 +511,7 @@ double GWDR::bandwidthCriterionAICOmp(const vector<BandwidthWeight*>& bandwidths
     double value = GWDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
     if (mStatus == Status::Success && isfinite(value))
     {
-        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, value).str());
+        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, value));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = value;
         return value;
@@ -594,7 +594,7 @@ double GWDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
     if (mStatus == Status::Success && success)
     {
         double value = success ? GWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
-        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value).str());
+        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value));
         return isfinite(value) ? value : DBL_MAX;
     }
     else return DBL_MAX;
@@ -680,7 +680,7 @@ double GWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
     if (mStatus == Status::Success && success)
     {
         double value = success ? GWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
-        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value).str());
+        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value));
         return isfinite(value) ? value : DBL_MAX;
     }
     else return DBL_MAX;

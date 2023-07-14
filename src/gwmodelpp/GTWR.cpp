@@ -40,7 +40,7 @@ mat GTWR::fit()
         double lower = bw0->adaptive() ? 20 : 0.0;
         double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
 
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0).str());
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0));
         BandwidthSelector selector(bw0, lower, upper);
         BandwidthWeight *bw = selector.optimize(this);
         if (bw)
@@ -57,7 +57,7 @@ mat GTWR::fit()
         BandwidthWeight *bw = mSpatialWeight.weight<BandwidthWeight>();
         mStdistance = mSpatialWeight.distance<CRSSTDistance>();
 
-        GWM_LOG_INFO(infoLambdaCriterion().str());
+        GWM_LOG_INFO(infoLambdaCriterion());
         double lambda = LambdaAutoSelection(bw);
         mStdistance->setLambda(lambda);
         GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
@@ -528,7 +528,7 @@ Status GTWR::RsquareByLambda(BandwidthWeight* bandwidthWeight, double lambda, do
         double yss = sum((mY - mean(mY)) % (mY - mean(mY)));
         r2 = 1 - rss / yss;
         rsquare = r2;
-        GWM_LOG_INFO(infoLambdaCriterion(lambda, rsquare).str());
+        GWM_LOG_INFO(infoLambdaCriterion(lambda, rsquare));
     }
     else
     {

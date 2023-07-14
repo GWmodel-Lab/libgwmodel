@@ -57,11 +57,11 @@ public:
      * @brief \~english Get meta infomation of lambda and the corresponding criterion value.
      * \~chinese 获取当前 lambda 值和对应指标值的元信息。
      * 
-     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     * @return std::string \~english Information string \~chinese 信息字符串
      */
-    static std::stringstream infoLambdaCriterion()
+    static std::string infoLambdaCriterion()
     {
-        return std::stringstream() << GWM_LOG_TAG_LAMBDA_OPTIMIZATION << "lambda" << "," << "criterion";
+        return std::string(GWM_LOG_TAG_LAMBDA_OPTIMIZATION) + "lambda,criterion";
     }
 
     /**
@@ -70,11 +70,11 @@ public:
      * 
      * @param lambda \~english Lambda value \~chinese Lambda 值
      * @param criterion \~english Criterion value \~chinese 指标值
-     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     * @return std::string \~english Information string \~chinese 信息字符串
      */
-    static std::stringstream infoLambdaCriterion(const double& lambda, const double& criterion)
+    static std::string infoLambdaCriterion(const double& lambda, const double& criterion)
     {
-        return std::stringstream() << GWM_LOG_TAG_LAMBDA_OPTIMIZATION << lambda << "," << criterion;
+        return std::string(GWM_LOG_TAG_LAMBDA_OPTIMIZATION) + std::to_string(lambda) + "," + std::to_string(criterion);
     }
 
 private:

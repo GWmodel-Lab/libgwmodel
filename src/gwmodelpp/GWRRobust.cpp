@@ -46,7 +46,7 @@ mat GWRRobust::fit()
         mIndepVarSelectionProgressTotal = (k + 1) * k / 2;
         mIndepVarSelectionProgressCurrent = 0;
 
-        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion().str());
+        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion());
         VariableForwardSelector selector(indep_vars, mIndepVarSelectionThreshold);
         mSelectedIndepVars = selector.optimize(this);
         if (mSelectedIndepVars.size() > 0)
@@ -65,7 +65,7 @@ mat GWRRobust::fit()
         double lower = bw0->adaptive() ? 20 : 0.0;
         double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
         
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0).str());
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0));
         BandwidthSelector selector(bw0, lower, upper);
         BandwidthWeight* bw = selector.optimize(this);
         if (bw)

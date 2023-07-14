@@ -38,7 +38,7 @@ mat GWRGeneralized::fit()
         double lower = bw0->adaptive() ? 20 : 0.0;
         double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
         
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0).str());
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0));
         BandwidthSelector selector(bw0, lower, upper);
         BandwidthWeight *bw = selector.optimize(this);
         if (bw)

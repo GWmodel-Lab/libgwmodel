@@ -22,11 +22,11 @@ struct IVarialbeSelectable
      * @brief \~english Get meta infomation of variable combination and the corresponding criterion value.
      * \~chinese 获取当前带宽值和对应指标值的元信息。
      * 
-     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     * @return std::string \~english Stream of information string \~chinese 信息字符串流
      */
-    static std::stringstream infoVariableCriterion()
+    static std::string infoVariableCriterion()
     {
-        return std::stringstream() << GWM_LOG_TAG_VARIABLE_CRITERION << "variables" << "," << "criterion";
+        return std::string(GWM_LOG_TAG_VARIABLE_CRITERION) + "variables,criterion";
     }
 
     /**
@@ -35,16 +35,16 @@ struct IVarialbeSelectable
      * 
      * @param variables \~english Variable combination \~chinese 变量组合
      * @param criterion \~english Criterion value \~chinese 指标值
-     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     * @return std::string \~english Stream of information string \~chinese 信息字符串流
      */
-    static std::stringstream infoVariableCriterion(const std::vector<std::size_t>& variables, const double criterion)
+    static std::string infoVariableCriterion(const std::vector<std::size_t>& variables, const double criterion)
     {
         std::vector<std::string> var_labels(variables.size());
         std::transform(variables.cbegin(), variables.cend(), var_labels.begin(), [](const std::size_t& var)
         {
             return std::to_string(var);
         });
-        return std::stringstream() << "#variable-criterion " << strjoin("+", var_labels) << "," << criterion;
+        return std::string(GWM_LOG_TAG_VARIABLE_CRITERION) + strjoin("+", var_labels) + "," + std::to_string(criterion);
     }
     
     /**

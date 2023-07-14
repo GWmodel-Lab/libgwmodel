@@ -45,7 +45,7 @@ mat GWRBasic::fit()
         mIndepVarSelectionProgressTotal = (k + 1) * k / 2;
         mIndepVarSelectionProgressCurrent = 0;
 
-        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion().str());
+        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion());
         VariableForwardSelector selector(indep_vars, mIndepVarSelectionThreshold);
         mSelectedIndepVars = selector.optimize(this);
         if (mSelectedIndepVars.size() > 0)
@@ -64,7 +64,7 @@ mat GWRBasic::fit()
         double lower = bw0->adaptive() ? 20 : 0.0;
         double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
 
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0).str());
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0));
         BandwidthSelector selector(bw0, lower, upper);
         BandwidthWeight* bw = selector.optimize(this);
         if (bw)
@@ -313,7 +313,7 @@ double GWRBasic::bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight
     }
     if (mStatus == Status::Success && isfinite(cv))
     {
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv).str());
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -352,7 +352,7 @@ double GWRBasic::bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeigh
     double value = GWRBase::AICc(mX, mY, betas.t(), shat);
     if (mStatus == Status::Success && isfinite(value))
     {
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value).str());
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
         mBandwidthLastCriterion = value;
         return value;
@@ -400,7 +400,7 @@ double GWRBasic::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight)
     if (mStatus == Status::Success && flag)
     {
         double cv = sum(cv_all);
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv).str());
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -448,7 +448,7 @@ double GWRBasic::bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight)
         double value = GWRBase::AICc(mX, mY, betas.t(), shat);
         if (isfinite(value))
         {
-            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value).str());
+            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value));
             GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
             mBandwidthLastCriterion = value;
             return value;
@@ -492,7 +492,7 @@ double GWRBasic::indepVarsSelectionCriterionSerial(const vector<size_t>& indepVa
     if (mStatus == Status::Success)
     {
         double value = GWRBase::AICc(x, y, betas.t(), shat);
-        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value).str());
+        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value));
         return value;
     }
     else return DBL_MAX;
@@ -538,7 +538,7 @@ double GWRBasic::indepVarsSelectionCriterionOmp(const vector<size_t>& indepVars)
     if (mStatus == Status::Success && flag)
     {
         double value = GWRBase::AICc(x, y, betas.t(), sum(shat, 1));
-        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value).str());
+        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value));
         return value;
     }
     else return DBL_MAX;

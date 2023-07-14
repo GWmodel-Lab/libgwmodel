@@ -22,7 +22,7 @@ namespace gwm
  * @brief \~english Print log in `backfitting` function. \~chinese 输出 `backfitting` 函数中的日志。
  * 
  */
-#define GWM_LOG_MGWR_BACKFITTING(MESSAGE) { GWM_LOG_INFO((std::stringstream() << (GWM_LOG_TAG_MGWR_BACKFITTING) << (MESSAGE)).str()); }
+#define GWM_LOG_MGWR_BACKFITTING(MESSAGE) { GWM_LOG_INFO((std::string(GWM_LOG_TAG_MGWR_BACKFITTING) + (MESSAGE))); }
 
 /**
  * \~english
