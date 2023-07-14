@@ -551,9 +551,9 @@ public:
      * \~chinese 获取当前带宽值和对应指标值的元信息。
      * 
      * @param weights \~english Bandwidth weight \~chinese 带宽设置
-     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     * @return std::string \~english Information string \~chinese 信息字符串
      */
-    static std::stringstream infoBandwidthCriterion(const std::vector<BandwidthWeight*>& weights)
+    static std::string infoBandwidthCriterion(const std::vector<BandwidthWeight*>& weights)
     {
         std::size_t number = 1;
         std::vector<std::string> labels(weights.size());
@@ -561,7 +561,7 @@ public:
         {
             return std::to_string(number++) + ":" + (bw->adaptive() ? "adaptive" : "fixed");
         });
-        return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << strjoin(",", labels) << "," << "criterion";
+        return std::string(GWM_LOG_TAG_BANDWIDTH_CIRTERION) + strjoin(",", labels) + ",criterion";
     }
 
     /**
@@ -570,16 +570,16 @@ public:
      * 
      * @param weights \~english Bandwidth weight \~chinese 带宽设置
      * @param criterion \~english Criterion value \~chinese 指标值
-     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     * @return std::string \~english Information string \~chinese 信息字符串
      */
-    static std::stringstream infoBandwidthCriterion(const std::vector<BandwidthWeight*>& weights, const double criterion)
+    static std::string infoBandwidthCriterion(const std::vector<BandwidthWeight*>& weights, const double criterion)
     {
         std::vector<std::string> labels(weights.size());
         std::transform(weights.cbegin(), weights.cend(), labels.begin(), [](const BandwidthWeight* bw)
         {
             return std::to_string(bw->bandwidth());
         });
-        return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << strjoin(",", labels) << "," << criterion;
+        return std::string(GWM_LOG_TAG_BANDWIDTH_CIRTERION) + strjoin(",", labels) + "," + std::to_string(criterion);
     }
 
 public:

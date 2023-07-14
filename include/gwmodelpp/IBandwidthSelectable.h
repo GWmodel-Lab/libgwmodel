@@ -25,11 +25,11 @@ struct IBandwidthSelectable
      * \~chinese 获取当前带宽值和对应指标值的元信息。
      * 
      * @param weight \~english Bandwidth weight \~chinese 带宽设置
-     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     * @return std::string \~english Information string \~chinese 信息字符串
      */
-    static std::stringstream infoBandwidthCriterion(const BandwidthWeight* weight)
+    static std::string infoBandwidthCriterion(const BandwidthWeight* weight)
     {
-        return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << (weight->adaptive() ? "adaptive" : "fixed") << "," << "criterion";
+        return std::string(GWM_LOG_TAG_BANDWIDTH_CIRTERION) + (weight->adaptive() ? "adaptive" : "fixed") + ",criterion";
     }
 
     /**
@@ -38,14 +38,14 @@ struct IBandwidthSelectable
      * 
      * @param weight \~english Bandwidth weight \~chinese 带宽设置
      * @param value \~english Criterion value \~chinese 指标值
-     * @return std::stringstream \~english Stream of information string \~chinese 信息字符串流
+     * @return std::string \~english Information string \~chinese 信息字符串
      */
-    static std::stringstream infoBandwidthCriterion(const BandwidthWeight* weight, const double value)
+    static std::string infoBandwidthCriterion(const BandwidthWeight* weight, const double value)
     {
         if (weight->adaptive())
-            return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << int(weight->bandwidth()) << "," << value;
+            return std::string(GWM_LOG_TAG_BANDWIDTH_CIRTERION) + std::to_string(int(weight->bandwidth())) + "," + std::to_string(value);
         else 
-            return std::stringstream() << GWM_LOG_TAG_BANDWIDTH_CIRTERION << weight->bandwidth() << "," << value;
+            return std::string(GWM_LOG_TAG_BANDWIDTH_CIRTERION) + std::to_string(weight->bandwidth()) + "," + std::to_string(value);
     }
 
     /**

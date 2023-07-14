@@ -106,7 +106,7 @@ namespace gwm
  * 
  * @param STAGE \~english Stage description \~chinese 当前阶段的描述
  */
-#define GWM_LOG_STAGE(STAGE) { GWM_LOG_INFO((std::stringstream() << (GWM_LOG_TAG_STAGE) << (STAGE)).str()); }
+#define GWM_LOG_STAGE(STAGE) { GWM_LOG_INFO((std::string(GWM_LOG_TAG_STAGE) + (STAGE))); }
 
 /**
  * \~english

@@ -6,7 +6,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Catch2 3 REQUIRED)
 
 if(ENABLE_OpenMP)
-    add_definitions(-DENABLE_OPENMP)
+    find_package(OpenMP)
+    if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
+        if(ENABLE_OpenMP)
+            add_definitions(-DENABLE_OPENMP)
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+            set(CMAKE_EXE_LINKER_FLAGS"${CMAKE_EXE_LINKER_FLAGS}${OpenMP_EXE_LINKER_FLAGS}")
+            include_directories(${OpenMP_C_INCLUDE_DIRS} ${OpenMP_CXX_INCLUDE_DIRS})
+        endif(ENABLE_OpenMP)
+    endif(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
 endif()
 
 

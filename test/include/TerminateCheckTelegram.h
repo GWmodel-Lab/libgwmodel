@@ -10,25 +10,29 @@ using namespace gwm;
 class TerminateCheckTelegram : public Logger
 {
 public:
-
     static std::queue<std::string> MessageQueue;
-    
+
+#ifdef ENABLE_OPENMP
     static std::mutex Lock;
+    static bool TerminatePrinter;
+#endif
 
     static void progress_print();
 
-    static bool TerminatePrinter;
-
-    TerminateCheckTelegram(std::string breakStage, std::size_t breakProgress) : 
+    TerminateCheckTelegram(std::string breakStage, std::size_t breakProgress) :
+#ifdef ENABLE_OPENMP
+        mPrintThread(progress_print),
+#endif
         mBreakStage(breakStage),
-        mBreakProgress(breakProgress),
-        mPrintThread(progress_print)
+        mBreakProgress(breakProgress)
     {}
 
     ~TerminateCheckTelegram()
     {
+#ifdef ENABLE_OPENMP
         TerminatePrinter = true;
         mPrintThread.join();
+#endif
     }
 
     bool stop() override { return mCancelled; }
@@ -41,8 +45,12 @@ private:
     bool mCancelled = false;
     std::string mBreakStage = "";
     std::size_t mBreakProgress = 0;
+
+#ifdef ENABLE_OPENMP
     std::thread mPrintThread;
     std::condition_variable mPrintable;
+#endif
+
 };
 
 const std::map<ParallelType, std::string> ParallelTypeDict = {
