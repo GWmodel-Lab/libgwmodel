@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(libgwmodel)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH cmake)
 
 SET (ENABLE_OpenMP TRUE CACHE BOOL "Determines whether OpemMP support should be built")
 SET (WITH_TESTS TRUE CACHE BOOL "Determines whether to build and run tests")
@@ -30,9 +30,9 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif(MSVC)
 
 set(LIBGWMODEL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
-add_subdirectory(${CMAKE_SOURCE_DIR}/src)
+add_subdirectory(src)
 
 if(WITH_TESTS)
 enable_testing()
-add_subdirectory(${CMAKE_SOURCE_DIR}/test)
+add_subdirectory(test)
 endif()
