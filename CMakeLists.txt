@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH cmake)
 
 SET (ENABLE_OpenMP TRUE CACHE BOOL "Determines whether OpemMP support should be built")
+SET (ENABLE_CUDA TRUE CACHE BOOL "Determines whether CUDA support should be built")
 SET (WITH_TESTS TRUE CACHE BOOL "Determines whether to build and run tests")
 
 find_package(Armadillo REQUIRED)
@@ -24,6 +25,10 @@ if(ARMADILLO_FOUND)
 else(ARMADILLO_FOUND)
     message(FATAL_ERROR "Armadillo Not Found!")
 endif(ARMADILLO_FOUND)
+
+if(ENABLE_CUDA)
+    enable_language(CUDA)
+endif()
 
 if(MSVC)
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
