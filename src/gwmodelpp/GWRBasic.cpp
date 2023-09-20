@@ -292,7 +292,123 @@ mat GWRBasic::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& q
 #ifdef ENABLE_CUDA
 mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
 {
-    
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    uword nDp = mCoords.n_rows, nVar = x.n_cols, nDim = mCoords.n_cols;
+    mat betas = mat(nVar, nDp, arma::fill::zeros);
+    betasSE = mat(nVar, nDp, arma::fill::zeros);
+    shat = vec(2, arma::fill::zeros);
+    qDiag = vec(nDp, arma::fill::zeros);
+    S = mat(isStoreS() ? nDp : 1, nDp, arma::fill::zeros);
+    size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+    double *d_x, *d_y, *d_coords, *d_betas, *d_betasSE, *d_dist, *d_weights;
+    cudaMalloc(&d_x, sizeof(double) * nDp * nVar);
+    cudaMalloc(&d_y, sizeof(double) * nDp);
+    cudaMalloc(&d_coords, sizeof(double) * nDp * nDim);
+    cudaMalloc(&d_betas, sizeof(double) * nDp * nVar);
+    cudaMalloc(&d_betasSE, sizeof(double) * nDp * nVar);
+    cudaMalloc(&d_dist, sizeof(double) * nDp * mGroupLength);
+    cudaMalloc(&d_weights, sizeof(double) * nDp * mGroupLength);
+    cublasSetMatrix(nDp, nVar, sizeof(double), x.mem, nDp, d_x, nDp);
+    cublasSetMatrix(nDp, 1, sizeof(double), y.mem, nDp, d_y, nDp);
+    cublasSetMatrix(nDp, nDim, sizeof(double), mCoords.mem, nDp, d_coords, nDp);
+    cudaMemset(d_betas, 0, sizeof(double) * nDp * nVar);
+    cudaMemset(d_betasSE, 0, sizeof(double) * nDp * nVar);
+    cudaMemset(d_dist, 0, sizeof(double) * nDp * mGroupLength);
+    cudaMemset(d_weights, 0, sizeof(double) * nDp * mGroupLength);
+    double *ds_xtw, *ds_xtwx, *ds_xtwy, *ds_xtwxI;
+    cudaMalloc(&ds_xtw, sizeof(double) * nDp * nVar * mGroupLength);
+    cudaMalloc(&ds_xtwx, sizeof(double) * nVar * nVar * mGroupLength);
+    cudaMalloc(&ds_xtwy, sizeof(double) * nVar * 1 * mGroupLength);
+    cudaMalloc(&ds_xtwxI, sizeof(double) * nVar * nVar * mGroupLength);
+    cudaMemset(ds_xtw, 0, sizeof(double) * nDp * nVar * mGroupLength);
+    cudaMemset(ds_xtwx, 0, sizeof(double) * nVar * nVar * mGroupLength);
+    cudaMemset(ds_xtwy, 0, sizeof(double) * nVar * 1 * mGroupLength);
+    cudaMemset(ds_xtwxI, 0, sizeof(double) * nVar * nVar * mGroupLength);
+    double **pA_xtwx = new double*[mGroupLength], **pA_xtwy = new double*[mGroupLength], **pA_xtwxI = new double*[mGroupLength];
+    for (size_t e = 0; e < mGroupLength; e++)
+    {
+        pA_xtwx[e] = ds_xtwx + e * nVar * nVar;
+        pA_xtwy[e] = ds_xtwy + e * nVar;
+        pA_xtwxI[e] = ds_xtwxI + e * nVar * nVar;
+    }
+    double **pd_xtwx, **pd_xtwy, **pd_xtwxI;
+    cudaMalloc(&pd_xtwx, sizeof(double*) * mGroupLength);
+    cudaMalloc(&pd_xtwy, sizeof(double*) * mGroupLength);
+    cudaMalloc(&pd_xtwxI, sizeof(double*) * mGroupLength);
+    cudaMemcpy(pd_xtwx, pA_xtwx, sizeof(double*) * mGroupLength, cudaMemcpyHostToDevice);
+    cudaMemcpy(pd_xtwy, pA_xtwy, sizeof(double*) * mGroupLength, cudaMemcpyHostToDevice);
+    cudaMemcpy(pd_xtwxI, pA_xtwxI, sizeof(double*) * mGroupLength, cudaMemcpyHostToDevice);
+    double *ds_c, *ds_s, *ds_cct;
+    cudaMalloc(&ds_c, sizeof(double) * nDp * nVar * mGroupLength);
+    cudaMalloc(&ds_s, sizeof(double) * nDp * 1 * mGroupLength);
+    cudaMalloc(&ds_cct, sizeof(double) * nVar * nVar * mGroupLength);
+    cudaMemset(ds_c, 0, sizeof(double) * nDp * nVar * mGroupLength);
+    cudaMemset(ds_s, 0, sizeof(double) * nDp * 1 * mGroupLength);
+    cudaMemset(ds_cct, 0, sizeof(double) * nVar * nVar * mGroupLength);
+    mat si(1, nDp, fill::zeros), cct(nVar, nVar, fill::zeros);
+    double alpha = 1.0, beta = 0.0;
+    int* d_info;
+    cudaMalloc(&d_info, sizeof(int) * mGroupLength);
+    for (size_t i = 0; i < groups; i++)
+    {
+        /// [TODO] calculate distance with cuda
+        // cublasDdgmm(handle, CUBLAS_SIDE_RIGHT, nDp, nVar, d_x, nVar, d_weights, 1, )
+        /// [END]
+        // xtwx and xtwy
+        // function              (handle, OP_A       , OP_B       , m   , n   , k  , alpha , A     , lda , strideA   , B  , ldb ,sB, beta , C      , ldc , sC         , batCount    )
+        cublasDgemmStridedBatched(handle, CUBLAS_OP_N, CUBLAS_OP_T, nVar, nVar, nDp, &alpha, ds_xtw, nVar, nVar * nDp, d_x, nVar, 0, &beta, ds_xtwx, nVar, nVar * nVar, mGroupLength);
+        cublasDgemmStridedBatched(handle, CUBLAS_OP_N, CUBLAS_OP_T, nVar,    1, nDp, &alpha, ds_xtw, nVar, nVar * nDp, d_y,    1, 0, &beta, ds_xtwy, nVar, nVar *    1, mGroupLength);
+        // inv
+        cublasDmatinvBatched(handle, nVar, pd_xtwx, nVar, pd_xtwxI, nVar, d_info, mGroupLength);
+        // betas
+        size_t beta_bias = i * mGroupLength * nVar;
+        cublasDgemmStridedBatched(handle, CUBLAS_OP_N, CUBLAS_OP_N, nVar, 1, nVar, &alpha, ds_xtwxI, nVar, nVar * nVar, ds_xtwy, nVar, nVar, &beta, d_betas + beta_bias, 1, nVar, mGroupLength);
+        // ci
+        cublasDgemmStridedBatched(handle, CUBLAS_OP_T, CUBLAS_OP_T, nDp, nVar, nVar, &alpha, ds_xtw, nVar, nVar * nDp ,ds_xtwxI, nVar, nVar * nVar, &beta, ds_c, nDp, nDp * nVar, mGroupLength);
+        // si
+        cublasDgemmStridedBatched(handle, CUBLAS_OP_T, CUBLAS_OP_T, 1, nDp, nVar, &alpha, d_x, 1, nVar, ds_c, nDp, nDp * nVar, &beta, ds_s, nDp, nDp, mGroupLength);
+        // cct
+        cublasDgemmStridedBatched(handle, CUBLAS_OP_T, CUBLAS_OP_N, nVar, nVar, nDp, &alpha, ds_c, nDp, nVar * nDp, ds_c, nDp, nVar * nDp, &beta, ds_cct, nVar, nVar * nVar, mGroupLength);
+        // Transfer to cpu Perform further diagnostic
+        for (size_t j = 0; j < mGroupLength; i++)
+        {
+            size_t e = i * mGroupLength + j;
+            cublasGetMatrix(1, nDp, sizeof(double), ds_s + j * nDp, nDp, si.memptr(), nDp);
+            cublasGetMatrix(nVar, nVar, sizeof(double), ds_cct + j * nDp, nVar * nVar, cct.memptr(), nVar);
+            betasSE.col(e) = diagvec(cct);
+            shat(0) += si(0, e);
+            shat(1) += det(si * si.t());
+            vec p = -si.t();
+            p(i) += 1.0;
+            qDiag += p % p;
+            S.row(isStoreS() ? e : 0) = si;
+        }
+    }
+    cublasGetMatrix(nVar, nDp, sizeof(double), d_betas, nVar, betas.memptr(), nVar);
+    betasSE = betasSE.t();
+    cudaFree(d_x);
+    cudaFree(d_y);
+    cudaFree(d_coords);
+    cudaFree(d_betas);
+    cudaFree(d_betasSE);
+    cudaFree(d_dist);
+    cudaFree(d_weights);
+    cudaFree(ds_xtw);
+    cudaFree(ds_xtwx);
+    cudaFree(ds_xtwy);
+    cudaFree(ds_xtwxI);
+    cudaFree(pd_xtwx);
+    cudaFree(pd_xtwy);
+    cudaFree(pd_xtwxI);
+    cudaFree(ds_c);
+    cudaFree(ds_s);
+    cudaFree(ds_cct);
+    cudaFree(d_info);
+    delete[] pA_xtwx;
+    delete[] pA_xtwy;
+    delete[] pA_xtwxI;
+    return betas.t();
 }
 #endif
 

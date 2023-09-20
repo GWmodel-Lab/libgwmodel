@@ -641,6 +641,7 @@ protected:
 
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Type of parallel method. \~chinese 并行方法类型。
     int mOmpThreadNum = 8;  //!< \~english Number of threads to create. \~chinese 并行计算创建的线程数。
+    size_t mGroupLength = 64;
 
     arma::mat mBetasSE;  //!< \~english Standard errors of coefficient estimates. \~chinese 回归系数估计值的标准差。
     arma::vec mSHat;  //!< \~english A vector of \f$tr(S)\f$ and \f$tr(SS^T)\f$. \~chinese 由 \f$tr(S)\f$ 和 \f$tr(SS^T)\f$ 组成的向量。
