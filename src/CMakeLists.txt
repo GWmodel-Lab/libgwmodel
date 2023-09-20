@@ -113,9 +113,25 @@ set(HEADERS_C
     ../include/gwmodel.h
 )
 
+set(HEADERS_ALL ${HEADERS_CXX} ${HEADERS_C})
+set(SOURCES_ALL ${SOURCES_CXX})
+
+if(ENABLE_CUDA)
+    set(HEADERS_CUDA
+        ../include/gwmodelpp/spatialweight/cuda/BandwidthWeightKernel.h
+        ../include/gwmodelpp/spatialweight/cuda/CRSDistanceKernel.h
+    )
+    set(SOURCES_CUDA
+        gwmodelpp/spatialweight/cuda/BandwidthWeightKernel.cu
+        gwmodelpp/spatialweight/cuda/CRSDistanceKernel.cu
+    )
+    list(PREPEND HEADERS_ALL ${HEADERS_CUDA})
+    list(PREPEND SOURCES_ALL ${SOURCES_CUDA})
+endif(ENABLE_CUDA)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${gwmodel_BINARY_DIR}/bin)
 
-add_library(gwmodel STATIC ${SOURCES_CXX} ${HEADERS_CXX} ${HEADERS_C})
+add_library(gwmodel STATIC ${HEADERS_ALL} ${SOURCES_ALL})
 set_property(TARGET gwmodel PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
