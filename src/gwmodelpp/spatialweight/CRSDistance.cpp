@@ -143,14 +143,25 @@ double CRSDistance::minDistance()
     return minD;
 }
 
+#ifdef ENABLE_CUDA
+cudaError_t CRSDistance::prepareCuda()
+{
+    cudaMalloc(&mCudaDp, sizeof(double) * mParameter->dataPoints.n_elem);
+    cudaMalloc(&mCudaFp, sizeof(double) * mParameter->focusPoints.n_elem);
+    mat dpt = mParameter->dataPoints.t(), fpt = mParameter->focusPoints.t();
+    cudaMemcpy(mCudaDp, dpt.mem, sizeof(double) * dpt.n_elem, cudaMemcpyHostToDevice);
+    cudaMemcpy(mCudaFp, fpt.mem, sizeof(double) * fpt.n_elem, cudaMemcpyHostToDevice);
+}
+
 cudaError_t CRSDistance::distance(uword focus, double *d_dists, size_t *elems)
 {
     if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
     if (mCudaDp == 0 || mCudaFp == 0 || mCudaThreads == 0) throw std::logic_error("Cuda has not been prepared.");
     if (focus < mParameter->total)
     {
-        size_t fbias;
+        size_t fbias = focus * mParameter->focusPoints.n_cols;
         eu_dist_cuda(mCudaDp, mCudaFp + fbias, mParameter->total, mCudaThreads, d_dists);
     }
     else throw std::runtime_error("Target is out of bounds of data points.");
 }
+#endif // ENABLE_CUDA
