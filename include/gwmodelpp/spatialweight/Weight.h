@@ -1,6 +1,11 @@
 #ifndef WEIGHT_H
 #define WEIGHT_H
 
+#ifdef ENABLE_CUDA
+#include <cuda_runtime.h>
+#include "spatialweight/cuda/ISpatialCudaEnabled.h"
+#endif // ENABLE_CUDA
+
 #include <unordered_map>
 #include <string>
 #include <armadillo>
@@ -14,6 +19,9 @@ namespace gwm
  * \~chinese 根据距离计算权重的基类。
  */
 class Weight
+#ifdef ENABLE_CUDA
+    : public ISpatialCudaEnabled
+#endif
 {
 public:
 
@@ -55,6 +63,13 @@ public:
      * @return \~english Weight vector \~chinese 权重向量
      */
     virtual arma::vec weight(arma::vec dist) = 0;
+
+#ifdef ENABLE_CUDA
+    virtual cudaError_t weight(double* d_dists, double* d_weights)
+    {
+        throw std::logic_error("Function not yet implemented");
+    }
+#endif
 };
 
 }

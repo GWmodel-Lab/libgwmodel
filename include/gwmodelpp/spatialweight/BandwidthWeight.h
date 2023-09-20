@@ -169,6 +169,11 @@ public:
 public:
     virtual arma::vec weight(arma::vec dist) override;
 
+#ifdef ENABLE_CUDA
+    virtual cudaError_t prepareCuda() override;
+    virtual cudaError_t weight(double* d_dists, double* d_weights, size_t elems) override;
+#endif // ENABLE_CUDA
+
     /**
      * @brief \~english Get the bandwidth size. \~chinese 获取带宽大小。
      * 

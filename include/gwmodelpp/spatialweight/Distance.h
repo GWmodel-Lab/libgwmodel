@@ -1,6 +1,11 @@
 #ifndef DISTANCE_H
 #define DISTANCE_H
 
+#ifdef ENABLE_CUDA
+#include <cuda_runtime.h>
+#include "spatialweight/cuda/ISpatialCudaEnabled.h"
+#endif // ENABLE_CUDA
+
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -18,6 +23,9 @@ typedef std::variant<arma::mat, arma::vec, arma::uword> DistParamVariant;   //!<
  * 
  */
 class Distance
+#ifdef ENABLE_CUDA
+    : public ISpatialCudaEnabled
+#endif
 {
 public:
 
@@ -96,6 +104,13 @@ public:
      * @return arma::vec \~english Distance vector for the focused point \~chinese 目标点到所有数据点的距离向量
      */
     virtual arma::vec distance(arma::uword focus) = 0;
+
+#ifdef ENABLE_CUDA
+    virtual cudaError_t distance(arma::uword focus, double* d_dists, size_t* elems)
+    {
+        throw std::logic_error("Function not yet implemented");
+    }
+#endif // ENABLE_CUDA
 
     /**
      * @brief \~english Get maximum distance among all points. \~chinese 获取最大距离。

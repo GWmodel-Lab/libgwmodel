@@ -350,9 +350,19 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
     double alpha = 1.0, beta = 0.0;
     int* d_info;
     cudaMalloc(&d_info, sizeof(int) * mGroupLength);
+    cudaError_t error;
     for (size_t i = 0; i < groups; i++)
     {
         /// [TODO] calculate distance with cuda
+        for (size_t j = 0; j < mGroupLength; j++)
+        {
+            size_t e = i * mGroupLength + j;
+            error |= mSpatialWeights->weightVector(e, d_dists, d_weights);
+        }
+        if (error != cudaSuccess)
+        {
+            break;
+        }
         // cublasDdgmm(handle, CUBLAS_SIDE_RIGHT, nDp, nVar, d_x, nVar, d_weights, 1, )
         /// [END]
         // xtwx and xtwy
@@ -385,8 +395,12 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
             S.row(isStoreS() ? e : 0) = si;
         }
     }
-    cublasGetMatrix(nVar, nDp, sizeof(double), d_betas, nVar, betas.memptr(), nVar);
-    betasSE = betasSE.t();
+    if (error == cudaSuccess)
+    {
+        cublasGetMatrix(nVar, nDp, sizeof(double), d_betas, nVar, betas.memptr(), nVar);
+        betasSE = betasSE.t();
+    }
+    // Clean up memory
     cudaFree(d_x);
     cudaFree(d_y);
     cudaFree(d_coords);
@@ -408,6 +422,7 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
     delete[] pA_xtwx;
     delete[] pA_xtwy;
     delete[] pA_xtwxI;
+    // return value
     return betas.t();
 }
 #endif

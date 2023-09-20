@@ -3,6 +3,10 @@
 
 #include "Distance.h"
 
+#ifdef ENABLE_CUDA
+#include "spatialweight/cuda/CRSDistanceKernel.h"
+#endif // ENABLE_CUDA
+
 namespace gwm
 {
 
@@ -182,6 +186,12 @@ public:
     virtual arma::vec distance(arma::uword focus) override;
     virtual double maxDistance() override;
     virtual double minDistance() override;
+
+#ifdef ENABLE_CUDA
+    virtual cudaError_t prepareCuda() override;
+
+    virtual cudaError_t distance(arma::uword focus, double* d_dists, size_t* elems) override;
+#endif
 
 protected:
     bool mGeographic;  //!< \~english Whether the CRS is geographic \~chinese 坐标系是否是地理坐标系

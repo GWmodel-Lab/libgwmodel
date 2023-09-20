@@ -1,6 +1,11 @@
 #ifndef SPATIALWEIGHT_H
 #define SPATIALWEIGHT_H
 
+#ifdef ENABLE_CUDA
+#include <cuda_runtime.h>
+#include "spatialweight/cuda/ISpatialCudaEnabled.h"
+#endif 
+
 #include "Weight.h"
 #include "Distance.h"
 
@@ -36,6 +41,9 @@ namespace gwm
  * 如果距离和权重通过引用设置，那么该类对象将会克隆他们。
  */
 class SpatialWeight
+#ifdef ENABLE_CUDA
+    : public ISpatialCudaEnabled
+#endif
 {
 public:
 
@@ -328,6 +336,23 @@ public:
     {
         return mWeight->weight(mDistance->distance(focus));
     }
+
+#ifdef ENABLE_CUDA
+    virtual cudaError_t prepareCuda() override
+    {
+        return mDistance->prepareCuda() || mWeight->prepareCuda();
+    }
+
+    virtual cudaError_t weightVector(arma::uword focus, double* d_dists, double* d_weights)
+    {
+        cudaError_t error;
+        size_t elems = 0;
+        error = mDistance->distance(focus, d_dists, &elems);
+        if (error != cudaSuccess) return error;
+        error = mWeight->weight(d_dists, d_weights, elems);
+        return error;
+    }
+#endif
 
     /**
      * \~english
