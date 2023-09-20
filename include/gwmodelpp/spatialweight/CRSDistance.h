@@ -199,6 +199,12 @@ protected:
 
 private:
     CalculatorType mCalculator = &EuclideanDistance;  //!< \~english Calculator \~chinese 距离计算方法
+#ifdef ENABLE_CUDA
+    double* mCudaDp = 0;
+    double* mCudaFp = 0;
+    size_t mCudaThreads = 0;
+#endif
+
 };
 
 }

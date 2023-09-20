@@ -142,3 +142,15 @@ double CRSDistance::minDistance()
     }
     return minD;
 }
+
+cudaError_t CRSDistance::distance(uword focus, double *d_dists, size_t *elems)
+{
+    if(mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
+    if (mCudaDp == 0 || mCudaFp == 0 || mCudaThreads == 0) throw std::logic_error("Cuda has not been prepared.");
+    if (focus < mParameter->total)
+    {
+        size_t fbias;
+        eu_dist_cuda(mCudaDp, mCudaFp + fbias, mParameter->total, mCudaThreads, d_dists);
+    }
+    else throw std::runtime_error("Target is out of bounds of data points.");
+}
