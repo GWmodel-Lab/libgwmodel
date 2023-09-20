@@ -7,6 +7,11 @@
 #include <omp.h>
 #endif
 
+#ifdef ENABLE_CUDA
+#include <cuda_runtime.h>
+#include <cublas_v2.h>
+#endif
+
 using namespace std;
 using namespace arma;
 using namespace gwm;
@@ -281,6 +286,13 @@ mat GWRBasic::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& q
     qDiag = sum(qDiag_all, 1);
     betasSE = betasSE.t();
     return betas.t();
+}
+#endif
+
+#ifdef ENABLE_CUDA
+mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
+{
+    
 }
 #endif
 

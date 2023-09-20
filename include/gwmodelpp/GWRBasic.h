@@ -447,6 +447,10 @@ private:
     arma::mat fitOmp(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qDiag, arma::mat& S);
 #endif
 
+#ifdef ENABLE_CUDA
+    arma::mat fitCuda(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qDiag, arma::mat& S);
+#endif
+
 public:     // Implement IBandwidthSelectable
     Status getCriterion(BandwidthWeight* weight, double& criterion) override
     {

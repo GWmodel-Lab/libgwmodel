@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.17)
 project(libgwmodel)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -29,6 +29,14 @@ endif(ARMADILLO_FOUND)
 if(ENABLE_CUDA)
     enable_language(CUDA)
     add_definitions(-DENABLE_CUDA)
+
+    find_package(CUDAToolkit REQUIRED)
+    if(NOT CUDAToolkit_FOUND)
+        message(FATAL_ERROR "CUDAToolkit Not Found!")
+    else(NOT CUDAToolkit_FOUND)
+        message(STATUS "Found CUDAToolkit at: ${CUDAToolkit_INCLUDE_DIRS}")
+    endif(NOT CUDAToolkit_FOUND)
+    include_directories(${CUDAToolkit_INCLUDE_DIRS})
 endif()
 
 if(MSVC)

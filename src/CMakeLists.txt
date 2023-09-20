@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.17)
 
 if(ENABLE_OpenMP)
 find_package(OpenMP)
@@ -152,6 +152,13 @@ if(OpenMP_FOUND)
         ${OpenMP_CXX_LIBRARIES}
     )
 endif(OpenMP_FOUND)
+
+if(CUDAToolkit_FOUND)
+    target_link_libraries(gwmodel
+        CUDA::cudart_static
+        CUDA::cublas_static
+    )
+endif(CUDAToolkit_FOUND)
 
 install(TARGETS gwmodel
     LIBRARY DESTINATION lib
