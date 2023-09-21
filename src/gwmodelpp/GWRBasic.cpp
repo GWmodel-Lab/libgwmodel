@@ -38,7 +38,10 @@ mat GWRBasic::fit()
     uword nDp = mCoords.n_rows, nVars = mX.n_cols;
     createDistanceParameter();
 #ifdef ENABLE_CUDA
-    mSpatialWeight.prepareCuda(mGpuId);
+    if (mParallelType == ParallelType::CUDA)
+    {
+        mSpatialWeight.prepareCuda(mGpuId);
+    }
 #endif // ENABLE_CUDA
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
 
