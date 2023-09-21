@@ -160,7 +160,7 @@ cudaError_t CRSDistance::distance(uword focus, double *d_dists, size_t *elems)
     if (focus < mParameter->total)
     {
         size_t fbias = focus * mParameter->focusPoints.n_cols;
-        eu_dist_cuda(mCudaDp, mCudaFp + fbias, mParameter->total, mCudaThreads, d_dists);
+        return mCalculatorCuda(mCudaDp, mCudaFp + fbias, mParameter->total, mCudaThreads, d_dists);
     }
     else throw std::runtime_error("Target is out of bounds of data points.");
 }

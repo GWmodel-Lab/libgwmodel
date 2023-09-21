@@ -111,6 +111,9 @@ public:
 
 private:
     typedef arma::vec (*CalculatorType)(const arma::rowvec&, const arma::mat&);
+#ifdef ENABLE_CUDA
+    typedef cudaError_t (*CalculatorCudaType)(const double*, const double*, size_t, size_t, double*);
+#endif
 
 public:
 
@@ -128,6 +131,9 @@ public:
     explicit CRSDistance(bool isGeographic): mGeographic(isGeographic), mParameter(nullptr)
     {
         mCalculator = mGeographic ? &SpatialDistance : &EuclideanDistance;
+#ifdef ENABLE_CUDA
+        mCalculatorCuda = mGeographic ? &sp_dist_cuda : eu_dist_cuda;
+#endif
     }
 
     /**
@@ -136,6 +142,14 @@ public:
      * @param distance \~english Reference to object for copying \~chinese 要拷贝的对象的引用
      */
     CRSDistance(const CRSDistance& distance);
+
+    virtual ~CRSDistance()
+    {
+#ifdef ENABLE_CUDA
+        cudaFree(mCudaDp);
+        cudaFree(mCudaFp);
+#endif
+    }
 
     virtual Distance * clone() override
     {
@@ -164,6 +178,9 @@ public:
     {
         mGeographic = geographic;
         mCalculator = mGeographic ? &SpatialDistance : &EuclideanDistance;
+#ifdef ENABLE_CUDA
+        mCalculatorCuda = mGeographic ? &sp_dist_cuda : eu_dist_cuda;
+#endif
     }
 
 public:
@@ -199,11 +216,13 @@ protected:
 
 private:
     CalculatorType mCalculator = &EuclideanDistance;  //!< \~english Calculator \~chinese 距离计算方法
+
 #ifdef ENABLE_CUDA
     bool mCudaPrepared = false;
     double* mCudaDp = 0;
     double* mCudaFp = 0;
     size_t mCudaThreads = 0;
+    CalculatorCudaType mCalculatorCuda = &eu_dist_cuda;
 #endif
 
 };

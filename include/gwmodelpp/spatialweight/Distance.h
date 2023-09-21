@@ -110,6 +110,11 @@ public:
     {
         throw std::logic_error("Function not yet implemented");
     }
+
+    virtual bool useCuda() override { return mUseCuda; }
+
+    virtual void setUseCuda(bool isUseCuda) override { mUseCuda = isUseCuda; }
+
 #endif // ENABLE_CUDA
 
     /**
@@ -125,6 +130,11 @@ public:
      * @return double \~english Maximum distance \~chinese 最小距离
      */
     virtual double minDistance() = 0;
+
+#ifdef ENABLE_CUDA
+protected:
+    bool mUseCuda = false;
+#endif // ENABLE_CUDA
 
 };
 

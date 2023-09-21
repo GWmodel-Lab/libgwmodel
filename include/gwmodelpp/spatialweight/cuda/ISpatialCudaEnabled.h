@@ -6,7 +6,7 @@
 struct ISpatialCudaEnabled
 {
     virtual bool useCuda() = 0;
-    virtual void setUseCuda() = 0;
+    virtual void setUseCuda(bool isUseCuda) = 0;
     virtual cudaError_t prepareCuda() = 0;
 }
 
