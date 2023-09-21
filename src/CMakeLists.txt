@@ -122,6 +122,7 @@ if(ENABLE_CUDA)
         ../include/gwmodelpp/utils/CudaUtils.h
         ../include/gwmodelpp/spatialweight/cuda/BandwidthWeightKernel.h
         ../include/gwmodelpp/spatialweight/cuda/CRSDistanceKernel.h
+        ../include/cumat/cumat.hpp
     )
     set(SOURCES_CUDA
         gwmodelpp/utils/CudaUtils.cpp
