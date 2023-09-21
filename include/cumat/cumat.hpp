@@ -35,15 +35,6 @@ public:
         cudaMemcpy(dMem, mat.dMem, mBytes, cudaMemcpyDeviceToDevice);
     }
 
-    cumat(const cumat&& mat)
-    {
-        mRows = mat.mRows;
-        mCols = mat.mCols;
-        mBytes = mat.mBtypes;
-        dMem = mat.dMem;
-        mMoved = true;
-    }
-
     ~cumat()
     {
         if (mMoved) cudaFree(dMem);
@@ -65,7 +56,7 @@ public:
         cumat res {m, n};
         cudaError_t error = cublasDgemm(cumat::handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, &cumat::alpha, dMem, mRows, right.dmem(), right.nrows(), &cumat::beta, res.dmem(), m);
         if (error != cudaSuccess) throw error;
-        return std::move(res);
+        return res;
     }
 
     cumat operator*(const cumat_trans& right) const
@@ -75,7 +66,7 @@ public:
         cumat res {m, n};
         cudaError_t error = cublasDgemm(cumat::handle, CUBLAS_OP_N, CUBLAS_OP_T, m, n, k, &cumat::alpha, dMem, mRows, right.mat.dmem(), right.nrows(), &cumat::beta, res.dmem(), m);
         if (error != cudaSuccess) throw error;
-        return std::move(res);
+        return res;
     }
 
 public:
@@ -85,7 +76,6 @@ public:
     double* dmem() { return dMem; }
 
 private:
-    bool mMoved = false;
     size_t mRows = 0;
     size_t mCols = 0;
     double* dMem = nullptr;
@@ -109,7 +99,7 @@ public:
         cumat res { m, n };
         auto error = cublasDgeam(cublas::handle, CUBLAS_OP_T, CUBLAS_OP_T, m, n, &cumat::alpha1, mat.mem(), mat.nrows(), &cumat::beta0, mat.mem(), mat.nrows(), res.mem(), m);
         if (error != cudaSuccess) throw error;
-        return std::move(res);
+        return res;
     }
 
     const cumat& t() const
@@ -124,7 +114,7 @@ public:
         cumat res {m, n};
         cudaError_t error = cublasDgemm(cumat::handle, CUBLAS_OP_T, CUBLAS_OP_N, m, n, k, &cumat::alpha, mat.dmem(), mat.nrows(), right.dmem(), right.nrows(), &cumat::beta, res.dmem(), m);
         if (error != cudaSuccess) throw error;
-        return std::move(res);
+        return res;
     }
 
     cumat operator*(const cumat_trans& right) const
@@ -134,7 +124,7 @@ public:
         cumat res {m, n};
         cudaError_t error = cublasDgemm(cumat::handle, CUBLAS_OP_T, CUBLAS_OP_T, m, n, k, &cumat::alpha, mat.dmem(), mat.nrows(), right.mat.dmem(), right.nrows(), &cumat::beta, res.dmem(), m);
         if (error != cudaSuccess) throw error;
-        return std::move(res);
+        return res;
     }
 
     const cumat& mat;
