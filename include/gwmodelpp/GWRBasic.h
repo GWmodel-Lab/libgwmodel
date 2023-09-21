@@ -574,7 +574,10 @@ public:     // Implement IParallelizable
         return ParallelType::SerialOnly
 #ifdef ENABLE_OPENMP
             | ParallelType::OpenMP
-#endif        
+#endif // ENABLE_OPENMP
+#ifdef ENABLE_CUDA
+            | ParallelType::CUDA
+#endif // ENABLE_CUDA
         ;
     }
 

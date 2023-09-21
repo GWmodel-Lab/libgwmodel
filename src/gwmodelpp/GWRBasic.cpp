@@ -739,7 +739,13 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitFunction = &GWRBasic::fitOmp;
             mIndepVarsSelectionCriterionFunction = &GWRBasic::indepVarsSelectionCriterionOmp;
             break;
-#endif
+#endif // ENABLE_OPENMP
+#ifdef ENABLE_CUDA
+        case ParallelType::CUDA:
+            mPredictFunction = &GWRBasic::predictSerial;
+            mFitFunction = &GWRBasic::fitCuda;
+            mIndepVarsSelectionCriterionFunction = &GWRBasic::indepVarsSelectionCriterionSerial;
+#endif // ENABLE_CUDA
         default:
             mPredictFunction = &GWRBasic::predictSerial;
             mFitFunction = &GWRBasic::fitSerial;
