@@ -4,7 +4,8 @@
 #include "Distance.h"
 
 #ifdef ENABLE_CUDA
-#include "spatialweight/cuda/CRSDistanceKernel.h"
+#include "gwmodelpp/spatialweight/cuda/CRSDistanceKernel.h"
+#include "gwmodelpp/spatialweight/cuda/ISpatialCudaEnabled.h"
 #endif // ENABLE_CUDA
 
 namespace gwm
@@ -205,7 +206,7 @@ public:
     virtual double minDistance() override;
 
 #ifdef ENABLE_CUDA
-    virtual cudaError_t prepareCuda() override;
+    virtual cudaError_t prepareCuda(size_t gpuId) override;
 
     virtual cudaError_t distance(arma::uword focus, double* d_dists, size_t* elems) override;
 #endif
@@ -218,10 +219,8 @@ private:
     CalculatorType mCalculator = &EuclideanDistance;  //!< \~english Calculator \~chinese 距离计算方法
 
 #ifdef ENABLE_CUDA
-    bool mCudaPrepared = false;
     double* mCudaDp = 0;
     double* mCudaFp = 0;
-    size_t mCudaThreads = 0;
     CalculatorCudaType mCalculatorCuda = &eu_dist_cuda;
 #endif
 

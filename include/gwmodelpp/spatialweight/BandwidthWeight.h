@@ -5,6 +5,9 @@
 #include <string>
 #include "Weight.h"
 
+#ifdef ENABLE_CUDA
+#include "gwmodelpp/spatialweight/cuda/BandwidthWeightKernel.h"
+#endif // ENABLE_CUDA
 
 namespace gwm
 {
@@ -170,7 +173,6 @@ public:
     virtual arma::vec weight(arma::vec dist) override;
 
 #ifdef ENABLE_CUDA
-    virtual cudaError_t prepareCuda() override;
     virtual cudaError_t weight(double* d_dists, double* d_weights, size_t elems) override;
 #endif // ENABLE_CUDA
 

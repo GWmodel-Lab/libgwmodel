@@ -1,12 +1,7 @@
 #include "gwmodelpp/spatialweight/cuda/CRSDistanceKernel.h"
 
-#define M_PI       3.14159265358979323846
-#define DOUBLE_EPS 1e-12
-
 #include <device_launch_parameters.h>
 #include <cmath>
-#include <thrust/device_vector.h>
-#include <thrust/sort.h>
 
 
 #define POWDI(x,i) pow(x,i)
@@ -47,7 +42,7 @@
 __global__ void eu_dist_vec_kernel(const double *dp, const double *rp, size_t rows, double *dists)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= ndp) return;
+    if (i >= rows) return;
     double ix = *(dp + i * 2), iy = *(dp + i * 2 + 1);
     double ox = *(rp), oy = *(rp + 1);
     double dist = hypot((ix - ox), (iy - oy));
@@ -57,7 +52,7 @@ __global__ void eu_dist_vec_kernel(const double *dp, const double *rp, size_t ro
 cudaError_t eu_dist_cuda(const double *d_dp, const double *d_rp, size_t rows, size_t threads, double* d_dists)
 {
     cudaError_t error;
-    dim3 blockSize(threads), gridSize((n + blockSize.x - 1) / blockSize.x);
+    dim3 blockSize(threads), gridSize((rows + blockSize.x - 1) / blockSize.x);
     eu_dist_vec_kernel<<<gridSize, blockSize>>>(d_dp, d_rp, rows, d_dists);
     return cudaGetLastError();
 }
@@ -156,20 +151,19 @@ __device__ double sp_gcdist(double lon1, double lon2, double lat1, double lat2)
     return D * (1 + f * H1*sinF2*cosG2 - f * H2*cosF2*sinG2);
 }
 
-__global__ void sp_dist_vec_kernel(const double *dp, int ndp, const double *rp, int focus, int nrp, double *dists)
+__global__ void sp_dist_vec_kernel(const double *dp, const double *rp, int rows, double *dists)
 {
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
-    if (index >= ndp) return;
-    int i = index;
-    double ix = dp[i], iy = dp[i + ndp];
-    double ox = *(rp + focus), oy = *(rp + focus + nrp);
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= rows) return;
+    double ix = dp[i * 2], iy = dp[i * 2 + 1];
+    double ox = *(rp), oy = *(rp + 1);
     dists[i] = sp_gcdist(ix, ox, iy, oy);
 }
 
 cudaError_t sp_dist_cuda(const double *d_dp, const double *d_rp, size_t rows, size_t threads, double* d_dists)
 {
     cudaError_t error;
-    dim3 blockSize(threads), gridSize((n + blockSize.x - 1) / blockSize.x);
+    dim3 blockSize(threads), gridSize((rows + blockSize.x - 1) / blockSize.x);
     sp_dist_vec_kernel<<<gridSize, blockSize>>>(d_dp, d_rp, rows, d_dists);
     return cudaGetLastError();
 }

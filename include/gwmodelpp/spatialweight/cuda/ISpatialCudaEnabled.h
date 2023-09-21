@@ -7,7 +7,7 @@ struct ISpatialCudaEnabled
 {
     virtual bool useCuda() = 0;
     virtual void setUseCuda(bool isUseCuda) = 0;
-    virtual cudaError_t prepareCuda() = 0;
-}
+    virtual cudaError_t prepareCuda(size_t gpuId) = 0;
+};
 
 #endif  // ISAPATIALCUDAENABLED_H

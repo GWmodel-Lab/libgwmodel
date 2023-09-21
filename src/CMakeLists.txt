@@ -24,6 +24,7 @@ endif()
 include_directories(
     ${LIBGWMODEL_INCLUDE_DIR} 
     ${LIBGWMODEL_INCLUDE_DIR}/gwmodelpp
+    ${LIBGWMODEL_INCLUDE_DIR}/gwmodelpp/utils
 )
 
 add_definitions(-DM_PI=3.14159265358979323846 -DM_PI_2=1.57079632679489661923 -DDOUBLE_EPS=1e-8)
@@ -74,6 +75,8 @@ set(SOURCES_C
 )
 
 set(HEADERS_CXX
+    ../include/gwmodelpp/utils/CudaUtils.h
+
     ../include/gwmodelpp/spatialweight/BandwidthWeight.h
     ../include/gwmodelpp/spatialweight/CRSDistance.h
     ../include/gwmodelpp/spatialweight/OneDimDistance.h
@@ -136,21 +139,32 @@ set_property(TARGET gwmodel PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 
+if(ENABLE_CUDA AND CUDAToolkit_FOUND)
+    target_link_libraries(gwmodel
+        CUDA::cudart_static
+        CUDA::cublas_static
+    )
+    target_compile_options(gwmodel PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+        --compiler-options
+        -Werror
+    >)
+endif(ENABLE_CUDA AND CUDAToolkit_FOUND)
+
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
     if(CMAKE_CXX_COMPILER_ID STREQUAL Clang OR CMAKE_CXX_COMPILER_ID STREQUAL AppleClang)
-        target_compile_options(gwmodel PRIVATE -Wmost -Werror)
+        target_compile_options(gwmodel PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wmost -Werror>)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
-        target_compile_options(gwmodel PRIVATE /W4 /wd4819 /WX)
+        target_compile_options(gwmodel PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/W4 /wd4819 /WX>)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
-        target_compile_options(gwmodel PRIVATE -Wall -Werror)
+        target_compile_options(gwmodel PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Werror>)
     endif()
 else()
     if(CMAKE_CXX_COMPILER_ID STREQUAL Clang OR CMAKE_CXX_COMPILER_ID STREQUAL AppleClang)
-        target_compile_options(gwmodel PRIVATE -Wmost)
+        target_compile_options(gwmodel PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wmost>)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
-        target_compile_options(gwmodel PRIVATE /W4 /wd4819)
+        target_compile_options(gwmodel PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/W4 /wd4819>)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
-        target_compile_options(gwmodel PRIVATE -Wall)
+        target_compile_options(gwmodel PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall>)
     endif()
 endif()
 
@@ -168,13 +182,6 @@ if(OpenMP_FOUND)
         ${OpenMP_CXX_LIBRARIES}
     )
 endif(OpenMP_FOUND)
-
-if(CUDAToolkit_FOUND)
-    target_link_libraries(gwmodel
-        CUDA::cudart_static
-        CUDA::cublas_static
-    )
-endif(CUDAToolkit_FOUND)
 
 install(TARGETS gwmodel
     LIBRARY DESTINATION lib

@@ -25,7 +25,7 @@ namespace gwm
  * 该算法可以通过 OpenMP 加速。
  * 
  */
-class GWRBasic : public GWRBase, public IBandwidthSelectable, public IVarialbeSelectable, public IParallelizable, public IParallelOpenmpEnabled
+class GWRBasic : public GWRBase, public IBandwidthSelectable, public IVarialbeSelectable, public IParallelizable, public IParallelOpenmpEnabled, public IParallelCudaEnabled
 {
 public:
 
@@ -584,6 +584,8 @@ public:     // Implement IParallelizable
 
 public:     // Implement IGwmParallelOpenmpEnabled
     void setOmpThreadNum(const int threadNum) override { mOmpThreadNum = threadNum; }
+    void setGPUId(const int gpuId) { mGpuId = gpuId; };
+    void setGroupSize(const double size) { mGroupLength = size; };
 
 protected:
 
@@ -642,6 +644,7 @@ protected:
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Type of parallel method. \~chinese 并行方法类型。
     int mOmpThreadNum = 8;  //!< \~english Number of threads to create. \~chinese 并行计算创建的线程数。
     size_t mGroupLength = 64;
+    int mGpuId = 0;
 
     arma::mat mBetasSE;  //!< \~english Standard errors of coefficient estimates. \~chinese 回归系数估计值的标准差。
     arma::vec mSHat;  //!< \~english A vector of \f$tr(S)\f$ and \f$tr(SS^T)\f$. \~chinese 由 \f$tr(S)\f$ 和 \f$tr(SS^T)\f$ 组成的向量。

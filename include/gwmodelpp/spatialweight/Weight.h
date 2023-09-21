@@ -3,7 +3,7 @@
 
 #ifdef ENABLE_CUDA
 #include <cuda_runtime.h>
-#include "spatialweight/cuda/ISpatialCudaEnabled.h"
+#include "gwmodelpp/spatialweight/cuda/ISpatialCudaEnabled.h"
 #endif // ENABLE_CUDA
 
 #include <unordered_map>
@@ -65,11 +65,24 @@ public:
     virtual arma::vec weight(arma::vec dist) = 0;
 
 #ifdef ENABLE_CUDA
-    virtual cudaError_t weight(double* d_dists, double* d_weights)
+    bool useCuda() { return mUseCuda; }
+
+    void setUseCuda(bool isUseCuda) { mUseCuda = isUseCuda; }
+
+    virtual cudaError_t prepareCuda(size_t gpuId) override;
+    
+    virtual cudaError_t weight(double* d_dists, double* d_weights, size_t elems)
     {
         throw std::logic_error("Function not yet implemented");
     }
 #endif
+
+#ifdef ENABLE_CUDA
+protected:
+    bool mUseCuda = false;
+    size_t mCudaThreads = 0;
+    bool mCudaPrepared = false;
+#endif // ENABLE_CUDA
 };
 
 }

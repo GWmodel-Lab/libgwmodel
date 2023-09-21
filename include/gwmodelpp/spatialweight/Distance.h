@@ -3,7 +3,7 @@
 
 #ifdef ENABLE_CUDA
 #include <cuda_runtime.h>
-#include "spatialweight/cuda/ISpatialCudaEnabled.h"
+#include "gwmodelpp/spatialweight/cuda/ISpatialCudaEnabled.h"
 #endif // ENABLE_CUDA
 
 #include <memory>
@@ -115,6 +115,8 @@ public:
 
     virtual void setUseCuda(bool isUseCuda) override { mUseCuda = isUseCuda; }
 
+    virtual cudaError_t prepareCuda(size_t gpuId) override;
+
 #endif // ENABLE_CUDA
 
     /**
@@ -134,6 +136,9 @@ public:
 #ifdef ENABLE_CUDA
 protected:
     bool mUseCuda = false;
+    bool mCudaPrepared = false;
+    size_t mCudaThreads = 0;
+
 #endif // ENABLE_CUDA
 
 };

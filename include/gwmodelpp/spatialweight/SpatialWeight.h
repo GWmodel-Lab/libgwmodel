@@ -3,7 +3,7 @@
 
 #ifdef ENABLE_CUDA
 #include <cuda_runtime.h>
-#include "spatialweight/cuda/ISpatialCudaEnabled.h"
+#include "gwmodelpp/spatialweight/cuda/ISpatialCudaEnabled.h"
 #endif 
 
 #include "Weight.h"
@@ -338,9 +338,24 @@ public:
     }
 
 #ifdef ENABLE_CUDA
-    virtual cudaError_t prepareCuda() override
+    virtual cudaError_t prepareCuda(size_t gpuId) override
     {
-        return mDistance->prepareCuda() || mWeight->prepareCuda();
+        cudaError_t error;
+        error = mDistance->prepareCuda(gpuId);
+        if (error != cudaSuccess) return error;
+        error = mWeight->prepareCuda(gpuId);
+        return error;
+    }
+
+    virtual bool useCuda()
+    {
+        return mWeight->useCuda() || mDistance->useCuda();
+    }
+
+    virtual void setUseCuda(bool isUseCuda)
+    {
+        mWeight->setUseCuda(isUseCuda);
+        mDistance->setUseCuda(isUseCuda);
     }
 
     virtual cudaError_t weightVector(arma::uword focus, double* d_dists, double* d_weights)
