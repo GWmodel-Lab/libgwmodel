@@ -121,15 +121,9 @@ __global__ void gw_xtw_kernel(const double* d_x, const double* d_wights, int n, 
 
 cudaError_t gw_xtw_cuda(const double* d_x, const double* d_weight, int n, int k, double* d_xtw, int threads)
 {
-    cudaError_t error;
     dim3 blockSize(threads), gridSize((n + blockSize.x - 1) / blockSize.x);
     gw_xtw_kernel << <gridSize, blockSize >> > (d_x, d_weight, n, k, d_xtw);
-    error = cudaGetLastError();
-    if (error != cudaSuccess)
-    {
-        return error;
-    }
-    return cudaSuccess;
+    return cudaGetLastError();
 }
 
 

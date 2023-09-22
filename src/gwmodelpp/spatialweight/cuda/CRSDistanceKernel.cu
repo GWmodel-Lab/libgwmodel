@@ -51,7 +51,6 @@ __global__ void eu_dist_vec_kernel(const double *dp, const double *rp, size_t ro
 
 cudaError_t eu_dist_cuda(const double *d_dp, const double *d_rp, size_t rows, size_t threads, double* d_dists)
 {
-    cudaError_t error;
     dim3 blockSize(threads), gridSize((rows + blockSize.x - 1) / blockSize.x);
     eu_dist_vec_kernel<<<gridSize, blockSize>>>(d_dp, d_rp, rows, d_dists);
     return cudaGetLastError();
@@ -162,7 +161,6 @@ __global__ void sp_dist_vec_kernel(const double *dp, const double *rp, int rows,
 
 cudaError_t sp_dist_cuda(const double *d_dp, const double *d_rp, size_t rows, size_t threads, double* d_dists)
 {
-    cudaError_t error;
     dim3 blockSize(threads), gridSize((rows + blockSize.x - 1) / blockSize.x);
     sp_dist_vec_kernel<<<gridSize, blockSize>>>(d_dp, d_rp, rows, d_dists);
     return cudaGetLastError();
