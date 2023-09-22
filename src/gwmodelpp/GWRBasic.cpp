@@ -318,9 +318,9 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
     checkCudaErrors(cudaMalloc(&d_betasSE, sizeof(double) * nDp * nVar));
     checkCudaErrors(cudaMalloc(&d_dists, sizeof(double) * nDp));
     checkCudaErrors(cudaMalloc(&d_weights, sizeof(double) * nDp));
-    checkCudaErrors(cublasSetMatrix(nDp, nVar, sizeof(double), xt.mem, nDp, d_xt, nDp));
-    checkCudaErrors(cublasSetMatrix(nDp, 1, sizeof(double), y.mem, nDp, d_y, nDp));
-    checkCudaErrors(cublasSetMatrix(nDp, nDim, sizeof(double), mCoords.mem, nDp, d_coords, nDp));
+    checkCudaErrors(cudaMemcpy(d_xt, xt.mem, sizeof(double) * nDp * nVar, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_y, y.mem, sizeof(double) * nDp * 1, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_coords, mCoords.mem, sizeof(double) * nDp * nDim, cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemset(d_betas, 0, sizeof(double) * nDp * nVar));
     checkCudaErrors(cudaMemset(d_betasSE, 0, sizeof(double) * nDp * nVar));
     checkCudaErrors(cudaMemset(d_dists, 0, sizeof(double) * nDp));
@@ -361,11 +361,11 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
     for (size_t i = 0; i < groups; i++)
     {
         /// [TODO] calculate distance with cuda
-        for (size_t j = 0, e = i * mGroupLength + j; j < mGroupLength && e < nDp; j++)
+        for (size_t j = 0, e = i * mGroupLength + j; j < mGroupLength && e < nDp; j++, e++)
         {
             checkCudaErrors(mSpatialWeight.weightVector(e, d_dists, d_weights));
             // xtw = xt * w [k*n,n*n]
-            checkCudaErrors(cublasDdgmm(handle, CUBLAS_SIDE_RIGHT, nVar, nDp, d_xt, nVar, d_weights, nDp, ds_xtw, nDp));
+            checkCudaErrors(cublasDdgmm(handle, CUBLAS_SIDE_RIGHT, nVar, nDp, d_xt, nVar, d_weights, 1, ds_xtw + j * nVar * nDp, nVar));
         }
         /// [END]
         // xtwx and xtwy
@@ -382,14 +382,14 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
         // ci = xtwxI * xtw [k*k,t(n*k)]
         checkCudaErrors(cublasDgemmStridedBatched(handle, CUBLAS_OP_N, CUBLAS_OP_N, nVar, nDp, nVar, &alpha, ds_xtwxI, nVar, nVar * nVar, ds_xtw, nVar, nVar * nDp, &beta, ds_c, nVar, nDp * nVar, mGroupLength));
         // si = t(xti) * ci [1*k,k*n]
-        checkCudaErrors(cublasDgemmStridedBatched(handle, CUBLAS_OP_T, CUBLAS_OP_N, 1, nDp, nVar, &alpha, d_xt + beta_bias, nVar, nVar, ds_c, nVar, nDp * nVar, &beta, ds_s, nDp, nDp, mGroupLength));
+        checkCudaErrors(cublasDgemmStridedBatched(handle, CUBLAS_OP_T, CUBLAS_OP_N, 1, nDp, nVar, &alpha, d_xt + beta_bias, nVar, nVar, ds_c, nVar, nDp * nVar, &beta, ds_s, 1, nDp, mGroupLength));
         // cct = ci * cit [k*n,t(k*n)]
         checkCudaErrors(cublasDgemmStridedBatched(handle, CUBLAS_OP_N, CUBLAS_OP_T, nVar, nVar, nDp, &alpha, ds_c, nVar, nVar * nDp, ds_c, nVar, nVar * nDp, &beta, ds_cct, nVar, nVar * nVar, mGroupLength));
         // Transfer to cpu Perform further diagnostic
-        for (size_t j = 0, e = i * mGroupLength + j; j < mGroupLength && e < nDp; j++)
+        for (size_t j = 0, e = i * mGroupLength + j; j < mGroupLength && e < nDp; j++, e++)
         {
-            checkCudaErrors(cublasGetMatrix(1, nDp, sizeof(double), ds_s + j * nDp, 1, si.memptr(), 1));
-            checkCudaErrors(cublasGetMatrix(nVar, nVar, sizeof(double), ds_cct + j * nVar * nVar, nVar, cct.memptr(), nVar));
+            checkCudaErrors(cudaMemcpy(si.memptr(), ds_s + j * nDp, sizeof(double) * nDp, cudaMemcpyDeviceToHost));
+            checkCudaErrors(cudaMemcpy(cct.memptr(), ds_cct + j * nVar * nVar, sizeof(double) * nVar * nVar, cudaMemcpyDeviceToHost));
             betasSE.col(e) = diagvec(cct);
             shat(0) += si(0, e);
             shat(1) += det(si * si.t());
@@ -399,6 +399,7 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
             S.row(isStoreS() ? e : 0) = si;
         }
     }
+    S.save("S_GWRBasic_fit_cuda.csv", arma::csv_ascii);
     checkCudaErrors(cublasGetMatrix(nVar, nDp, sizeof(double), d_betas, nVar, betas.memptr(), nVar));
     betasSE = betasSE.t();
     // Clean up memory

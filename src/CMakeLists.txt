@@ -75,8 +75,6 @@ set(SOURCES_C
 )
 
 set(HEADERS_CXX
-    ../include/gwmodelpp/utils/CudaUtils.h
-
     ../include/gwmodelpp/spatialweight/BandwidthWeight.h
     ../include/gwmodelpp/spatialweight/CRSDistance.h
     ../include/gwmodelpp/spatialweight/OneDimDistance.h
@@ -121,10 +119,12 @@ set(SOURCES_ALL ${SOURCES_CXX})
 
 if(ENABLE_CUDA)
     set(HEADERS_CUDA
+        ../include/gwmodelpp/utils/CudaUtils.h
         ../include/gwmodelpp/spatialweight/cuda/BandwidthWeightKernel.h
         ../include/gwmodelpp/spatialweight/cuda/CRSDistanceKernel.h
     )
     set(SOURCES_CUDA
+        gwmodelpp/utils/CudaUtils.cpp
         gwmodelpp/spatialweight/cuda/BandwidthWeightKernel.cu
         gwmodelpp/spatialweight/cuda/CRSDistanceKernel.cu
     )
@@ -156,7 +156,7 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
         target_compile_options(gwmodel PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/W4 /wd4819 /WX>)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
-        target_compile_options(gwmodel PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Werror>)
+        target_compile_options(gwmodel PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Werror -O0>)
     endif()
 else()
     if(CMAKE_CXX_COMPILER_ID STREQUAL Clang OR CMAKE_CXX_COMPILER_ID STREQUAL AppleClang)
