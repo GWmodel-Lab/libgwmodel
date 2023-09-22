@@ -1,9 +1,9 @@
 #ifndef CUDAUTILS_H
 #define CUDAUTILS_H
 
+#include <cstdio>
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
-
 
 static const char *_cudaGetErrorEnum(cudaError_t error) {
     return cudaGetErrorName(error);
@@ -64,5 +64,7 @@ bool check(T result, char const *const func, const char *const file,
 }
 
 #define checkCudaErrors(val) if (check((val), #val, __FILE__, __LINE__)) throw std::exception(std::runtime_error(_cudaGetErrorEnum(val)))
+
+void pdm(const double* dptr, size_t rows, size_t cols, const char* header = "");
 
 #endif  // CUDAUTILS_H
