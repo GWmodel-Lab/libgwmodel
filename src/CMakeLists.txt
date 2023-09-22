@@ -120,12 +120,13 @@ set(SOURCES_ALL ${SOURCES_CXX})
 if(ENABLE_CUDA)
     set(HEADERS_CUDA
         ../include/gwmodelpp/utils/CudaUtils.h
+        ../include/gwmodelpp/utils/cumat.hpp
         ../include/gwmodelpp/spatialweight/cuda/BandwidthWeightKernel.h
         ../include/gwmodelpp/spatialweight/cuda/CRSDistanceKernel.h
-        ../include/cumat/cumat.hpp
     )
     set(SOURCES_CUDA
         gwmodelpp/utils/CudaUtils.cpp
+        gwmodelpp/utils/cumat.cpp
         gwmodelpp/spatialweight/cuda/BandwidthWeightKernel.cu
         gwmodelpp/spatialweight/cuda/CRSDistanceKernel.cu
     )

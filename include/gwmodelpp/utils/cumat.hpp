@@ -4,7 +4,7 @@
 #include <exception>
 #include <armadillo>
 #include <cuda_runtime.h>
-#include <cublas.h>
+#include <cublas_v2.h>
 
 class cumat_trans;
 class cumat;
@@ -12,10 +12,10 @@ class cumat;
 class cumat
 {
 public:
-    static cublasHandle_t handle = nullptr;
-    static double alpha1 = 1.0;
-    static double beta0 = 0.0;
-    static double beta1 = 1.0;
+    static cublasHandle_t handle;
+    constexpr static const double alpha1 = 1.0;
+    constexpr static const double beta0 = 0.0;
+    constexpr static const double beta1 = 1.0;
 
 public:
     cumat(size_t rows, size_t cols) : mRows(rows), mCols(cols)
@@ -37,50 +37,36 @@ public:
 
     ~cumat()
     {
-        if (mMoved) cudaFree(dMem);
+        cudaFree(dMem);
         dMem = nullptr;
         mRows = 0;
         mCols = 0;
         mBytes = 0;
     }
 
-    const cumat_trans t() const
+    const cumat_trans t() const;
+
+    void get(double* dst)
     {
-        return cumat_trans(*this);
+        cudaMemcpy(dst, dMem, mBytes, cudaMemcpyDeviceToHost);
     }
 
-    cumat operator*(const cumat& right) const
-    {
-        if (mCols != right.nrows()) throw std::logic_error("Dimension mismatched.");
-        size_t m = mRows, k = mCols, n = right.ncols();
-        cumat res {m, n};
-        cudaError_t error = cublasDgemm(cumat::handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, &cumat::alpha, dMem, mRows, right.dmem(), right.nrows(), &cumat::beta, res.dmem(), m);
-        if (error != cudaSuccess) throw error;
-        return res;
-    }
+    cumat operator*(const cumat& right) const;
 
-    cumat operator*(const cumat_trans& right) const
-    {
-        if (mCols != right.nrows()) throw std::logic_error("Dimension mismatched.");
-        size_t m = mRows, k = mCols, n = right.ncols();
-        cumat res {m, n};
-        cudaError_t error = cublasDgemm(cumat::handle, CUBLAS_OP_N, CUBLAS_OP_T, m, n, k, &cumat::alpha, dMem, mRows, right.mat.dmem(), right.nrows(), &cumat::beta, res.dmem(), m);
-        if (error != cudaSuccess) throw error;
-        return res;
-    }
+    cumat operator*(const cumat_trans& right) const;
 
 public:
-    size_t nrows() { return mRows; }
-    size_t ncols() { return mCols; }
-    size_t nbytes() { return mBytes; }
-    double* dmem() { return dMem; }
+    size_t nrows() const { return mRows; }
+    size_t ncols() const { return mCols; }
+    size_t nbytes() const { return mBytes; }
+    double* dmem() const { return dMem; }
 
 private:
     size_t mRows = 0;
     size_t mCols = 0;
     double* dMem = nullptr;
     size_t mBytes = 0;
-}
+};
 
 class cumat_trans
 {
@@ -89,16 +75,16 @@ public:
 
     cumat_trans(const cumat_trans& src) : mat(src.mat) {}
 
-    size_t nrows() const { return mat.ncols() }
+    size_t nrows() const { return mat.ncols(); }
 
-    size_t ncols() const { return mat.nrows() }
+    size_t ncols() const { return mat.nrows(); }
 
     operator cumat()
     {
         size_t m = mat.ncols(), n = mat.nrows();
         cumat res { m, n };
-        auto error = cublasDgeam(cublas::handle, CUBLAS_OP_T, CUBLAS_OP_T, m, n, &cumat::alpha1, mat.mem(), mat.nrows(), &cumat::beta0, mat.mem(), mat.nrows(), res.mem(), m);
-        if (error != cudaSuccess) throw error;
+        auto error = cublasDgeam(cumat::handle, CUBLAS_OP_T, CUBLAS_OP_T, m, n, &cumat::alpha1, mat.dmem(), mat.nrows(), &cumat::beta0, mat.dmem(), mat.nrows(), res.dmem(), m);
+        if (error != CUBLAS_STATUS_SUCCESS) throw error;
         return res;
     }
 
@@ -107,27 +93,11 @@ public:
         return mat;
     }
 
-    cumat operator*(const cumat& right) const
-    {
-        if (ncols() != right.nrows()) throw std::logic_error("Dimension mismatched.");
-        size_t m = nrows(), k = ncols(), n = right.ncols();
-        cumat res {m, n};
-        cudaError_t error = cublasDgemm(cumat::handle, CUBLAS_OP_T, CUBLAS_OP_N, m, n, k, &cumat::alpha, mat.dmem(), mat.nrows(), right.dmem(), right.nrows(), &cumat::beta, res.dmem(), m);
-        if (error != cudaSuccess) throw error;
-        return res;
-    }
+    cumat operator*(const cumat& right) const;
 
-    cumat operator*(const cumat_trans& right) const
-    {
-        if (ncols() != right.nrows()) throw std::logic_error("Dimension mismatched.");
-        size_t m = nrows(), k = ncols(), n = right.ncols();
-        cumat res {m, n};
-        cudaError_t error = cublasDgemm(cumat::handle, CUBLAS_OP_T, CUBLAS_OP_T, m, n, k, &cumat::alpha, mat.dmem(), mat.nrows(), right.mat.dmem(), right.nrows(), &cumat::beta, res.dmem(), m);
-        if (error != cudaSuccess) throw error;
-        return res;
-    }
+    cumat operator*(const cumat_trans& right) const;
 
     const cumat& mat;
-}
+};
 
 #endif  // CUMAT_HPP

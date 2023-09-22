@@ -119,3 +119,12 @@ add_test(
     NAME testGWDA 
     COMMAND $<TARGET_FILE:testGWDA> --success
 )
+
+if (ENABLE_CUDA)
+add_executable(testCuMat cumat.cpp)
+target_link_libraries(testCuMat PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_test(
+    NAME testCuMat
+    COMMAND $<TARGET_FILE:testCuMat --success
+)
+endif()
