@@ -140,14 +140,21 @@ set_property(TARGET gwmodel PROPERTY POSITION_INDEPENDENT_CODE ON)
 message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 
 if(ENABLE_CUDA AND CUDAToolkit_FOUND)
-    target_link_libraries(gwmodel
-        CUDA::cudart_static
-        CUDA::cublas_static
-    )
-    target_compile_options(gwmodel PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
-        --compiler-options
-        -Werror
-    >)
+    if(MSVC)
+        target_link_libraries(gwmodel
+            CUDA::cudart_static
+            CUDA::cublas
+        )
+    else(MSVC)
+        target_link_libraries(gwmodel
+            CUDA::cudart_static
+            CUDA::cublas_static
+        )
+        target_compile_options(gwmodel PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+            --compiler-options
+            -Werror
+        >)
+    endif(MSVC)
 endif(ENABLE_CUDA AND CUDAToolkit_FOUND)
 
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
