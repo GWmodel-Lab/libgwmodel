@@ -67,4 +67,6 @@ bool check(T result, char const *const func, const char *const file,
 
 void pdm(const double* dptr, size_t rows, size_t cols, const char* header = "");
 
+void pdc(const double* dptr, size_t rows, size_t cols, size_t strides, const char* header = "");
+
 #endif  // CUDAUTILS_H

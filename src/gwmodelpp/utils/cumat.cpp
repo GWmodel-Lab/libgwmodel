@@ -7,6 +7,11 @@ const cuop_trans<cumat> cumat::t() const
     return cuop_trans<cumat>(*this);
 }
 
+const cuop_trans<custride> custride::t() const
+{
+    return cuop_trans<custride>(*this);
+}
+
 cumat& cumat::operator=(const cuop_trans<cumat>& right)
 {
     mRows = right.ori.ncols(), mCols = right.ori.nrows();

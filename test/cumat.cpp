@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "gwmodelpp/utils/cumat.hpp"
+#include "gwmodelpp/utils/CudaUtils.h"
 
 using namespace std;
 using namespace arma;
@@ -11,52 +12,47 @@ TEST_CASE("cuBLAS gemm")
 {
     cublasCreate(&cumat::handle);
 
-    mat A34(3, 4, fill::randu);
-    mat A43(4, 3, fill::randu);
-    mat A35(3, 5, fill::randu);
-    mat B45(4, 5, fill::randu);
-    mat B54(5, 4, fill::randu);
+    int m = 3, n = 4, k = 5, s = 5;
 
-    cumat A34cu(A34);
-    cumat A43cu(A43);
-    cumat A35cu(A35);
-    cumat B45cu(B45);
-    cumat B54cu(B54);
-
-    SECTION("A * B")
+    SECTION("mat mul")
     {
-        mat C = A34 * B45;
-        cumat U = A34cu * B45cu;
-        mat D(size(C));
-        U.get(D.memptr());
-        REQUIRE(approx_equal(C, D, "absdiff", 1e-6));
+        auto flag_A_trans = GENERATE(false, true);
+        auto flag_B_trans = GENERATE(false, true);
+        INFO("settings: transport A (" << flag_A_trans << ") transport B (" << flag_B_trans << ")");
+
+        mat arA = flag_A_trans ? mat(k, m, arma::fill::randu) : mat(m, k, arma::fill::randu);
+        mat arB = flag_B_trans ? mat(n, k, arma::fill::randu) : mat(k, n, arma::fill::randu);
+        mat arC = flag_A_trans ? (flag_B_trans ? mat(trans(arA) * trans(arB)) : mat(trans(arA) * arB)) : (flag_B_trans ? mat(arA * trans(arB)) : mat(arA * arB));
+
+        cumat cuA(arA), cuB(arB);
+        cumat cuC = flag_A_trans ? (flag_B_trans ? (cuA.t() * cuB.t()) : (cuA.t() * cuB)) : (flag_B_trans ? (cuA * cuB.t()) : (cuA * cuB));
+
+        mat arD(size(arC));
+        cuC.get(arD.memptr());
+        REQUIRE(approx_equal(arC, arD, "absdiff", 1e-6));
     }
 
-    SECTION("A.t * B")
+    SECTION("stride mat mul")
     {
-        mat C = A43.t() * B45;
-        cumat U = A43cu.t() * B45cu;
-        mat D(size(C));
-        U.get(D.memptr());
-        REQUIRE(approx_equal(C, D, "absdiff", 1e-6));
-    }
+        auto flag_A_trans = GENERATE(false, true);
+        auto flag_B_trans = GENERATE(false, true);
+        INFO("settings: transport A (" << flag_A_trans << ") transport B (" << flag_B_trans << ")");
 
-    SECTION("A * B.t")
-    {
-        mat C = A35 * B45.t();
-        cumat U = A35cu * B45cu.t();
-        mat D(size(C));
-        U.get(D.memptr());
-        REQUIRE(approx_equal(C, D, "absdiff", 1e-6));
-    }
+        cube arA = flag_A_trans ? cube(k, m, s, arma::fill::randu) : cube(m, k, s, arma::fill::randu);
+        cube arB = flag_B_trans ? cube(n, k, s, arma::fill::randu) : cube(k, n, s, arma::fill::randu);
+        cube arC(m, n, s);
+        for (size_t i = 0; i < s; i++)
+        {
+            mat a = arA.slice(i), b = arB.slice(i);
+            arC.slice(i) = flag_A_trans ? (flag_B_trans ? mat(trans(a) * trans(b)) : mat(trans(a) * b)) : (flag_B_trans ? mat(a * trans(b)) : mat(a * b));
+        }
+        
+        custride cuA(arA), cuB(arB);
+        custride cuC = flag_A_trans ? (flag_B_trans ? (cuA.t() * cuB.t()) : (cuA.t() * cuB)) : (flag_B_trans ? (cuA * cuB.t()) : (cuA * cuB));
 
-    SECTION("A.t * B.t")
-    {
-        mat C = A43.t() * B54.t();
-        cumat U = A43cu.t() * B54cu.t();
-        mat D(size(C));
-        U.get(D.memptr());
-        REQUIRE(approx_equal(C, D, "absdiff", 1e-6));
+        cube arD(arC.n_rows, arC.n_cols, arC.n_slices);
+        cuC.get(arD.memptr());
+        REQUIRE(approx_equal(arC, arD, "absdiff", 1e-6));
     }
 
     cublasDestroy(cumat::handle);

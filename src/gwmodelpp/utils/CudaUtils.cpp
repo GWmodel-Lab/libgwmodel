@@ -6,9 +6,14 @@ using namespace arma;
 
 void pdm(const double* dptr, size_t rows, size_t cols, const char* header)
 {
-    double* mptr = new double[rows * cols];
-    cudaMemcpy(mptr, dptr, sizeof(double) * rows * cols, cudaMemcpyDeviceToHost);
-    mat tmp(mptr, rows, cols, false, true);
+    mat tmp(rows, cols);
+    cudaMemcpy(tmp.memptr(), dptr, sizeof(double) * rows * cols, cudaMemcpyDeviceToHost);
     tmp.brief_print(cout, header);
-    delete[] mptr;
+}
+
+void pdc(const double* dptr, size_t rows, size_t cols, size_t strides, const char* header)
+{
+    cube tmp(rows, cols, strides);
+    cudaMemcpy(tmp.memptr(), dptr, sizeof(double) * rows * cols * strides, cudaMemcpyDeviceToHost);
+    tmp.brief_print(cout, header);
 }

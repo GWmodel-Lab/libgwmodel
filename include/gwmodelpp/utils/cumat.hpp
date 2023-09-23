@@ -57,6 +57,11 @@ public:
 
     virtual size_t nbytes() const = 0;
 
+    virtual void get(double* dst)
+    {
+        cudaMemcpy(dst, dMem, nbytes(), cudaMemcpyDeviceToHost);
+    }
+
     double* dmem() const { return dMem; }
 
 protected:
@@ -109,11 +114,6 @@ public:
 
     const cuop_trans<cumat> t() const;
 
-    void get(double* dst)
-    {
-        cudaMemcpy(dst, dMem, nbytes(), cudaMemcpyDeviceToHost);
-    }
-
     cumat& operator=(const cuop_trans<cumat>& right);
 
     template<class R>
@@ -139,15 +139,30 @@ public:
     constexpr static cubase::Type type = cubase::Type::Stride;
 
 public:
+    custride() {}
+
     custride(size_t rows, size_t cols, size_t strides) : 
         cubase(sizeof(double) * rows * cols * strides),
         mRows(rows),
         mCols(cols),
-        mStrides(strides),
-        mStrideBytes(sizeof(double) * rows * cols)
+        mStrides(strides)
     {
         cudaMalloc(&dMem, nbytes());
         cudaMemset(dMem, 0, nbytes());
+    }
+
+    custride(const arma::cube& src):
+        cubase(sizeof(double) * src.n_elem),
+        mRows(src.n_rows),
+        mCols(src.n_cols),
+        mStrides(src.n_slices)
+    {
+        cudaMemcpy(dMem, src.mem, nbytes(), cudaMemcpyHostToDevice);
+    }
+
+    custride(const custride& mat) : custride(mat.mRows, mat.mCols, mat.mStrides)
+    {
+        cudaMemcpy(dMem, mat.dMem, nbytes(), cudaMemcpyDeviceToDevice);
     }
 
     size_t nbytes() const override { return sizeof(double) * mRows * mCols * mStrides; }
@@ -157,14 +172,15 @@ public:
         mRows = 0;
         mCols = 0;
         mStrides = 0;
-        mStrideBytes = 0;
         cudaFree(dMem);
     }
 
     size_t nrows() const { return mRows; }
     size_t ncols() const { return mCols; }
     size_t nstrides() const { return mStrides; }
-    size_t nstrideBytes() const { return mStrideBytes; }
+    size_t nstrideBytes() const { return mRows * mCols * sizeof(double); }
+
+    const cuop_trans<custride> t() const;
 
     template<class R>
     auto operator*(const R& right) const
@@ -176,7 +192,6 @@ protected:
     size_t mRows = 0;
     size_t mCols = 0;
     size_t mStrides = 0;
-    size_t mStrideBytes = 0;
 };
 
 template<typename T>
@@ -209,28 +224,6 @@ template<class A, class B, cubase::Type TA, cubase::Type TB>
 class cuop_matmul
 {
 public:
-    static auto matmul(const A& a, const B& b)
-    {
-        size_t m = a.nrows(), k = a.ncols(), n = b.ncols();
-        int lda = cutraits<A>::op == cuop::Op::Origin ? a.nrows() : a.ncols();
-        int ldb = cutraits<B>::op == cuop::Op::Origin ? b.nrows() : b.ncols();
-        int strideBytesA = getStrideBytes(a);
-        int strideBytesB = getStrideBytes(b);
-        int strideC = cutraits<A>::type == cubase::Type::Stride ? getStrides(a) : (cutraits<B>::Type == cubase::Type::Stride ? getStrides(b) : 0);
-        custride c { m, n, strideC };
-        int strideBytesC = getStrideBytes(c);
-        cublasStatus_t error = cublasDgemmStridedBatched(
-            cubase::handle, cutraits<A>::op, cutraits<B>::op,
-            m, n, k, &cubase::alpha1,
-            a.dmem(), lda, strideBytesA,
-            b.dmem(), ldb, strideBytesB,
-            &cubase::beta0, c.dmem(), m, strideBytesC, strideC
-        );
-        if (error != CUBLAS_STATUS_SUCCESS) throw cublasGetStatusString(error);
-        return c;
-    }
-
-public:
     cuop_matmul(const A& left, const B& right): a(left), b(right) {}
 
     template<class T>
@@ -240,24 +233,42 @@ public:
     }
 
     template<class T>
-    int getStrideBytes(const T& m)
+    int getStrideSize(const T& m)
     {
-        return 0;
+        return cutraits<T>::type == cubase::Type::Stride ? m.nrows() * m.ncols() : 0;
     }
 
     int getStrides(const custride& m)
     {
-        return m.nstrideBytes();
+        return m.nstrides();
     }
 
-    int getStrideBytes(const custride& m)
+    int getStrides(const cuop_trans<custride>& m)
     {
-        return m.nstrides();
+        return m.ori.nstrides();
     }
 
     auto eval()
     {
-        return matmul(a, b);
+        size_t m = a.nrows(), k = a.ncols(), n = b.ncols();
+        int lda = cutraits<A>::op == cuop::Op::Origin ? a.nrows() : a.ncols();
+        int ldb = cutraits<B>::op == cuop::Op::Origin ? b.nrows() : b.ncols();
+        auto opa = cutraits<A>::op == cuop::Op::Origin ? CUBLAS_OP_N : CUBLAS_OP_T;
+        auto opb = cutraits<B>::op == cuop::Op::Origin ? CUBLAS_OP_N : CUBLAS_OP_T;
+        size_t strideSizeA = getStrideSize(a);
+        size_t strideSizeB = getStrideSize(b);
+        size_t strideC = cutraits<A>::type == cubase::Type::Stride ? getStrides(a) : (cutraits<B>::type == cubase::Type::Stride ? getStrides(b) : 1);
+        custride c { m, n, strideC };
+        int strideSizeC = getStrideSize(c);
+        cublasStatus_t error = cublasDgemmStridedBatched(
+            cubase::handle, opa, opb,
+            m, n, k, &cubase::alpha1,
+            a.dmem(), lda, strideSizeA,
+            b.dmem(), ldb, strideSizeB,
+            &cubase::beta0, c.dmem(), m, strideSizeC, strideC
+        );
+        if (error != CUBLAS_STATUS_SUCCESS) throw cublasGetStatusString(error);
+        return c;
     }
 
 private:
@@ -269,7 +280,10 @@ template<class A, class B>
 class cuop_matmul<A, B, cubase::Type::Mat, cubase::Type::Mat>
 {
 public:
-    static auto matmul(const A& a, const B& b)
+
+    cuop_matmul(const A& left, const B& right): a(left), b(right) {}
+
+    auto eval()
     {
         size_t m = a.nrows(), k = a.ncols(), n = b.ncols();
         int lda = cutraits<A>::op == cuop::Op::Origin ? a.nrows() : a.ncols();
@@ -286,13 +300,6 @@ public:
         );
         if (error != CUBLAS_STATUS_SUCCESS) throw cublasGetStatusString(error);
         return c;
-    }
-
-    cuop_matmul(const A& left, const B& right): a(left), b(right) {}
-
-    auto eval()
-    {
-        return matmul(a, b);
     }
 
 private:
