@@ -83,7 +83,7 @@ public:
     cumat() {}
 
     cumat(size_t rows, size_t cols) : 
-        cubase(rows * cols),
+        cubase(rows * cols * sizeof(double)),
         mRows(rows),
         mCols(cols)
     {
