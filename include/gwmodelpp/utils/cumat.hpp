@@ -207,20 +207,42 @@ public:
 
     cubatched(size_t batch) : mBatch(batch)
     {
-        cudaMalloc(&d_array, sizeof(double*) * mBatch);
-        cudaMemset(d_array, 0, sizeof(double*) * mBatch);
+        cudaMalloc(&dArray, sizeof(double*) * mBatch);
+        cudaMemset(dArray, 0, sizeof(double*) * mBatch);
     }
 
-    cubatched(size_t batch, size_t rows, size_t cols) : cubatched(batch)
+    cubatched(size_t batch, size_t rows, size_t cols, bool initialize = false) : cubatched(batch)
     {
         mRows = rows;
         mCols = cols;
+        if (initialize)
+        {
+            mIsRelease = true;
+            for (size_t i = 0; i < batch; i++)
+            {
+                cudaMalloc(dArray + i, sizeof(double) * rows * cols);
+                cudaMemset(dArray[i], 0, sizeof(double) * rows * cols);
+            }
+        }
     }
 
-    cubatched(std::initializer_list<double*> mats, size_t rows, size_t cols) : cubatched(mats.size(), rows, cols)
+    cubatched(const cubatched& right) : cubatched(right.mBatch, right.mRows, right.mCols, true)
     {
-        std::vector<double*> v_mats(mats);
-        cudaMemcpy(d_array, v_mats.data(), sizeof(double*) * mBatch, cudaMemcpyHostToDevice);
+        for (size_t i = 0; i < mBatch; i++)
+        {
+            cudaMemcpy(dArray[i], right.dArray[i], sizeof(double) * mRows * mCols, cudaMemcpyDeviceToDevice);
+        }
+    }
+
+    cubatched(cubatched&& right) : cubatched(right.mBatch, right.mRows, right.mCols, false)
+    {
+        dArray = right.dArray;
+        right.mIsRelease = false;
+    }
+
+    cubatched(const double** p_mats, size_t batch, size_t rows, size_t cols) : cubatched(batch, rows, cols)
+    {
+        cudaMemcpy(dArray, p_mats, sizeof(double*) * batch, cudaMemcpyHostToDevice);        
     }
 
     cubatched(double* d_mat, size_t batch, size_t rows, size_t cols, size_t bias) : cubatched(batch, rows, cols)
@@ -230,13 +252,8 @@ public:
         {
             p_mats[i] = d_mat + i * bias;
         }
-        cudaMemcpy(d_array, p_mats, sizeof(double*) * mBatch, cudaMemcpyHostToDevice);
+        cudaMemcpy(dArray, p_mats, sizeof(double*) * mBatch, cudaMemcpyHostToDevice);
         delete[] p_mats;
-    }
-
-    cubatched(const double** p_mats, size_t batch, size_t rows, size_t cols) : cubatched(batch, rows, cols)
-    {
-        cudaMemcpy(d_array, p_mats, sizeof(double*) * batch, cudaMemcpyHostToDevice);        
     }
 
     cubatched(const custride&& stride) : cubatched(stride.dmem(), stride.nstrides(), stride.nstrideSize(), stride.nrows(), stride.ncols())
@@ -250,22 +267,26 @@ public:
 
     ~cubatched()
     {
-        if (d_array) cudaFree(d_array);
-        d_array = nullptr;
+        if (dArray) cudaFree(dArray);
+        dArray = nullptr;
     }
 
+    double** darray() { return dArray; }
+
 public:
-    template<class R>
-    auto operator*(const R& right)
+    cubatched&& inv(int* dinfo)
     {
-        return cuop_matmul<cubatched, R>(*this, right);
+        cubatched res(mBatch, mRows, mCols, true);
+        cublasDmatinvBatched(cubase::handle, mRows, dArray, mRows, res.darray(), mRows, dinfo, mBatch);
+        return std::move(res);
     }
 
 private:
     size_t mBatch = 0;
-    double** d_array = nullptr;
+    double** dArray = nullptr;
     size_t mRows = 0;
     size_t mCols = 0;
+    bool mIsRelease = false;
 };
 
 template<typename T>
