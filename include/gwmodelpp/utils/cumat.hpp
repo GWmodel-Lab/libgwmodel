@@ -76,7 +76,7 @@ struct cutraits
     constexpr static cuop::Op op = T::op;
 };
 
-template<class A, class B, cubase::Type TA, cubase::Type TB>
+template<class A, class B, cubase::Type TA = cutraits<A>::type, cubase::Type TB = cutraits<B>::type>
 class cuop_matmul;
 
 class cumat : public cubase
@@ -120,7 +120,7 @@ public:
     template<class R>
     auto operator*(const R& right) const
     {
-        return cuop_matmul<cumat, R, cumat::type, cutraits<R>::type>(*this, right).eval();
+        return cuop_matmul<cumat, R>(*this, right).eval();
     }
 
 
@@ -179,6 +179,7 @@ public:
     size_t nrows() const { return mRows; }
     size_t ncols() const { return mCols; }
     size_t nstrides() const { return mStrides; }
+    size_t nstrideSize() const { return mRows * mCols; }
     size_t nstrideBytes() const { return mRows * mCols * sizeof(double); }
 
     const cuop_trans<custride> t() const;
@@ -186,7 +187,7 @@ public:
     template<class R>
     auto operator*(const R& right) const
     {
-        return cuop_matmul<custride, R, custride::type, cutraits<R>::type>(*this, right).eval();
+        return cuop_matmul<custride, R>(*this, right).eval();
     }
 
 protected:
@@ -207,37 +208,44 @@ public:
     cubatched(size_t batch) : mBatch(batch)
     {
         cudaMalloc(&d_array, sizeof(double*) * mBatch);
+        cudaMemset(d_array, 0, sizeof(double*) * mBatch);
     }
 
-    cubatched(std::initializer_list<double*> mats) : cubatched(mats.size())
+    cubatched(size_t batch, size_t rows, size_t cols) : cubatched(batch)
+    {
+        mRows = rows;
+        mCols = cols;
+    }
+
+    cubatched(std::initializer_list<double*> mats, size_t rows, size_t cols) : cubatched(mats.size(), rows, cols)
     {
         std::vector<double*> v_mats(mats);
         cudaMemcpy(d_array, v_mats.data(), sizeof(double*) * mBatch, cudaMemcpyHostToDevice);
     }
 
-    cubatched(double* d_mat, size_t batch, size_t size) : cubatched(batch)
+    cubatched(double* d_mat, size_t batch, size_t rows, size_t cols, size_t bias) : cubatched(batch, rows, cols)
     {
         double** p_mats = new double*[mBatch];
         for (size_t i = 0; i < mBatch; i++)
         {
-            p_mats[i] = d_mat + i * size;
+            p_mats[i] = d_mat + i * bias;
         }
         cudaMemcpy(d_array, p_mats, sizeof(double*) * mBatch, cudaMemcpyHostToDevice);
         delete[] p_mats;
     }
 
-    cubatched(const double** p_mats, size_t size) : cubatched(size)
+    cubatched(const double** p_mats, size_t batch, size_t rows, size_t cols) : cubatched(batch, rows, cols)
     {
-        cudaMemcpy(d_array, p_mats, sizeof(double*) * size, cudaMemcpyHostToDevice);        
+        cudaMemcpy(d_array, p_mats, sizeof(double*) * batch, cudaMemcpyHostToDevice);        
     }
 
-    cubatched(const custride&& stride) : cubatched(stride.dmem(), stride.nstrides(), stride.nrows() * stride.ncols())
+    cubatched(const custride&& stride) : cubatched(stride.dmem(), stride.nstrides(), stride.nstrideSize(), stride.nrows(), stride.ncols())
     {}
 
-    cubatched(const cumat&& mat) : cubatched(mat.dmem(), mat.ncols(), mat.nrows())
+    cubatched(const cumat&& mat) : cubatched(mat.dmem(), mat.ncols(), mat.nrows(), mat.nrows(), 1)
     {}
 
-    cubatched(const cumat&& mat, size_t batch) : cubatched(mat.dmem(), batch, 0)
+    cubatched(const cumat&& mat, size_t batch) : cubatched(mat.dmem(), batch, 0, mat.nrows(), mat.ncols())
     {}
 
     ~cubatched()
@@ -250,12 +258,14 @@ public:
     template<class R>
     auto operator*(const R& right)
     {
-        return cuop_matmul<cubatched, R, cubase::Type::Batched, cutraits<R>::type>(*this, right);
+        return cuop_matmul<cubatched, R>(*this, right);
     }
 
 private:
     size_t mBatch = 0;
     double** d_array = nullptr;
+    size_t mRows = 0;
+    size_t mCols = 0;
 };
 
 template<typename T>
@@ -268,16 +278,16 @@ public:
 public:
     cuop_trans(const T& src): ori(src) {}
 
-    cuop_trans(const cuop_trans& src) : ori(src.mat) {}
+    cuop_trans(const cuop_trans& src) : ori(src.ori) {}
 
+    double* dmem() const { return ori.dmem(); }
     size_t nrows() const { return ori.ncols(); }
     size_t ncols() const { return ori.nrows(); }
-    double* dmem() const { return ori.dmem(); }
 
     template<class R>
     auto operator*(const R& right) const
     {
-        return cuop_matmul<cuop_trans<T>, R, cutraits<T>::type, cutraits<R>::type>(*this, right).eval();
+        return cuop_matmul<cuop_trans<T>, R>(*this, right).eval();
     }
 
     const T& ori;
