@@ -662,6 +662,10 @@ protected:
     arma::mat fitAllOmp(const arma::mat& x, const arma::vec& y);
 #endif
 
+#ifdef ENABLE_CUDA
+    arma::mat fitAllCuda(const arma::mat& x, const arma::vec& y);
+#endif // ENABLE_CUDA
+
     /**
      * \~english
      * @brief The serial implementation of fit function for one variable.
@@ -897,6 +901,8 @@ private:
 
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Parallel type of this algorithm. \~chinese 当前算法的并行类型。
     int mOmpThreadNum = 8;  //!< \~english Number of threads. \~chinese 并行线程数。
+    size_t mGroupLength = 64;
+    int mGpuId = 0;
 
 public:
     static int treeChildCount;  //!< \~english  \~chinese

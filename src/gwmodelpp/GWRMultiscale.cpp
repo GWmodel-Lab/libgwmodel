@@ -10,6 +10,12 @@
 #include "VariableForwardSelector.h"
 #include "Logger.h"
 
+#ifdef ENABLE_CUDA
+#include <cuda_runtime.h>
+#include "cumat.hpp"
+#include "CudaUtils.h"
+#endif // ENABLE_CUDA
+
 using namespace std;
 using namespace arma;
 using namespace gwm;
@@ -451,6 +457,77 @@ mat GWRMultiscale::fitAllOmp(const mat &x, const vec &y)
     return betas.t();
 }
 #endif
+
+#ifdef ENABLE_CUDA
+mat GWRMultiscale::fitAllCuda(const mat& x, const vec& y)
+{
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
+    mat betas(nVar, nDp, fill::zeros);
+    mat xt = trans(x);
+    cumat u_xt(xt), u_y(y);
+    cumat u_betas(nVar, nDp);
+    cumat u_dists(nDp, 1), u_weights(1, nDp);
+    custride u_xtw(nDp, nVar, mGroupLength);
+    mat si(nDp, mGroupLength, fill::zeros);
+    cube ci(nVar, nDp, mGroupLength, fill::zeros);
+    cube cct(nVar, nVar, mGroupLength, fill::zeros);
+    int* d_info;
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    if (mHasHatMatrix)
+    {
+        mat betasSE(nVar, nDp);
+        cumat u_betasSE(nVar, nDp);
+        size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+        for (size_t i = 0; i < groups; i++)
+        {
+            size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+            for (size_t j = 0, e = begin + j; j < length; j++, e++)
+            {
+                checkCudaErrors(mInitSpatialWeight.weightVector(e, u_dists.dmem(), u_weights.dmem()));
+                u_xtw.strides(j) = u_xt.diagmul(u_weights);
+            }
+            custride u_xtwx = u_xtw * u_xt.t();
+            custride u_xtwy = u_xtw * u_y;
+            custride u_xtwxI = u_xtwx.inv(d_info);
+            u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+            custride u_c = u_xtwxI * u_xtw;
+            custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
+            custride u_cct = u_c * u_c.t();
+            u_s.get(si.memptr());
+            mS0.rows(begin, begin + length - 1) = si.head_cols(length).t();
+            u_c.get(ci.memptr());
+            mC.slices(begin, begin + length - 1) = ci.head_slices(length);
+            u_cct.get(cct.memptr());
+            for (size_t j = 0, e = i * mGroupLength + j; j < mGroupLength && e < nDp; j++, e++)
+            {
+                u_s.strides(j).get(si.memptr());
+                betasSE.col(e) = diagvec(cct.slice(j));
+            }
+        }
+        u_betas.get(betas.memptr());
+        mBetasSE = betasSE.t();
+    }
+    else
+    {
+        size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+        for (size_t i = 0; i < groups; i++)
+        {
+            size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+            for (size_t j = 0, e = begin + j; j < length; j++, e++)
+            {
+                checkCudaErrors(mInitSpatialWeight.weightVector(e, u_dists.dmem(), u_weights.dmem()));
+                u_xtw.strides(j) = u_xt.diagmul(u_weights);
+            }
+            custride u_xtwx = u_xtw * u_xt.t();
+            custride u_xtwy = u_xtw * u_y;
+            custride u_xtwxI = u_xtwx.inv(d_info);
+            u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+        }
+        u_betas.get(betas.memptr());
+    }
+    return betas.t();
+}
+#endif // ENABLE_CUDA
 
 vec GWRMultiscale::fitVarSerial(const vec &x, const vec &y, const uword var, mat &S)
 {
