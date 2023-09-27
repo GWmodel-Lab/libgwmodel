@@ -309,9 +309,9 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
     qDiag = vec(nDp, arma::fill::zeros);
     S = mat(isStoreS() ? nDp : 1, nDp, arma::fill::zeros);
     size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
-    cumat u_xt(xt), u_y(y), u_coords(mCoords);
+    cumat u_xt(xt), u_y(y);
     cumat u_betas(nVar, nDp), u_betasSE(nVar, nDp);
-    cumat u_dists(1, nDp), u_weights(1, nDp);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
     custride u_xtw(nVar, nDp, mGroupLength);//, u_s(1, nDp, mGroupLength);
     mat si(1, nDp, fill::zeros);
     cube cct(nVar, nVar, mGroupLength, fill::zeros);
@@ -333,7 +333,6 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
         // inv
         custride u_xtwxI = u_xtwx.inv(d_info);
         // beta = xtwxI * xtwy [k*k,k*1]
-        size_t beta_bias = i * mGroupLength * nVar;
         u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
         // ci = xtwxI * xtw [k*k,t(n*k)]
         custride u_c = u_xtwxI * u_xtw;
