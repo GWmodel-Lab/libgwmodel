@@ -107,8 +107,8 @@ public:
 public:
     cumat() {}
 
-    cumat(size_t rows, size_t cols) : 
-        cubase(rows * cols * sizeof(double)),
+    cumat(size_t rows, size_t cols, cubase::Init init = cubase::Init::Zero) : 
+        cubase(rows * cols * sizeof(double), init),
         mRows(rows),
         mCols(cols)
     {
@@ -168,8 +168,8 @@ public:
 public:
     custride() {}
 
-    custride(size_t rows, size_t cols, size_t strides) : 
-        cubase(sizeof(double) * rows * cols * strides),
+    custride(size_t rows, size_t cols, size_t strides, cubase::Init init = cubase::Init::Zero) : 
+        cubase(sizeof(double) * rows * cols * strides, init),
         mRows(rows),
         mCols(cols),
         mStrides(strides)
@@ -215,6 +215,8 @@ public:
     size_t nstrideBytes() const { return mRows * mCols * sizeof(double); }
 
     const cuop_trans<custride> t() const;
+
+    custride inv(int* d_info) const;
 
     template<class R>
     auto operator*(const R& right) const
@@ -288,22 +290,32 @@ public:
         delete[] p_mats;
     }
 
-    cubatched(const custride&& stride) : cubatched(stride.dmem(), stride.nstrides(), stride.nstrideSize(), stride.nrows(), stride.ncols())
+    cubatched(const custride& stride) : cubatched(stride.dmem(), stride.nstrides(), stride.nrows(), stride.ncols(), stride.nstrideSize())
     {}
 
-    cubatched(const cumat&& mat) : cubatched(mat.dmem(), mat.ncols(), mat.nrows(), mat.nrows(), 1)
+    cubatched(const cumat& mat) : cubatched(mat.dmem(), mat.ncols(), mat.nrows(), mat.nrows(), 1)
     {}
 
-    cubatched(const cumat&& mat, size_t batch) : cubatched(mat.dmem(), batch, 0, mat.nrows(), mat.ncols())
+    cubatched(const cumat& mat, size_t batch) : cubatched(mat.dmem(), batch, 0, mat.nrows(), mat.ncols())
     {}
 
     ~cubatched()
     {
-        if (mIsRelease && dArray) cudaFree(dArray);
+        if (mIsRelease && dArray)
+        {
+            for (size_t i = 0; i < mBatch; i++)
+            {
+                cudaFree(dArray[i]);
+            }
+        }
+        cudaFree(dArray);
         dArray = nullptr;
     }
 
     double** darray() { return dArray; }
+    size_t nrows() { return mRows; }
+    size_t ncols() { return mCols; }
+    size_t nbatch() { return mBatch; }
 
 public:
     cubatched inv(int* dinfo)

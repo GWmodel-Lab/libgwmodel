@@ -103,5 +103,24 @@ TEST_CASE("cuBLAS gemm")
         REQUIRE(approx_equal(arC, arD, "absdiff", 1e-6));
     }
 
+    SECTION("stride inv")
+    {
+        cube arA(5, 5, 5, arma::fill::randu);
+        cube arAI(5, 5, 5);
+        for (size_t i = 0; i < 5; i++)
+        {
+            arAI.slice(i) = inv(arA.slice(i));
+        }
+        custride sA(arA);
+        int* d_info;
+        checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * 5));
+        custride sAI = sA.inv(d_info);
+
+        cube reAI(5, 5, 5, arma::fill::randu);
+        sAI.get(reAI.memptr());
+        
+        REQUIRE(approx_equal(arAI, reAI, "absdiff", 1e-6));
+    }
+
     cublasDestroy(cumat::handle);
 };
