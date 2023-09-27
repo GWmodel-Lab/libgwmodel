@@ -11,6 +11,15 @@ class cumat;
 class custride;
 template <class T>
 class cuop_trans;
+template<class T>
+class cuview;
+
+struct curange
+{
+    size_t start = 0;
+    size_t end = 0;
+};
+
 
 class cuop
 {
@@ -149,6 +158,9 @@ public:
         return cuop_matmul<cumat, R>(*this, right).eval();
     }
 
+    custride as_stride() const;
+
+    cumat diagmul(const cumat& diag) const;
 
 public:
     size_t nrows() const { return mRows; }
@@ -173,12 +185,9 @@ public:
         mRows(rows),
         mCols(cols),
         mStrides(strides)
-    {
-        cudaMalloc(&dMem, nbytes());
-        cudaMemset(dMem, 0, nbytes());
-    }
+    {}
 
-    custride(const arma::cube& src):
+    explicit custride(const arma::cube& src):
         cubase(sizeof(double) * src.n_elem),
         mRows(src.n_rows),
         mCols(src.n_cols),
@@ -199,6 +208,11 @@ public:
         mat.mIsRelease = false;
     }
 
+    explicit custride(const cumat& mat) : custride(mat.nrows(), 1, mat.ncols(), cubase::Init::None)
+    {
+        dMem = mat.dmem();
+    }
+
     size_t nbytes() const override { return sizeof(double) * mRows * mCols * mStrides; }
 
     virtual ~custride()
@@ -213,6 +227,9 @@ public:
     size_t nstrides() const { return mStrides; }
     size_t nstrideSize() const { return mRows * mCols; }
     size_t nstrideBytes() const { return mRows * mCols * sizeof(double); }
+
+    cuview<custride> strides(size_t start) const;
+    cuview<custride> strides(size_t start, size_t end) const;
 
     const cuop_trans<custride> t() const;
 
@@ -358,6 +375,65 @@ public:
     const T& ori;
 };
 
+template<class T>
+class cuview
+{
+public:
+    constexpr static cubase::Type type = custride<T>::type;
+    constexpr static cuop::Op op = custride<T>::op;
+
+public:
+    explicit cuview(T& src): mSrc(src) {}
+
+protected:
+    T& mSrc;
+};
+
+template<>
+class cuview<custride>
+{
+public:
+    constexpr static cubase::Type type = custride::type;
+    constexpr static cuop::Op op = custride::op;
+
+public:
+    explicit cuview(const custride& src, curange strides): mSrc(src), mStrides(strides)
+    {}
+    
+    size_t nrows() const { return mSrc.nrows(); }
+    size_t ncols() const { return mSrc.ncols(); }
+    size_t nstrides() const { return mStrides.end - mStrides.start; }
+    size_t nstrideSize() const { return mSrc.nstrideSize(); }
+    size_t nstrideBytes() const { return mSrc.nstrideBytes(); }
+    size_t nbytes() const { return nstrides() * nstrideBytes(); }
+    double* dmem() const { return mSrc.dmem() + mStrides.start * mSrc.nstrideSize(); } 
+
+    void get(double* dst)
+    {
+        cudaMemcpy(dst, dmem(), nbytes(), cudaMemcpyDeviceToHost);
+    }
+
+    cuview<custride>& operator=(custride&& right)
+    {
+        cudaMemcpy(dmem(), right.dmem(), nbytes(), cudaMemcpyDeviceToDevice);
+        return *this;
+    }
+
+    cuview<custride>& operator=(cumat&& right)
+    {
+        cudaMemcpy(dmem(), right.dmem(), nstrideBytes(), cudaMemcpyDeviceToDevice);
+        return *this;
+    }
+
+    cuop_trans<cuview<custride>> t()
+    {
+        return cuop_trans<cuview<custride>>(*this);
+    }
+
+protected:
+    const custride& mSrc;
+    const curange mStrides;
+};
 
 template<class A, class B, cubase::Type TA, cubase::Type TB>
 class cuop_matmul
@@ -383,6 +459,16 @@ public:
     }
 
     int getStrides(const cuop_trans<custride>& m)
+    {
+        return m.ori.nstrides();
+    }
+
+    int getStrides(const cuview<custride>& m)
+    {
+        return m.nstrides();
+    }
+
+    int getStrides(const cuop_trans<cuview<custride>>& m)
     {
         return m.ori.nstrides();
     }

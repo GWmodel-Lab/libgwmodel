@@ -7,6 +7,37 @@ const cuop_trans<cumat> cumat::t() const
     return cuop_trans<cumat>(*this);
 }
 
+custride cumat::as_stride() const
+{
+    return custride(*this);
+}
+
+cumat cumat::diagmul(const cumat& diag) const
+{
+    cumat res { mRows, mCols };
+    cublasDdgmm(
+        cubase::handle, CUBLAS_SIDE_RIGHT, mRows, mCols, 
+        dMem, mRows, 
+        diag.dmem(), 1, 
+        res.dmem(), mRows
+    );
+    return res;
+}
+
+cuview<custride> custride::strides(size_t start) const
+{
+    curange range { start, start + 1 };
+    cuview<custride> view(*this, range);
+    return view;
+}
+
+cuview<custride> custride::strides(size_t start, size_t end) const
+{
+    curange range { start, end };
+    cuview<custride> view(*this, range);
+    return view;
+}
+
 const cuop_trans<custride> custride::t() const
 {
     return cuop_trans<custride>(*this);

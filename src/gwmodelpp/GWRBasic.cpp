@@ -192,7 +192,6 @@ mat GWRBasic::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec
             p(i) += 1.0;
             qDiag += p % p;
             S.row(isStoreS() ? i : 0) = si;
-            S.save(arma::csv_name("GWRBasic_S_serial.csv"));
         }
         catch (const exception& e)
         {
@@ -313,23 +312,18 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
     cumat u_xt(xt), u_y(y), u_coords(mCoords);
     cumat u_betas(nVar, nDp), u_betasSE(nVar, nDp);
     cumat u_dists(1, nDp), u_weights(1, nDp);
-    custride u_xtw(nVar, nDp, mGroupLength), u_s(1, nDp, mGroupLength);
+    custride u_xtw(nVar, nDp, mGroupLength);//, u_s(1, nDp, mGroupLength);
     mat si(1, nDp, fill::zeros);
     cube cct(nVar, nVar, mGroupLength, fill::zeros);
     int* d_info;
     checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
     for (size_t i = 0; i < groups; i++)
     {
-        for (size_t j = 0, e = i * mGroupLength + j; j < mGroupLength && e < nDp; j++, e++)
+        size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+        for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
             checkCudaErrors(mSpatialWeight.weightVector(e, u_dists.dmem(), u_weights.dmem()));
-            // xtw = xt * w [k*n,n*n]
-            checkCudaErrors(cublasDdgmm(
-                cubase::handle, CUBLAS_SIDE_RIGHT, nVar, nDp, 
-                u_xt.dmem(), u_xt.nrows(), 
-                u_weights.dmem(), u_weights.nrows(), 
-                u_xtw.dmem() + j * nVar * nDp, u_xtw.nrows()
-            ));
+            u_xtw.strides(j) = u_xt.diagmul(u_weights);
         }
         // xtwx and xtwy
         // xtw * x [k*n,n*k]
@@ -340,28 +334,18 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
         custride u_xtwxI = u_xtwx.inv(d_info);
         // beta = xtwxI * xtwy [k*k,k*1]
         size_t beta_bias = i * mGroupLength * nVar;
-        checkCudaErrors(cublasDgemmStridedBatched(
-            cubase::handle, CUBLAS_OP_N, CUBLAS_OP_N, nVar, 1, nVar, &cubase::alpha1,
-            u_xtwxI.dmem(), u_xtwxI.nrows(), u_xtwxI.nstrideSize(),
-            u_xtwy.dmem(), u_xtwy.nrows(), u_xtwy.nstrideSize(),
-            &cubase::beta0, u_betas.dmem() + beta_bias, u_betas.nrows(), u_betas.nrows(), mGroupLength)
-        );
+        u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
         // ci = xtwxI * xtw [k*k,t(n*k)]
         custride u_c = u_xtwxI * u_xtw;
         // si = t(xti) * ci [1*k,k*n]
-        checkCudaErrors(cublasDgemmStridedBatched(
-            cubase::handle, CUBLAS_OP_T, CUBLAS_OP_N, 1, nDp, nVar, &cubase::alpha1, 
-            u_xt.dmem() + beta_bias, u_xt.nrows(), u_xt.nrows(), 
-            u_c.dmem(), u_c.nrows(), u_c.nstrideSize(), 
-            &cubase::beta0, u_s.dmem(), u_s.nrows(), u_s.nstrideSize(), u_s.nstrides()
-        ));
+        custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
         // cct = ci * cit [k*n,t(k*n)]
         custride u_cct = u_c * u_c.t();
         u_cct.get(cct.memptr());
         // Transfer to cpu Perform further diagnostic
         for (size_t j = 0, e = i * mGroupLength + j; j < mGroupLength && e < nDp; j++, e++)
         {
-            checkCudaErrors(cudaMemcpy(si.memptr(), u_s.dmem() + j * nDp, sizeof(double) * nDp, cudaMemcpyDeviceToHost));
+            u_s.strides(j).get(si.memptr());
             betasSE.col(e) = diagvec(cct.slice(j));
             shat(0) += si(0, e);
             shat(1) += det(si * si.t());
@@ -371,7 +355,7 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
             S.row(isStoreS() ? e : 0) = si;
         }
     }
-    checkCudaErrors(cudaMemcpy(betas.memptr(), u_betas.dmem(), u_betas.nbytes(), cudaMemcpyDeviceToHost));
+    u_betas.get(betas.memptr());
     betasSE = betasSE.t();
     cudaFree(d_info);
     cublasDestroy(cubase::handle);
