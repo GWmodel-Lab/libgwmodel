@@ -67,7 +67,11 @@ public:
 
     virtual ~cubase()
     {
-        if (mIsRelease && dMem) cudaFree(dMem);
+        if (mIsRelease && dMem)
+        {
+            cudaFree(dMem);
+        }
+        dMem = nullptr;
     }
 
     virtual size_t nbytes() const = 0;
@@ -120,8 +124,9 @@ public:
         cudaMemcpy(dMem, mat.dMem, nbytes(), cudaMemcpyDeviceToDevice);
     }
 
-    cumat(cumat&& mat) : mRows(mat.mRows), mCols(mat.mRows)
+    cumat(cumat&& mat) : mRows(mat.mRows), mCols(mat.mCols)
     {
+        mIsRelease = true;
         dMem = mat.dMem;
         mat.mIsRelease = false;
     }
@@ -189,6 +194,7 @@ public:
 
     custride(custride&& mat) : mRows(mat.mRows), mCols(mat.mCols), mStrides(mat.mStrides)
     {
+        mIsRelease = true;
         dMem = mat.dMem;
         mat.mIsRelease = false;
     }
@@ -200,7 +206,6 @@ public:
         mRows = 0;
         mCols = 0;
         mStrides = 0;
-        cudaFree(dMem);
     }
 
     size_t nrows() const { return mRows; }
