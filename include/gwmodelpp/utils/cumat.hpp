@@ -42,18 +42,32 @@ public:
     constexpr static cuop::Op op = cuop::Op::Origin;
     constexpr static cubase::Type type = cubase::Type::Base;
 
+    enum class Init
+    {
+        None,
+        Zero
+    };
+
 public:
     cubase() {}
 
-    cubase(size_t bytes)
+    cubase(size_t bytes, Init init = Init::Zero)
     {
-        cudaMalloc(&dMem, bytes);
-        cudaMemset(dMem, 0, bytes);
+        switch (init)
+        {
+        case Init::Zero:
+            mIsRelease = true;
+            cudaMalloc(&dMem, bytes);
+            cudaMemset(dMem, 0, bytes);
+            break;
+        default:
+            break;
+        }
     }
 
     virtual ~cubase()
     {
-        if (dMem) cudaFree(dMem);
+        if (mIsRelease && dMem) cudaFree(dMem);
     }
 
     virtual size_t nbytes() const = 0;
@@ -66,6 +80,7 @@ public:
     double* dmem() const { return dMem; }
 
 protected:
+    bool mIsRelease = false;
     double* dMem = nullptr;
 };
 
@@ -103,6 +118,12 @@ public:
     cumat(const cumat& mat) : cumat(mat.mRows, mat.mCols)
     {
         cudaMemcpy(dMem, mat.dMem, nbytes(), cudaMemcpyDeviceToDevice);
+    }
+
+    cumat(cumat&& mat) : mRows(mat.mRows), mCols(mat.mRows)
+    {
+        dMem = mat.dMem;
+        mat.mIsRelease = false;
     }
 
     virtual ~cumat()
@@ -164,6 +185,12 @@ public:
     custride(const custride& mat) : custride(mat.mRows, mat.mCols, mat.mStrides)
     {
         cudaMemcpy(dMem, mat.dMem, nbytes(), cudaMemcpyDeviceToDevice);
+    }
+
+    custride(custride&& mat) : mRows(mat.mRows), mCols(mat.mCols), mStrides(mat.mStrides)
+    {
+        dMem = mat.dMem;
+        mat.mIsRelease = false;
     }
 
     size_t nbytes() const override { return sizeof(double) * mRows * mCols * mStrides; }
@@ -267,18 +294,18 @@ public:
 
     ~cubatched()
     {
-        if (dArray) cudaFree(dArray);
+        if (mIsRelease && dArray) cudaFree(dArray);
         dArray = nullptr;
     }
 
     double** darray() { return dArray; }
 
 public:
-    cubatched&& inv(int* dinfo)
+    cubatched inv(int* dinfo)
     {
         cubatched res(mBatch, mRows, mCols, true);
         cublasDmatinvBatched(cubase::handle, mRows, dArray, mRows, res.darray(), mRows, dinfo, mBatch);
-        return std::move(res);
+        return res;
     }
 
 private:
@@ -363,7 +390,7 @@ public:
             &cubase::beta0, c.dmem(), m, strideSizeC, strideC
         );
         if (error != CUBLAS_STATUS_SUCCESS) throw cublasGetStatusString(error);
-        return c;
+        return std::move(c);
     }
 
 private:
@@ -394,7 +421,7 @@ public:
             &cubase::beta0, c.dmem(), m
         );
         if (error != CUBLAS_STATUS_SUCCESS) throw cublasGetStatusString(error);
-        return c;
+        return std::move(c);
     }
 
 private:
