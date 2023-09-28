@@ -15,10 +15,14 @@ unordered_map<Weight::WeightType, string> Weight::TypeNameMapper = {
 #ifdef ENABLE_CUDA
 cudaError_t Weight::prepareCuda(size_t gpuId)
 {
-    cudaDeviceProp devProp;
-    checkCudaErrors(cudaGetDeviceProperties(&devProp, gpuId));
-    mCudaThreads = devProp.maxThreadsPerBlock;
-    mCudaPrepared = true;
+    mGpuID = gpuId;
+    mUseCuda = true;
+    if (!mCudaPrepared)
+    {
+        cudaDeviceProp devProp;
+        checkCudaErrors(cudaGetDeviceProperties(&devProp, gpuId));
+        mCudaThreads = devProp.maxThreadsPerBlock;
+    }
     return cudaSuccess;
 }
 #endif // ENABLE_CUDA

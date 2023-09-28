@@ -19,10 +19,14 @@ unordered_map<Distance::DistanceType, string> Distance::TypeNameMapper =
 #ifdef ENABLE_CUDA
 cudaError_t Distance::prepareCuda(size_t gpuId)
 {
-    cudaDeviceProp devProp;
-    checkCudaErrors(cudaGetDeviceProperties(&devProp, gpuId));
-    mCudaThreads = devProp.maxThreadsPerBlock;
-    mCudaPrepared = true;
+    mGpuID = gpuId;
+    mUseCuda = true;
+    if (!mCudaPrepared)
+    {
+        cudaDeviceProp devProp;
+        checkCudaErrors(cudaGetDeviceProperties(&devProp, gpuId));
+        mCudaThreads = devProp.maxThreadsPerBlock;
+    }
     return cudaSuccess;
 }
 #endif // ENABLE_CUDA

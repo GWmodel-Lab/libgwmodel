@@ -6,6 +6,7 @@
 #include "Weight.h"
 
 #ifdef ENABLE_CUDA
+#include "gwmodelpp/utils/CudaUtils.h"
 #include "gwmodelpp/spatialweight/cuda/BandwidthWeightKernel.h"
 #endif // ENABLE_CUDA
 
@@ -145,11 +146,18 @@ public:
      * 
      * @param bandwidthWeight \~english Reference to the object for copying \~chinese 要复制的对象引用
      */
-    BandwidthWeight(const BandwidthWeight& bandwidthWeight)
+    BandwidthWeight(const BandwidthWeight& bandwidthWeight) : Weight(bandwidthWeight)
     {
         mBandwidth = bandwidthWeight.mBandwidth;
         mAdaptive = bandwidthWeight.mAdaptive;
         mKernel = bandwidthWeight.mKernel;
+#ifdef ENABLE_CUDA
+        mUseCuda = bandwidthWeight.mUseCuda;
+        if (mUseCuda)
+        {
+            prepareCuda(bandwidthWeight.mGpuID);
+        }
+#endif // ENABLE_CUDA
     }
 
     /**
@@ -236,6 +244,14 @@ public:
     {
         mKernel = kernel;
     }
+
+#ifdef ENABLE_CUDA
+    cudaError_t prepareCuda(size_t gpuId) override
+    {
+        checkCudaErrors(Weight::prepareCuda(gpuId));
+        mCudaPrepared = true;
+    }
+#endif // ENABLE_CUDA
 
 private:
     double mBandwidth;          //!< \~english Bandwidth size \~chinese 带宽大小

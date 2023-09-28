@@ -88,6 +88,13 @@ CRSDistance::CRSDistance(const CRSDistance &distance) : Distance(distance)
         mat fp = distance.mParameter->focusPoints;
         mat dp = distance.mParameter->dataPoints;
         mParameter = make_unique<Parameter>(fp, dp);
+#ifdef ENABLE_CUDA
+        mUseCuda = distance.mUseCuda;
+        if (distance.mCudaPrepared)
+        {
+            prepareCuda(distance.mGpuID);
+        }
+#endif // ENABLE_CUDA
     }
 }
 
@@ -156,6 +163,7 @@ cudaError_t CRSDistance::prepareCuda(size_t gpuId)
     mat dpt = mParameter->dataPoints.t(), fpt = mParameter->focusPoints.t();
     checkCudaErrors(cudaMemcpy(mCudaDp, dpt.mem, sizeof(double) * dpt.n_elem, cudaMemcpyHostToDevice));
     checkCudaErrors(cudaMemcpy(mCudaFp, fpt.mem, sizeof(double) * fpt.n_elem, cudaMemcpyHostToDevice));
+    mCudaPrepared = true;
     return cudaSuccess;
 }
 

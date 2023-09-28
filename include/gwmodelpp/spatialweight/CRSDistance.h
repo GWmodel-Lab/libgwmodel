@@ -147,8 +147,11 @@ public:
     virtual ~CRSDistance()
     {
 #ifdef ENABLE_CUDA
-        cudaFree(mCudaDp);
-        cudaFree(mCudaFp);
+        if (mCudaPrepared)
+        {
+            cudaFree(mCudaDp);
+            cudaFree(mCudaFp);
+        }
 #endif
     }
 

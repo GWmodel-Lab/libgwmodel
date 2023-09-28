@@ -136,6 +136,7 @@ public:
 #ifdef ENABLE_CUDA
 protected:
     bool mUseCuda = false;
+    int mGpuID = 0;
     bool mCudaPrepared = false;
     size_t mCudaThreads = 0;
 

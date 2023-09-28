@@ -71,6 +71,17 @@ mat GWRMultiscale::fit()
     uword nDp = mX.n_rows, nVar = mX.n_cols;
     createDistanceParameter(nVar);
     createInitialDistanceParameter();
+#ifdef ENABLE_CUDA
+    if (mParallelType == ParallelType::CUDA)
+    {
+        cublasCreate(&cubase::handle);
+        mInitSpatialWeight.prepareCuda(mGpuId);
+        for (size_t i = 0; i < nVar; i++)
+        {
+            mSpatialWeights[i].prepareCuda(mGpuId);
+        }
+    }
+#endif // ENABLE_CUDA
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     // ********************************
@@ -112,6 +123,9 @@ mat GWRMultiscale::fit()
             if (bw)
             {
                 mSpatialWeights[i].setWeight(bw);
+#ifdef ENABLE_CUDA
+                mSpatialWeights[i].prepareCuda(mGpuId);
+#endif // ENABLE_CUDA
             }
             GWM_LOG_INFO(string(GWM_LOG_TAG_MGWR_INITIAL_BW)  + to_string(i)  + "," + to_string(bw->bandwidth()));
         }
@@ -139,6 +153,9 @@ mat GWRMultiscale::fit()
         throw std::runtime_error("Cannot select initial bandwidth.");
     }
     mInitSpatialWeight.setWeight(initBw);
+#ifdef ENABLE_CUDA
+    mInitSpatialWeight.prepareCuda(mGpuId);
+#endif // ENABLE_CUDA
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     // 初始化诊断信息矩阵
@@ -166,6 +183,11 @@ mat GWRMultiscale::fit()
     }
     vec yhat = Fitted(mX, mBetas);
     vec residual = mY - yhat;
+
+    // Cleaning
+#ifdef ENABLE_CUDA
+    cublasDestroy(cubase::handle);
+#endif // ENABLE_CUDA
 
     return mBetas;
 }
@@ -257,6 +279,10 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
                     }
                 }
                 mSpatialWeights[i].setWeight(bwi);
+#ifdef ENABLE_CUDA
+                mSpatialWeights[i].prepareCuda(mGpuId);
+#endif // ENABLE_CUDA
+
                 GWM_LOG_MGWR_BACKFITTING("#variable-bandwidth-selection " + strjoin(",", vbs_args));
             }
             GWM_LOG_STOP_BREAK(mStatus);
@@ -388,6 +414,70 @@ mat GWRMultiscale::fitAllSerial(const mat& x, const vec& y)
     return betas.t();
 }
 
+vec GWRMultiscale::fitVarSerial(const vec &x, const vec &y, const uword var, mat &S)
+{
+    uword nDp = mCoords.n_rows;
+    mat betas(1, nDp, fill::zeros);
+    bool success = true;
+    std::exception except;
+    if (mHasHatMatrix)
+    {
+        mat ci, si;
+        S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
+        for (uword i = 0; i < nDp  ; i++)
+        {
+            GWM_LOG_STOP_BREAK(mStatus);
+            vec w = mSpatialWeights[var].weightVector(i);
+            mat xtw = trans(x % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                ci = xtwx_inv * xtw;
+                si = x(i) * ci;
+                S.row(mHasHatMatrix ? i : 0) = si;
+            }
+            catch (const exception& e)
+            {
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
+            }
+            GWM_LOG_PROGRESS(i + 1, nDp);
+        }
+    }
+    else
+    {
+        for (int i = 0; (uword)i < nDp  ; i++)
+        {
+            GWM_LOG_STOP_BREAK(mStatus);
+            vec w = mSpatialWeights[var].weightVector(i);
+            mat xtw = trans(x % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+            }
+            catch (const exception& e)
+            {
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
+            }
+            GWM_LOG_PROGRESS(i + 1, nDp);
+        }
+    }
+    if (!success)
+    {
+        throw except;
+    }
+    return betas.t();
+}
+
 #ifdef ENABLE_OPENMP
 mat GWRMultiscale::fitAllOmp(const mat &x, const vec &y)
 {
@@ -466,8 +556,8 @@ mat GWRMultiscale::fitAllCuda(const mat& x, const vec& y)
     mat xt = trans(x);
     cumat u_xt(xt), u_y(y);
     cumat u_betas(nVar, nDp);
-    cumat u_dists(nDp, 1), u_weights(1, nDp);
-    custride u_xtw(nDp, nVar, mGroupLength);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(nVar, nDp, mGroupLength);
     mat si(nDp, mGroupLength, fill::zeros);
     cube ci(nVar, nDp, mGroupLength, fill::zeros);
     cube cct(nVar, nVar, mGroupLength, fill::zeros);
@@ -527,71 +617,62 @@ mat GWRMultiscale::fitAllCuda(const mat& x, const vec& y)
     }
     return betas.t();
 }
-#endif // ENABLE_CUDA
 
-vec GWRMultiscale::fitVarSerial(const vec &x, const vec &y, const uword var, mat &S)
+vec GWRMultiscale::fitVarCuda(const vec &x, const vec &y, const uword var, mat &S)
 {
     uword nDp = mCoords.n_rows;
     mat betas(1, nDp, fill::zeros);
-    bool success = true;
-    std::exception except;
+    mat xt = trans(x);
+    cumat u_xt(xt), u_y(y);
+    cumat u_betas(1, nDp);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(1, nDp, mGroupLength);
+    int* d_info;
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+    S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
     if (mHasHatMatrix)
     {
-        mat ci, si;
-        S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
-        for (uword i = 0; i < nDp  ; i++)
+        mat sg(nDp, mGroupLength, fill::zeros);
+        for (size_t i = 0; i < groups; i++)
         {
-            GWM_LOG_STOP_BREAK(mStatus);
-            vec w = mSpatialWeights[var].weightVector(i);
-            mat xtw = trans(x % w);
-            mat xtwx = xtw * x;
-            mat xtwy = xtw * y;
-            try
+            size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+            for (size_t j = 0, e = begin + j; j < length; j++, e++)
             {
-                mat xtwx_inv = inv_sympd(xtwx);
-                betas.col(i) = xtwx_inv * xtwy;
-                ci = xtwx_inv * xtw;
-                si = x(i) * ci;
-                S.row(mHasHatMatrix ? i : 0) = si;
+                checkCudaErrors(mSpatialWeights[var].weightVector(e, u_dists.dmem(), u_weights.dmem()));
+                u_xtw.strides(j) = u_xt.diagmul(u_weights);
             }
-            catch (const exception& e)
-            {
-                GWM_LOG_ERROR(e.what());
-                except = e;
-                success = false;
-            }
-            GWM_LOG_PROGRESS(i + 1, nDp);
+            custride u_xtwx = u_xtw * u_xt.t();
+            custride u_xtwy = u_xtw * u_y;
+            custride u_xtwxI = u_xtwx.inv(d_info);
+            u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+            custride u_c = u_xtwxI * u_xtw;
+            custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
+            u_s.get(sg.memptr());
+            S.rows(begin, begin + length - 1) = sg.head_cols(length).t();
         }
     }
     else
     {
-        for (int i = 0; (uword)i < nDp  ; i++)
+        for (size_t i = 0; i < groups; i++)
         {
-            GWM_LOG_STOP_BREAK(mStatus);
-            vec w = mSpatialWeights[var].weightVector(i);
-            mat xtw = trans(x % w);
-            mat xtwx = xtw * x;
-            mat xtwy = xtw * y;
-            try
+            size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+            for (size_t j = 0, e = begin + j; j < length; j++, e++)
             {
-                mat xtwx_inv = inv_sympd(xtwx);
-                betas.col(i) = xtwx_inv * xtwy;
+                checkCudaErrors(mSpatialWeights[var].weightVector(e, u_dists.dmem(), u_weights.dmem()));
+                u_xtw.strides(j) = u_xt.diagmul(u_weights);
             }
-            catch (const exception& e)
-            {
-                GWM_LOG_ERROR(e.what());
-                except = e;
-                success = false;
-            }
-            GWM_LOG_PROGRESS(i + 1, nDp);
+            custride u_xtwx = u_xtw * u_xt.t();
+            custride u_xtwy = u_xtw * u_y;
+            custride u_xtwxI = u_xtwx.inv(d_info);
+            u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
         }
+        
     }
-    if (!success)
-    {
-        throw except;
-    }
+    u_betas.get(betas.memptr());
     return betas.t();
 }
+#endif // ENABLE_CUDA
 
 #ifdef ENABLE_OPENMP
 vec GWRMultiscale::fitVarOmp(const vec &x, const vec &y, const uword var, mat &S)
@@ -1016,18 +1097,22 @@ GWRMultiscale::BandwidthSizeCriterionFunction GWRMultiscale::bandwidthSizeCriter
 {
     unordered_map<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> > mapper = {
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
-            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionAllCVSerial),
         #ifdef ENABLE_OPENMP
             std::make_pair(ParallelType::OpenMP, &GWRMultiscale::bandwidthSizeCriterionAllCVOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionAllCVSerial)
+        #ifdef ENABLE_CUDA
+            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionAllCVSerial),
+        #endif
+            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionAllCVSerial)
         }),
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
-            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionAllAICSerial),
         #ifdef ENABLE_OPENMP
             std::make_pair(ParallelType::OpenMP, &GWRMultiscale::bandwidthSizeCriterionAllAICOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionAllAICSerial)
+        #ifdef ENABLE_CUDA
+            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionAllAICSerial),
+        #endif
+            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionAllAICSerial)
         })
     };
     return mapper[type][mParallelType];
@@ -1037,18 +1122,22 @@ GWRMultiscale::BandwidthSizeCriterionFunction GWRMultiscale::bandwidthSizeCriter
 {
     unordered_map<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> > mapper = {
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
-            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionVarCVSerial),
         #ifdef ENABLE_OPENMP
             std::make_pair(ParallelType::OpenMP, &GWRMultiscale::bandwidthSizeCriterionVarCVOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionVarCVSerial)
+        #ifdef ENABLE_CUDA
+            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionVarCVSerial),
+        #endif
+            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionVarCVSerial)
         }),
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
-            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionVarAICSerial),
         #ifdef ENABLE_OPENMP
             std::make_pair(ParallelType::OpenMP, &GWRMultiscale::bandwidthSizeCriterionVarAICOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionVarAICSerial)
+        #ifdef ENABLE_CUDA
+            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionVarAICSerial),
+        #endif
+            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionVarAICSerial)
         })
     };
     return mapper[type][mParallelType];
@@ -1068,6 +1157,12 @@ void GWRMultiscale::setParallelType(const ParallelType &type)
         case ParallelType::OpenMP:
             mFitAll = &GWRMultiscale::fitAllOmp;
             mFitVar = &GWRMultiscale::fitVarOmp;
+            break;
+#endif
+#ifdef ENABLE_CUDA
+        case ParallelType::CUDA:
+            mFitAll = &GWRMultiscale::fitAllCuda;
+            mFitVar = &GWRMultiscale::fitVarCuda;
             break;
 #endif
         default:

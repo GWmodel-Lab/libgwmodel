@@ -80,6 +80,7 @@ public:
 #ifdef ENABLE_CUDA
 protected:
     bool mUseCuda = false;
+    int mGpuID = -1;
     size_t mCudaThreads = 0;
     bool mCudaPrepared = false;
 #endif // ENABLE_CUDA
