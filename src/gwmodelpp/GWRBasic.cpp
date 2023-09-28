@@ -41,6 +41,7 @@ mat GWRBasic::fit()
 #ifdef ENABLE_CUDA
     if (mParallelType == ParallelType::CUDA)
     {
+        cublasCreate(&cubase::handle);
         mSpatialWeight.prepareCuda(mGpuId);
     }
 #endif // ENABLE_CUDA
@@ -83,6 +84,12 @@ mat GWRBasic::fit()
         if (bw)
         {
             mSpatialWeight.setWeight(bw);
+#ifdef ENABLE_CUDA
+            if (mParallelType == ParallelType::CUDA)
+            {
+                mSpatialWeight.prepareCuda(mGpuId);
+            }
+#endif // ENABLE_CUDA
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
         }
         GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
@@ -111,7 +118,12 @@ mat GWRBasic::fit()
         double rss = sum(dyhat2 % w);
         localR2(i) = (tss - rss) / tss;
     }
-
+#ifdef ENABLE_CUDA
+    if (mParallelType == ParallelType::CUDA)
+    {
+        cublasDestroy(cubase::handle);
+    }
+#endif // ENABLE_CUDA
     return mBetas;
 }
 
@@ -120,11 +132,25 @@ mat GWRBasic::predict(const mat& locations)
     GWM_LOG_STAGE("Initialization");
     uword nDp = mCoords.n_rows, nVars = mX.n_cols;
     createPredictionDistanceParameter(locations);
+#ifdef ENABLE_CUDA
+    if (mParallelType == ParallelType::CUDA)
+    {
+        cublasCreate(&cubase::handle);
+        mSpatialWeight.prepareCuda(mGpuId);
+    }
+#endif // ENABLE_CUDA
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     
     GWM_LOG_STAGE("Prediction");
     mBetas = (this->*mPredictFunction)(locations, mX, mY);
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
+
+#ifdef ENABLE_CUDA
+    if (mParallelType == ParallelType::CUDA)
+    {
+        cublasDestroy(cubase::handle);
+    }
+#endif // ENABLE_CUDA
 
     return mBetas;
 }
@@ -555,9 +581,9 @@ double GWRBasic::indepVarsSelectionCriterionOmp(const vector<size_t>& indepVars)
 #endif
 
 #ifdef ENABLE_CUDA
+
 mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
 {
-    cublasCreate(&cubase::handle);
     uword nDp = mCoords.n_rows, nVar = x.n_cols, nDim = mCoords.n_cols;
     mat xt = trans(x);
     mat betas = mat(nVar, nDp, arma::fill::zeros);
@@ -572,7 +598,8 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
     custride u_xtw(nVar, nDp, mGroupLength);//, u_s(1, nDp, mGroupLength);
     mat si(1, nDp, fill::zeros);
     cube cct(nVar, nVar, mGroupLength, fill::zeros);
-    int* d_info;
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
     checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
     for (size_t i = 0; i < groups; i++)
     {
@@ -589,6 +616,14 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
         custride u_xtwy = u_xtw * u_y;
         // inv
         custride u_xtwxI = u_xtwx.inv(d_info);
+        checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+        for (size_t j = 0; j < mGroupLength; j++)
+        {
+            if (p_info[j] != 0)
+            {
+                throw std::runtime_error("Cuda failed to get the inverse of matrix");
+            }
+        }
         // beta = xtwxI * xtwy [k*k,k*1]
         u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
         // ci = xtwxI * xtw [k*k,t(n*k)]
@@ -599,7 +634,7 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
         custride u_cct = u_c * u_c.t();
         u_cct.get(cct.memptr());
         // Transfer to cpu Perform further diagnostic
-        for (size_t j = 0, e = i * mGroupLength + j; j < mGroupLength && e < nDp; j++, e++)
+        for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
             u_s.strides(j).get(si.memptr());
             betasSE.col(e) = diagvec(cct.slice(j));
@@ -614,9 +649,222 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
     u_betas.get(betas.memptr());
     betasSE = betasSE.t();
     cudaFree(d_info);
-    cublasDestroy(cubase::handle);
     return betas.t();
 }
+
+arma::mat GWRBasic::predictCuda(const mat& locations, const mat& x, const vec& y)
+{
+    uword nRp = locations.n_rows, nDp = mCoords.n_rows, nVar = x.n_cols;
+    mat betas(nVar, nRp, fill::zeros);
+    size_t groups = nRp / mGroupLength + (nRp % mGroupLength == 0 ? 0 : 1);
+    cumat u_xt(x.t()), u_y(y);
+    cumat u_betas(nVar, nRp);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(nVar, nDp, mGroupLength);
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    for (size_t i = 0; i < groups; i++)
+    {
+        size_t begin = i * mGroupLength, length = (begin + mGroupLength > nRp) ? (nRp - begin) : mGroupLength;
+        for (size_t j = 0, e = begin + j; j < length; j++, e++)
+        {
+            checkCudaErrors(mSpatialWeight.weightVector(e, u_dists.dmem(), u_weights.dmem()));
+            u_xtw.strides(j) = u_xt.diagmul(u_weights);
+        }
+        custride u_xtwx = u_xtw * u_xt.t();
+        custride u_xtwy = u_xtw * u_y;
+        custride u_xtwxI = u_xtwx.inv(d_info);
+        checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+        for (size_t j = 0; j < mGroupLength; j++)
+        {
+            if (p_info[j] != 0)
+            {
+                throw std::runtime_error("Cuda failed to get the inverse of matrix");
+            }
+        }
+        u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+    }
+    cudaFree(d_info);
+    delete[] p_info;
+    u_betas.get(betas.memptr());
+    return betas.t();
+}
+
+double GWRBasic::bandwidthSizeCriterionCVCuda(BandwidthWeight* bandwidthWeight)
+{
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols, elems = nDp;
+    cumat u_xt(mX.t()), u_y(mY);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(nVar, nDp, mGroupLength);
+    vec yhat(mGroupLength), yhat_all(nDp);
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    bool success = true;
+    size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+    for (size_t i = 0; i < groups && success; i++)
+    {
+        size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+        for (size_t j = 0, e = begin + j; j < length; j++, e++)
+        {
+            checkCudaErrors(mSpatialWeight.distance()->distance(e, u_dists.dmem(), &elems));
+            checkCudaErrors(bandwidthWeight->weight(u_dists.dmem(), u_weights.dmem(), elems));
+            checkCudaErrors(cudaMemcpy(u_weights.dmem() + e, &cubase::beta0, sizeof(double), cudaMemcpyHostToDevice));
+            u_xtw.strides(j) = u_xt.diagmul(u_weights);
+        }
+        custride u_xtwx = u_xtw * u_xt.t();
+        custride u_xtwy = u_xtw * u_y;
+        custride u_xtwxI = u_xtwx.inv(d_info);
+        checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+        for (size_t j = 0; j < mGroupLength; j++)
+        {
+            if (p_info[j] != 0)
+            {
+                success = false;
+                break;
+            }
+        }
+        if (success)
+        {
+            custride u_betas = u_xtwxI * u_xtwy;
+            custride u_yhat = u_xt.as_stride().strides(begin, begin + length).t() * u_betas;
+            u_yhat.get(yhat.memptr());
+            yhat_all.rows(begin, begin + length - 1) = yhat.head_rows(length);
+        }
+    }
+    checkCudaErrors(cudaFree(d_info));
+    delete[] p_info;
+    if (!success) return DBL_MAX;
+    double cv = as_scalar((mY - yhat_all).t() * (mY - yhat_all));
+    if (isfinite(cv))
+    {
+        mBandwidthLastCriterion = cv;
+        return cv;
+    }
+    else return DBL_MAX;
+}
+
+double GWRBasic::bandwidthSizeCriterionAICCuda(BandwidthWeight* bandwidthWeight)
+{
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols, elems = nDp;
+    cumat u_xt(mX.t()), u_y(mY), u_betas(nVar, nDp);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(nVar, nDp, mGroupLength);
+    mat betas(nVar, nDp);
+    vec shat(2), sst(mGroupLength);
+    mat sg(nDp, mGroupLength);
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    bool success = true;
+    size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+    for (size_t i = 0; i < groups && success; i++)
+    {
+        size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+        for (size_t j = 0, e = begin + j; j < length; j++, e++)
+        {
+            checkCudaErrors(mSpatialWeight.distance()->distance(e, u_dists.dmem(), &elems));
+            checkCudaErrors(bandwidthWeight->weight(u_dists.dmem(), u_weights.dmem(), elems));
+            u_xtw.strides(j) = u_xt.diagmul(u_weights);
+        }
+        custride u_xtwx = u_xtw * u_xt.t();
+        custride u_xtwy = u_xtw * u_y;
+        custride u_xtwxI = u_xtwx.inv(d_info);
+        checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+        for (size_t j = 0; j < mGroupLength; j++)
+        {
+            if (p_info[j] != 0)
+            {
+                success = false;
+                break;
+            }
+        }
+        if (success)
+        {
+            u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+            custride u_c = u_xtwxI * u_xtw;
+            custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
+            custride u_sst = u_s * u_s.t();
+            u_s.get(sg.memptr());
+            u_sst.get(sst.memptr());
+            shat(0) += trace(sg.submat(begin, 0, arma::SizeMat(length, length)));
+            shat(1) += sum(sst);
+        }
+    }
+    checkCudaErrors(cudaFree(d_info));
+    delete[] p_info;
+    if (!success) return DBL_MAX;
+    u_betas.get(betas.memptr());
+    double aic = GWRBasic::AICc(mX, mY, betas.t(), shat);
+    if (isfinite(aic))
+    {
+        mBandwidthLastCriterion = aic;
+        return aic;
+    }
+    else return DBL_MAX;
+}
+
+double GWRBasic::indepVarsSelectionCriterionCuda(const std::vector<size_t>& indepVars)
+{
+    mat x = mX.cols(VariableForwardSelector::index2uvec(indepVars, mHasIntercept));
+    mat y = mY;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols, elems = nDp;
+    cumat u_xt(x.t()), u_y(y), u_betas(nVar, nDp);
+    cumat u_weights(vec(nDp, fill::ones));
+    custride u_xtw(nVar, nDp, mGroupLength);
+    mat betas(nVar, nDp);
+    vec shat(2), sst(mGroupLength);
+    mat sg(nDp, mGroupLength);
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    bool success = true;
+    size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+    for (size_t i = 0; i < groups && success; i++)
+    {
+        size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+        for (size_t j = 0, e = begin + j; j < length; j++, e++)
+        {
+            u_xtw.strides(j) = u_xt.diagmul(u_weights);
+        }
+        custride u_xtwx = u_xtw * u_xt.t();
+        custride u_xtwy = u_xtw * u_y;
+        custride u_xtwxI = u_xtwx.inv(d_info);
+        checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+        for (size_t j = 0; j < mGroupLength; j++)
+        {
+            if (p_info[j] != 0)
+            {
+                success = false;
+                break;
+            }
+        }
+        if (success)
+        {
+            u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+            custride u_c = u_xtwxI * u_xtw;
+            custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
+            custride u_sst = u_s * u_s.t();
+            u_s.get(sg.memptr());
+            u_sst.get(sst.memptr());
+            shat(0) += trace(sg.submat(begin, 0, arma::SizeMat(length, length)));
+            shat(1) += sum(sst);
+        }
+    }
+    checkCudaErrors(cudaFree(d_info));
+    delete[] p_info;
+    if (!success) return DBL_MAX;
+    u_betas.get(betas.memptr());
+    double aic = GWRBasic::AICc(x, y, betas.t(), shat);
+    if (isfinite(aic))
+    {
+        mBandwidthLastCriterion = aic;
+        return aic;
+    }
+    else return DBL_MAX;
+}
+
 #endif
 
 void GWRBasic::setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion)
@@ -636,6 +884,14 @@ void GWRBasic::setBandwidthSelectionCriterion(const BandwidthSelectionCriterionT
         mapper = {
             make_pair(BandwidthSelectionCriterionType::CV, &GWRBasic::bandwidthSizeCriterionCVOmp),
             make_pair(BandwidthSelectionCriterionType::AIC, &GWRBasic::bandwidthSizeCriterionAICOmp)
+        };
+        break;
+#endif
+#ifdef ENABLE_CUDA
+    case ParallelType::CUDA:
+        mapper = {
+            make_pair(BandwidthSelectionCriterionType::CV, &GWRBasic::bandwidthSizeCriterionCVCuda),
+            make_pair(BandwidthSelectionCriterionType::AIC, &GWRBasic::bandwidthSizeCriterionAICCuda)
         };
         break;
 #endif
@@ -669,9 +925,9 @@ void GWRBasic::setParallelType(const ParallelType& type)
 #endif // ENABLE_OPENMP
 #ifdef ENABLE_CUDA
         case ParallelType::CUDA:
-            mPredictFunction = &GWRBasic::predictSerial;
+            mPredictFunction = &GWRBasic::predictCuda;
             mFitFunction = &GWRBasic::fitCuda;
-            mIndepVarsSelectionCriterionFunction = &GWRBasic::indepVarsSelectionCriterionSerial;
+            mIndepVarsSelectionCriterionFunction = &GWRBasic::indepVarsSelectionCriterionCuda;
             break;
 #endif // ENABLE_CUDA
         default:

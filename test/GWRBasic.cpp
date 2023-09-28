@@ -10,6 +10,7 @@
 #include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
 #include "TerminateCheckTelegram.h"
+#include "FileTelegram.h"
 
 using namespace std;
 using namespace arma;
@@ -42,9 +43,10 @@ TEST_CASE("BasicGWR: LondonHP")
 #endif // ENABLE_CUDA
     };
 
-    SECTION("adaptive bandwidth | no bandwidth optimization | no variable optimization | serial") {
+    SECTION("adaptive bandwidth | no bandwidth optimization | no variable optimization") {
         auto parallel = GENERATE_REF(values(parallel_list));
         INFO("Parallel:" << ParallelTypeDict.at(parallel));
+
         BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
         algorithm.setSpatialWeight(spatial);
@@ -65,10 +67,27 @@ TEST_CASE("BasicGWR: LondonHP")
         REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.674975341723766, 1e-8));
     }
     
-    SECTION("fixed bandwidth | no bandwidth optimization | no variable optimization | serial") {
+    SECTION("fixed bandwidth | no bandwidth optimization | no variable optimization") {
+        auto parallel = GENERATE_REF(values(parallel_list));
+        INFO("Parallel:" << ParallelTypeDict.at(parallel));
+        
         BandwidthWeight bandwidth(5000, false, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
         algorithm.setSpatialWeight(spatial);
+        algorithm.setParallelType(parallel);
+#ifdef ENABLE_OPENMP
+        if (parallel == ParallelType::OpenMP)
+        {
+            algorithm.setOmpThreadNum(6);
+        }
+#endif // ENABLE_OPENMP
+#ifdef ENABLE_CUDA
+        if (parallel == ParallelType::CUDA)
+        {
+            algorithm.setGPUId(0);
+            algorithm.setGroupSize(64);
+        }
+#endif // ENABLE_CUDA
         REQUIRE_NOTHROW(algorithm.fit());
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2437.649574267587, 1e-8));
@@ -77,23 +96,57 @@ TEST_CASE("BasicGWR: LondonHP")
         REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.673691594464, 1e-8));
     }
 
-    SECTION("adaptive bandwidth | CV bandwidth optimization | no variable optimization | serial") {
+    SECTION("adaptive bandwidth | CV bandwidth optimization | no variable optimization") {
+        auto parallel = GENERATE_REF(values(parallel_list));
+        INFO("Parallel:" << ParallelTypeDict.at(parallel));
+        
         BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
         algorithm.setSpatialWeight(spatial);
         algorithm.setIsAutoselectBandwidth(true);
         algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::CV);
+        algorithm.setParallelType(parallel);
+#ifdef ENABLE_OPENMP
+        if (parallel == ParallelType::OpenMP)
+        {
+            algorithm.setOmpThreadNum(6);
+        }
+#endif // ENABLE_OPENMP
+#ifdef ENABLE_CUDA
+        if (parallel == ParallelType::CUDA)
+        {
+            algorithm.setGPUId(0);
+            algorithm.setGroupSize(64);
+        }
+#endif // ENABLE_CUDA
         REQUIRE_NOTHROW(algorithm.fit());
         size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
         REQUIRE(bw == 67);
     }
     
-    SECTION("adaptive bandwidth | no bandwidth optimization | AIC variable optimization | serial") {
+    SECTION("adaptive bandwidth | no bandwidth optimization | AIC variable optimization") {
+        auto parallel = GENERATE_REF(values(parallel_list));
+        INFO("Parallel:" << ParallelTypeDict.at(parallel));
+        
         BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
         algorithm.setSpatialWeight(spatial);
         algorithm.setIsAutoselectIndepVars(true);
         algorithm.setIndepVarSelectionThreshold(3.0);
+        algorithm.setParallelType(parallel);
+#ifdef ENABLE_OPENMP
+        if (parallel == ParallelType::OpenMP)
+        {
+            algorithm.setOmpThreadNum(6);
+        }
+#endif // ENABLE_OPENMP
+#ifdef ENABLE_CUDA
+        if (parallel == ParallelType::CUDA)
+        {
+            algorithm.setGPUId(0);
+            algorithm.setGroupSize(64);
+        }
+#endif // ENABLE_CUDA
         REQUIRE_NOTHROW(algorithm.fit());
         VariablesCriterionList criterions = algorithm.indepVarsSelectionCriterionList();
         REQUIRE_THAT(criterions[0].first, Catch::Matchers::Equals(vector<size_t>({ 2 })));
@@ -112,8 +165,10 @@ TEST_CASE("BasicGWR: LondonHP")
         REQUIRE_THAT(selectedVariables, Catch::Matchers::Equals(vector<size_t>({1, 3})));
     }
 
-#ifdef ENABLE_OPENMP
-    SECTION("adaptive bandwidth | CV bandwidth optimization | AIC variable optimization | omp parallel") {
+    SECTION("adaptive bandwidth | CV bandwidth optimization | AIC variable optimization") {
+        auto parallel = GENERATE_REF(values(parallel_list));
+        INFO("Parallel:" << ParallelTypeDict.at(parallel));
+        
         BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
         algorithm.setSpatialWeight(spatial);
@@ -121,8 +176,20 @@ TEST_CASE("BasicGWR: LondonHP")
         algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::CV);
         algorithm.setIsAutoselectIndepVars(true);
         algorithm.setIndepVarSelectionThreshold(3.0);
-        algorithm.setParallelType(ParallelType::OpenMP);
-        algorithm.setOmpThreadNum(6);
+        algorithm.setParallelType(parallel);
+#ifdef ENABLE_OPENMP
+        if (parallel == ParallelType::OpenMP)
+        {
+            algorithm.setOmpThreadNum(6);
+        }
+#endif // ENABLE_OPENMP
+#ifdef ENABLE_CUDA
+        if (parallel == ParallelType::CUDA)
+        {
+            algorithm.setGPUId(0);
+            algorithm.setGroupSize(64);
+        }
+#endif // ENABLE_CUDA
         REQUIRE_NOTHROW(algorithm.fit());
         VariablesCriterionList criterions = algorithm.indepVarsSelectionCriterionList();
         REQUIRE_THAT(criterions[0].first, Catch::Matchers::Equals(vector<size_t>({ 2 })));
@@ -147,7 +214,6 @@ TEST_CASE("BasicGWR: LondonHP")
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.706143867720706, 1e-8));
         REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.678982114793865, 1e-8));
     }
-#endif
 
 }
 

@@ -186,7 +186,10 @@ mat GWRMultiscale::fit()
 
     // Cleaning
 #ifdef ENABLE_CUDA
-    cublasDestroy(cubase::handle);
+    if (mParallelType == ParallelType::CUDA)
+    {
+        cublasDestroy(cubase::handle);
+    }
 #endif // ENABLE_CUDA
 
     return mBetas;
@@ -973,7 +976,8 @@ mat GWRMultiscale::fitAllCuda(const mat& x, const vec& y)
     mat si(nDp, mGroupLength, fill::zeros);
     cube ci(nVar, nDp, mGroupLength, fill::zeros);
     cube cct(nVar, nVar, mGroupLength, fill::zeros);
-    int* d_info;
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
     checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
     if (mHasHatMatrix)
     {
@@ -991,6 +995,14 @@ mat GWRMultiscale::fitAllCuda(const mat& x, const vec& y)
             custride u_xtwx = u_xtw * u_xt.t();
             custride u_xtwy = u_xtw * u_y;
             custride u_xtwxI = u_xtwx.inv(d_info);
+            checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+            for (size_t j = 0; j < mGroupLength; j++)
+            {
+                if (p_info[j] != 0)
+                {
+                    throw std::runtime_error("Cuda failed to get the inverse of matrix");
+                }
+            }
             u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
             custride u_c = u_xtwxI * u_xtw;
             custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
@@ -1023,6 +1035,14 @@ mat GWRMultiscale::fitAllCuda(const mat& x, const vec& y)
             custride u_xtwx = u_xtw * u_xt.t();
             custride u_xtwy = u_xtw * u_y;
             custride u_xtwxI = u_xtwx.inv(d_info);
+            checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+            for (size_t j = 0; j < mGroupLength; j++)
+            {
+                if (p_info[j] != 0)
+                {
+                    throw std::runtime_error("Cuda failed to get the inverse of matrix");
+                }
+            }
             u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
         }
         u_betas.get(betas.memptr());
@@ -1039,7 +1059,8 @@ vec GWRMultiscale::fitVarCuda(const vec &x, const vec &y, const uword var, mat &
     cumat u_betas(1, nDp);
     cumat u_dists(nDp, 1), u_weights(nDp, 1);
     custride u_xtw(1, nDp, mGroupLength);
-    int* d_info;
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
     checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
     size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
     S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
@@ -1057,6 +1078,14 @@ vec GWRMultiscale::fitVarCuda(const vec &x, const vec &y, const uword var, mat &
             custride u_xtwx = u_xtw * u_xt.t();
             custride u_xtwy = u_xtw * u_y;
             custride u_xtwxI = u_xtwx.inv(d_info);
+            checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+            for (size_t j = 0; j < mGroupLength; j++)
+            {
+                if (p_info[j] != 0)
+                {
+                    throw std::runtime_error("Cuda failed to get the inverse of matrix");
+                }
+            }
             u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
             custride u_c = u_xtwxI * u_xtw;
             custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
@@ -1077,6 +1106,14 @@ vec GWRMultiscale::fitVarCuda(const vec &x, const vec &y, const uword var, mat &
             custride u_xtwx = u_xtw * u_xt.t();
             custride u_xtwy = u_xtw * u_y;
             custride u_xtwxI = u_xtwx.inv(d_info);
+            checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+            for (size_t j = 0; j < mGroupLength; j++)
+            {
+                if (p_info[j] != 0)
+                {
+                    throw std::runtime_error("Cuda failed to get the inverse of matrix");
+                }
+            }
             u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
         }
         
@@ -1088,7 +1125,7 @@ vec GWRMultiscale::fitVarCuda(const vec &x, const vec &y, const uword var, mat &
 double GWRMultiscale::bandwidthSizeCriterionAllCVCuda(BandwidthWeight* bandwidthWeight)
 {
     uword nDp = mCoords.n_rows, nVar = mX.n_cols, elems = nDp;
-    cumat u_xt(mX.t()), u_y(mYi);
+    cumat u_xt(mX.t()), u_y(mY);
     cumat u_dists(nDp, 1), u_weights(nDp, 1);
     custride u_xtw(nVar, nDp, mGroupLength);
     vec yhat(mGroupLength), yhat_all(nDp);
@@ -1142,7 +1179,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVCuda(BandwidthWeight* bandwidth
 double GWRMultiscale::bandwidthSizeCriterionAllAICCuda(BandwidthWeight* bandwidthWeight)
 {
     uword nDp = mCoords.n_rows, nVar = mX.n_cols, elems = nDp;
-    cumat u_xt(mX.t()), u_y(mYi), u_betas(nVar, nDp);
+    cumat u_xt(mX.t()), u_y(mY), u_betas(nVar, nDp);
     cumat u_dists(nDp, 1), u_weights(nDp, 1);
     custride u_xtw(nVar, nDp, mGroupLength);
     mat betas(nVar, nDp);

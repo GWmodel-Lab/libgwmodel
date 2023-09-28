@@ -33,10 +33,10 @@ TEST_CASE("MGWR: basic flow")
     uword nVar = 3;
 
     const initializer_list<ParallelType> parallelTypes = {
-        // ParallelType::SerialOnly,
-// #ifdef ENABLE_OPENMP
-//         ParallelType::OpenMP,
-// #endif // ENABLE_OPENmp
+        ParallelType::SerialOnly,
+#ifdef ENABLE_OPENMP
+        ParallelType::OpenMP,
+#endif // ENABLE_OPENMP
 #ifdef ENABLE_CUDA
         ParallelType::CUDA
 #endif // ENABLE_CUDA
