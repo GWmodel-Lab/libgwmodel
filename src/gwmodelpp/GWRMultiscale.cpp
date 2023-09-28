@@ -960,6 +960,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICOmp(BandwidthWeight *bandwidth
 #endif
 
 #ifdef ENABLE_CUDA
+
 mat GWRMultiscale::fitAllCuda(const mat& x, const vec& y)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
@@ -1083,6 +1084,239 @@ vec GWRMultiscale::fitVarCuda(const vec &x, const vec &y, const uword var, mat &
     u_betas.get(betas.memptr());
     return betas.t();
 }
+
+double GWRMultiscale::bandwidthSizeCriterionAllCVCuda(BandwidthWeight* bandwidthWeight)
+{
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols, elems = nDp;
+    cumat u_xt(mX.t()), u_y(mYi);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(nVar, nDp, mGroupLength);
+    vec yhat(mGroupLength), yhat_all(nDp);
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    bool success = true;
+    size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+    for (size_t i = 0; i < groups && success; i++)
+    {
+        size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+        for (size_t j = 0, e = begin + j; j < length; j++, e++)
+        {
+            checkCudaErrors(mInitSpatialWeight.distance()->distance(e, u_dists.dmem(), &elems));
+            checkCudaErrors(bandwidthWeight->weight(u_dists.dmem(), u_weights.dmem(), elems));
+            checkCudaErrors(cudaMemcpy(u_weights.dmem() + e, &cubase::beta0, sizeof(double), cudaMemcpyHostToDevice));
+            u_xtw.strides(j) = u_xt.diagmul(u_weights);
+        }
+        custride u_xtwx = u_xtw * u_xt.t();
+        custride u_xtwy = u_xtw * u_y;
+        custride u_xtwxI = u_xtwx.inv(d_info);
+        checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+        for (size_t j = 0; j < mGroupLength; j++)
+        {
+            if (p_info[j] != 0)
+            {
+                success = false;
+                break;
+            }
+        }
+        if (success)
+        {
+            custride u_betas = u_xtwxI * u_xtwy;
+            custride u_yhat = u_xt.as_stride().strides(begin, begin + length).t() * u_betas;
+            u_yhat.get(yhat.memptr());
+            yhat_all.rows(begin, begin + length - 1) = yhat.head_rows(length);
+        }
+    }
+    checkCudaErrors(cudaFree(d_info));
+    delete[] p_info;
+    if (!success) return DBL_MAX;
+    double cv = as_scalar((mY - yhat_all).t() * (mY - yhat_all));
+    if (isfinite(cv))
+    {
+        mBandwidthLastCriterion = cv;
+        return cv;
+    }
+    else return DBL_MAX;
+}
+
+double GWRMultiscale::bandwidthSizeCriterionAllAICCuda(BandwidthWeight* bandwidthWeight)
+{
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols, elems = nDp;
+    cumat u_xt(mX.t()), u_y(mYi), u_betas(nVar, nDp);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(nVar, nDp, mGroupLength);
+    mat betas(nVar, nDp);
+    vec shat(2), sst(mGroupLength);
+    mat sg(nDp, mGroupLength);
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    bool success = true;
+    size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+    for (size_t i = 0; i < groups && success; i++)
+    {
+        size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+        for (size_t j = 0, e = begin + j; j < length; j++, e++)
+        {
+            checkCudaErrors(mInitSpatialWeight.distance()->distance(e, u_dists.dmem(), &elems));
+            checkCudaErrors(bandwidthWeight->weight(u_dists.dmem(), u_weights.dmem(), elems));
+            u_xtw.strides(j) = u_xt.diagmul(u_weights);
+        }
+        custride u_xtwx = u_xtw * u_xt.t();
+        custride u_xtwy = u_xtw * u_y;
+        custride u_xtwxI = u_xtwx.inv(d_info);
+        checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+        for (size_t j = 0; j < mGroupLength; j++)
+        {
+            if (p_info[j] != 0)
+            {
+                success = false;
+                break;
+            }
+        }
+        if (success)
+        {
+            u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+            custride u_c = u_xtwxI * u_xtw;
+            custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
+            custride u_sst = u_s * u_s.t();
+            u_s.get(sg.memptr());
+            u_sst.get(sst.memptr());
+            shat(0) += trace(sg.submat(begin, 0, arma::SizeMat(length, length)));
+            shat(1) += sum(sst);
+        }
+    }
+    checkCudaErrors(cudaFree(d_info));
+    delete[] p_info;
+    if (!success) return DBL_MAX;
+    u_betas.get(betas.memptr());
+    double aic = GWRMultiscale::AICc(mX, mY, betas.t(), shat);
+    if (isfinite(aic))
+    {
+        mBandwidthLastCriterion = aic;
+        return aic;
+    }
+    else return DBL_MAX;
+}
+
+double GWRMultiscale::bandwidthSizeCriterionVarCVCuda(BandwidthWeight* bandwidthWeight)
+{
+    size_t var = mBandwidthSelectionCurrentIndex;
+    uword nDp = mCoords.n_rows, elems = nDp;
+    constexpr size_t nVar = 1;
+    cumat u_xt(mXi.t()), u_y(mYi);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(nVar, nDp, mGroupLength);
+    vec yhat(mGroupLength), yhat_all(nDp);
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    bool success = true;
+    size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+    for (size_t i = 0; i < groups && success; i++)
+    {
+        size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+        for (size_t j = 0, e = begin + j; j < length; j++, e++)
+        {
+            checkCudaErrors(mSpatialWeights[var].distance()->distance(e, u_dists.dmem(), &elems));
+            checkCudaErrors(bandwidthWeight->weight(u_dists.dmem(), u_weights.dmem(), elems));
+            checkCudaErrors(cudaMemcpy(u_weights.dmem() + e, &cubase::beta0, sizeof(double), cudaMemcpyHostToDevice));
+            u_xtw.strides(j) = u_xt.diagmul(u_weights);
+        }
+        custride u_xtwx = u_xtw * u_xt.t();
+        custride u_xtwy = u_xtw * u_y;
+        custride u_xtwxI = u_xtwx.inv(d_info);
+        checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+        for (size_t j = 0; j < mGroupLength; j++)
+        {
+            if (p_info[j] != 0)
+            {
+                success = false;
+                break;
+            }
+        }
+        if (success)
+        {
+            custride u_betas = u_xtwxI * u_xtwy;
+            custride u_yhat = u_xt.as_stride().strides(begin, begin + length).t() * u_betas.strides(0, length);
+            u_yhat.get(yhat.memptr());
+            yhat_all.rows(begin, begin + length - 1) = yhat.head_rows(length);
+        }
+    }
+    checkCudaErrors(cudaFree(d_info));
+    delete[] p_info;
+    if (!success) return DBL_MAX;
+    double cv = as_scalar((mYi - yhat_all).t() * (mYi - yhat_all));
+    if (isfinite(cv))
+    {
+        mBandwidthLastCriterion = cv;
+        return cv;
+    }
+    else return DBL_MAX;
+}
+
+double GWRMultiscale::bandwidthSizeCriterionVarAICCuda(BandwidthWeight* bandwidthWeight)
+{
+    size_t var = mBandwidthSelectionCurrentIndex;
+    uword nDp = mCoords.n_rows, elems = nDp;
+    constexpr size_t nVar = 1;
+    cumat u_xt(mXi.t()), u_y(mYi), u_betas(nVar, nDp);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(nVar, nDp, mGroupLength);
+    mat betas(nVar, nDp);
+    vec shat(2), sst(mGroupLength);
+    mat sg(nDp, mGroupLength);
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    bool success = true;
+    size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+    for (size_t i = 0; i < groups && success; i++)
+    {
+        size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+        for (size_t j = 0, e = begin + j; j < length; j++, e++)
+        {
+            checkCudaErrors(mSpatialWeights[var].distance()->distance(e, u_dists.dmem(), &elems));
+            checkCudaErrors(bandwidthWeight->weight(u_dists.dmem(), u_weights.dmem(), elems));
+            u_xtw.strides(j) = u_xt.diagmul(u_weights);
+        }
+        custride u_xtwx = u_xtw * u_xt.t();
+        custride u_xtwy = u_xtw * u_y;
+        custride u_xtwxI = u_xtwx.inv(d_info);
+        checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+        for (size_t j = 0; j < mGroupLength; j++)
+        {
+            if (p_info[j] != 0)
+            {
+                success = false;
+                break;
+            }
+        }
+        if (success)
+        {
+            u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+            custride u_c = u_xtwxI * u_xtw;
+            custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
+            custride u_sst = u_s * u_s.t();
+            u_s.get(sg.memptr());
+            u_sst.get(sst.memptr());
+            shat(0) += trace(sg.submat(begin, 0, arma::SizeMat(length, length)));
+            shat(1) += sum(sst);
+        }
+    }
+    checkCudaErrors(cudaFree(d_info));
+    delete[] p_info;
+    if (!success) return DBL_MAX;
+    u_betas.get(betas.memptr());
+    double aic = GWRMultiscale::AICc(mXi, mYi, betas.t(), shat);
+    if (isfinite(aic))
+    {
+        mBandwidthLastCriterion = aic;
+        return aic;
+    }
+    else return DBL_MAX;
+}
+
 #endif // ENABLE_CUDA
 
 GWRMultiscale::BandwidthSizeCriterionFunction GWRMultiscale::bandwidthSizeCriterionAll(GWRMultiscale::BandwidthSelectionCriterionType type)
@@ -1093,7 +1327,7 @@ GWRMultiscale::BandwidthSizeCriterionFunction GWRMultiscale::bandwidthSizeCriter
             std::make_pair(ParallelType::OpenMP, &GWRMultiscale::bandwidthSizeCriterionAllCVOmp),
         #endif
         #ifdef ENABLE_CUDA
-            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionAllCVSerial),
+            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionAllCVCuda),
         #endif
             std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionAllCVSerial)
         }),
@@ -1102,7 +1336,7 @@ GWRMultiscale::BandwidthSizeCriterionFunction GWRMultiscale::bandwidthSizeCriter
             std::make_pair(ParallelType::OpenMP, &GWRMultiscale::bandwidthSizeCriterionAllAICOmp),
         #endif
         #ifdef ENABLE_CUDA
-            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionAllAICSerial),
+            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionAllAICCuda),
         #endif
             std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionAllAICSerial)
         })
@@ -1118,7 +1352,7 @@ GWRMultiscale::BandwidthSizeCriterionFunction GWRMultiscale::bandwidthSizeCriter
             std::make_pair(ParallelType::OpenMP, &GWRMultiscale::bandwidthSizeCriterionVarCVOmp),
         #endif
         #ifdef ENABLE_CUDA
-            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionVarCVSerial),
+            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionVarCVCuda),
         #endif
             std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionVarCVSerial)
         }),
@@ -1127,7 +1361,7 @@ GWRMultiscale::BandwidthSizeCriterionFunction GWRMultiscale::bandwidthSizeCriter
             std::make_pair(ParallelType::OpenMP, &GWRMultiscale::bandwidthSizeCriterionVarAICOmp),
         #endif
         #ifdef ENABLE_CUDA
-            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionVarAICSerial),
+            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionVarAICCuda),
         #endif
             std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionVarAICSerial)
         })

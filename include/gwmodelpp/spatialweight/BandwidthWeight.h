@@ -250,6 +250,7 @@ public:
     {
         checkCudaErrors(Weight::prepareCuda(gpuId));
         mCudaPrepared = true;
+        return cudaSuccess;
     }
 #endif // ENABLE_CUDA
 
