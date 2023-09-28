@@ -14,6 +14,10 @@ class cuop_trans;
 template<class T>
 class cuview;
 
+/**
+ * @brief \~english Struct of range \~chinese 范围结构
+ * 
+ */
 struct curange
 {
     size_t start = 0;
@@ -21,6 +25,10 @@ struct curange
 };
 
 
+/**
+ * @brief \~english Base class of operator types \~chinese 运算符基类
+ * 
+ */
 class cuop
 {
 public:
@@ -31,10 +39,14 @@ public:
     };
 };
 
+/**
+ * @brief \~english Base class of types managing data \~chinese 数据类型的基类
+ * 
+ */
 class cubase
 {
 public:
-    static cublasHandle_t handle;
+    static cublasHandle_t handle;   //!< Save handle for cublas
     constexpr static const double alpha1 = 1.0;
     constexpr static const double beta0 = 0.0;
     constexpr static const double beta1 = 1.0;
@@ -58,8 +70,19 @@ public:
     };
 
 public:
+
+    /**
+     * @brief \~english Construct a new cubase object. \~chinese 构造一个新的 cubase 对象。 
+     * 
+     */
     cubase() {}
 
+    /**
+     * @brief \~english Construct a new cubase object. \~chinese 构造一个新的 cubase 对象。 
+     * 
+     * @param bytes \~english Size in bytes \~chinese 字节数
+     * @param init \~english How to initialise \~chinese 初始化方式
+     */
     cubase(size_t bytes, Init init = Init::Zero)
     {
         switch (init)
@@ -74,6 +97,10 @@ public:
         }
     }
 
+    /**
+     * @brief \~english Destroy the cubase object. \~chinese 销毁 cubase 对象。 
+     * 
+     */
     virtual ~cubase()
     {
         if (mIsRelease && dMem)
@@ -83,14 +110,29 @@ public:
         dMem = nullptr;
     }
 
+    /**
+     * @brief \~english Get size in bytes \~chinese 获取字节数
+     * 
+     * @return size_t \~english Size in bytes \~chinese 字节数
+     */
     virtual size_t nbytes() const = 0;
 
+    /**
+     * @brief \~english Get pointer to data \~chinese 获取数据指针
+     * 
+     * @return double* \~english Pointer to data \~chinese 数据指针
+     */
+    double* dmem() const { return dMem; }
+
+    /**
+     * @brief \~english Get data in GPU \~chinese 提取 GPU 中的数据
+     * 
+     * @param dst \~english Pointer to where to store data \~chinese 指向要保存数据位置的指针
+     */
     virtual void get(double* dst)
     {
         cudaMemcpy(dst, dMem, nbytes(), cudaMemcpyDeviceToHost);
     }
-
-    double* dmem() const { return dMem; }
 
 protected:
     bool mIsRelease = false;
@@ -107,6 +149,10 @@ struct cutraits
 template<class A, class B, cubase::Type TA = cutraits<A>::type, cubase::Type TB = cutraits<B>::type>
 class cuop_matmul;
 
+/**
+ * @brief \~english Matrix. Elements are stored in GPU by column-major format. \~chinese 矩阵类。数据存储在 GPU 中，列主序格式。
+ * 
+ */
 class cumat : public cubase
 {
 public:
@@ -114,8 +160,20 @@ public:
     constexpr static cubase::Type type = cubase::Type::Mat;
 
 public:
+
+    /**
+     * @brief \~english Construct a new cumat object. \~chinese 构造一个新的 cumat 对象。
+     * 
+     */
     cumat() {}
 
+    /**
+     * @brief \~english Construct a new cumat object. \~chinese 构造一个新的 cumat 对象。
+     * 
+     * @param rows \~english Number of rows \~chinese 行数
+     * @param cols \~english Number of columns \~chinese 列数
+     * @param init \~english How to initialise \~chinese 初始化方式
+     */
     cumat(size_t rows, size_t cols, cubase::Init init = cubase::Init::Zero) : 
         cubase(rows * cols * sizeof(double), init),
         mRows(rows),
@@ -123,16 +181,34 @@ public:
     {
     }
 
+    /**
+     * @brief \~english Construct a new cumat object from armadillo matrix. \~chinese 从 armadillo 的矩阵类构造一个新的 cumat 对象。
+     * 
+     * @param src \~english Armadillo matrix \~chinese Armadillo 类库的的矩阵类
+     */
     cumat(arma::mat src) : cumat(src.n_rows, src.n_cols)
     {
         cudaMemcpy(dMem, src.mem, nbytes(), cudaMemcpyHostToDevice);
     }
 
+    /**
+     * @brief \~english Copy construct a new cumat object. \~chinese 复制构造一个新的 cumat 对象。
+     * 
+     * @param mat \~english Source matrix \~chinese 源矩阵
+     */
     cumat(const cumat& mat) : cumat(mat.mRows, mat.mCols)
     {
         cudaMemcpy(dMem, mat.dMem, nbytes(), cudaMemcpyDeviceToDevice);
     }
 
+    /**
+     * @brief \~english Move construct a new cumat object.
+     * The source object will move the management of memory to the new object.
+     * \~chinese 移动构造一个新的 cumat 对象。
+     * 源对象将把内存管理移交给新对象。
+     * 
+     * @param mat \~english  \~chinese 
+     */
     cumat(cumat&& mat) : mRows(mat.mRows), mCols(mat.mCols)
     {
         mIsRelease = true;
@@ -140,6 +216,10 @@ public:
         mat.mIsRelease = false;
     }
 
+    /**
+     * @brief \~english Destroy the cumat object. \~chinese 销毁 cumat 对象。
+     * 
+     */
     virtual ~cumat()
     {
         mRows = 0;
@@ -148,6 +228,12 @@ public:
 
     size_t nbytes() const override { return sizeof(double) * mRows * mCols; }
 
+    /**
+     * @brief \~english Transpose matrix. Do not do the calculation immediately, unless it is assigned to a new object.
+     * \~chinese 转置矩阵。除非赋值到新的对象，否则并不执行计算。
+     * 
+     * @return const cuop_trans<cumat> \~english Object with transpose mark \~chinese 带有转置标记的对象
+     */
     const cuop_trans<cumat> t() const;
 
     cumat& operator=(const cuop_trans<cumat>& right);
@@ -158,8 +244,19 @@ public:
         return cuop_matmul<cumat, R>(*this, right).eval();
     }
 
+    /**
+     * @brief \~english Convert to object of custride type in which each column is a stride. \~chinese 转换为 custride 类型，每列作为一个 stride。
+     * 
+     * @return custride \~english Converted custride object \~chinese 转换后的 custride 对象
+     */
     custride as_stride() const;
 
+    /**
+     * @brief \~english Multiply with a diagonal matrix. \~chinese 与对角矩阵相乘。
+     * 
+     * @param diag \~english Diagonal elements of the diagonal matrix \~chinese 对角矩阵的对角线元素
+     * @return cumat \~english Result matrix \~chinese 结果矩阵
+     */
     cumat diagmul(const cumat& diag) const;
 
 public:
@@ -171,6 +268,10 @@ protected:
     size_t mCols = 0;
 };
 
+/**
+ * @brief \~english Strided matrix. \~chinese 条带矩阵。
+ * 
+ */
 class custride: public cubase
 {
 public:
@@ -178,8 +279,21 @@ public:
     constexpr static cubase::Type type = cubase::Type::Stride;
 
 public:
+
+    /**
+     * @brief \~english Construct a new custride object. \~chinese 构造一个新的 custride 对象。
+     * 
+     */
     custride() {}
 
+    /**
+     * @brief \~english Construct a new custride object. \~chinese 构造一个新的 custride 对象。
+     * 
+     * @param rows \~english  \~chinese 
+     * @param cols \~english  \~chinese 
+     * @param strides \~english  \~chinese 
+     * @param init \~english  \~chinese 
+     */
     custride(size_t rows, size_t cols, size_t strides, cubase::Init init = cubase::Init::Zero) : 
         cubase(sizeof(double) * rows * cols * strides, init),
         mRows(rows),
@@ -187,6 +301,11 @@ public:
         mStrides(strides)
     {}
 
+    /**
+     * @brief \~english Construct a new custride object form armadillo cube. \~chinese 从 Armadillo 类库的 cube 对象构造一个新的 custride 对象。
+     * 
+     * @param src \~english  \~chinese 
+     */
     explicit custride(const arma::cube& src):
         cubase(sizeof(double) * src.n_elem),
         mRows(src.n_rows),
@@ -196,11 +315,21 @@ public:
         cudaMemcpy(dMem, src.mem, nbytes(), cudaMemcpyHostToDevice);
     }
 
+    /**
+     * @brief \~english Copy construct a new custride object. \~chinese 复制构造一个新的 custride 对象。
+     * 
+     * @param mat \~english  \~chinese 
+     */
     custride(const custride& mat) : custride(mat.mRows, mat.mCols, mat.mStrides)
     {
         cudaMemcpy(dMem, mat.dMem, nbytes(), cudaMemcpyDeviceToDevice);
     }
 
+    /**
+     * @brief \~english Move construct a new custride object. \~chinese 移动构造一个新的 custride 对象。
+     * 
+     * @param mat \~english  \~chinese 
+     */
     custride(custride&& mat) : mRows(mat.mRows), mCols(mat.mCols), mStrides(mat.mStrides)
     {
         mIsRelease = true;
@@ -208,13 +337,21 @@ public:
         mat.mIsRelease = false;
     }
 
+    /**
+     * @brief \~english Construct a new custride object from a cumat object. Each column will be a stride.
+     * \~chinese 从 cumat 对象构造一个新的 custride 对象。每列是一个条带。
+     * 
+     * @param mat \~english  \~chinese 
+     */
     explicit custride(const cumat& mat) : custride(mat.nrows(), 1, mat.ncols(), cubase::Init::None)
     {
         dMem = mat.dmem();
     }
 
-    size_t nbytes() const override { return sizeof(double) * mRows * mCols * mStrides; }
-
+    /**
+     * @brief \~english Destroy the custride object. \~chinese 销毁 custride 对象。
+     * 
+     */
     virtual ~custride()
     {
         mRows = 0;
@@ -222,17 +359,45 @@ public:
         mStrides = 0;
     }
 
+    size_t nbytes() const override { return sizeof(double) * mRows * mCols * mStrides; }
+
     size_t nrows() const { return mRows; }
     size_t ncols() const { return mCols; }
     size_t nstrides() const { return mStrides; }
     size_t nstrideSize() const { return mRows * mCols; }
     size_t nstrideBytes() const { return mRows * mCols * sizeof(double); }
 
+    /**
+     * @brief \~english Get a stride at start \~chinese 获取 start 指定的条带
+     * 
+     * @param start \~english  \~chinese 
+     * @return cuview<custride> \~english  \~chinese 
+     */
     cuview<custride> strides(size_t start) const;
+
+    /**
+     * @brief \~english Get a range of strides \~chinese 获取条带范围
+     * 
+     * @param start \~english  \~chinese 
+     * @param end \~english  \~chinese 
+     * @return cuview<custride> \~english  \~chinese 
+     */
     cuview<custride> strides(size_t start, size_t end) const;
 
+    /**
+     * @brief \~english Transpose matrix \~chinese 转置矩阵
+     * 
+     * @return const cuop_trans<custride> \~english  \~chinese 
+     */
     const cuop_trans<custride> t() const;
 
+    /**
+     * @brief \~english Inverse matrix. Will calculate instantly.
+     * \~chinese 求逆矩阵。该函数立即执行。
+     * 
+     * @param d_info \~english  \~chinese 
+     * @return custride \~english  \~chinese 
+     */
     custride inv(int* d_info) const;
 
     template<class R>
@@ -435,6 +600,14 @@ protected:
     const curange mStrides;
 };
 
+/**
+ * @brief \~english Operator of matrix multiply \~chinese 矩阵乘法运算符
+ * 
+ * @tparam A \~english Type of left operands \~chinese 左操作数的类型
+ * @tparam B \~english Type of right operands \~chinese 右操作数的类型
+ * @tparam TA \~english Traits of left operands \~chinese 左操作数的本质
+ * @tparam TB \~english Traits of right operands \~chinese 右操作数的本质
+ */
 template<class A, class B, cubase::Type TA, cubase::Type TB>
 class cuop_matmul
 {
@@ -501,6 +674,12 @@ private:
     const B& b;
 };
 
+/**
+ * @brief \~english Operator of matrix multiply specificated for matrix-matrix multiply \~chinese 矩阵乘法运算符，为矩阵与矩阵乘法特化
+ * 
+ * @tparam A \~english Type of left operands \~chinese 左操作数的类型
+ * @tparam B \~english Type of right operands \~chinese 右操作数的类型
+ */
 template<class A, class B>
 class cuop_matmul<A, B, cubase::Type::Mat, cubase::Type::Mat>
 {
