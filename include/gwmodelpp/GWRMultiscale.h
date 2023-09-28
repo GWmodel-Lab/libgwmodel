@@ -687,51 +687,6 @@ protected:
      */
     arma::vec fitVarSerial(const arma::vec& x, const arma::vec& y, const arma::uword var, arma::mat& S);
 
-#ifdef ENABLE_OPENMP
-    /**
-     * \~english
-     * @brief The openmp parallel implementation of fit function for all variables.
-     * 
-     * @param x Independent variables \f$X\f$.
-     * @param y Dependent variable \f$y\f$.
-     * @return arma::mat Coefficient estimates \f$\beta\f$.
-     * 
-     * \~chinese
-     * @brief 拟合所有变量的多线程实现。
-     * 
-     * @param x 自变量矩阵 \f$X\f$。
-     * @param y 因变量 \f$y\f$。
-     * @return arma::mat 回归系数估计值 \f$\beta\f$。
-     */
-    arma::mat fitAllOmp(const arma::mat& x, const arma::vec& y);
-    
-    /**
-     * \~english
-     * @brief The openmp parallel implementation of fit function for one variable.
-     * 
-     * @param x Independent variables \f$X\f$.
-     * @param y Dependent variable \f$y\f$.
-     * @param var The index of this variable.
-     * @param S The hat matrix \f$S\f$.
-     * @return arma::vec The coefficient estimates corresponding to this variable.
-     * 
-     * \~chinese
-     * @brief 拟合单个变量的多线程实现。
-     * 
-     * @param x 自变量矩阵 \f$X\f$。
-     * @param y 因变量 \f$y\f$。
-     * @param var 当前变量的索引值。
-     * @param S 帽子矩阵 \f$S\f$
-     * @return arma::vec 该变量对应的回归系数估计值。
-     */
-    arma::vec fitVarOmp(const arma::vec& x, const arma::vec& y, const arma::uword var, arma::mat& S);
-#endif
-
-#ifdef ENABLE_CUDA
-    arma::mat fitAllCuda(const arma::mat& x, const arma::vec& y);
-    arma::vec fitVarCuda(const arma::vec& x, const arma::vec& y, const arma::uword var, arma::mat& S);
-#endif // ENABLE_CUDA
-
     /**
      * \~english
      * @brief The serial implementation of CV criterion calculator for given bandwidth size and all variables.
@@ -795,6 +750,44 @@ protected:
 #ifdef ENABLE_OPENMP
     /**
      * \~english
+     * @brief The openmp parallel implementation of fit function for all variables.
+     * 
+     * @param x Independent variables \f$X\f$.
+     * @param y Dependent variable \f$y\f$.
+     * @return arma::mat Coefficient estimates \f$\beta\f$.
+     * 
+     * \~chinese
+     * @brief 拟合所有变量的多线程实现。
+     * 
+     * @param x 自变量矩阵 \f$X\f$。
+     * @param y 因变量 \f$y\f$。
+     * @return arma::mat 回归系数估计值 \f$\beta\f$。
+     */
+    arma::mat fitAllOmp(const arma::mat& x, const arma::vec& y);
+    
+    /**
+     * \~english
+     * @brief The openmp parallel implementation of fit function for one variable.
+     * 
+     * @param x Independent variables \f$X\f$.
+     * @param y Dependent variable \f$y\f$.
+     * @param var The index of this variable.
+     * @param S The hat matrix \f$S\f$.
+     * @return arma::vec The coefficient estimates corresponding to this variable.
+     * 
+     * \~chinese
+     * @brief 拟合单个变量的多线程实现。
+     * 
+     * @param x 自变量矩阵 \f$X\f$。
+     * @param y 因变量 \f$y\f$。
+     * @param var 当前变量的索引值。
+     * @param S 帽子矩阵 \f$S\f$
+     * @return arma::vec 该变量对应的回归系数估计值。
+     */
+    arma::vec fitVarOmp(const arma::vec& x, const arma::vec& y, const arma::uword var, arma::mat& S);
+    
+    /**
+     * \~english
      * @brief The openmp parallel implementation of CV criterion calculator for given bandwidth size and all variables.
      * 
      * @param bandwidthWeight Badwidth weight.
@@ -853,6 +846,16 @@ protected:
      */
     double bandwidthSizeCriterionVarAICOmp(BandwidthWeight* bandwidthWeight);
 #endif
+
+#ifdef ENABLE_CUDA
+    arma::mat fitAllCuda(const arma::mat& x, const arma::vec& y);
+    arma::vec fitVarCuda(const arma::vec& x, const arma::vec& y, const arma::uword var, arma::mat& S);
+    double bandwidthSizeCriterionAllCVCuda(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionAllAICCuda(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionVarCVCuda(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionVarAICCuda(BandwidthWeight* bandwidthWeight);
+
+#endif // ENABLE_CUDA
 
     /**
      * \~english
