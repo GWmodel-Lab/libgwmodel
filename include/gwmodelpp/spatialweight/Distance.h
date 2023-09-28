@@ -106,16 +106,25 @@ public:
     virtual arma::vec distance(arma::uword focus) = 0;
 
 #ifdef ENABLE_CUDA
-    virtual cudaError_t distance(arma::uword focus, double* d_dists, size_t* elems)
-    {
-        throw std::logic_error("Function not yet implemented");
-    }
 
     virtual bool useCuda() override { return mUseCuda; }
 
     virtual void setUseCuda(bool isUseCuda) override { mUseCuda = isUseCuda; }
 
     virtual cudaError_t prepareCuda(size_t gpuId) override;
+    
+    /**
+     * @brief \~english Calculate distance vector for a focus point. \~chinese 为一个目标点计算距离向量。
+     * 
+     * @param focus \~english Focused point's index. Require focus < total \~chinese 目标点索引，要求 focus 小于参数中的 total
+     * @param d_dists \~english Output device pointer to distances \~chinese 指向输出距离的设备指针
+     * @param elems \~english Number of elements in distances \~chinese 距离向量的元素数量
+     * @return cudaError_t \~english CUDA error or success \~chinese CUDA 错误或成功
+     */
+    virtual cudaError_t distance(arma::uword focus, double* d_dists, size_t* elems)
+    {
+        throw std::logic_error("Function not yet implemented");
+    }
 
 #endif // ENABLE_CUDA
 
@@ -135,10 +144,10 @@ public:
 
 #ifdef ENABLE_CUDA
 protected:
-    bool mUseCuda = false;
-    int mGpuID = 0;
-    bool mCudaPrepared = false;
-    size_t mCudaThreads = 0;
+    bool mUseCuda = false;  //<! \~english Whether to use CUDA \~chinese 是否使用 CUDA
+    int mGpuID = 0;  //<! \~english The ID of selected GPU \~chinese 选择的 GPU 的索引
+    bool mCudaPrepared = false;  //<! \~english Whether CUDA has been prepared \~chinese CUDA 环境是否已经准备
+    size_t mCudaThreads = 0;  //<! \~english Number of GPU threads \~chinese GPU 线程数
 
 #endif // ENABLE_CUDA
 

@@ -848,11 +848,103 @@ protected:
 #endif
 
 #ifdef ENABLE_CUDA
+    
+    /**
+     * \~english
+     * @brief The CUDA implementation of fit function for all variables.
+     * 
+     * @param x Independent variables \f$X\f$.
+     * @param y Dependent variable \f$y\f$.
+     * @return arma::mat Coefficient estimates \f$\beta\f$.
+     * 
+     * \~chinese
+     * @brief 拟合所有变量的CUDA实现。
+     * 
+     * @param x 自变量矩阵 \f$X\f$。
+     * @param y 因变量 \f$y\f$。
+     * @return arma::mat 回归系数估计值 \f$\beta\f$。
+     */
     arma::mat fitAllCuda(const arma::mat& x, const arma::vec& y);
+    
+    /**
+     * \~english
+     * @brief The CUDA implementation of fit function for one variable.
+     * 
+     * @param x Independent variables \f$X\f$.
+     * @param y Dependent variable \f$y\f$.
+     * @param var The index of this variable.
+     * @param S The hat matrix \f$S\f$.
+     * @return arma::vec The coefficient estimates corresponding to this variable.
+     * 
+     * \~chinese
+     * @brief 拟合单个变量的CUDA实现。
+     * 
+     * @param x 自变量矩阵 \f$X\f$。
+     * @param y 因变量 \f$y\f$。
+     * @param var 当前变量的索引值。
+     * @param S 帽子矩阵 \f$S\f$
+     * @return arma::vec 该变量对应的回归系数估计值。
+     */
     arma::vec fitVarCuda(const arma::vec& x, const arma::vec& y, const arma::uword var, arma::mat& S);
+    
+    /**
+     * \~english
+     * @brief The CUDA implementation of CV criterion calculator for given bandwidth size and all variables.
+     * 
+     * @param bandwidthWeight Badwidth weight.
+     * @return double CV criterion value.
+     * 
+     * \~chinese
+     * @brief 为指定带宽值和所有变量计算CV指标值函数的CUDA实现。
+     * 
+     * @param bandwidthWeight 带宽值。
+     * @return double CV指标值。
+     */
     double bandwidthSizeCriterionAllCVCuda(BandwidthWeight* bandwidthWeight);
+    
+    /**
+     * \~english
+     * @brief The CUDA implementation of AIC criterion calculator for given bandwidth size and all variables.
+     * 
+     * @param bandwidthWeight Badwidth weight.
+     * @return double AIC criterion value.
+     * 
+     * \~chinese
+     * @brief 为指定带宽值和所有变量计算AIC指标值函数的CUDA实现。
+     * 
+     * @param bandwidthWeight 带宽值。
+     * @return double AIC指标值。
+     */
     double bandwidthSizeCriterionAllAICCuda(BandwidthWeight* bandwidthWeight);
+    
+    /**
+     * \~english
+     * @brief The CUDA implementation of CV criterion calculator for given bandwidth size and one variable.
+     * 
+     * @param bandwidthWeight Badwidth weight.
+     * @return double CV criterion value.
+     * 
+     * \~chinese
+     * @brief 为指定带宽值和某个变量计算CV指标值函数的CUDA实现。
+     * 
+     * @param bandwidthWeight 带宽值。
+     * @return double CV指标值。
+     */
     double bandwidthSizeCriterionVarCVCuda(BandwidthWeight* bandwidthWeight);
+    
+    /**
+     * \~english
+     * @brief The CUDA implementation of AIC criterion calculator for given bandwidth size and one variable.
+     * 
+     * @param bandwidthWeight Badwidth weight.
+     * @return double AIC criterion value.
+     * 
+     * \~chinese
+     * @brief 为指定带宽值和某个变量计算AIC指标值函数的CUDA实现。
+     * 
+     * @param bandwidthWeight 带宽值。
+     * @return double AIC指标值。
+     */
     double bandwidthSizeCriterionVarAICCuda(BandwidthWeight* bandwidthWeight);
 
 #endif // ENABLE_CUDA
@@ -909,8 +1001,8 @@ private:
 
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Parallel type of this algorithm. \~chinese 当前算法的并行类型。
     int mOmpThreadNum = 8;  //!< \~english Number of threads. \~chinese 并行线程数。
-    size_t mGroupLength = 64;
-    int mGpuId = 0;
+    size_t mGroupLength = 64;   //!< \~english Size of a group computing together. \~chinese 同时计算的一组的大小。
+    int mGpuId = 0; //!< \~english The ID of selected GPU. \~chinese 选择的 GPU 的 ID。
 
 public:
     static int treeChildCount;  //!< \~english  \~chinese

@@ -222,9 +222,9 @@ private:
     CalculatorType mCalculator = &EuclideanDistance;  //!< \~english Calculator \~chinese 距离计算方法
 
 #ifdef ENABLE_CUDA
-    double* mCudaDp = 0;
-    double* mCudaFp = 0;
-    CalculatorCudaType mCalculatorCuda = &eu_dist_cuda;
+    double* mCudaDp = 0;    //!< \~english Device pointer to data points \~chinese 指向数据点的设备指针
+    double* mCudaFp = 0;    //!< \~english Device pointer to focus points \~chinese 指向关注点的设备指针
+    CalculatorCudaType mCalculatorCuda = &eu_dist_cuda;  //!< \~english CUDA based Calculator \~chinese 基于 CUDA 的距离计算方法
 #endif
 
 };
