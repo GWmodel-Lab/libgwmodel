@@ -59,9 +59,19 @@ public:
 		mX(nDp, nVar),
 		mY(nDp),
 		mCoords(nDp, 2),
-		mBetas(nPredictPoints, nVar),
 		mPredictLocations(nPredictPoints, 2)
 	{
+		switch (distanceType)
+		{
+		case gwm::Distance::DistanceType::CRSDistance:
+			mDistance = new gwm::CRSDistance();
+			break;
+		case gwm::Distance::DistanceType::MinkwoskiDistance:
+			mDistance = new gwm::MinkwoskiDistance();
+		default:
+			break;
+		}
+		mWeight = new gwm::BandwidthWeight();
 	}
 
 	GWRBasicGpuTask(const GWRBasicGpuTask& source) :
