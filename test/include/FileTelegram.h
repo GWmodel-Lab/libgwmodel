@@ -30,7 +30,7 @@ public:
         });
     }
 #else
-    explicit FileTelegram() : 
+    explicit FileTelegram(const std::string& filename) : 
         mFileName(filename),
         mFileStream(filename.c_str())
     {}
