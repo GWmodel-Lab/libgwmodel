@@ -192,9 +192,9 @@ public:
 		mOptimizeVariablesThreshold = threshold;
 	}
 
-	double betas(int i, int k) override { return betas(i, k); }
+	double betas(int i, int k) override { return mBetas(i, k); }
 
-	double betasSE(int i, int k) override { return betasSE(i, k); }
+	double betasSE(int i, int k) override { return mBetasSE(i, k); }
 
 	double shat1() override { return mSHat(0); }
 
