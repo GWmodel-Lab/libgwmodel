@@ -26,6 +26,7 @@ private:
 	gwm::GWRBasic::BandwidthSelectionCriterionType mBandwidthOptimizationCriterion = gwm::GWRBasic::BandwidthSelectionCriterionType::CV;
 
 	bool mIsOptimizeVariables = false;
+	double mOptimizeVariablesThreshold = 3.0;
 
 public:
 	GWRBasicGpuTask(int nDp, int nVar, gwm::Distance::DistanceType distanceType) :
@@ -70,7 +71,8 @@ public:
 		mQDiag(source.mQDiag),
 		mIsOptimizeBandwidth(source.mIsOptimizeBandwidth),
 		mBandwidthOptimizationCriterion(source.mBandwidthOptimizationCriterion),
-		mIsOptimizeVariables(source.mIsOptimizeVariables)
+		mIsOptimizeVariables(source.mIsOptimizeVariables),
+		mOptimizeVariablesThreshold(source.mOptimizeVariablesThreshold)
 	{
 		mDistance = source.mDistance->clone();
 		mWeight = source.mWeight->clone();
@@ -97,6 +99,7 @@ public:
 		mIsOptimizeBandwidth = source.mIsOptimizeBandwidth;
 		mBandwidthOptimizationCriterion = source.mBandwidthOptimizationCriterion;
 		mIsOptimizeVariables = source.mIsOptimizeVariables;
+		mOptimizeVariablesThreshold = source.mOptimizeVariablesThreshold;
 		return *this;
 	}
 
@@ -171,9 +174,10 @@ public:
 		mBandwidthOptimizationCriterion = static_cast<gwm::GWRBasic::BandwidthSelectionCriterionType>(criterion);
 	}
 
-	void enableVariablesOptimization() override
+	void enableVariablesOptimization(double threshold) override
 	{
 		mIsOptimizeVariables = true;
+		mOptimizeVariablesThreshold = threshold;
 	}
 
 	double betas(int i, int k) override

@@ -29,7 +29,7 @@ public:
 	virtual void setBandwidthKernel(int kernel) = 0;
 
 	virtual void enableBandwidthOptimization(int criterion) = 0;
-	virtual void enableVariablesOptimization() = 0;
+	virtual void enableVariablesOptimization(double threshold) = 0;
 
 	virtual double betas(int i, int k) = 0;
 	virtual double betasSE(int i, int k) = 0;

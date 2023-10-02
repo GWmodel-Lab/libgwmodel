@@ -13,6 +13,7 @@ bool GWRBasicGpuTask::fit(bool hasIntercept)
     algorithm.setIsAutoselectBandwidth(mIsOptimizeBandwidth);
     algorithm.setBandwidthSelectionCriterion(mBandwidthOptimizationCriterion);
     algorithm.setIsAutoselectIndepVars(mIsOptimizeVariables);
+    algorithm.setIndepVarSelectionThreshold(mOptimizeVariablesThreshold);
     algorithm.setParallelType(ParallelType::CUDA);
 
     try
@@ -35,11 +36,7 @@ bool GWRBasicGpuTask::predict(bool hasIntercept)
 {
     SpatialWeight sw(mWeight, mDistance);
     GWRBasic algorithm(mX, mY, mCoords, sw, true, hasIntercept);
-    algorithm.setIsAutoselectBandwidth(mIsOptimizeBandwidth);
-    algorithm.setBandwidthSelectionCriterion(mBandwidthOptimizationCriterion);
-    algorithm.setIsAutoselectIndepVars(mIsOptimizeVariables);
     algorithm.setParallelType(ParallelType::CUDA);
-
     try
     {
         algorithm.predict(mPredictLocations);
