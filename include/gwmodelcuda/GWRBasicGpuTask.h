@@ -1,6 +1,7 @@
 #ifndef GWRBASICGPUTASK
 #define GWRBASICGPUTASK
 
+#include <vector>
 #include <memory>
 #include <armadillo>
 
@@ -30,6 +31,10 @@ private:
 	double mOptimizeVariablesThreshold = 3.0;
 
 	gwm::RegressionDiagnostic mDiagnostic = {};
+
+	double mOptimizedBandwidth = 0.0;
+	std::vector<arma::uword> mSelectedVars;
+	gwm::VariablesCriterionList mVariableOptimizationCriterionList;
 
 public:
 	GWRBasicGpuTask(int nDp, int nVar, gwm::Distance::DistanceType distanceType) :
@@ -72,7 +77,10 @@ public:
 		mIsOptimizeBandwidth(source.mIsOptimizeBandwidth),
 		mBandwidthOptimizationCriterion(source.mBandwidthOptimizationCriterion),
 		mIsOptimizeVariables(source.mIsOptimizeVariables),
-		mOptimizeVariablesThreshold(source.mOptimizeVariablesThreshold)
+		mOptimizeVariablesThreshold(source.mOptimizeVariablesThreshold),
+		mOptimizedBandwidth(source.mOptimizedBandwidth),
+		mSelectedVars(source.mSelectedVars),
+		mVariableOptimizationCriterionList(source.mVariableOptimizationCriterionList)
 	{
 		mDistance = source.mDistance->clone();
 		mWeight = source.mWeight->clone();
@@ -101,6 +109,9 @@ public:
 		mBandwidthOptimizationCriterion = source.mBandwidthOptimizationCriterion;
 		mIsOptimizeVariables = source.mIsOptimizeVariables;
 		mOptimizeVariablesThreshold = source.mOptimizeVariablesThreshold;
+		mOptimizedBandwidth = source.mOptimizedBandwidth;
+		mSelectedVars = source.mSelectedVars;
+		mVariableOptimizationCriterionList = source.mVariableOptimizationCriterionList;
 		return *this;
 	}
 
@@ -209,6 +220,11 @@ public:
 
 	double diagnosticRSquareAdjust() override { return mDiagnostic.RSquareAdjust; }
 
+	double optimizedBandwidth() override { return mOptimizedBandwidth; }
+
+	unsigned long long nSelectedVars() override { return mSelectedVars.size(); }
+
+	unsigned long long selectedVar(unsigned long long i) override { return mSelectedVars[i]; }
 
 	bool fit(bool hasIntercept = true) override;
 

@@ -47,6 +47,9 @@ public:
 	virtual double diagnosticRSquare() = 0;
 	virtual double diagnosticRSquareAdjust() = 0;
 
+	virtual double optimizedBandwidth()  = 0;
+	virtual unsigned long long nSelectedVars()  = 0;
+	virtual unsigned long long selectedVar(unsigned long long i)  = 0;
 
 	virtual bool fit(bool hasIntercept) = 0;
 

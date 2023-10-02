@@ -25,6 +25,17 @@ bool GWRBasicGpuTask::fit(bool hasIntercept)
         mQDiag = algorithm.qDiag();
         mS = algorithm.s();
         mDiagnostic = algorithm.diagnostic();
+        
+        if (mIsOptimizeBandwidth)
+        {
+            mOptimizedBandwidth = algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
+        }
+
+        if (mIsOptimizeVariables)
+        {
+            mSelectedVars = algorithm.selectedVariables();
+            mVariableOptimizationCriterionList = algorithm.indepVarsSelectionCriterionList();
+        }
     }
     catch(const std::exception& e)
     {
