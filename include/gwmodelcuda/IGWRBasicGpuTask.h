@@ -39,6 +39,14 @@ public:
 	virtual unsigned long long sRows() = 0;
 	virtual double s(int i, int k) = 0;
 
+	virtual double diagnosticRSS() = 0;
+	virtual double diagnosticAIC() = 0;
+	virtual double diagnosticAICc() = 0;
+	virtual double diagnosticENP() = 0;
+	virtual double diagnosticEDF() = 0;
+	virtual double diagnosticRSquare() = 0;
+	virtual double diagnosticRSquareAdjust() = 0;
+
 
 	virtual bool fit(bool hasIntercept) = 0;
 

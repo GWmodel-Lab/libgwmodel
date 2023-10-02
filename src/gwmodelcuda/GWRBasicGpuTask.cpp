@@ -24,6 +24,7 @@ bool GWRBasicGpuTask::fit(bool hasIntercept)
         mSHat = algorithm.sHat();
         mQDiag = algorithm.qDiag();
         mS = algorithm.s();
+        mDiagnostic = algorithm.diagnostic();
     }
     catch(const std::exception& e)
     {

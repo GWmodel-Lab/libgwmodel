@@ -29,6 +29,8 @@ private:
 	bool mIsOptimizeVariables = false;
 	double mOptimizeVariablesThreshold = 3.0;
 
+	gwm::RegressionDiagnostic mDiagnostic = {};
+
 public:
 	GWRBasicGpuTask(int nDp, int nVar, gwm::Distance::DistanceType distanceType) :
 		mX(nDp, nVar),
@@ -179,40 +181,34 @@ public:
 		mOptimizeVariablesThreshold = threshold;
 	}
 
-	double betas(int i, int k) override
-	{
-		return betas(i, k);
-	}
+	double betas(int i, int k) override { return betas(i, k); }
 
-	double betasSE(int i, int k) override
-	{
-		return betasSE(i, k);
-	}
+	double betasSE(int i, int k) override { return betasSE(i, k); }
 
-	double shat1() override
-	{
-		return mSHat(0);
-	}
+	double shat1() override { return mSHat(0); }
 
-	double shat2() override
-	{
-		return mSHat(1);
-	}
+	double shat2() override { return mSHat(1); }
 
-	double qDiag(int i) override
-	{
-		return mQDiag(i);
-	}
+	double qDiag(int i) override { return mQDiag(i); }
 
-	unsigned long long sRows() override
-	{
-		return mS.n_rows;
-	}
+	unsigned long long sRows() override { return mS.n_rows; }
 
-	double s(int i, int k) override
-	{
-		return mS(i, k);
-	}
+	double s(int i, int k) override { return mS(i, k); }
+
+	double diagnosticRSS() override { return mDiagnostic.RSS; }
+
+	double diagnosticAIC() override { return mDiagnostic.AIC; }
+
+	double diagnosticAICc() override { return mDiagnostic.AICc; }
+
+	double diagnosticENP() override { return mDiagnostic.ENP; }
+
+	double diagnosticEDF() override { return mDiagnostic.EDF; }
+
+	double diagnosticRSquare() override { return mDiagnostic.RSquare; }
+
+	double diagnosticRSquareAdjust() override { return mDiagnostic.RSquareAdjust; }
+
 
 	bool fit(bool hasIntercept = true) override;
 
