@@ -27,12 +27,6 @@ TEST_CASE("BasicGWR: LondonHP")
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
-    GWRBasic algorithm;
-    algorithm.setCoords(londonhp100_coord);
-    algorithm.setDependentVariable(y);
-    algorithm.setIndependentVariables(x);
-    CRSDistance distance(false);
-
     const initializer_list<ParallelType> parallel_list = {
         ParallelType::SerialOnly
 #ifdef ENABLE_OPENMP
@@ -47,8 +41,14 @@ TEST_CASE("BasicGWR: LondonHP")
         auto parallel = GENERATE_REF(values(parallel_list));
         INFO("Parallel:" << ParallelTypeDict.at(parallel));
 
+        CRSDistance distance(false);
         BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
+
+        GWRBasic algorithm;
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
         algorithm.setSpatialWeight(spatial);
         algorithm.setParallelType(parallel);
 #ifdef ENABLE_CUDA
@@ -71,8 +71,14 @@ TEST_CASE("BasicGWR: LondonHP")
         auto parallel = GENERATE_REF(values(parallel_list));
         INFO("Parallel:" << ParallelTypeDict.at(parallel));
         
+        CRSDistance distance(false);
         BandwidthWeight bandwidth(5000, false, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
+
+        GWRBasic algorithm;
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
         algorithm.setSpatialWeight(spatial);
         algorithm.setParallelType(parallel);
 #ifdef ENABLE_OPENMP
@@ -100,8 +106,14 @@ TEST_CASE("BasicGWR: LondonHP")
         auto parallel = GENERATE_REF(values(parallel_list));
         INFO("Parallel:" << ParallelTypeDict.at(parallel));
         
+        CRSDistance distance(false);
         BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
+
+        GWRBasic algorithm;
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
         algorithm.setSpatialWeight(spatial);
         algorithm.setIsAutoselectBandwidth(true);
         algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::CV);
@@ -128,8 +140,14 @@ TEST_CASE("BasicGWR: LondonHP")
         auto parallel = GENERATE_REF(values(parallel_list));
         INFO("Parallel:" << ParallelTypeDict.at(parallel));
         
+        CRSDistance distance(false);
         BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
+
+        GWRBasic algorithm;
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
         algorithm.setSpatialWeight(spatial);
         algorithm.setIsAutoselectIndepVars(true);
         algorithm.setIndepVarSelectionThreshold(3.0);
@@ -169,8 +187,14 @@ TEST_CASE("BasicGWR: LondonHP")
         auto parallel = GENERATE_REF(values(parallel_list));
         INFO("Parallel:" << ParallelTypeDict.at(parallel));
         
+        CRSDistance distance(false);
         BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
+        
+        GWRBasic algorithm;
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
         algorithm.setSpatialWeight(spatial);
         algorithm.setIsAutoselectBandwidth(true);
         algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::CV);
