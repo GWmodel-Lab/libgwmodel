@@ -222,9 +222,17 @@ public:
 
 	double optimizedBandwidth() override { return mOptimizedBandwidth; }
 
-	unsigned long long nSelectedVars() override { return mSelectedVars.size(); }
+	unsigned long long selectedVarSize() override { return mSelectedVars.size(); }
 
 	unsigned long long selectedVar(unsigned long long i) override { return mSelectedVars[i]; }
+
+	unsigned long long variableSelectionCriterionSize() override { return mVariableOptimizationCriterionList.size(); }
+
+	unsigned long long variableSelectionCriterionItemVarSize(unsigned long long i) override { return mVariableOptimizationCriterionList[i].first.size(); }
+	
+	unsigned long long variableSelectionCriterionItemVar(unsigned long long i, unsigned long long j) override { return mVariableOptimizationCriterionList[i].first[j]; }
+
+	double variableSelectionCriterionItemValue(unsigned long long i) override { return mVariableOptimizationCriterionList[i].second; }
 
 	bool fit(bool hasIntercept = true) override;
 

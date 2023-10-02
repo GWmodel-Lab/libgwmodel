@@ -48,8 +48,12 @@ public:
 	virtual double diagnosticRSquareAdjust() = 0;
 
 	virtual double optimizedBandwidth()  = 0;
-	virtual unsigned long long nSelectedVars()  = 0;
+	virtual unsigned long long selectedVarSize()  = 0;
 	virtual unsigned long long selectedVar(unsigned long long i)  = 0;
+    virtual unsigned long long variableSelectionCriterionSize() = 0;
+    virtual unsigned long long variableSelectionCriterionItemVarSize(unsigned long long i) = 0;
+    virtual unsigned long long variableSelectionCriterionItemVar(unsigned long long i, unsigned long long j) = 0;
+    virtual double variableSelectionCriterionItemValue(unsigned long long i) = 0;
 
 	virtual bool fit(bool hasIntercept) = 0;
 
