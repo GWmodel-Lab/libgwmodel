@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.17)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${libgwmodel_BINARY_DIR}/bin)
+
 if(ENABLE_OpenMP)
 find_package(OpenMP)
 if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
@@ -25,6 +27,7 @@ include_directories(
     ${LIBGWMODEL_INCLUDE_DIR} 
     ${LIBGWMODEL_INCLUDE_DIR}/gwmodelpp
     ${LIBGWMODEL_INCLUDE_DIR}/gwmodelpp/utils
+    ${LIBGWMODEL_INCLUDE_DIR}/gwmodelcuda
 )
 
 add_definitions(-DM_PI=3.14159265358979323846 -DM_PI_2=1.57079632679489661923 -DDOUBLE_EPS=1e-8)
@@ -134,10 +137,9 @@ if(ENABLE_CUDA)
     list(PREPEND SOURCES_ALL ${SOURCES_CUDA})
 endif(ENABLE_CUDA)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${gwmodel_BINARY_DIR}/bin)
-
 add_library(gwmodel STATIC ${HEADERS_ALL} ${SOURCES_ALL})
 set_property(TARGET gwmodel PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 
 message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 
@@ -191,6 +193,23 @@ if(OpenMP_FOUND)
         ${OpenMP_CXX_LIBRARIES}
     )
 endif(OpenMP_FOUND)
+
+if(USE_CUDA_SHARED)
+    set(HEADERS_CUDA_SHARED
+        ../include/gwmodelcuda/GWRBasicGpuTask.h
+        ../include/gwmodelcuda/IGWRBasicGpuTask.h
+    )
+    set(SOURCES_CUDA_SHARED
+        gwmodelcuda/IGWRBasicGpuTask.cpp
+        gwmodelcuda/GWRBasicGpuTask.cpp
+    )
+    add_definitions(-DCREATDLL_EXPORTS)
+    add_library(gwmodelcuda SHARED ${HEADERS_CUDA_SHARED} ${SOURCES_CUDA_SHARED})
+    target_link_libraries(gwmodelcuda
+        PRIVATE gwmodel ${ARMADILLO_LIBRARIES}
+    )
+    set_property(TARGET gwmodelcuda PROPERTY POSITION_INDEPENDENT_CODE ON)
+endif(USE_CUDA_SHARED)
 
 install(TARGETS gwmodel
     LIBRARY DESTINATION lib

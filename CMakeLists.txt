@@ -4,13 +4,14 @@ project(libgwmodel)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH cmake)
 
-SET (ENABLE_OpenMP TRUE CACHE BOOL "Determines whether OpemMP support should be built")
-SET (ENABLE_CUDA FALSE CACHE BOOL "Determines whether CUDA support should be built")
-SET (WITH_TESTS TRUE CACHE BOOL "Determines whether to build and run tests")
+option(ENABLE_OpenMP "Determines whether OpemMP support should be built" ON)
+option(ENABLE_CUDA "Determines whether CUDA support should be built" OFF)
+option(WITH_TESTS "Determines whether to build and run tests" ON)
 
 if(ENABLE_CUDA)
     enable_language(CUDA)
     add_definitions(-DENABLE_CUDA)
+    option(USE_CUDA_SHARED "Determines whether to build shared libraries to call CUDA" OFF)
 
     find_package(CUDAToolkit REQUIRED)
     if(NOT CUDAToolkit_FOUND)

@@ -53,13 +53,15 @@ public:
 
 public:
 
+    MinkwoskiDistance() : mPoly(2.0), mTheta(0.0) {}
+
     /**
      * @brief \~english Construct a new MinkwoskiDistance object \~chinese 构造一个新的 MinkwoskiDistance 对象
      * 
      * @param p \~english Polynomial number \~chinese 次数
      * @param theta \~english Angle \~chinese 旋转角度
      */
-    explicit MinkwoskiDistance(double p, double theta);
+    MinkwoskiDistance(double p, double theta);
 
     /**
      * @brief \~english Copy construct a new MinkwoskiDistance object \~chinese 构造一个新的 MinkwoskiDistance 对象
@@ -107,8 +109,8 @@ public:
     virtual arma::vec distance(arma::uword focus) override;
 
 private:
-    double mPoly;
-    double mTheta;
+    double mPoly = 2.0;
+    double mTheta = 0.0;
 };
 
 inline arma::vec MinkwoskiDistance::ChessDistance(const arma::rowvec& out_loc, const arma::mat& in_locs)
