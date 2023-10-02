@@ -204,7 +204,7 @@ public:
 		return mQDiag(i);
 	}
 
-	std::size_t sRows() override
+	unsigned long long sRows() override
 	{
 		return mS.n_rows;
 	}
