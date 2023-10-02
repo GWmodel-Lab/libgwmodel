@@ -36,6 +36,8 @@ public:
 	virtual double shat1() = 0;
 	virtual double shat2() = 0;
 	virtual double qDiag(int i) = 0;
+	virtual std::size_t sRows() = 0;
+	virtual double s(int i, int k) = 0;
 
 
 	virtual bool fit(bool hasIntercept) = 0;

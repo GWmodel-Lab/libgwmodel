@@ -23,6 +23,7 @@ bool GWRBasicGpuTask::fit(bool hasIntercept)
         mBetasSE = algorithm.betasSE();
         mSHat = algorithm.sHat();
         mQDiag = algorithm.qDiag();
+        mS = algorithm.s();
     }
     catch(const std::exception& e)
     {

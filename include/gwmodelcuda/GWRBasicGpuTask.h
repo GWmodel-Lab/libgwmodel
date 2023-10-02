@@ -18,6 +18,7 @@ private:
 	arma::mat mBetasSE;
 	arma::vec mSHat;
 	arma::vec mQDiag;
+	arma::mat mS;
 
 	gwm::Distance* mDistance = nullptr;
 	gwm::Weight* mWeight = nullptr;
@@ -32,11 +33,7 @@ public:
 	GWRBasicGpuTask(int nDp, int nVar, gwm::Distance::DistanceType distanceType) :
 		mX(nDp, nVar),
 		mY(nDp),
-		mCoords(nDp, 2),
-		mBetas(nDp, nVar),
-		mBetasSE(nDp, nVar),
-		mSHat(2),
-		mQDiag(nDp)
+		mCoords(nDp, 2)
 	{
 		switch (distanceType)
 		{
@@ -69,6 +66,7 @@ public:
 		mBetasSE(source.mBetasSE),
 		mSHat(source.mSHat),
 		mQDiag(source.mQDiag),
+		mS(source.mS),
 		mIsOptimizeBandwidth(source.mIsOptimizeBandwidth),
 		mBandwidthOptimizationCriterion(source.mBandwidthOptimizationCriterion),
 		mIsOptimizeVariables(source.mIsOptimizeVariables),
@@ -94,6 +92,7 @@ public:
 		mBetasSE = source.mBetasSE;
 		mSHat = source.mSHat;
 		mQDiag = source.mQDiag;
+		mS = source.mS;
 		mDistance = source.mDistance->clone();
 		mWeight = source.mWeight->clone();
 		mIsOptimizeBandwidth = source.mIsOptimizeBandwidth;
@@ -203,6 +202,16 @@ public:
 	double qDiag(int i) override
 	{
 		return mQDiag(i);
+	}
+
+	std::size_t sRows() override
+	{
+		return mS.n_rows;
+	}
+
+	double s(int i, int k) override
+	{
+		return mS(i, k);
 	}
 
 	bool fit(bool hasIntercept = true) override;
