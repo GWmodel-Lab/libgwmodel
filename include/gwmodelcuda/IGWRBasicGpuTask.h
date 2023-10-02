@@ -60,7 +60,8 @@ public:
 	virtual bool predict(bool hasIntercept) = 0;
 };
 
-extern "C" GWMODELCUDA_API IGWRBasicGpuTask* GpuTask_Create(int nDp, int nVar, int distanceType);
-extern "C" GWMODELCUDA_API void GpuTask_Del(IGWRBasicGpuTask * pInstance);
+extern "C" GWMODELCUDA_API IGWRBasicGpuTask* GWRBasicGpuTaskFit_Create(int nDp, int nVar, int distanceType);
+extern "C" GWMODELCUDA_API IGWRBasicGpuTask* GWRBasicGpuTaskPredict_Create(int nDp, int nVar, int distanceType, int nPredictPoints);
+extern "C" GWMODELCUDA_API void GWRBasicGpuTask_Del(IGWRBasicGpuTask * pInstance);
 
 #endif  // IGWMCUDA

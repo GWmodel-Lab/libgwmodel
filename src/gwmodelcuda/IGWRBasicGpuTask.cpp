@@ -2,12 +2,17 @@
 #include "GWRBasicGPUTask.h"
 
 
-IGWRBasicGpuTask * GpuTask_Create(int nDp, int nVar, int distanceType)
+IGWRBasicGpuTask * GWRBasicGpuTaskFit_Create(int nDp, int nVar, int distanceType)
 {
 	return new GWRBasicGpuTask(nDp, nVar, (gwm::Distance::DistanceType)distanceType);
 }
 
-void GpuTask_Del(IGWRBasicGpuTask * pInstance)
+IGWRBasicGpuTask * GWRBasicGpuTaskPredict_Create(int nDp, int nVar, int distanceType, int nPredictPoints)
+{
+	return new GWRBasicGpuTask(nDp, nVar, (gwm::Distance::DistanceType)distanceType, nPredictPoints);
+}
+
+void GWRBasicGpuTask_Del(IGWRBasicGpuTask * pInstance)
 {
 	delete pInstance;
 }
