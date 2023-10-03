@@ -986,6 +986,7 @@ mat GWRMultiscale::fitAllCuda(const mat& x, const vec& y)
         size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
         for (size_t i = 0; i < groups; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
             for (size_t j = 0, e = begin + j; j < length; j++, e++)
             {
@@ -1000,7 +1001,9 @@ mat GWRMultiscale::fitAllCuda(const mat& x, const vec& y)
             {
                 if (p_info[j] != 0)
                 {
-                    throw std::runtime_error("Cuda failed to get the inverse of matrix");
+                    std::runtime_error e("Cuda failed to get the inverse of matrix");
+                    GWM_LOG_ERROR(e.what());
+                    throw e;
                 }
             }
             u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
@@ -1017,6 +1020,7 @@ mat GWRMultiscale::fitAllCuda(const mat& x, const vec& y)
                 u_s.strides(j).get(si.memptr());
                 betasSE.col(e) = diagvec(cct.slice(j));
             }
+            GWM_LOG_PROGRESS(begin + length, nDp);
         }
         u_betas.get(betas.memptr());
         mBetasSE = betasSE.t();
@@ -1026,6 +1030,7 @@ mat GWRMultiscale::fitAllCuda(const mat& x, const vec& y)
         size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
         for (size_t i = 0; i < groups; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
             for (size_t j = 0, e = begin + j; j < length; j++, e++)
             {
@@ -1040,10 +1045,13 @@ mat GWRMultiscale::fitAllCuda(const mat& x, const vec& y)
             {
                 if (p_info[j] != 0)
                 {
-                    throw std::runtime_error("Cuda failed to get the inverse of matrix");
+                    std::runtime_error e("Cuda failed to get the inverse of matrix");
+                    GWM_LOG_ERROR(e.what());
+                    throw e;
                 }
             }
             u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+            GWM_LOG_PROGRESS(begin + length, nDp);
         }
         u_betas.get(betas.memptr());
     }
@@ -1069,6 +1077,7 @@ vec GWRMultiscale::fitVarCuda(const vec &x, const vec &y, const uword var, mat &
         mat sg(nDp, mGroupLength, fill::zeros);
         for (size_t i = 0; i < groups; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
             for (size_t j = 0, e = begin + j; j < length; j++, e++)
             {
@@ -1083,7 +1092,9 @@ vec GWRMultiscale::fitVarCuda(const vec &x, const vec &y, const uword var, mat &
             {
                 if (p_info[j] != 0)
                 {
-                    throw std::runtime_error("Cuda failed to get the inverse of matrix");
+                    std::runtime_error e("Cuda failed to get the inverse of matrix");
+                    GWM_LOG_ERROR(e.what());
+                    throw e;
                 }
             }
             u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
@@ -1091,12 +1102,14 @@ vec GWRMultiscale::fitVarCuda(const vec &x, const vec &y, const uword var, mat &
             custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
             u_s.get(sg.memptr());
             S.rows(begin, begin + length - 1) = sg.head_cols(length).t();
+            GWM_LOG_PROGRESS(begin + length, nDp);
         }
     }
     else
     {
         for (size_t i = 0; i < groups; i++)
         {
+            GWM_LOG_STOP_BREAK(mStatus);
             size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
             for (size_t j = 0, e = begin + j; j < length; j++, e++)
             {
@@ -1111,10 +1124,13 @@ vec GWRMultiscale::fitVarCuda(const vec &x, const vec &y, const uword var, mat &
             {
                 if (p_info[j] != 0)
                 {
-                    throw std::runtime_error("Cuda failed to get the inverse of matrix");
+                    std::runtime_error e("Cuda failed to get the inverse of matrix");
+                    GWM_LOG_ERROR(e.what());
+                    throw e;
                 }
             }
             u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+            GWM_LOG_PROGRESS(begin + length, nDp);
         }
         
     }
@@ -1136,6 +1152,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVCuda(BandwidthWeight* bandwidth
     size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
     for (size_t i = 0; i < groups && success; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
@@ -1152,6 +1169,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVCuda(BandwidthWeight* bandwidth
         {
             if (p_info[j] != 0)
             {
+                GWM_LOG_ERROR("Cuda failed to get the inverse of matrix");
                 success = false;
                 break;
             }
@@ -1170,6 +1188,8 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVCuda(BandwidthWeight* bandwidth
     double cv = as_scalar((mY - yhat_all).t() * (mY - yhat_all));
     if (isfinite(cv))
     {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
     }
@@ -1192,6 +1212,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllAICCuda(BandwidthWeight* bandwidt
     size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
     for (size_t i = 0; i < groups && success; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
@@ -1207,6 +1228,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllAICCuda(BandwidthWeight* bandwidt
         {
             if (p_info[j] != 0)
             {
+                GWM_LOG_ERROR("Cuda failed to get the inverse of matrix");
                 success = false;
                 break;
             }
@@ -1230,6 +1252,8 @@ double GWRMultiscale::bandwidthSizeCriterionAllAICCuda(BandwidthWeight* bandwidt
     double aic = GWRMultiscale::AICc(mX, mY, betas.t(), shat);
     if (isfinite(aic))
     {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, aic));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - aic)));
         mBandwidthLastCriterion = aic;
         return aic;
     }
@@ -1252,6 +1276,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVCuda(BandwidthWeight* bandwidth
     size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
     for (size_t i = 0; i < groups && success; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
@@ -1268,6 +1293,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVCuda(BandwidthWeight* bandwidth
         {
             if (p_info[j] != 0)
             {
+                GWM_LOG_ERROR("Cuda failed to get the inverse of matrix");
                 success = false;
                 break;
             }
@@ -1286,6 +1312,8 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVCuda(BandwidthWeight* bandwidth
     double cv = as_scalar((mYi - yhat_all).t() * (mYi - yhat_all));
     if (isfinite(cv))
     {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
     }
@@ -1310,6 +1338,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICCuda(BandwidthWeight* bandwidt
     size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
     for (size_t i = 0; i < groups && success; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
@@ -1325,6 +1354,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICCuda(BandwidthWeight* bandwidt
         {
             if (p_info[j] != 0)
             {
+                GWM_LOG_ERROR("Cuda failed to get the inverse of matrix");
                 success = false;
                 break;
             }
@@ -1348,6 +1378,8 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICCuda(BandwidthWeight* bandwidt
     double aic = GWRMultiscale::AICc(mXi, mYi, betas.t(), shat);
     if (isfinite(aic))
     {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, aic));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - aic)));
         mBandwidthLastCriterion = aic;
         return aic;
     }

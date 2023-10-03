@@ -258,7 +258,10 @@ TEST_CASE("Multiscale GWR: cancel")
         ParallelType::SerialOnly
 #ifdef ENABLE_OPENMP
         , ParallelType::OpenMP
-#endif // ENABLE_OPENMP     
+#endif // ENABLE_OPENMP
+#ifdef ENABLE_CUDA
+        , ParallelType::CUDA
+#endif // ENABLE_CUDA
     };
     auto parallel = GENERATE_REF(values(parallel_list));
     

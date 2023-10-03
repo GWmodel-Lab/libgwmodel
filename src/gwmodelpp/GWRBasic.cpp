@@ -603,6 +603,7 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
     checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
     for (size_t i = 0; i < groups; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
@@ -621,7 +622,9 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
         {
             if (p_info[j] != 0)
             {
-                throw std::runtime_error("Cuda failed to get the inverse of matrix");
+                std::runtime_error e("Cuda failed to get the inverse of matrix");
+                GWM_LOG_ERROR(e.what());
+                throw e;
             }
         }
         // beta = xtwxI * xtwy [k*k,k*1]
@@ -645,6 +648,7 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
             qDiag += p % p;
             S.row(isStoreS() ? e : 0) = si;
         }
+        GWM_LOG_PROGRESS(begin + length, nDp);
     }
     u_betas.get(betas.memptr());
     betasSE = betasSE.t();
@@ -666,6 +670,7 @@ arma::mat GWRBasic::predictCuda(const mat& locations, const mat& x, const vec& y
     checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
     for (size_t i = 0; i < groups; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         size_t begin = i * mGroupLength, length = (begin + mGroupLength > nRp) ? (nRp - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
@@ -680,10 +685,13 @@ arma::mat GWRBasic::predictCuda(const mat& locations, const mat& x, const vec& y
         {
             if (p_info[j] != 0)
             {
-                throw std::runtime_error("Cuda failed to get the inverse of matrix");
+                std::runtime_error e("Cuda failed to get the inverse of matrix");
+                GWM_LOG_ERROR(e.what());
+                throw e;
             }
         }
         u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+        GWM_LOG_PROGRESS(begin + length, nDp);
     }
     cudaFree(d_info);
     delete[] p_info;
@@ -705,6 +713,7 @@ double GWRBasic::bandwidthSizeCriterionCVCuda(BandwidthWeight* bandwidthWeight)
     size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
     for (size_t i = 0; i < groups && success; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
@@ -721,6 +730,7 @@ double GWRBasic::bandwidthSizeCriterionCVCuda(BandwidthWeight* bandwidthWeight)
         {
             if (p_info[j] != 0)
             {
+                GWM_LOG_ERROR("Cuda failed to get the inverse of matrix");
                 success = false;
                 break;
             }
@@ -739,6 +749,8 @@ double GWRBasic::bandwidthSizeCriterionCVCuda(BandwidthWeight* bandwidthWeight)
     double cv = as_scalar((mY - yhat_all).t() * (mY - yhat_all));
     if (isfinite(cv))
     {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
         mBandwidthLastCriterion = cv;
         return cv;
     }
@@ -761,6 +773,7 @@ double GWRBasic::bandwidthSizeCriterionAICCuda(BandwidthWeight* bandwidthWeight)
     size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
     for (size_t i = 0; i < groups && success; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
@@ -776,6 +789,7 @@ double GWRBasic::bandwidthSizeCriterionAICCuda(BandwidthWeight* bandwidthWeight)
         {
             if (p_info[j] != 0)
             {
+                GWM_LOG_ERROR("Cuda failed to get the inverse of matrix");
                 success = false;
                 break;
             }
@@ -799,6 +813,8 @@ double GWRBasic::bandwidthSizeCriterionAICCuda(BandwidthWeight* bandwidthWeight)
     double aic = GWRBasic::AICc(mX, mY, betas.t(), shat);
     if (isfinite(aic))
     {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, aic));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - aic)));
         mBandwidthLastCriterion = aic;
         return aic;
     }
@@ -823,6 +839,7 @@ double GWRBasic::indepVarsSelectionCriterionCuda(const std::vector<size_t>& inde
     size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
     for (size_t i = 0; i < groups && success; i++)
     {
+        GWM_LOG_STOP_BREAK(mStatus);
         size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
@@ -836,6 +853,7 @@ double GWRBasic::indepVarsSelectionCriterionCuda(const std::vector<size_t>& inde
         {
             if (p_info[j] != 0)
             {
+                GWM_LOG_ERROR("Cuda failed to get the inverse of matrix");
                 success = false;
                 break;
             }
@@ -856,9 +874,11 @@ double GWRBasic::indepVarsSelectionCriterionCuda(const std::vector<size_t>& inde
     delete[] p_info;
     if (!success) return DBL_MAX;
     u_betas.get(betas.memptr());
+    GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressTotal);
     double aic = GWRBasic::AICc(x, y, betas.t(), shat);
     if (isfinite(aic))
     {
+        GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, aic));
         mBandwidthLastCriterion = aic;
         return aic;
     }

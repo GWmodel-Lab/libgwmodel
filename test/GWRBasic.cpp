@@ -270,6 +270,17 @@ TEST_CASE("Basic GWR: cancel")
         make_pair("predict", 10)
     };
 
+    initializer_list<ParallelType> parallel_types = {
+#ifdef ENABLE_OPENMP
+        ParallelType::OpenMP,
+#endif // ENABLE_OPENMP
+#ifdef ENABLE_CUDA
+        ParallelType::CUDA,
+#endif // ENABLE_CUDA
+        ParallelType::SerialOnly
+    };
+    auto parallel = GENERATE_REF(values(parallel_types));
+
     SECTION("fit | CV Bandwidth | serial")
     {
         for (auto &&stage : fit_stages)
@@ -284,6 +295,18 @@ TEST_CASE("Basic GWR: cancel")
             algorithm.setIsAutoselectBandwidth(true);
             algorithm.setIsAutoselectIndepVars(true);
             algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::CV);
+            algorithm.setParallelType(parallel);
+            switch (parallel)
+            {
+            case ParallelType::OpenMP:
+                algorithm.setOmpThreadNum(8);
+                break;
+            case ParallelType::CUDA:
+                algorithm.setGPUId(0);
+                algorithm.setGroupSize(64);
+            default:
+                break;
+            }
             REQUIRE_NOTHROW(algorithm.fit());
             REQUIRE(algorithm.status() == Status::Terminated);
         }
@@ -303,6 +326,18 @@ TEST_CASE("Basic GWR: cancel")
             algorithm.setIsAutoselectBandwidth(true);
             algorithm.setIsAutoselectIndepVars(true);
             algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
+            algorithm.setParallelType(parallel);
+            switch (parallel)
+            {
+            case ParallelType::OpenMP:
+                algorithm.setOmpThreadNum(8);
+                break;
+            case ParallelType::CUDA:
+                algorithm.setGPUId(0);
+                algorithm.setGroupSize(64);
+            default:
+                break;
+            }
             REQUIRE_NOTHROW(algorithm.fit());
             REQUIRE(algorithm.status() == Status::Terminated);
         }
@@ -319,79 +354,22 @@ TEST_CASE("Basic GWR: cancel")
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
             algorithm.setSpatialWeight(spatial);
-            algorithm.setIsAutoselectBandwidth(true);
-            algorithm.setIsAutoselectIndepVars(true);
-            algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
+            algorithm.setParallelType(parallel);
+            switch (parallel)
+            {
+            case ParallelType::OpenMP:
+                algorithm.setOmpThreadNum(8);
+                break;
+            case ParallelType::CUDA:
+                algorithm.setGPUId(0);
+                algorithm.setGroupSize(64);
+            default:
+                break;
+            }
             REQUIRE_NOTHROW(algorithm.fit());
             REQUIRE_NOTHROW(algorithm.predict(londonhp100_coord));
             REQUIRE(algorithm.status() == Status::Terminated);
         }
     }
-
-#ifdef ENABLE_OPENMP
-    SECTION("fit | CV Bandwidth | openmp")
-    {
-        for (auto &&stage : fit_stages)
-        {
-            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
-            GWRBasic algorithm;
-            algorithm.setTelegram(std::move(telegram));
-            algorithm.setCoords(londonhp100_coord);
-            algorithm.setDependentVariable(y);
-            algorithm.setIndependentVariables(x);
-            algorithm.setSpatialWeight(spatial);
-            algorithm.setIsAutoselectBandwidth(true);
-            algorithm.setIsAutoselectIndepVars(true);
-            algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::CV);
-            algorithm.setParallelType(ParallelType::OpenMP);
-            algorithm.setOmpThreadNum(6);
-            REQUIRE_NOTHROW(algorithm.fit());
-            REQUIRE(algorithm.status() == Status::Terminated);
-        }
-    }
-
-    SECTION("fit | AIC Bandwidth | openmp")
-    {
-        for (auto &&stage : fit_stages)
-        {
-            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
-            GWRBasic algorithm;
-            algorithm.setTelegram(std::move(telegram));
-            algorithm.setCoords(londonhp100_coord);
-            algorithm.setDependentVariable(y);
-            algorithm.setIndependentVariables(x);
-            algorithm.setSpatialWeight(spatial);
-            algorithm.setIsAutoselectBandwidth(true);
-            algorithm.setIsAutoselectIndepVars(true);
-            algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
-            algorithm.setParallelType(ParallelType::OpenMP);
-            algorithm.setOmpThreadNum(6);
-            REQUIRE_NOTHROW(algorithm.fit());
-            REQUIRE(algorithm.status() == Status::Terminated);
-        }
-    }
-
-    SECTION("predict | openmp")
-    {
-        for (auto &&stage : fit_stages)
-        {
-            auto telegram = make_unique<TerminateCheckTelegram>(stage.first, stage.second);
-            GWRBasic algorithm;
-            algorithm.setTelegram(std::move(telegram));
-            algorithm.setCoords(londonhp100_coord);
-            algorithm.setDependentVariable(y);
-            algorithm.setIndependentVariables(x);
-            algorithm.setSpatialWeight(spatial);
-            algorithm.setIsAutoselectBandwidth(true);
-            algorithm.setIsAutoselectIndepVars(true);
-            algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
-            algorithm.setParallelType(ParallelType::OpenMP);
-            algorithm.setOmpThreadNum(6);
-            REQUIRE_NOTHROW(algorithm.fit());
-            REQUIRE_NOTHROW(algorithm.predict(londonhp100_coord));
-            REQUIRE(algorithm.status() == Status::Terminated);
-        }
-    }
-#endif  // ENABLE_OPENMP
 
 }
