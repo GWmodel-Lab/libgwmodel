@@ -196,10 +196,12 @@ endif(OpenMP_FOUND)
 
 if(USE_CUDA_SHARED)
     set(HEADERS_CUDA_SHARED
+        ../include/gwmodelcuda/StdTelegram.h
         ../include/gwmodelcuda/GWRBasicGpuTask.h
         ../include/gwmodelcuda/IGWRBasicGpuTask.h
     )
     set(SOURCES_CUDA_SHARED
+        gwmodelcuda/StdTelegram.cpp
         gwmodelcuda/IGWRBasicGpuTask.cpp
         gwmodelcuda/GWRBasicGpuTask.cpp
     )

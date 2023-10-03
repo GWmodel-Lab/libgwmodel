@@ -1,6 +1,7 @@
 #include "GWRBasicGpuTask.h"
 
 #include "gwmodel.h"
+#include "StdTelegram.h"
 
 using namespace std;
 using namespace arma;
@@ -15,7 +16,7 @@ bool GWRBasicGpuTask::fit(bool hasIntercept)
     algorithm.setIsAutoselectIndepVars(mIsOptimizeVariables);
     algorithm.setIndepVarSelectionThreshold(mOptimizeVariablesThreshold);
     algorithm.setParallelType(ParallelType::CUDA);
-
+    algorithm.setTelegram(make_unique<StdTelegram>());
     try
     {
         algorithm.fit();
@@ -50,6 +51,7 @@ bool GWRBasicGpuTask::predict(bool hasIntercept)
     SpatialWeight sw(mWeight, mDistance);
     GWRBasic algorithm(mX, mY, mCoords, sw, true, hasIntercept);
     algorithm.setParallelType(ParallelType::CUDA);
+    algorithm.setTelegram(make_unique<StdTelegram>());
     try
     {
         algorithm.predict(mPredictLocations);
