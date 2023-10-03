@@ -36,7 +36,7 @@ void TerminateCheckTelegram::progress(size_t current, size_t total, string fun_n
 #ifdef ENABLE_OPENMP
     unique_lock<mutex> locker(Lock);
 #endif
-    if (fun_name.find(mBreakStage, 0) >= 0)
+    if (fun_name.find(mBreakStage, 0) >= 0 && current >= mBreakProgress)
     {
         mCancelled = true;
     }
@@ -54,7 +54,7 @@ void TerminateCheckTelegram::progress(double percent, string fun_name, string fi
 #ifdef ENABLE_OPENMP
     unique_lock<mutex> locker(Lock);
 #endif
-    if (fun_name.find(mBreakStage, 0) >= 0)
+    if (fun_name.find(mBreakStage, 0) >= 0 && (percent * 100) >= mBreakProgress)
     {
         mCancelled = true;
     }

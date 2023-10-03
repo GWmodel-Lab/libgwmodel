@@ -270,7 +270,7 @@ TEST_CASE("Basic GWR: cancel")
         make_pair("predict", 10)
     };
 
-    initializer_list<ParallelType> parallel_types = {
+    const initializer_list<ParallelType> parallel_types = {
 #ifdef ENABLE_OPENMP
         ParallelType::OpenMP,
 #endif // ENABLE_OPENMP
@@ -281,7 +281,7 @@ TEST_CASE("Basic GWR: cancel")
     };
     auto parallel = GENERATE_REF(values(parallel_types));
 
-    SECTION("fit | CV Bandwidth | serial")
+    SECTION("fit | CV Bandwidth")
     {
         for (auto &&stage : fit_stages)
         {
@@ -312,7 +312,7 @@ TEST_CASE("Basic GWR: cancel")
         }
     }
 
-    SECTION("fit | AIC Bandwidth | serial")
+    SECTION("fit | AIC Bandwidth")
     {
         for (auto &&stage : fit_stages)
         {
@@ -343,7 +343,7 @@ TEST_CASE("Basic GWR: cancel")
         }
     }
 
-    SECTION("predict | serial")
+    SECTION("predict")
     {
         for (auto &&stage : fit_stages)
         {
@@ -354,6 +354,9 @@ TEST_CASE("Basic GWR: cancel")
             algorithm.setDependentVariable(y);
             algorithm.setIndependentVariables(x);
             algorithm.setSpatialWeight(spatial);
+            algorithm.setIsAutoselectBandwidth(true);
+            algorithm.setIsAutoselectIndepVars(true);
+            algorithm.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
             algorithm.setParallelType(parallel);
             switch (parallel)
             {
