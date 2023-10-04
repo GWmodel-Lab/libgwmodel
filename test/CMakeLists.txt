@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.17)
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -31,6 +31,7 @@ add_definitions(-DSAMPLE_DATA_DIR="${SAMPLE_DATA_DIR}")
 set(ADDON_SOURCES
     data/londonhp100.cpp
     TerminateCheckTelegram.cpp
+    FileTelegram.cpp
 )
 
 add_definitions(-DSAMPLE_DATA_DIR="${SAMPLE_DATA_DIR}")
@@ -119,3 +120,12 @@ add_test(
     NAME testGWDA 
     COMMAND $<TARGET_FILE:testGWDA> --success
 )
+
+if (ENABLE_CUDA)
+add_executable(testCuMat cumat.cpp)
+target_link_libraries(testCuMat PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_test(
+    NAME testCuMat
+    COMMAND $<TARGET_FILE:testCuMat --success
+)
+endif()

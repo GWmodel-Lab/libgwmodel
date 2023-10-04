@@ -3,6 +3,11 @@
 
 #include "Distance.h"
 
+#ifdef ENABLE_CUDA
+#include "gwmodelpp/spatialweight/cuda/CRSDistanceKernel.h"
+#include "gwmodelpp/spatialweight/cuda/ISpatialCudaEnabled.h"
+#endif // ENABLE_CUDA
+
 namespace gwm
 {
 
@@ -107,6 +112,9 @@ public:
 
 private:
     typedef arma::vec (*CalculatorType)(const arma::rowvec&, const arma::mat&);
+#ifdef ENABLE_CUDA
+    typedef cudaError_t (*CalculatorCudaType)(const double*, const double*, size_t, size_t, double*);
+#endif
 
 public:
 
@@ -124,6 +132,9 @@ public:
     explicit CRSDistance(bool isGeographic): mGeographic(isGeographic), mParameter(nullptr)
     {
         mCalculator = mGeographic ? &SpatialDistance : &EuclideanDistance;
+#ifdef ENABLE_CUDA
+        mCalculatorCuda = mGeographic ? &sp_dist_cuda : eu_dist_cuda;
+#endif
     }
 
     /**
@@ -132,6 +143,17 @@ public:
      * @param distance \~english Reference to object for copying \~chinese 要拷贝的对象的引用
      */
     CRSDistance(const CRSDistance& distance);
+
+    virtual ~CRSDistance()
+    {
+#ifdef ENABLE_CUDA
+        if (mCudaPrepared)
+        {
+            cudaFree(mCudaDp);
+            cudaFree(mCudaFp);
+        }
+#endif
+    }
 
     virtual Distance * clone() override
     {
@@ -160,6 +182,9 @@ public:
     {
         mGeographic = geographic;
         mCalculator = mGeographic ? &SpatialDistance : &EuclideanDistance;
+#ifdef ENABLE_CUDA
+        mCalculatorCuda = mGeographic ? &sp_dist_cuda : eu_dist_cuda;
+#endif
     }
 
 public:
@@ -183,12 +208,25 @@ public:
     virtual double maxDistance() override;
     virtual double minDistance() override;
 
+#ifdef ENABLE_CUDA
+    virtual cudaError_t prepareCuda(size_t gpuId) override;
+
+    virtual cudaError_t distance(arma::uword focus, double* d_dists, size_t* elems) override;
+#endif
+
 protected:
     bool mGeographic;  //!< \~english Whether the CRS is geographic \~chinese 坐标系是否是地理坐标系
     std::unique_ptr<Parameter> mParameter;  //!< \~english Parameters \~chinese 计算参数
 
 private:
     CalculatorType mCalculator = &EuclideanDistance;  //!< \~english Calculator \~chinese 距离计算方法
+
+#ifdef ENABLE_CUDA
+    double* mCudaDp = 0;    //!< \~english Device pointer to data points \~chinese 指向数据点的设备指针
+    double* mCudaFp = 0;    //!< \~english Device pointer to focus points \~chinese 指向关注点的设备指针
+    CalculatorCudaType mCalculatorCuda = &eu_dist_cuda;  //!< \~english CUDA based Calculator \~chinese 基于 CUDA 的距离计算方法
+#endif
+
 };
 
 }

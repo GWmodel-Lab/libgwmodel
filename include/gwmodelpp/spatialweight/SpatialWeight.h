@@ -1,6 +1,11 @@
 #ifndef SPATIALWEIGHT_H
 #define SPATIALWEIGHT_H
 
+#ifdef ENABLE_CUDA
+#include <cuda_runtime.h>
+#include "gwmodelpp/spatialweight/cuda/ISpatialCudaEnabled.h"
+#endif 
+
 #include "Weight.h"
 #include "Distance.h"
 
@@ -36,6 +41,9 @@ namespace gwm
  * 如果距离和权重通过引用设置，那么该类对象将会克隆他们。
  */
 class SpatialWeight
+#ifdef ENABLE_CUDA
+    : public ISpatialCudaEnabled
+#endif
 {
 public:
 
@@ -328,6 +336,47 @@ public:
     {
         return mWeight->weight(mDistance->distance(focus));
     }
+
+#ifdef ENABLE_CUDA
+    virtual cudaError_t prepareCuda(size_t gpuId) override
+    {
+        cudaError_t error;
+        error = mDistance->prepareCuda(gpuId);
+        if (error != cudaSuccess) return error;
+        error = mWeight->prepareCuda(gpuId);
+        return error;
+    }
+
+    virtual bool useCuda()
+    {
+        return mWeight->useCuda() || mDistance->useCuda();
+    }
+
+    virtual void setUseCuda(bool isUseCuda)
+    {
+        mWeight->setUseCuda(isUseCuda);
+        mDistance->setUseCuda(isUseCuda);
+    }
+
+    /**
+     * @brief \~english Calculate the spatial weight vector from focused sample to other samples (including the focused sample itself).
+     * \~chinese 计算当前样本到其他样本的空间权重向量（包括当前样本自身）。
+     * 
+     * @param focus \~english Focused point's index. Require focus < total \~chinese 目标点索引，要求 focus 小于参数中的 total
+     * @param d_dists \~english Output device pointer to distances \~chinese 指向输出距离的设备指针
+     * @param d_weights \~english Device pointer to distances \~chinese 指向输出权重的设备指针
+     * @return cudaError_t \~english CUDA error or success \~chinese CUDA 错误或成功 
+     */
+    virtual cudaError_t weightVector(arma::uword focus, double* d_dists, double* d_weights)
+    {
+        cudaError_t error;
+        size_t elems = 0;
+        error = mDistance->distance(focus, d_dists, &elems);
+        if (error != cudaSuccess) return error;
+        error = mWeight->weight(d_dists, d_weights, elems);
+        return error;
+    }
+#endif
 
     /**
      * \~english

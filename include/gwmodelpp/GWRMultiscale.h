@@ -31,7 +31,7 @@ namespace gwm
  * \~chinese
  * @brief 多尺度GWR算法
  */
-class GWRMultiscale : public SpatialMultiscaleAlgorithm, public IBandwidthSelectable, public IRegressionAnalysis, public IParallelizable, public IParallelOpenmpEnabled
+class GWRMultiscale : public SpatialMultiscaleAlgorithm, public IBandwidthSelectable, public IRegressionAnalysis, public IParallelizable, public IParallelOpenmpEnabled, public IParallelCudaEnabled
 {
 public:
 
@@ -593,7 +593,10 @@ public:     // IParallelalbe interface
         return ParallelType::SerialOnly
 #ifdef ENABLE_OPENMP
             | ParallelType::OpenMP
-#endif        
+#endif
+#ifdef ENABLE_CUDA
+            | ParallelType::CUDA
+#endif
             ;
     }
 
@@ -605,6 +608,9 @@ public:     // IParallelalbe interface
 public:     // IOpenmpParallelable interface
     void setOmpThreadNum(const int threadNum) override { mOmpThreadNum = threadNum; }
 
+public:     // IParallelCudaEnabled interface
+    void setGPUId(const int gpuId) override { mGpuId = gpuId; }
+    void setGroupSize(const double size) override { mGroupLength = size; }
 
 protected:
 
@@ -628,6 +634,23 @@ protected:
 
     /**
      * \~english
+     * @brief The backfitting algorithm.
+     * 
+     * @param x Independent variables \f$X\f$.
+     * @param y Dependent variable \f$y\f$.
+     * @return arma::mat Coefficient estimates \f$\beta\f$.
+     * 
+     * \~chinese
+     * @brief 后向迭代算法。
+     * 
+     * @param x 自变量矩阵 \f$X\f$。
+     * @param y 因变量 \f$y\f$。
+     * @return arma::mat 回归系数估计值 \f$\beta\f$。
+     */
+    arma::mat backfitting(const arma::mat &x, const arma::vec &y);
+
+    /**
+     * \~english
      * @brief The serial implementation of fit function for all variables.
      * 
      * @param x Independent variables \f$X\f$.
@@ -642,25 +665,6 @@ protected:
      * @return arma::mat 回归系数估计值 \f$\beta\f$。
      */
     arma::mat fitAllSerial(const arma::mat& x, const arma::vec& y);
-
-#ifdef ENABLE_OPENMP
-    /**
-     * \~english
-     * @brief The openmp parallel implementation of fit function for all variables.
-     * 
-     * @param x Independent variables \f$X\f$.
-     * @param y Dependent variable \f$y\f$.
-     * @return arma::mat Coefficient estimates \f$\beta\f$.
-     * 
-     * \~chinese
-     * @brief 拟合所有变量的多线程实现。
-     * 
-     * @param x 自变量矩阵 \f$X\f$。
-     * @param y 因变量 \f$y\f$。
-     * @return arma::mat 回归系数估计值 \f$\beta\f$。
-     */
-    arma::mat fitAllOmp(const arma::mat& x, const arma::vec& y);
-#endif
 
     /**
      * \~english
@@ -682,46 +686,6 @@ protected:
      * @return arma::vec 该变量对应的回归系数估计值。
      */
     arma::vec fitVarSerial(const arma::vec& x, const arma::vec& y, const arma::uword var, arma::mat& S);
-
-#ifdef ENABLE_OPENMP
-    /**
-     * \~english
-     * @brief The openmp parallel implementation of fit function for one variable.
-     * 
-     * @param x Independent variables \f$X\f$.
-     * @param y Dependent variable \f$y\f$.
-     * @param var The index of this variable.
-     * @param S The hat matrix \f$S\f$.
-     * @return arma::vec The coefficient estimates corresponding to this variable.
-     * 
-     * \~chinese
-     * @brief 拟合单个变量的多线程实现。
-     * 
-     * @param x 自变量矩阵 \f$X\f$。
-     * @param y 因变量 \f$y\f$。
-     * @param var 当前变量的索引值。
-     * @param S 帽子矩阵 \f$S\f$
-     * @return arma::vec 该变量对应的回归系数估计值。
-     */
-    arma::vec fitVarOmp(const arma::vec& x, const arma::vec& y, const arma::uword var, arma::mat& S);
-#endif
-
-    /**
-     * \~english
-     * @brief The backfitting algorithm.
-     * 
-     * @param x Independent variables \f$X\f$.
-     * @param y Dependent variable \f$y\f$.
-     * @return arma::mat Coefficient estimates \f$\beta\f$.
-     * 
-     * \~chinese
-     * @brief 后向迭代算法。
-     * 
-     * @param x 自变量矩阵 \f$X\f$。
-     * @param y 因变量 \f$y\f$。
-     * @return arma::mat 回归系数估计值 \f$\beta\f$。
-     */
-    arma::mat backfitting(const arma::mat &x, const arma::vec &y);
 
     /**
      * \~english
@@ -786,6 +750,44 @@ protected:
 #ifdef ENABLE_OPENMP
     /**
      * \~english
+     * @brief The openmp parallel implementation of fit function for all variables.
+     * 
+     * @param x Independent variables \f$X\f$.
+     * @param y Dependent variable \f$y\f$.
+     * @return arma::mat Coefficient estimates \f$\beta\f$.
+     * 
+     * \~chinese
+     * @brief 拟合所有变量的多线程实现。
+     * 
+     * @param x 自变量矩阵 \f$X\f$。
+     * @param y 因变量 \f$y\f$。
+     * @return arma::mat 回归系数估计值 \f$\beta\f$。
+     */
+    arma::mat fitAllOmp(const arma::mat& x, const arma::vec& y);
+    
+    /**
+     * \~english
+     * @brief The openmp parallel implementation of fit function for one variable.
+     * 
+     * @param x Independent variables \f$X\f$.
+     * @param y Dependent variable \f$y\f$.
+     * @param var The index of this variable.
+     * @param S The hat matrix \f$S\f$.
+     * @return arma::vec The coefficient estimates corresponding to this variable.
+     * 
+     * \~chinese
+     * @brief 拟合单个变量的多线程实现。
+     * 
+     * @param x 自变量矩阵 \f$X\f$。
+     * @param y 因变量 \f$y\f$。
+     * @param var 当前变量的索引值。
+     * @param S 帽子矩阵 \f$S\f$
+     * @return arma::vec 该变量对应的回归系数估计值。
+     */
+    arma::vec fitVarOmp(const arma::vec& x, const arma::vec& y, const arma::uword var, arma::mat& S);
+    
+    /**
+     * \~english
      * @brief The openmp parallel implementation of CV criterion calculator for given bandwidth size and all variables.
      * 
      * @param bandwidthWeight Badwidth weight.
@@ -845,6 +847,108 @@ protected:
     double bandwidthSizeCriterionVarAICOmp(BandwidthWeight* bandwidthWeight);
 #endif
 
+#ifdef ENABLE_CUDA
+    
+    /**
+     * \~english
+     * @brief The CUDA implementation of fit function for all variables.
+     * 
+     * @param x Independent variables \f$X\f$.
+     * @param y Dependent variable \f$y\f$.
+     * @return arma::mat Coefficient estimates \f$\beta\f$.
+     * 
+     * \~chinese
+     * @brief 拟合所有变量的CUDA实现。
+     * 
+     * @param x 自变量矩阵 \f$X\f$。
+     * @param y 因变量 \f$y\f$。
+     * @return arma::mat 回归系数估计值 \f$\beta\f$。
+     */
+    arma::mat fitAllCuda(const arma::mat& x, const arma::vec& y);
+    
+    /**
+     * \~english
+     * @brief The CUDA implementation of fit function for one variable.
+     * 
+     * @param x Independent variables \f$X\f$.
+     * @param y Dependent variable \f$y\f$.
+     * @param var The index of this variable.
+     * @param S The hat matrix \f$S\f$.
+     * @return arma::vec The coefficient estimates corresponding to this variable.
+     * 
+     * \~chinese
+     * @brief 拟合单个变量的CUDA实现。
+     * 
+     * @param x 自变量矩阵 \f$X\f$。
+     * @param y 因变量 \f$y\f$。
+     * @param var 当前变量的索引值。
+     * @param S 帽子矩阵 \f$S\f$
+     * @return arma::vec 该变量对应的回归系数估计值。
+     */
+    arma::vec fitVarCuda(const arma::vec& x, const arma::vec& y, const arma::uword var, arma::mat& S);
+    
+    /**
+     * \~english
+     * @brief The CUDA implementation of CV criterion calculator for given bandwidth size and all variables.
+     * 
+     * @param bandwidthWeight Badwidth weight.
+     * @return double CV criterion value.
+     * 
+     * \~chinese
+     * @brief 为指定带宽值和所有变量计算CV指标值函数的CUDA实现。
+     * 
+     * @param bandwidthWeight 带宽值。
+     * @return double CV指标值。
+     */
+    double bandwidthSizeCriterionAllCVCuda(BandwidthWeight* bandwidthWeight);
+    
+    /**
+     * \~english
+     * @brief The CUDA implementation of AIC criterion calculator for given bandwidth size and all variables.
+     * 
+     * @param bandwidthWeight Badwidth weight.
+     * @return double AIC criterion value.
+     * 
+     * \~chinese
+     * @brief 为指定带宽值和所有变量计算AIC指标值函数的CUDA实现。
+     * 
+     * @param bandwidthWeight 带宽值。
+     * @return double AIC指标值。
+     */
+    double bandwidthSizeCriterionAllAICCuda(BandwidthWeight* bandwidthWeight);
+    
+    /**
+     * \~english
+     * @brief The CUDA implementation of CV criterion calculator for given bandwidth size and one variable.
+     * 
+     * @param bandwidthWeight Badwidth weight.
+     * @return double CV criterion value.
+     * 
+     * \~chinese
+     * @brief 为指定带宽值和某个变量计算CV指标值函数的CUDA实现。
+     * 
+     * @param bandwidthWeight 带宽值。
+     * @return double CV指标值。
+     */
+    double bandwidthSizeCriterionVarCVCuda(BandwidthWeight* bandwidthWeight);
+    
+    /**
+     * \~english
+     * @brief The CUDA implementation of AIC criterion calculator for given bandwidth size and one variable.
+     * 
+     * @param bandwidthWeight Badwidth weight.
+     * @return double AIC criterion value.
+     * 
+     * \~chinese
+     * @brief 为指定带宽值和某个变量计算AIC指标值函数的CUDA实现。
+     * 
+     * @param bandwidthWeight 带宽值。
+     * @return double AIC指标值。
+     */
+    double bandwidthSizeCriterionVarAICCuda(BandwidthWeight* bandwidthWeight);
+
+#endif // ENABLE_CUDA
+
     /**
      * \~english
      * @brief Create a Initial Distance Parameter object
@@ -897,6 +1001,8 @@ private:
 
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Parallel type of this algorithm. \~chinese 当前算法的并行类型。
     int mOmpThreadNum = 8;  //!< \~english Number of threads. \~chinese 并行线程数。
+    size_t mGroupLength = 64;   //!< \~english Size of a group computing together. \~chinese 同时计算的一组的大小。
+    int mGpuId = 0; //!< \~english The ID of selected GPU. \~chinese 选择的 GPU 的 ID。
 
 public:
     static int treeChildCount;  //!< \~english  \~chinese

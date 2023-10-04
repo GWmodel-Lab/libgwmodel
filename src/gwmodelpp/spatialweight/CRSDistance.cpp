@@ -2,6 +2,10 @@
 #include <assert.h>
 #include <exception>
 
+#ifdef ENABLE_CUDA
+#include "CudaUtils.h"
+#endif // ENABLE_CUDA
+
 using namespace std;
 using namespace arma;
 using namespace gwm;
@@ -84,6 +88,13 @@ CRSDistance::CRSDistance(const CRSDistance &distance) : Distance(distance)
         mat fp = distance.mParameter->focusPoints;
         mat dp = distance.mParameter->dataPoints;
         mParameter = make_unique<Parameter>(fp, dp);
+#ifdef ENABLE_CUDA
+        mUseCuda = distance.mUseCuda;
+        if (distance.mCudaPrepared)
+        {
+            prepareCuda(distance.mGpuID);
+        }
+#endif // ENABLE_CUDA
     }
 }
 
@@ -142,3 +153,31 @@ double CRSDistance::minDistance()
     }
     return minD;
 }
+
+#ifdef ENABLE_CUDA
+cudaError_t CRSDistance::prepareCuda(size_t gpuId)
+{
+    checkCudaErrors(Distance::prepareCuda(gpuId));
+    checkCudaErrors(cudaMalloc(&mCudaDp, sizeof(double) * mParameter->dataPoints.n_elem));
+    checkCudaErrors(cudaMalloc(&mCudaFp, sizeof(double) * mParameter->focusPoints.n_elem));
+    mat dpt = mParameter->dataPoints.t(), fpt = mParameter->focusPoints.t();
+    checkCudaErrors(cudaMemcpy(mCudaDp, dpt.mem, sizeof(double) * dpt.n_elem, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(mCudaFp, fpt.mem, sizeof(double) * fpt.n_elem, cudaMemcpyHostToDevice));
+    mCudaPrepared = true;
+    return cudaSuccess;
+}
+
+cudaError_t CRSDistance::distance(uword focus, double *d_dists, size_t *elems)
+{
+    if (mParameter == nullptr) throw std::runtime_error("Parameter is nullptr.");
+    if (!mCudaPrepared) throw std::logic_error("Cuda has not been prepared.");
+    if (mCudaDp == 0 || mCudaFp == 0 || mCudaThreads == 0) throw std::logic_error("Cuda has not been correctly prepared.");
+    if (focus < mParameter->total)
+    {
+        size_t fbias = focus * mParameter->focusPoints.n_cols;
+        *elems = mParameter->total;
+        return mCalculatorCuda(mCudaDp, mCudaFp + fbias, mParameter->total, mCudaThreads, d_dists);
+    }
+    else throw std::runtime_error("Target is out of bounds of data points.");
+}
+#endif // ENABLE_CUDA

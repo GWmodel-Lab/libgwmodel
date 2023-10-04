@@ -1,6 +1,11 @@
 #ifndef DISTANCE_H
 #define DISTANCE_H
 
+#ifdef ENABLE_CUDA
+#include <cuda_runtime.h>
+#include "gwmodelpp/spatialweight/cuda/ISpatialCudaEnabled.h"
+#endif // ENABLE_CUDA
+
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -18,6 +23,9 @@ typedef std::variant<arma::mat, arma::vec, arma::uword> DistParamVariant;   //!<
  * 
  */
 class Distance
+#ifdef ENABLE_CUDA
+    : public ISpatialCudaEnabled
+#endif
 {
 public:
 
@@ -41,11 +49,11 @@ public:
      */
     enum DistanceType
     {
-        CRSSTDistance,
         CRSDistance,        //!< \~english Distance according to coordinate reference system \~chinese 坐标系距离
         MinkwoskiDistance,  //!< \~english Minkwoski distance \~chinese Minkwoski 距离
         DMatDistance,       //!< \~english Distance according to a .dmat file \~chinese 从 .dmat 文件读取距离
         OneDimDistance,     //!< \~english Distance for just one dimension \~chinese 一维距离
+        CRSSTDistance,
     };
     
     /**
@@ -97,6 +105,29 @@ public:
      */
     virtual arma::vec distance(arma::uword focus) = 0;
 
+#ifdef ENABLE_CUDA
+
+    virtual bool useCuda() override { return mUseCuda; }
+
+    virtual void setUseCuda(bool isUseCuda) override { mUseCuda = isUseCuda; }
+
+    virtual cudaError_t prepareCuda(size_t gpuId) override;
+    
+    /**
+     * @brief \~english Calculate distance vector for a focus point. \~chinese 为一个目标点计算距离向量。
+     * 
+     * @param focus \~english Focused point's index. Require focus < total \~chinese 目标点索引，要求 focus 小于参数中的 total
+     * @param d_dists \~english Output device pointer to distances \~chinese 指向输出距离的设备指针
+     * @param elems \~english Number of elements in distances \~chinese 距离向量的元素数量
+     * @return cudaError_t \~english CUDA error or success \~chinese CUDA 错误或成功
+     */
+    virtual cudaError_t distance(arma::uword focus, double* d_dists, size_t* elems)
+    {
+        throw std::logic_error("Function not yet implemented");
+    }
+
+#endif // ENABLE_CUDA
+
     /**
      * @brief \~english Get maximum distance among all points. \~chinese 获取最大距离。
      * 
@@ -110,6 +141,15 @@ public:
      * @return double \~english Maximum distance \~chinese 最小距离
      */
     virtual double minDistance() = 0;
+
+#ifdef ENABLE_CUDA
+protected:
+    bool mUseCuda = false;  //<! \~english Whether to use CUDA \~chinese 是否使用 CUDA
+    int mGpuID = 0;  //<! \~english The ID of selected GPU \~chinese 选择的 GPU 的索引
+    bool mCudaPrepared = false;  //<! \~english Whether CUDA has been prepared \~chinese CUDA 环境是否已经准备
+    size_t mCudaThreads = 0;  //<! \~english Number of GPU threads \~chinese GPU 线程数
+
+#endif // ENABLE_CUDA
 
 };
 

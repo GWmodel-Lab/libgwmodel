@@ -10,6 +10,12 @@
 #include "VariableForwardSelector.h"
 #include "Logger.h"
 
+#ifdef ENABLE_CUDA
+#include <cuda_runtime.h>
+#include "cumat.hpp"
+#include "CudaUtils.h"
+#endif // ENABLE_CUDA
+
 using namespace std;
 using namespace arma;
 using namespace gwm;
@@ -65,6 +71,17 @@ mat GWRMultiscale::fit()
     uword nDp = mX.n_rows, nVar = mX.n_cols;
     createDistanceParameter(nVar);
     createInitialDistanceParameter();
+#ifdef ENABLE_CUDA
+    if (mParallelType == ParallelType::CUDA)
+    {
+        cublasCreate(&cubase::handle);
+        mInitSpatialWeight.prepareCuda(mGpuId);
+        for (size_t i = 0; i < nVar; i++)
+        {
+            mSpatialWeights[i].prepareCuda(mGpuId);
+        }
+    }
+#endif // ENABLE_CUDA
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     // ********************************
@@ -106,6 +123,9 @@ mat GWRMultiscale::fit()
             if (bw)
             {
                 mSpatialWeights[i].setWeight(bw);
+#ifdef ENABLE_CUDA
+                mSpatialWeights[i].prepareCuda(mGpuId);
+#endif // ENABLE_CUDA
             }
             GWM_LOG_INFO(string(GWM_LOG_TAG_MGWR_INITIAL_BW)  + to_string(i)  + "," + to_string(bw->bandwidth()));
         }
@@ -133,6 +153,9 @@ mat GWRMultiscale::fit()
         throw std::runtime_error("Cannot select initial bandwidth.");
     }
     mInitSpatialWeight.setWeight(initBw);
+#ifdef ENABLE_CUDA
+    mInitSpatialWeight.prepareCuda(mGpuId);
+#endif // ENABLE_CUDA
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     // 初始化诊断信息矩阵
@@ -160,6 +183,14 @@ mat GWRMultiscale::fit()
     }
     vec yhat = Fitted(mX, mBetas);
     vec residual = mY - yhat;
+
+    // Cleaning
+#ifdef ENABLE_CUDA
+    if (mParallelType == ParallelType::CUDA)
+    {
+        cublasDestroy(cubase::handle);
+    }
+#endif // ENABLE_CUDA
 
     return mBetas;
 }
@@ -251,6 +282,10 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
                     }
                 }
                 mSpatialWeights[i].setWeight(bwi);
+#ifdef ENABLE_CUDA
+                mSpatialWeights[i].prepareCuda(mGpuId);
+#endif // ENABLE_CUDA
+
                 GWM_LOG_MGWR_BACKFITTING("#variable-bandwidth-selection " + strjoin(",", vbs_args));
             }
             GWM_LOG_STOP_BREAK(mStatus);
@@ -279,7 +314,6 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
     mRSS0 = RSS0;
     return betas;
 }
-
 
 bool GWRMultiscale::isValid()
 {
@@ -382,7 +416,227 @@ mat GWRMultiscale::fitAllSerial(const mat& x, const vec& y)
     return betas.t();
 }
 
+vec GWRMultiscale::fitVarSerial(const vec &x, const vec &y, const uword var, mat &S)
+{
+    uword nDp = mCoords.n_rows;
+    mat betas(1, nDp, fill::zeros);
+    bool success = true;
+    std::exception except;
+    if (mHasHatMatrix)
+    {
+        mat ci, si;
+        S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
+        for (uword i = 0; i < nDp  ; i++)
+        {
+            GWM_LOG_STOP_BREAK(mStatus);
+            vec w = mSpatialWeights[var].weightVector(i);
+            mat xtw = trans(x % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+                ci = xtwx_inv * xtw;
+                si = x(i) * ci;
+                S.row(mHasHatMatrix ? i : 0) = si;
+            }
+            catch (const exception& e)
+            {
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
+            }
+            GWM_LOG_PROGRESS(i + 1, nDp);
+        }
+    }
+    else
+    {
+        for (int i = 0; (uword)i < nDp  ; i++)
+        {
+            GWM_LOG_STOP_BREAK(mStatus);
+            vec w = mSpatialWeights[var].weightVector(i);
+            mat xtw = trans(x % w);
+            mat xtwx = xtw * x;
+            mat xtwy = xtw * y;
+            try
+            {
+                mat xtwx_inv = inv_sympd(xtwx);
+                betas.col(i) = xtwx_inv * xtwy;
+            }
+            catch (const exception& e)
+            {
+                GWM_LOG_ERROR(e.what());
+                except = e;
+                success = false;
+            }
+            GWM_LOG_PROGRESS(i + 1, nDp);
+        }
+    }
+    if (!success)
+    {
+        throw except;
+    }
+    return betas.t();
+}
+
+double GWRMultiscale::bandwidthSizeCriterionAllCVSerial(BandwidthWeight *bandwidthWeight)
+{
+    uword nDp = mCoords.n_rows;
+    vec shat(2, fill::zeros);
+    double cv = 0.0;
+    for (uword i = 0; i < nDp; i++)
+    {
+        GWM_LOG_STOP_BREAK(mStatus);
+        vec d = mInitSpatialWeight.distance()->distance(i);
+        vec w = bandwidthWeight->weight(d);
+        w(i) = 0.0;
+        mat xtw = trans(mX.each_col() % w);
+        mat xtwx = xtw * mX;
+        mat xtwy = xtw * mY;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            vec beta = xtwx_inv * xtwy;
+            double res = mY(i) - det(mX.row(i) * beta);
+            cv += res * res;
+        }
+        catch (const exception& e)
+        {
+            GWM_LOG_ERROR(e.what());
+            return DBL_MAX;
+        }
+    }
+    if (mStatus == Status::Success && isfinite(cv))
+    {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
+        mBandwidthLastCriterion = cv;
+        return cv;
+    }
+    else return DBL_MAX;
+}
+
+double GWRMultiscale::bandwidthSizeCriterionAllAICSerial(BandwidthWeight *bandwidthWeight)
+{
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
+    mat betas(nVar, nDp, fill::zeros);
+    vec shat(2, fill::zeros);
+    for (uword i = 0; i < nDp ; i++)
+    {
+        GWM_LOG_STOP_BREAK(mStatus);
+        vec d = mInitSpatialWeight.distance()->distance(i);
+        vec w = bandwidthWeight->weight(d);
+        mat xtw = trans(mX.each_col() % w);
+        mat xtwx = xtw * mX;
+        mat xtwy = xtw * mY;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            betas.col(i) = xtwx_inv * xtwy;
+            mat ci = xtwx_inv * xtw;
+            mat si = mX.row(i) * ci;
+            shat(0) += si(0, i);
+            shat(1) += det(si * si.t());
+        }
+        catch (const exception& e)
+        {
+            GWM_LOG_ERROR(e.what());
+            return DBL_MAX;
+        }
+    }
+    double value = GWRMultiscale::AICc(mX, mY, betas.t(), shat);
+    if (mStatus == Status::Success && isfinite(value))
+    {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
+        mBandwidthLastCriterion = value;
+        return value;
+    }
+    else return DBL_MAX;
+}
+
+double GWRMultiscale::bandwidthSizeCriterionVarCVSerial(BandwidthWeight *bandwidthWeight)
+{
+    size_t var = mBandwidthSelectionCurrentIndex;
+    uword nDp = mCoords.n_rows;
+    vec shat(2, fill::zeros);
+    double cv = 0.0;
+    for (uword i = 0; i < nDp; i++)
+    {
+        GWM_LOG_STOP_BREAK(mStatus);
+        vec d = mSpatialWeights[var].distance()->distance(i);
+        vec w = bandwidthWeight->weight(d);
+        w(i) = 0.0;
+        mat xtw = trans(mXi % w);
+        mat xtwx = xtw * mXi;
+        mat xtwy = xtw * mYi;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            vec beta = xtwx_inv * xtwy;
+            double res = mYi(i) - det(mXi(i) * beta);
+            cv += res * res;
+        }
+        catch (const exception& e)
+        {
+            GWM_LOG_ERROR(e.what());
+            return DBL_MAX;
+        }
+    }
+    if (mStatus == Status::Success && isfinite(cv))
+    {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
+        mBandwidthLastCriterion = cv;
+        return cv;
+    }
+    else return DBL_MAX;
+}
+
+double GWRMultiscale::bandwidthSizeCriterionVarAICSerial(BandwidthWeight *bandwidthWeight)
+{
+    size_t var = mBandwidthSelectionCurrentIndex;
+    uword nDp = mCoords.n_rows;
+    mat betas(1, nDp, fill::zeros);
+    vec shat(2, fill::zeros);
+    for (uword i = 0; i < nDp ; i++)
+    {
+        GWM_LOG_STOP_BREAK(mStatus);
+        vec d = mSpatialWeights[var].distance()->distance(i);
+        vec w = bandwidthWeight->weight(d);
+        mat xtw = trans(mXi % w);
+        mat xtwx = xtw * mXi;
+        mat xtwy = xtw * mYi;
+        try
+        {
+            mat xtwx_inv = inv_sympd(xtwx);
+            betas.col(i) = xtwx_inv * xtwy;
+            mat ci = xtwx_inv * xtw;
+            mat si = mXi(i) * ci;
+            shat(0) += si(0, i);
+            shat(1) += det(si * si.t());
+        }
+        catch (const exception& e)
+        {
+            GWM_LOG_ERROR(e.what());
+            return DBL_MAX;
+        }
+    }
+    double value = GWRMultiscale::AICc(mXi, mYi, betas.t(), shat);
+    if (mStatus == Status::Success && isfinite(value))
+    {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
+        mBandwidthLastCriterion = value;
+        return value;
+    }
+    return isfinite(value) ? value : DBL_MAX;
+}
+
+
 #ifdef ENABLE_OPENMP
+
 mat GWRMultiscale::fitAllOmp(const mat &x, const vec &y)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
@@ -450,73 +704,7 @@ mat GWRMultiscale::fitAllOmp(const mat &x, const vec &y)
     }
     return betas.t();
 }
-#endif
 
-vec GWRMultiscale::fitVarSerial(const vec &x, const vec &y, const uword var, mat &S)
-{
-    uword nDp = mCoords.n_rows;
-    mat betas(1, nDp, fill::zeros);
-    bool success = true;
-    std::exception except;
-    if (mHasHatMatrix)
-    {
-        mat ci, si;
-        S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
-        for (uword i = 0; i < nDp  ; i++)
-        {
-            GWM_LOG_STOP_BREAK(mStatus);
-            vec w = mSpatialWeights[var].weightVector(i);
-            mat xtw = trans(x % w);
-            mat xtwx = xtw * x;
-            mat xtwy = xtw * y;
-            try
-            {
-                mat xtwx_inv = inv_sympd(xtwx);
-                betas.col(i) = xtwx_inv * xtwy;
-                ci = xtwx_inv * xtw;
-                si = x(i) * ci;
-                S.row(mHasHatMatrix ? i : 0) = si;
-            }
-            catch (const exception& e)
-            {
-                GWM_LOG_ERROR(e.what());
-                except = e;
-                success = false;
-            }
-            GWM_LOG_PROGRESS(i + 1, nDp);
-        }
-    }
-    else
-    {
-        for (int i = 0; (uword)i < nDp  ; i++)
-        {
-            GWM_LOG_STOP_BREAK(mStatus);
-            vec w = mSpatialWeights[var].weightVector(i);
-            mat xtw = trans(x % w);
-            mat xtwx = xtw * x;
-            mat xtwy = xtw * y;
-            try
-            {
-                mat xtwx_inv = inv_sympd(xtwx);
-                betas.col(i) = xtwx_inv * xtwy;
-            }
-            catch (const exception& e)
-            {
-                GWM_LOG_ERROR(e.what());
-                except = e;
-                success = false;
-            }
-            GWM_LOG_PROGRESS(i + 1, nDp);
-        }
-    }
-    if (!success)
-    {
-        throw except;
-    }
-    return betas.t();
-}
-
-#ifdef ENABLE_OPENMP
 vec GWRMultiscale::fitVarOmp(const vec &x, const vec &y, const uword var, mat &S)
 {
     uword nDp = mCoords.n_rows;
@@ -581,46 +769,7 @@ vec GWRMultiscale::fitVarOmp(const vec &x, const vec &y, const uword var, mat &S
     }
     return betas.t();
 }
-#endif
 
-double GWRMultiscale::bandwidthSizeCriterionAllCVSerial(BandwidthWeight *bandwidthWeight)
-{
-    uword nDp = mCoords.n_rows;
-    vec shat(2, fill::zeros);
-    double cv = 0.0;
-    for (uword i = 0; i < nDp; i++)
-    {
-        GWM_LOG_STOP_BREAK(mStatus);
-        vec d = mInitSpatialWeight.distance()->distance(i);
-        vec w = bandwidthWeight->weight(d);
-        w(i) = 0.0;
-        mat xtw = trans(mX.each_col() % w);
-        mat xtwx = xtw * mX;
-        mat xtwy = xtw * mY;
-        try
-        {
-            mat xtwx_inv = inv_sympd(xtwx);
-            vec beta = xtwx_inv * xtwy;
-            double res = mY(i) - det(mX.row(i) * beta);
-            cv += res * res;
-        }
-        catch (const exception& e)
-        {
-            GWM_LOG_ERROR(e.what());
-            return DBL_MAX;
-        }
-    }
-    if (mStatus == Status::Success && isfinite(cv))
-    {
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
-        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
-        mBandwidthLastCriterion = cv;
-        return cv;
-    }
-    else return DBL_MAX;
-}
-
-#ifdef ENABLE_OPENMP
 double GWRMultiscale::bandwidthSizeCriterionAllCVOmp(BandwidthWeight *bandwidthWeight)
 {
     uword nDp = mCoords.n_rows;
@@ -664,48 +813,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVOmp(BandwidthWeight *bandwidthW
     }
     else return DBL_MAX;
 }
-#endif
 
-double GWRMultiscale::bandwidthSizeCriterionAllAICSerial(BandwidthWeight *bandwidthWeight)
-{
-    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
-    mat betas(nVar, nDp, fill::zeros);
-    vec shat(2, fill::zeros);
-    for (uword i = 0; i < nDp ; i++)
-    {
-        GWM_LOG_STOP_BREAK(mStatus);
-        vec d = mInitSpatialWeight.distance()->distance(i);
-        vec w = bandwidthWeight->weight(d);
-        mat xtw = trans(mX.each_col() % w);
-        mat xtwx = xtw * mX;
-        mat xtwy = xtw * mY;
-        try
-        {
-            mat xtwx_inv = inv_sympd(xtwx);
-            betas.col(i) = xtwx_inv * xtwy;
-            mat ci = xtwx_inv * xtw;
-            mat si = mX.row(i) * ci;
-            shat(0) += si(0, i);
-            shat(1) += det(si * si.t());
-        }
-        catch (const exception& e)
-        {
-            GWM_LOG_ERROR(e.what());
-            return DBL_MAX;
-        }
-    }
-    double value = GWRMultiscale::AICc(mX, mY, betas.t(), shat);
-    if (mStatus == Status::Success && isfinite(value))
-    {
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value));
-        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
-        mBandwidthLastCriterion = value;
-        return value;
-    }
-    else return DBL_MAX;
-}
-
-#ifdef ENABLE_OPENMP
 double GWRMultiscale::bandwidthSizeCriterionAllAICOmp(BandwidthWeight *bandwidthWeight)
 {
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
@@ -755,47 +863,7 @@ double GWRMultiscale::bandwidthSizeCriterionAllAICOmp(BandwidthWeight *bandwidth
     }
     else return DBL_MAX;
 }
-#endif
 
-double GWRMultiscale::bandwidthSizeCriterionVarCVSerial(BandwidthWeight *bandwidthWeight)
-{
-    size_t var = mBandwidthSelectionCurrentIndex;
-    uword nDp = mCoords.n_rows;
-    vec shat(2, fill::zeros);
-    double cv = 0.0;
-    for (uword i = 0; i < nDp; i++)
-    {
-        GWM_LOG_STOP_BREAK(mStatus);
-        vec d = mSpatialWeights[var].distance()->distance(i);
-        vec w = bandwidthWeight->weight(d);
-        w(i) = 0.0;
-        mat xtw = trans(mXi % w);
-        mat xtwx = xtw * mXi;
-        mat xtwy = xtw * mYi;
-        try
-        {
-            mat xtwx_inv = inv_sympd(xtwx);
-            vec beta = xtwx_inv * xtwy;
-            double res = mYi(i) - det(mXi(i) * beta);
-            cv += res * res;
-        }
-        catch (const exception& e)
-        {
-            GWM_LOG_ERROR(e.what());
-            return DBL_MAX;
-        }
-    }
-    if (mStatus == Status::Success && isfinite(cv))
-    {
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
-        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
-        mBandwidthLastCriterion = cv;
-        return cv;
-    }
-    else return DBL_MAX;
-}
-
-#ifdef ENABLE_OPENMP
 double GWRMultiscale::bandwidthSizeCriterionVarCVOmp(BandwidthWeight *bandwidthWeight)
 {
     size_t var = mBandwidthSelectionCurrentIndex;
@@ -840,49 +908,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVOmp(BandwidthWeight *bandwidthW
     }
     else return DBL_MAX;
 }
-#endif
 
-double GWRMultiscale::bandwidthSizeCriterionVarAICSerial(BandwidthWeight *bandwidthWeight)
-{
-    size_t var = mBandwidthSelectionCurrentIndex;
-    uword nDp = mCoords.n_rows;
-    mat betas(1, nDp, fill::zeros);
-    vec shat(2, fill::zeros);
-    for (uword i = 0; i < nDp ; i++)
-    {
-        GWM_LOG_STOP_BREAK(mStatus);
-        vec d = mSpatialWeights[var].distance()->distance(i);
-        vec w = bandwidthWeight->weight(d);
-        mat xtw = trans(mXi % w);
-        mat xtwx = xtw * mXi;
-        mat xtwy = xtw * mYi;
-        try
-        {
-            mat xtwx_inv = inv_sympd(xtwx);
-            betas.col(i) = xtwx_inv * xtwy;
-            mat ci = xtwx_inv * xtw;
-            mat si = mXi(i) * ci;
-            shat(0) += si(0, i);
-            shat(1) += det(si * si.t());
-        }
-        catch (const exception& e)
-        {
-            GWM_LOG_ERROR(e.what());
-            return DBL_MAX;
-        }
-    }
-    double value = GWRMultiscale::AICc(mXi, mYi, betas.t(), shat);
-    if (mStatus == Status::Success && isfinite(value))
-    {
-        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value));
-        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
-        mBandwidthLastCriterion = value;
-        return value;
-    }
-    return isfinite(value) ? value : DBL_MAX;
-}
-
-#ifdef ENABLE_OPENMP
 double GWRMultiscale::bandwidthSizeCriterionVarAICOmp(BandwidthWeight *bandwidthWeight)
 {
     size_t var = mBandwidthSelectionCurrentIndex;
@@ -933,24 +959,455 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICOmp(BandwidthWeight *bandwidth
     }
     return DBL_MAX;
 }
+
 #endif
+
+#ifdef ENABLE_CUDA
+
+mat GWRMultiscale::fitAllCuda(const mat& x, const vec& y)
+{
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
+    mat betas(nVar, nDp, fill::zeros);
+    mat xt = trans(x);
+    cumat u_xt(xt), u_y(y);
+    cumat u_betas(nVar, nDp);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(nVar, nDp, mGroupLength);
+    mat si(nDp, mGroupLength, fill::zeros);
+    cube ci(nVar, nDp, mGroupLength, fill::zeros);
+    cube cct(nVar, nVar, mGroupLength, fill::zeros);
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    if (mHasHatMatrix)
+    {
+        mat betasSE(nVar, nDp);
+        cumat u_betasSE(nVar, nDp);
+        size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+        for (size_t i = 0; i < groups; i++)
+        {
+            GWM_LOG_STOP_BREAK(mStatus);
+            size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+            for (size_t j = 0, e = begin + j; j < length; j++, e++)
+            {
+                checkCudaErrors(mInitSpatialWeight.weightVector(e, u_dists.dmem(), u_weights.dmem()));
+                u_xtw.strides(j) = u_xt.diagmul(u_weights);
+            }
+            custride u_xtwx = u_xtw * u_xt.t();
+            custride u_xtwy = u_xtw * u_y;
+            custride u_xtwxI = u_xtwx.inv(d_info);
+            checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+            for (size_t j = 0; j < mGroupLength; j++)
+            {
+                if (p_info[j] != 0)
+                {
+                    std::runtime_error e("Cuda failed to get the inverse of matrix");
+                    GWM_LOG_ERROR(e.what());
+                    throw e;
+                }
+            }
+            u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+            custride u_c = u_xtwxI * u_xtw;
+            custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
+            custride u_cct = u_c * u_c.t();
+            u_s.get(si.memptr());
+            mS0.rows(begin, begin + length - 1) = si.head_cols(length).t();
+            u_c.get(ci.memptr());
+            mC.slices(begin, begin + length - 1) = ci.head_slices(length);
+            u_cct.get(cct.memptr());
+            for (size_t j = 0, e = i * mGroupLength + j; j < mGroupLength && e < nDp; j++, e++)
+            {
+                u_s.strides(j).get(si.memptr());
+                betasSE.col(e) = diagvec(cct.slice(j));
+            }
+            GWM_LOG_PROGRESS(begin + length, nDp);
+        }
+        u_betas.get(betas.memptr());
+        mBetasSE = betasSE.t();
+    }
+    else
+    {
+        size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+        for (size_t i = 0; i < groups; i++)
+        {
+            GWM_LOG_STOP_BREAK(mStatus);
+            size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+            for (size_t j = 0, e = begin + j; j < length; j++, e++)
+            {
+                checkCudaErrors(mInitSpatialWeight.weightVector(e, u_dists.dmem(), u_weights.dmem()));
+                u_xtw.strides(j) = u_xt.diagmul(u_weights);
+            }
+            custride u_xtwx = u_xtw * u_xt.t();
+            custride u_xtwy = u_xtw * u_y;
+            custride u_xtwxI = u_xtwx.inv(d_info);
+            checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+            for (size_t j = 0; j < mGroupLength; j++)
+            {
+                if (p_info[j] != 0)
+                {
+                    std::runtime_error e("Cuda failed to get the inverse of matrix");
+                    GWM_LOG_ERROR(e.what());
+                    throw e;
+                }
+            }
+            u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+            GWM_LOG_PROGRESS(begin + length, nDp);
+        }
+        u_betas.get(betas.memptr());
+    }
+    return betas.t();
+}
+
+vec GWRMultiscale::fitVarCuda(const vec &x, const vec &y, const uword var, mat &S)
+{
+    uword nDp = mCoords.n_rows;
+    mat betas(1, nDp, fill::zeros);
+    mat xt = trans(x);
+    cumat u_xt(xt), u_y(y);
+    cumat u_betas(1, nDp);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(1, nDp, mGroupLength);
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+    S = mat(mHasHatMatrix ? nDp : 1, nDp, fill::zeros);
+    if (mHasHatMatrix)
+    {
+        mat sg(nDp, mGroupLength, fill::zeros);
+        for (size_t i = 0; i < groups; i++)
+        {
+            GWM_LOG_STOP_BREAK(mStatus);
+            size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+            for (size_t j = 0, e = begin + j; j < length; j++, e++)
+            {
+                checkCudaErrors(mSpatialWeights[var].weightVector(e, u_dists.dmem(), u_weights.dmem()));
+                u_xtw.strides(j) = u_xt.diagmul(u_weights);
+            }
+            custride u_xtwx = u_xtw * u_xt.t();
+            custride u_xtwy = u_xtw * u_y;
+            custride u_xtwxI = u_xtwx.inv(d_info);
+            checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+            for (size_t j = 0; j < mGroupLength; j++)
+            {
+                if (p_info[j] != 0)
+                {
+                    std::runtime_error e("Cuda failed to get the inverse of matrix");
+                    GWM_LOG_ERROR(e.what());
+                    throw e;
+                }
+            }
+            u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+            custride u_c = u_xtwxI * u_xtw;
+            custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
+            u_s.get(sg.memptr());
+            S.rows(begin, begin + length - 1) = sg.head_cols(length).t();
+            GWM_LOG_PROGRESS(begin + length, nDp);
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < groups; i++)
+        {
+            GWM_LOG_STOP_BREAK(mStatus);
+            size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+            for (size_t j = 0, e = begin + j; j < length; j++, e++)
+            {
+                checkCudaErrors(mSpatialWeights[var].weightVector(e, u_dists.dmem(), u_weights.dmem()));
+                u_xtw.strides(j) = u_xt.diagmul(u_weights);
+            }
+            custride u_xtwx = u_xtw * u_xt.t();
+            custride u_xtwy = u_xtw * u_y;
+            custride u_xtwxI = u_xtwx.inv(d_info);
+            checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+            for (size_t j = 0; j < mGroupLength; j++)
+            {
+                if (p_info[j] != 0)
+                {
+                    std::runtime_error e("Cuda failed to get the inverse of matrix");
+                    GWM_LOG_ERROR(e.what());
+                    throw e;
+                }
+            }
+            u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+            GWM_LOG_PROGRESS(begin + length, nDp);
+        }
+        
+    }
+    u_betas.get(betas.memptr());
+    return betas.t();
+}
+
+double GWRMultiscale::bandwidthSizeCriterionAllCVCuda(BandwidthWeight* bandwidthWeight)
+{
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols, elems = nDp;
+    cumat u_xt(mX.t()), u_y(mY);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(nVar, nDp, mGroupLength);
+    vec yhat(mGroupLength), yhat_all(nDp);
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    bool success = true;
+    size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+    for (size_t i = 0; i < groups && success; i++)
+    {
+        GWM_LOG_STOP_BREAK(mStatus);
+        size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+        for (size_t j = 0, e = begin + j; j < length; j++, e++)
+        {
+            checkCudaErrors(mInitSpatialWeight.distance()->distance(e, u_dists.dmem(), &elems));
+            checkCudaErrors(bandwidthWeight->weight(u_dists.dmem(), u_weights.dmem(), elems));
+            checkCudaErrors(cudaMemcpy(u_weights.dmem() + e, &cubase::beta0, sizeof(double), cudaMemcpyHostToDevice));
+            u_xtw.strides(j) = u_xt.diagmul(u_weights);
+        }
+        custride u_xtwx = u_xtw * u_xt.t();
+        custride u_xtwy = u_xtw * u_y;
+        custride u_xtwxI = u_xtwx.inv(d_info);
+        checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+        for (size_t j = 0; j < mGroupLength; j++)
+        {
+            if (p_info[j] != 0)
+            {
+                GWM_LOG_ERROR("Cuda failed to get the inverse of matrix");
+                success = false;
+                break;
+            }
+        }
+        if (success)
+        {
+            custride u_betas = u_xtwxI * u_xtwy;
+            custride u_yhat = u_xt.as_stride().strides(begin, begin + length).t() * u_betas;
+            u_yhat.get(yhat.memptr());
+            yhat_all.rows(begin, begin + length - 1) = yhat.head_rows(length);
+        }
+    }
+    checkCudaErrors(cudaFree(d_info));
+    delete[] p_info;
+    if (!success) return DBL_MAX;
+    double cv = as_scalar((mY - yhat_all).t() * (mY - yhat_all));
+    if (isfinite(cv))
+    {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
+        mBandwidthLastCriterion = cv;
+        return cv;
+    }
+    else return DBL_MAX;
+}
+
+double GWRMultiscale::bandwidthSizeCriterionAllAICCuda(BandwidthWeight* bandwidthWeight)
+{
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols, elems = nDp;
+    cumat u_xt(mX.t()), u_y(mY), u_betas(nVar, nDp);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(nVar, nDp, mGroupLength);
+    mat betas(nVar, nDp);
+    vec shat(2), sst(mGroupLength);
+    mat sg(nDp, mGroupLength);
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    bool success = true;
+    size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+    for (size_t i = 0; i < groups && success; i++)
+    {
+        GWM_LOG_STOP_BREAK(mStatus);
+        size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+        for (size_t j = 0, e = begin + j; j < length; j++, e++)
+        {
+            checkCudaErrors(mInitSpatialWeight.distance()->distance(e, u_dists.dmem(), &elems));
+            checkCudaErrors(bandwidthWeight->weight(u_dists.dmem(), u_weights.dmem(), elems));
+            u_xtw.strides(j) = u_xt.diagmul(u_weights);
+        }
+        custride u_xtwx = u_xtw * u_xt.t();
+        custride u_xtwy = u_xtw * u_y;
+        custride u_xtwxI = u_xtwx.inv(d_info);
+        checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+        for (size_t j = 0; j < mGroupLength; j++)
+        {
+            if (p_info[j] != 0)
+            {
+                GWM_LOG_ERROR("Cuda failed to get the inverse of matrix");
+                success = false;
+                break;
+            }
+        }
+        if (success)
+        {
+            u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+            custride u_c = u_xtwxI * u_xtw;
+            custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
+            custride u_sst = u_s * u_s.t();
+            u_s.get(sg.memptr());
+            u_sst.get(sst.memptr());
+            shat(0) += trace(sg.submat(begin, 0, arma::SizeMat(length, length)));
+            shat(1) += sum(sst);
+        }
+    }
+    checkCudaErrors(cudaFree(d_info));
+    delete[] p_info;
+    if (!success) return DBL_MAX;
+    u_betas.get(betas.memptr());
+    double aic = GWRMultiscale::AICc(mX, mY, betas.t(), shat);
+    if (isfinite(aic))
+    {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, aic));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - aic)));
+        mBandwidthLastCriterion = aic;
+        return aic;
+    }
+    else return DBL_MAX;
+}
+
+double GWRMultiscale::bandwidthSizeCriterionVarCVCuda(BandwidthWeight* bandwidthWeight)
+{
+    size_t var = mBandwidthSelectionCurrentIndex;
+    uword nDp = mCoords.n_rows, elems = nDp;
+    constexpr size_t nVar = 1;
+    cumat u_xt(mXi.t()), u_y(mYi);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(nVar, nDp, mGroupLength);
+    vec yhat(mGroupLength), yhat_all(nDp);
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    bool success = true;
+    size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+    for (size_t i = 0; i < groups && success; i++)
+    {
+        GWM_LOG_STOP_BREAK(mStatus);
+        size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+        for (size_t j = 0, e = begin + j; j < length; j++, e++)
+        {
+            checkCudaErrors(mSpatialWeights[var].distance()->distance(e, u_dists.dmem(), &elems));
+            checkCudaErrors(bandwidthWeight->weight(u_dists.dmem(), u_weights.dmem(), elems));
+            checkCudaErrors(cudaMemcpy(u_weights.dmem() + e, &cubase::beta0, sizeof(double), cudaMemcpyHostToDevice));
+            u_xtw.strides(j) = u_xt.diagmul(u_weights);
+        }
+        custride u_xtwx = u_xtw * u_xt.t();
+        custride u_xtwy = u_xtw * u_y;
+        custride u_xtwxI = u_xtwx.inv(d_info);
+        checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+        for (size_t j = 0; j < mGroupLength; j++)
+        {
+            if (p_info[j] != 0)
+            {
+                GWM_LOG_ERROR("Cuda failed to get the inverse of matrix");
+                success = false;
+                break;
+            }
+        }
+        if (success)
+        {
+            custride u_betas = u_xtwxI * u_xtwy;
+            custride u_yhat = u_xt.as_stride().strides(begin, begin + length).t() * u_betas.strides(0, length);
+            u_yhat.get(yhat.memptr());
+            yhat_all.rows(begin, begin + length - 1) = yhat.head_rows(length);
+        }
+    }
+    checkCudaErrors(cudaFree(d_info));
+    delete[] p_info;
+    if (!success) return DBL_MAX;
+    double cv = as_scalar((mYi - yhat_all).t() * (mYi - yhat_all));
+    if (isfinite(cv))
+    {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
+        mBandwidthLastCriterion = cv;
+        return cv;
+    }
+    else return DBL_MAX;
+}
+
+double GWRMultiscale::bandwidthSizeCriterionVarAICCuda(BandwidthWeight* bandwidthWeight)
+{
+    size_t var = mBandwidthSelectionCurrentIndex;
+    uword nDp = mCoords.n_rows, elems = nDp;
+    constexpr size_t nVar = 1;
+    cumat u_xt(mXi.t()), u_y(mYi), u_betas(nVar, nDp);
+    cumat u_dists(nDp, 1), u_weights(nDp, 1);
+    custride u_xtw(nVar, nDp, mGroupLength);
+    mat betas(nVar, nDp);
+    vec shat(2), sst(mGroupLength);
+    mat sg(nDp, mGroupLength);
+    int *d_info, *p_info;
+    p_info = new int[mGroupLength];
+    checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
+    bool success = true;
+    size_t groups = nDp / mGroupLength + (nDp % mGroupLength == 0 ? 0 : 1);
+    for (size_t i = 0; i < groups && success; i++)
+    {
+        GWM_LOG_STOP_BREAK(mStatus);
+        size_t begin = i * mGroupLength, length = (begin + mGroupLength > nDp) ? (nDp - begin) : mGroupLength;
+        for (size_t j = 0, e = begin + j; j < length; j++, e++)
+        {
+            checkCudaErrors(mSpatialWeights[var].distance()->distance(e, u_dists.dmem(), &elems));
+            checkCudaErrors(bandwidthWeight->weight(u_dists.dmem(), u_weights.dmem(), elems));
+            u_xtw.strides(j) = u_xt.diagmul(u_weights);
+        }
+        custride u_xtwx = u_xtw * u_xt.t();
+        custride u_xtwy = u_xtw * u_y;
+        custride u_xtwxI = u_xtwx.inv(d_info);
+        checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
+        for (size_t j = 0; j < mGroupLength; j++)
+        {
+            if (p_info[j] != 0)
+            {
+                GWM_LOG_ERROR("Cuda failed to get the inverse of matrix");
+                success = false;
+                break;
+            }
+        }
+        if (success)
+        {
+            u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
+            custride u_c = u_xtwxI * u_xtw;
+            custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
+            custride u_sst = u_s * u_s.t();
+            u_s.get(sg.memptr());
+            u_sst.get(sst.memptr());
+            shat(0) += trace(sg.submat(begin, 0, arma::SizeMat(length, length)));
+            shat(1) += sum(sst);
+        }
+    }
+    checkCudaErrors(cudaFree(d_info));
+    delete[] p_info;
+    if (!success) return DBL_MAX;
+    u_betas.get(betas.memptr());
+    double aic = GWRMultiscale::AICc(mXi, mYi, betas.t(), shat);
+    if (isfinite(aic))
+    {
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, aic));
+        GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - aic)));
+        mBandwidthLastCriterion = aic;
+        return aic;
+    }
+    else return DBL_MAX;
+}
+
+#endif // ENABLE_CUDA
 
 GWRMultiscale::BandwidthSizeCriterionFunction GWRMultiscale::bandwidthSizeCriterionAll(GWRMultiscale::BandwidthSelectionCriterionType type)
 {
     unordered_map<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> > mapper = {
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
-            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionAllCVSerial),
         #ifdef ENABLE_OPENMP
             std::make_pair(ParallelType::OpenMP, &GWRMultiscale::bandwidthSizeCriterionAllCVOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionAllCVSerial)
+        #ifdef ENABLE_CUDA
+            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionAllCVCuda),
+        #endif
+            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionAllCVSerial)
         }),
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
-            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionAllAICSerial),
         #ifdef ENABLE_OPENMP
             std::make_pair(ParallelType::OpenMP, &GWRMultiscale::bandwidthSizeCriterionAllAICOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionAllAICSerial)
+        #ifdef ENABLE_CUDA
+            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionAllAICCuda),
+        #endif
+            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionAllAICSerial)
         })
     };
     return mapper[type][mParallelType];
@@ -960,18 +1417,22 @@ GWRMultiscale::BandwidthSizeCriterionFunction GWRMultiscale::bandwidthSizeCriter
 {
     unordered_map<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> > mapper = {
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::CV, {
-            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionVarCVSerial),
         #ifdef ENABLE_OPENMP
             std::make_pair(ParallelType::OpenMP, &GWRMultiscale::bandwidthSizeCriterionVarCVOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionVarCVSerial)
+        #ifdef ENABLE_CUDA
+            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionVarCVCuda),
+        #endif
+            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionVarCVSerial)
         }),
         std::make_pair<BandwidthSelectionCriterionType, unordered_map<ParallelType, BandwidthSizeCriterionFunction> >(BandwidthSelectionCriterionType::AIC, {
-            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionVarAICSerial),
         #ifdef ENABLE_OPENMP
             std::make_pair(ParallelType::OpenMP, &GWRMultiscale::bandwidthSizeCriterionVarAICOmp),
         #endif
-            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionVarAICSerial)
+        #ifdef ENABLE_CUDA
+            std::make_pair(ParallelType::CUDA, &GWRMultiscale::bandwidthSizeCriterionVarAICCuda),
+        #endif
+            std::make_pair(ParallelType::SerialOnly, &GWRMultiscale::bandwidthSizeCriterionVarAICSerial)
         })
     };
     return mapper[type][mParallelType];
@@ -991,6 +1452,12 @@ void GWRMultiscale::setParallelType(const ParallelType &type)
         case ParallelType::OpenMP:
             mFitAll = &GWRMultiscale::fitAllOmp;
             mFitVar = &GWRMultiscale::fitVarOmp;
+            break;
+#endif
+#ifdef ENABLE_CUDA
+        case ParallelType::CUDA:
+            mFitAll = &GWRMultiscale::fitAllCuda;
+            mFitVar = &GWRMultiscale::fitVarCuda;
             break;
 #endif
         default:

@@ -1,6 +1,11 @@
 #include "gwmodelpp/spatialweight/BandwidthWeight.h"
 #include "gwmodelpp/spatialweight/Weight.h"
 
+#ifdef ENABLE_CUDA
+#include "CudaUtils.h"
+#include "gwmodelpp/spatialweight/cuda/BandwidthWeightKernel.h"
+#endif // ENABLE_CUDA
+
 using namespace std;
 using namespace arma;
 using namespace gwm;
@@ -54,3 +59,11 @@ vec BandwidthWeight::weight(vec dist)
     }
     return w;
 }
+
+#ifdef ENABLE_CUDA
+cudaError_t BandwidthWeight::weight(double* d_dists, double* d_weights, size_t elems)
+{
+    if (!mCudaPrepared) throw std::logic_error("Cuda has not been prepared.");
+    return gw_weight_cuda(mBandwidth, (int)mKernel, mAdaptive, d_dists, d_weights, elems, mCudaThreads);
+}
+#endif // ENABLE_CUDA

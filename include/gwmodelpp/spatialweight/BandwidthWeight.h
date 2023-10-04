@@ -5,6 +5,10 @@
 #include <string>
 #include "Weight.h"
 
+#ifdef ENABLE_CUDA
+#include "gwmodelpp/utils/CudaUtils.h"
+#include "gwmodelpp/spatialweight/cuda/BandwidthWeightKernel.h"
+#endif // ENABLE_CUDA
 
 namespace gwm
 {
@@ -142,11 +146,18 @@ public:
      * 
      * @param bandwidthWeight \~english Reference to the object for copying \~chinese 要复制的对象引用
      */
-    BandwidthWeight(const BandwidthWeight& bandwidthWeight)
+    BandwidthWeight(const BandwidthWeight& bandwidthWeight) : Weight(bandwidthWeight)
     {
         mBandwidth = bandwidthWeight.mBandwidth;
         mAdaptive = bandwidthWeight.mAdaptive;
         mKernel = bandwidthWeight.mKernel;
+#ifdef ENABLE_CUDA
+        mUseCuda = bandwidthWeight.mUseCuda;
+        if (mUseCuda)
+        {
+            prepareCuda(bandwidthWeight.mGpuID);
+        }
+#endif // ENABLE_CUDA
     }
 
     /**
@@ -168,6 +179,10 @@ public:
 
 public:
     virtual arma::vec weight(arma::vec dist) override;
+
+#ifdef ENABLE_CUDA
+    virtual cudaError_t weight(double* d_dists, double* d_weights, size_t elems) override;
+#endif // ENABLE_CUDA
 
     /**
      * @brief \~english Get the bandwidth size. \~chinese 获取带宽大小。
@@ -229,6 +244,15 @@ public:
     {
         mKernel = kernel;
     }
+
+#ifdef ENABLE_CUDA
+    cudaError_t prepareCuda(size_t gpuId) override
+    {
+        checkCudaErrors(Weight::prepareCuda(gpuId));
+        mCudaPrepared = true;
+        return cudaSuccess;
+    }
+#endif // ENABLE_CUDA
 
 private:
     double mBandwidth;          //!< \~english Bandwidth size \~chinese 带宽大小

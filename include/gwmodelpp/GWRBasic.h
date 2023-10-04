@@ -25,7 +25,7 @@ namespace gwm
  * 该算法可以通过 OpenMP 加速。
  * 
  */
-class GWRBasic : public GWRBase, public IBandwidthSelectable, public IVarialbeSelectable, public IParallelizable, public IParallelOpenmpEnabled
+class GWRBasic : public GWRBase, public IBandwidthSelectable, public IVarialbeSelectable, public IParallelizable, public IParallelOpenmpEnabled, public IParallelCudaEnabled
 {
 public:
 
@@ -355,6 +355,26 @@ public:     // Implement IRegressionAnalysis
 
     arma::mat fit() override;
 
+public:     // Implement IVariableSelectable
+    Status getCriterion(const std::vector<size_t>& variables, double& criterion) override
+    {
+        criterion = (this->*mIndepVarsSelectionCriterionFunction)(variables);
+        return mStatus;
+    }
+
+    std::vector<std::size_t> selectedVariables() override
+    {
+        return mSelectedIndepVars;
+    }
+
+public:     // Implement IBandwidthSelectable
+    Status getCriterion(BandwidthWeight* weight, double& criterion) override
+    {
+        criterion = (this->*mBandwidthSelectionCriterionFunction)(weight);
+        return mStatus;
+    }
+
+
 private:
     
     /**
@@ -401,7 +421,53 @@ private:
      */
     arma::mat fitSerial(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qDiag, arma::mat& S);
     
+    /**
+     * \~english
+     * @brief Get CV value with given bandwidth for bandwidth optimization (serial implementation).
+     * 
+     * @param bandwidthWeight Given bandwidth
+     * @return double Criterion value
+     * 
+     * \~chinese
+     * @brief 根据指定的带宽计算带宽优选的CV值（串行实现）。
+     * 
+     * @param bandwidthWeight 指定的带宽。
+     * @return double 带宽优选的指标值。
+     */
+    double bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight);
+    
+    /**
+     * \~english
+     * @brief Get AIC value with given bandwidth for bandwidth optimization (serial implementation).
+     * 
+     * @param bandwidthWeight Given bandwidth
+     * @return double Criterion value
+     * 
+     * \~chinese
+     * @brief 根据指定的带宽计算带宽优选的AIC值（串行实现）。
+     * 
+     * @param bandwidthWeight 指定的带宽。
+     * @return double 带宽优选的指标值。
+     */
+    double bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeight);
+    
+    /**
+     * \~english
+     * @brief Get AIC value with given variables for variable optimization (serial implementation).
+     * 
+     * @param indepVars Given variables
+     * @return double Criterion value
+     * 
+     * \~chinese
+     * @brief 根据指定的变量计算变量优选的AIC值（串行实现）。
+     * 
+     * @param indepVars 指定的变量。
+     * @return double 变量优选的指标值。
+     */
+    double indepVarsSelectionCriterionSerial(const std::vector<size_t>& indepVars);
+
 #ifdef ENABLE_OPENMP
+
     /**
      * \~english 
      * @brief Predict coefficients on specified locations (OpenMP implementation).
@@ -445,48 +511,7 @@ private:
      * @return mat 回归系数估计值
      */
     arma::mat fitOmp(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qDiag, arma::mat& S);
-#endif
 
-public:     // Implement IBandwidthSelectable
-    Status getCriterion(BandwidthWeight* weight, double& criterion) override
-    {
-        criterion = (this->*mBandwidthSelectionCriterionFunction)(weight);
-        return mStatus;
-    }
-
-private:
-    
-    /**
-     * \~english
-     * @brief Get CV value with given bandwidth for bandwidth optimization (serial implementation).
-     * 
-     * @param bandwidthWeight Given bandwidth
-     * @return double Criterion value
-     * 
-     * \~chinese
-     * @brief 根据指定的带宽计算带宽优选的CV值（串行实现）。
-     * 
-     * @param bandwidthWeight 指定的带宽。
-     * @return double 带宽优选的指标值。
-     */
-    double bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight);
-    
-    /**
-     * \~english
-     * @brief Get AIC value with given bandwidth for bandwidth optimization (serial implementation).
-     * 
-     * @param bandwidthWeight Given bandwidth
-     * @return double Criterion value
-     * 
-     * \~chinese
-     * @brief 根据指定的带宽计算带宽优选的AIC值（串行实现）。
-     * 
-     * @param bandwidthWeight 指定的带宽。
-     * @return double 带宽优选的指标值。
-     */
-    double bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeight);
-
-#ifdef ENABLE_OPENMP
     /**
      * \~english
      * @brief Get CV value with given bandwidth for bandwidth optimization (OpenMP implementation).
@@ -516,38 +541,7 @@ private:
      * @return double 带宽优选的指标值。
      */
     double bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight);
-#endif
 
-public:     // Implement IVariableSelectable
-    Status getCriterion(const std::vector<size_t>& variables, double& criterion) override
-    {
-        criterion = (this->*mIndepVarsSelectionCriterionFunction)(variables);
-        return mStatus;
-    }
-
-    std::vector<std::size_t> selectedVariables() override
-    {
-        return mSelectedIndepVars;
-    }
-
-private:
-    
-    /**
-     * \~english
-     * @brief Get AIC value with given variables for variable optimization (serial implementation).
-     * 
-     * @param indepVars Given variables
-     * @return double Criterion value
-     * 
-     * \~chinese
-     * @brief 根据指定的变量计算变量优选的AIC值（串行实现）。
-     * 
-     * @param indepVars 指定的变量。
-     * @return double 变量优选的指标值。
-     */
-    double indepVarsSelectionCriterionSerial(const std::vector<size_t>& indepVars);
-    
-#ifdef ENABLE_OPENMP
     /**
      * \~english
      * @brief Get AIC value with given variables for variable optimization (OpenMP implementation).
@@ -562,7 +556,101 @@ private:
      * @return double 变量优选的指标值。
      */
     double indepVarsSelectionCriterionOmp(const std::vector<size_t>& indepVars);
-#endif    
+
+#endif
+
+#ifdef ENABLE_CUDA
+
+    /**
+     * \~english 
+     * @brief Predict coefficients on specified locations (CUDA implementation).
+     * 
+     * @param locations Locations where to predict coefficients.
+     * @param x Independent variables.
+     * @param y Dependent variable.
+     * @return mat Predicted coefficients.
+     * 
+     * \~chinese 
+     * @brief 在指定位置处进行回归系数预测（CUDA实现）。
+     * 
+     * @param locations 指定位置。
+     * @param x 自变量矩阵。
+     * @param y 因变量。
+     * @return mat 回归系数预测值。
+     */
+    arma::mat fitCuda(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qDiag, arma::mat& S);
+
+    /**
+     * \~english
+     * @brief Fit coefficients (CUDA implementation).
+     * 
+     * @param x Independent variables.
+     * @param y Dependent variable.
+     * @param betasSE [out] Standard errors of coefficient estimates.
+     * @param shat [out] A vector of \f$tr(S)\f$ and \f$tr(SS^T)\f$.
+     * @param qDiag [out] The diagonal elements of matrix \f$Q\f$.
+     * @param S [out] The hat-matrix \f$S\f$.
+     * @return mat Coefficient estimates.
+     * 
+     * \~chinese
+     * @brief 回归系数估计值（CUDA实现）。
+     * 
+     * @param x 自变量矩阵。
+     * @param y 因变量。
+     * @param betasSE [out] 回归系数估计值的标准差。
+     * @param shat [out] 由 \f$tr(S)\f$ 和 \f$tr(SS^T)\f$ 组成的向量。
+     * @param qDiag [out] 矩阵 \f$Q\f$ 的对角线元素。
+     * @param S [out] 帽子矩阵 \f$S\f$。
+     * @return mat 回归系数估计值
+     */
+    arma::mat predictCuda(const arma::mat& locations, const arma::mat& x, const arma::vec& y);
+
+    /**
+     * \~english
+     * @brief Get CV value with given bandwidth for bandwidth optimization (CUDA implementation).
+     * 
+     * @param bandwidthWeight Given bandwidth
+     * @return double Criterion value
+     * 
+     * \~chinese
+     * @brief 根据指定的带宽计算带宽优选的CV值（CUDA实现）。
+     * 
+     * @param bandwidthWeight 指定的带宽。
+     * @return double 带宽优选的指标值。
+     */
+    double bandwidthSizeCriterionCVCuda(BandwidthWeight* bandwidthWeight);
+
+    /**
+     * \~english
+     * @brief Get AIC value with given bandwidth for bandwidth optimization (CUDA implementation).
+     * 
+     * @param bandwidthWeight Given bandwidth
+     * @return double Criterion value
+     * 
+     * \~chinese
+     * @brief 根据指定的带宽计算带宽优选的AIC值（CUDA实现）。
+     * 
+     * @param bandwidthWeight 指定的带宽。
+     * @return double 带宽优选的指标值。
+     */
+    double bandwidthSizeCriterionAICCuda(BandwidthWeight* bandwidthWeight);
+
+    /**
+     * \~english
+     * @brief Get AIC value with given variables for variable optimization (CUDA implementation).
+     * 
+     * @param indepVars Given variables
+     * @return double Criterion value
+     * 
+     * \~chinese
+     * @brief 根据指定的变量计算变量优选的AIC值（CUDA实现）。
+     * 
+     * @param indepVars 指定的变量。
+     * @return double 变量优选的指标值。
+     */
+    double indepVarsSelectionCriterionCuda(const std::vector<size_t>& indepVars);
+
+#endif
 
 public:     // Implement IParallelizable
     int parallelAbility() const override
@@ -570,7 +658,10 @@ public:     // Implement IParallelizable
         return ParallelType::SerialOnly
 #ifdef ENABLE_OPENMP
             | ParallelType::OpenMP
-#endif        
+#endif // ENABLE_OPENMP
+#ifdef ENABLE_CUDA
+            | ParallelType::CUDA
+#endif // ENABLE_CUDA
         ;
     }
 
@@ -580,6 +671,8 @@ public:     // Implement IParallelizable
 
 public:     // Implement IGwmParallelOpenmpEnabled
     void setOmpThreadNum(const int threadNum) override { mOmpThreadNum = threadNum; }
+    void setGPUId(const int gpuId) override { mGpuId = gpuId; };
+    void setGroupSize(const double size) override { mGroupLength = size; };
 
 protected:
 
@@ -637,6 +730,8 @@ protected:
 
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Type of parallel method. \~chinese 并行方法类型。
     int mOmpThreadNum = 8;  //!< \~english Number of threads to create. \~chinese 并行计算创建的线程数。
+    size_t mGroupLength = 64;   //!< \~english Size of a group computing together. \~chinese 同时计算的一组的大小。
+    int mGpuId = 0; //!< \~english The ID of selected GPU. \~chinese 选择的 GPU 的 ID。
 
     arma::mat mBetasSE;  //!< \~english Standard errors of coefficient estimates. \~chinese 回归系数估计值的标准差。
     arma::vec mSHat;  //!< \~english A vector of \f$tr(S)\f$ and \f$tr(SS^T)\f$. \~chinese 由 \f$tr(S)\f$ 和 \f$tr(SS^T)\f$ 组成的向量。
