@@ -544,8 +544,8 @@ template<class T>
 class cuview
 {
 public:
-    constexpr static cubase::Type type = custride<T>::type;
-    constexpr static cuop::Op op = custride<T>::op;
+    constexpr static cubase::Type type = cutraits<T>::type;
+    constexpr static cuop::Op op = cutraits<T>::op;
 
 public:
     explicit cuview(T& src): mSrc(src) {}

@@ -1140,7 +1140,8 @@ vec GWRMultiscale::fitVarCuda(const vec &x, const vec &y, const uword var, mat &
 
 double GWRMultiscale::bandwidthSizeCriterionAllCVCuda(BandwidthWeight* bandwidthWeight)
 {
-    uword nDp = mCoords.n_rows, nVar = mX.n_cols, elems = nDp;
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
+    size_t elems = nDp;
     cumat u_xt(mX.t()), u_y(mY);
     cumat u_dists(nDp, 1), u_weights(nDp, 1);
     custride u_xtw(nVar, nDp, mGroupLength);
@@ -1198,7 +1199,8 @@ double GWRMultiscale::bandwidthSizeCriterionAllCVCuda(BandwidthWeight* bandwidth
 
 double GWRMultiscale::bandwidthSizeCriterionAllAICCuda(BandwidthWeight* bandwidthWeight)
 {
-    uword nDp = mCoords.n_rows, nVar = mX.n_cols, elems = nDp;
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
+    size_t elems = nDp;
     cumat u_xt(mX.t()), u_y(mY), u_betas(nVar, nDp);
     cumat u_dists(nDp, 1), u_weights(nDp, 1);
     custride u_xtw(nVar, nDp, mGroupLength);
@@ -1263,7 +1265,8 @@ double GWRMultiscale::bandwidthSizeCriterionAllAICCuda(BandwidthWeight* bandwidt
 double GWRMultiscale::bandwidthSizeCriterionVarCVCuda(BandwidthWeight* bandwidthWeight)
 {
     size_t var = mBandwidthSelectionCurrentIndex;
-    uword nDp = mCoords.n_rows, elems = nDp;
+    uword nDp = mCoords.n_rows;
+    size_t elems = nDp;
     constexpr size_t nVar = 1;
     cumat u_xt(mXi.t()), u_y(mYi);
     cumat u_dists(nDp, 1), u_weights(nDp, 1);
@@ -1323,7 +1326,8 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVCuda(BandwidthWeight* bandwidth
 double GWRMultiscale::bandwidthSizeCriterionVarAICCuda(BandwidthWeight* bandwidthWeight)
 {
     size_t var = mBandwidthSelectionCurrentIndex;
-    uword nDp = mCoords.n_rows, elems = nDp;
+    uword nDp = mCoords.n_rows;
+    size_t elems = nDp;
     constexpr size_t nVar = 1;
     cumat u_xt(mXi.t()), u_y(mYi), u_betas(nVar, nDp);
     cumat u_dists(nDp, 1), u_weights(nDp, 1);
