@@ -701,7 +701,8 @@ arma::mat GWRBasic::predictCuda(const mat& locations, const mat& x, const vec& y
 
 double GWRBasic::bandwidthSizeCriterionCVCuda(BandwidthWeight* bandwidthWeight)
 {
-    uword nDp = mCoords.n_rows, nVar = mX.n_cols, elems = nDp;
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
+    size_t elems = nDp;
     cumat u_xt(mX.t()), u_y(mY);
     cumat u_dists(nDp, 1), u_weights(nDp, 1);
     custride u_xtw(nVar, nDp, mGroupLength);
@@ -759,7 +760,8 @@ double GWRBasic::bandwidthSizeCriterionCVCuda(BandwidthWeight* bandwidthWeight)
 
 double GWRBasic::bandwidthSizeCriterionAICCuda(BandwidthWeight* bandwidthWeight)
 {
-    uword nDp = mCoords.n_rows, nVar = mX.n_cols, elems = nDp;
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols;
+    size_t elems = nDp;
     cumat u_xt(mX.t()), u_y(mY), u_betas(nVar, nDp);
     cumat u_dists(nDp, 1), u_weights(nDp, 1);
     custride u_xtw(nVar, nDp, mGroupLength);
