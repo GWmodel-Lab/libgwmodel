@@ -4,6 +4,7 @@
 #include <utility>
 #include <string>
 #include <initializer_list>
+#include <optional>
 #include "GWRBase.h"
 #include "RegressionDiagnostic.h"
 #include "IBandwidthSelectable.h"
@@ -181,6 +182,20 @@ public:
      * @param criterion 带宽自动优选指标值类型。
      */
     void setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion);
+
+    /**
+     * @brief \~english Set the upper bounds of golden selection. \~chinese 设置 Golden selection 算法的上界。
+     * 
+     * @param value \~english \~chinese
+     */
+    void setGoldenUpperBounds(double value) { mGoldenUpperBounds = value; }
+
+    /**
+     * @brief \~english Set the lower bounds of golden selection. \~chinese 设置 Golden selection 算法的下界。
+     * 
+     * @param value \~english \~chinese
+     */
+    void setGoldenLowerBounds(double value) { mGoldenLowerBounds = value; }
 
     /**
      * \~english
@@ -724,6 +739,8 @@ protected:
     BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &GWRBasic::bandwidthSizeCriterionCVSerial; //!< \~english Criterion calculator for bandwidth selection. \~chinese 带宽优选的指标计算函数。
     BandwidthCriterionList mBandwidthSelectionCriterionList;    //!< \~english Criterion list of each bandwidth. \~chinese 每种带宽组合对应的指标值。
     double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
+    std::optional<double> mGoldenUpperBounds;
+    std::optional<double> mGoldenLowerBounds;
 
     PredictCalculator mPredictFunction = &GWRBasic::predictSerial;  //!< \~english Implementation of predict function. \~chinese 预测的具体实现函数。
     FitCalculator mFitFunction = &GWRBasic::fitSerial;  //!< \~english Implementation of fit function. \~chinese 拟合的具体实现函数。
