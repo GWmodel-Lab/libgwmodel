@@ -4,6 +4,7 @@
 #include <utility>
 #include <string>
 #include <initializer_list>
+#include <optional>
 #include "SpatialMultiscaleAlgorithm.h"
 #include "spatialweight/SpatialWeight.h"
 #include "IRegressionAnalysis.h"
@@ -249,6 +250,20 @@ public:
     virtual ~GWRMultiscale() {}
 
 public:
+
+    /**
+     * @brief \~english Set the upper bounds of golden selection. \~chinese 设置 Golden selection 算法的上界。
+     * 
+     * @param value \~english \~chinese
+     */
+    void setGoldenUpperBounds(double value) { mGoldenUpperBounds = value; }
+
+    /**
+     * @brief \~english Set the lower bounds of golden selection. \~chinese 设置 Golden selection 算法的下界。
+     * 
+     * @param value \~english \~chinese
+     */
+    void setGoldenLowerBounds(double value) { mGoldenLowerBounds = value; }
 
     /**
      * \~english
@@ -966,7 +981,9 @@ private:
     BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &GWRMultiscale::bandwidthSizeCriterionAllCVSerial; //!< \~english The criterion calculator for given bandwidth size. \~chinese 根据指定带宽值计算指标值的函数。
     size_t mBandwidthSelectionCurrentIndex = 0; //!< \~english The index of variable which currently the algorithm select bandwidth for. \~chinese 当前正在选带宽的变量索引值。
     double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
-
+    std::optional<double> mGoldenUpperBounds;
+    std::optional<double> mGoldenLowerBounds;
+    std::vector<double> mMaxDistances;
 
     std::vector<BandwidthInitilizeType> mBandwidthInitilize;    //!< \~english Type of bandwidth initilization values. \~chinese 带宽初始值类型。
     std::vector<BandwidthSelectionCriterionType> mBandwidthSelectionApproach;   //!< \~english Type of bandwidth selection approach. \~chinese 带宽选择方法类型。
