@@ -71,6 +71,7 @@ mat GWRMultiscale::fit()
     uword nDp = mX.n_rows, nVar = mX.n_cols;
     createDistanceParameter(nVar);
     createInitialDistanceParameter();
+    mMaxDistances.resize(nVar);
 #ifdef ENABLE_CUDA
     if (mParallelType == ParallelType::CUDA)
     {
@@ -113,12 +114,13 @@ mat GWRMultiscale::fit()
             mXi = mX.col(i);
             BandwidthWeight* bw0 = bandwidth(i);
             bool adaptive = bw0->adaptive();
+            mMaxDistances[i] = mSpatialWeights[i].distance()->maxDistance();
 
             GWM_LOG_INFO(string(GWM_LOG_TAG_MGWR_INITIAL_BW) + to_string(i));
             BandwidthSelector selector;
             selector.setBandwidth(bw0);
-            selector.setLower(adaptive ? mAdaptiveLower : 0.0);
-            selector.setUpper(adaptive ? mCoords.n_rows : mSpatialWeights[i].distance()->maxDistance());
+            selector.setLower(mGoldenLowerBounds.value_or(adaptive ? mAdaptiveLower : mMaxDistances[i] / 5000.0));
+            selector.setUpper(mGoldenUpperBounds.value_or(adaptive ? mCoords.n_rows : mMaxDistances[i]));
             BandwidthWeight* bw = selector.optimize(this);
             if (bw)
             {
@@ -251,9 +253,9 @@ mat GWRMultiscale::backfitting(const mat &x, const vec &y)
                 bool adaptive = bwi0->adaptive();
                 BandwidthSelector selector;
                 selector.setBandwidth(bwi0);
-                double maxDist = mSpatialWeights[i].distance()->maxDistance();
-                selector.setLower(adaptive ? mAdaptiveLower : maxDist / 5000.0);
-                selector.setUpper(adaptive ? mCoords.n_rows : maxDist);
+                double maxDist = mMaxDistances[i];
+                selector.setLower(mGoldenLowerBounds.value_or(adaptive ? mAdaptiveLower : maxDist / 5000.0));
+                selector.setUpper(mGoldenUpperBounds.value_or(adaptive ? mCoords.n_rows : maxDist));
                 BandwidthWeight* bwi = selector.optimize(this);
                 double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
                 vector<string> vbs_args {
