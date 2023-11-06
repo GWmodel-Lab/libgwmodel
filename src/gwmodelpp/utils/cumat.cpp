@@ -2,6 +2,11 @@
 
 cublasHandle_t cubase::handle = nullptr;
 
+cumat::cumat(cuop_diagmul &&op): cumat(op.nrows(), op.ncols())
+{
+    op.eval(*this);
+}
+
 const cuop_trans<cumat> cumat::t() const
 {
     return cuop_trans<cumat>(*this);
@@ -12,16 +17,14 @@ custride cumat::as_stride() const
     return custride(*this);
 }
 
-cumat cumat::diagmul(const cumat& diag) const
+cuop_diagmul cumat::diagmul(const cumat& diag) const
 {
-    cumat res { mRows, mCols };
-    cublasDdgmm(
-        cubase::handle, CUBLAS_SIDE_RIGHT, mRows, mCols, 
-        dMem, mRows, 
-        diag.dmem(), 1, 
-        res.dmem(), mRows
-    );
-    return res;
+    return cuop_diagmul(*this, diag);
+}
+
+custride::custride(cuop_inv &&op): custride(op.nrows(), op.nrows(), op.nstrides())
+{
+    op.eval(*this);
 }
 
 cuview<custride> custride::strides(size_t start) const
@@ -43,12 +46,15 @@ const cuop_trans<custride> custride::t() const
     return cuop_trans<custride>(*this);
 }
 
-custride custride::inv(int* d_info) const
+cuop_inv custride::inv(int* d_info) const
 {
-    custride d_inv(mRows, mCols, mStrides);
-    cubatched b_array(*this), b_inv(d_inv);
-    cublasDmatinvBatched(cubase::handle, mRows, b_array.darray(), b_array.nrows(), b_inv.darray(), b_inv.nrows(), d_info, b_array.nbatch());
-    return d_inv;
+    return cuop_inv(*this, d_info);
+}
+
+custride &custride::operator=(cuop_inv &&op)
+{
+    op.eval(*this);
+    return *this;
 }
 
 cumat& cumat::operator=(const cuop_trans<cumat>& right)
@@ -63,5 +69,11 @@ cumat& cumat::operator=(const cuop_trans<cumat>& right)
         dMem, mRows
     );
     if (error != CUBLAS_STATUS_SUCCESS) throw error;
+    return *this;
+}
+
+cumat &cumat::operator=(cuop_diagmul &&op)
+{
+    op.eval(*this);
     return *this;
 }

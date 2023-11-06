@@ -24,8 +24,29 @@ TEST_CASE("cuBLAS gemm")
         mat arB = flag_B_trans ? mat(n, k, arma::fill::randu) : mat(k, n, arma::fill::randu);
         mat arC = flag_A_trans ? (flag_B_trans ? mat(trans(arA) * trans(arB)) : mat(trans(arA) * arB)) : (flag_B_trans ? mat(arA * trans(arB)) : mat(arA * arB));
 
-        cumat cuA(arA), cuB(arB);
-        cumat cuC = flag_A_trans ? (flag_B_trans ? (cuA.t() * cuB.t()) : (cuA.t() * cuB)) : (flag_B_trans ? (cuA * cuB.t()) : (cuA * cuB));
+        cumat cuA(arA), cuB(arB), cuC(arC.n_rows, arC.n_cols);
+        if (flag_A_trans) 
+        {
+            if (flag_B_trans) 
+            {
+                cuC = cuA.t() * cuB.t();
+            }
+            else
+            {
+                cuC = cuA.t() * cuB;
+            }
+        }
+        else 
+        {
+            if (flag_B_trans)
+            {
+                cuC = cuA * cuB.t();
+            }
+            else
+            {
+                cuC = cuA * cuB;
+            }
+        }
 
         mat arD(size(arC));
         cuC.get(arD.memptr());
@@ -47,8 +68,29 @@ TEST_CASE("cuBLAS gemm")
             arC.slice(i) = flag_A_trans ? (flag_B_trans ? mat(trans(a) * trans(b)) : mat(trans(a) * b)) : (flag_B_trans ? mat(a * trans(b)) : mat(a * b));
         }
         
-        custride cuA(arA), cuB(arB);
-        custride cuC = flag_A_trans ? (flag_B_trans ? (cuA.t() * cuB.t()) : (cuA.t() * cuB)) : (flag_B_trans ? (cuA * cuB.t()) : (cuA * cuB));
+        custride cuA(arA), cuB(arB), cuC(arC.n_rows, arC.n_cols, arC.n_slices);
+        if (flag_A_trans) 
+        {
+            if (flag_B_trans) 
+            {
+                cuC = cuA.t() * cuB.t();
+            }
+            else
+            {
+                cuC = cuA.t() * cuB;
+            }
+        }
+        else 
+        {
+            if (flag_B_trans)
+            {
+                cuC = cuA * cuB.t();
+            }
+            else
+            {
+                cuC = cuA * cuB;
+            }
+        }
 
         cube arD(arC.n_rows, arC.n_cols, arC.n_slices);
         cuC.get(arD.memptr());
@@ -72,7 +114,29 @@ TEST_CASE("cuBLAS gemm")
         
         custride cuA(arA);
         cumat cuB(arB);
-        custride cuC = flag_A_trans ? (flag_B_trans ? (cuA.t() * cuB.t()) : (cuA.t() * cuB)) : (flag_B_trans ? (cuA * cuB.t()) : (cuA * cuB));
+        custride cuC(arC.n_rows, arC.n_cols, arC.n_slices);
+        if (flag_A_trans) 
+        {
+            if (flag_B_trans) 
+            {
+                cuC = cuA.t() * cuB.t();
+            }
+            else
+            {
+                cuC = cuA.t() * cuB;
+            }
+        }
+        else 
+        {
+            if (flag_B_trans)
+            {
+                cuC = cuA * cuB.t();
+            }
+            else
+            {
+                cuC = cuA * cuB;
+            }
+        }
 
         cube arD(arC.n_rows, arC.n_cols, arC.n_slices);
         cuC.get(arD.memptr());
@@ -96,7 +160,29 @@ TEST_CASE("cuBLAS gemm")
         
         cumat cuA(arA);
         custride cuB(arB);
-        custride cuC = flag_A_trans ? (flag_B_trans ? (cuA.t() * cuB.t()) : (cuA.t() * cuB)) : (flag_B_trans ? (cuA * cuB.t()) : (cuA * cuB));
+        custride cuC(arC.n_rows, arC.n_cols, arC.n_slices);
+        if (flag_A_trans) 
+        {
+            if (flag_B_trans) 
+            {
+                cuC = cuA.t() * cuB.t();
+            }
+            else
+            {
+                cuC = cuA.t() * cuB;
+            }
+        }
+        else 
+        {
+            if (flag_B_trans)
+            {
+                cuC = cuA * cuB.t();
+            }
+            else
+            {
+                cuC = cuA * cuB;
+            }
+        }
 
         cube arD(arC.n_rows, arC.n_cols, arC.n_slices);
         cuC.get(arD.memptr());
@@ -151,11 +237,13 @@ TEST_CASE("Mat mul benchmark")
         p_info = new int[g];
         cudaMalloc(&d_info, sizeof(int) * g);
         custride xtwx(k, k, g), xtwx_inv(k, k, n);
+        cumat xtw(cu_x.nrows(), cu_x.ncols());
         for (size_t j = 0; j < groups; j++)
         {
             for (size_t i = 0; i < g; i++)
             {
-                xtwx.strides(i) = (cu_x.diagmul(cu_w)).t() * cu_x;
+                xtw = cu_x.diagmul(cu_w);
+                xtwx.strides(i) = xtw.t() * cu_x;
             }
             xtwx_inv.strides(j * g, j * g + g) = xtwx.inv(d_info);
         }
