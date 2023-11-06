@@ -127,7 +127,7 @@ TEST_CASE("cuBLAS gemm")
 
 TEST_CASE("Mat mul benchmark")
 {
-    size_t n = 10000, k = 4, g = 100;
+    size_t n = 20000, k = 4, g = 100;
     mat ar_x(n, k, arma::fill::randn);
     vec ar_w(n, arma::fill::randu);
     cumat cu_x(ar_x);
