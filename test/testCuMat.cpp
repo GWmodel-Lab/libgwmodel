@@ -127,12 +127,22 @@ TEST_CASE("cuBLAS gemm")
 
 TEST_CASE("Mat mul benchmark")
 {
-    size_t n = 20000, k = 4, g = 100;
+    size_t n = 10000, k = 4, g = 100;
     mat ar_x(n, k, arma::fill::randn);
     vec ar_w(n, arma::fill::randu);
     cumat cu_x(ar_x);
     cumat cu_w(ar_w);
     size_t groups = n / 100;
+
+    BENCHMARK("simulate weighted regression | arma")
+    {
+        cube xtwx_inv(k, k, n);
+        for (size_t i = 0; i < n; i++)
+        {
+            xtwx_inv.slice(i) = inv((ar_x.each_col() % ar_w).t() * ar_x);
+        }
+        return xtwx_inv;
+    };
     
     BENCHMARK("simulate weighted regression | cuda")
     {
@@ -152,16 +162,6 @@ TEST_CASE("Mat mul benchmark")
         cudaFree(d_info);
         delete[] p_info;
         cublasDestroy(cumat::handle);
-        return xtwx_inv;
-    };
-
-    BENCHMARK("simulate weighted regression | arma")
-    {
-        cube xtwx_inv(k, k, n);
-        for (size_t i = 0; i < n; i++)
-        {
-            xtwx_inv.slice(i) = inv((ar_x.each_col() % ar_w).t() * ar_x);
-        }
         return xtwx_inv;
     };
 };
