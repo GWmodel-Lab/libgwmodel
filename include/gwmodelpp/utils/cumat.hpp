@@ -241,7 +241,7 @@ public:
     template<class R>
     auto operator*(const R& right) const
     {
-        return cuop_matmul<cumat, R>(*this, right).eval();
+        return std::move(cuop_matmul<cumat, R>(*this, right).eval());
     }
 
     /**
@@ -403,7 +403,7 @@ public:
     template<class R>
     auto operator*(const R& right) const
     {
-        return cuop_matmul<custride, R>(*this, right).eval();
+        return std::move(cuop_matmul<custride, R>(*this, right).eval());
     }
 
 protected:
@@ -534,7 +534,7 @@ public:
     template<class R>
     auto operator*(const R& right) const
     {
-        return cuop_matmul<cuop_trans<T>, R>(*this, right).eval();
+        return std::move(cuop_matmul<cuop_trans<T>, R>(*this, right).eval());
     }
 
     const T& ori;
