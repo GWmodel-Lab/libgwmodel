@@ -644,7 +644,7 @@ protected:
      */
     BandwidthWeight* bandwidth(size_t i)
     {
-        return static_cast<BandwidthWeight*>(mSpatialWeights[i].weight());
+        return mSpatialWeights[i].weight<BandwidthWeight>();
     }
 
     /**

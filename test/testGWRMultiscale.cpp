@@ -229,7 +229,7 @@ TEST_CASE("MGWR: basic flow")
             BandwidthWeight bandwidth(36, true, BandwidthWeight::Bisquare);
             spatials.push_back(SpatialWeight(&bandwidth, &distance));
             preditorCentered.push_back(i != 0);
-            bandwidthInitialize.push_back(GWRMultiscale::BandwidthInitilizeType::Initial);
+            bandwidthInitialize.push_back(GWRMultiscale::BandwidthInitilizeType::Null);
             bandwidthSelectionApproach.push_back(GWRMultiscale::BandwidthSelectionCriterionType::CV);
         }
 
