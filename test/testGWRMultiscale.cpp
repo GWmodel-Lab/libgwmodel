@@ -249,6 +249,11 @@ TEST_CASE("MGWR: basic flow")
         algorithm.setGoldenLowerBounds(50);
         algorithm.setGoldenUpperBounds(100);
         REQUIRE_NOTHROW(algorithm.fit());
+
+        const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
+        REQUIRE(spatialWeights[0].weight<BandwidthWeight>()->bandwidth() == 52);
+        REQUIRE(spatialWeights[1].weight<BandwidthWeight>()->bandwidth() == 99);
+        REQUIRE(spatialWeights[2].weight<BandwidthWeight>()->bandwidth() == 99);
     }
 }
 
