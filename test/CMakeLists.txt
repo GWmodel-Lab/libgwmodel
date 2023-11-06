@@ -37,84 +37,84 @@ set(ADDON_SOURCES
 add_definitions(-DSAMPLE_DATA_DIR="${SAMPLE_DATA_DIR}")
 set(SAMPL_LONDONHP ${CMAKE_CURRENT_SOURCE_DIR}/data/londonhp.cpp)
 
-add_executable(testGWRBasic GWRBasic.cpp ${ADDON_SOURCES})
+add_executable(testGWRBasic testGWRBasic.cpp ${ADDON_SOURCES})
 target_link_libraries(testGWRBasic PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRBasic 
     COMMAND $<TARGET_FILE:testGWRBasic> --success
 )
 
-add_executable(testGWSS GWSS.cpp ${ADDON_SOURCES})
+add_executable(testGWSS testGWSS.cpp ${ADDON_SOURCES})
 target_link_libraries(testGWSS PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWSS 
     COMMAND $<TARGET_FILE:testGWSS> --success
 )
 
-add_executable(testGWPCA GWPCA.cpp ${ADDON_SOURCES})
+add_executable(testGWPCA testGWPCA.cpp ${ADDON_SOURCES})
 target_link_libraries(testGWPCA PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWPCA 
     COMMAND $<TARGET_FILE:testGWPCA> --success
 )
 
-add_executable(testGWDR GWDR.cpp ${ADDON_SOURCES})
+add_executable(testGWDR testGWDR.cpp ${ADDON_SOURCES})
 target_link_libraries(testGWDR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWDR 
     COMMAND $<TARGET_FILE:testGWDR> --success
 )
 
-add_executable(testGWRMultiscale GWRMultiscale.cpp ${ADDON_SOURCES})
+add_executable(testGWRMultiscale testGWRMultiscale.cpp ${ADDON_SOURCES})
 target_link_libraries(testGWRMultiscale PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRMultiscale 
     COMMAND $<TARGET_FILE:testGWRMultiscale> --success
 )
 
-add_executable(testLogger Logger.cpp ${ADDON_SOURCES})
+add_executable(testLogger testLogger.cpp ${ADDON_SOURCES})
 target_link_libraries(testLogger PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testLogger 
     COMMAND $<TARGET_FILE:testLogger> --success
 )
 
-add_executable(testGWRRobust GWRRobust.cpp ${ADDON_SOURCES})
+add_executable(testGWRRobust testGWRRobust.cpp ${ADDON_SOURCES})
 target_link_libraries(testGWRRobust PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRRobust 
     COMMAND $<TARGET_FILE:testGWRRobust> --success
 )
 
-add_executable(testGWRGeneralized GWRGeneralized.cpp ${ADDON_SOURCES} ${SAMPL_LONDONHP})
+add_executable(testGWRGeneralized testGWRGeneralized.cpp ${ADDON_SOURCES} ${SAMPL_LONDONHP})
 target_link_libraries(testGWRGeneralized PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRGeneralized 
     COMMAND $<TARGET_FILE:testGWRGeneralized> --success
 )
 
-add_executable(testGWRScalable GWRScalable.cpp ${ADDON_SOURCES})
+add_executable(testGWRScalable testGWRScalable.cpp ${ADDON_SOURCES})
 target_link_libraries(testGWRScalable PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRScalable 
     COMMAND $<TARGET_FILE:testGWRScalable> --success
 )
 
-add_executable(testGWRLocalCollinearity GWRLocalCollinearity.cpp ${ADDON_SOURCES})
+add_executable(testGWRLocalCollinearity testGWRLocalCollinearity.cpp ${ADDON_SOURCES})
 target_link_libraries(testGWRLocalCollinearity PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRLocalCollinearity 
     COMMAND $<TARGET_FILE:testGWRLocalCollinearity> --success
 )
 
-add_executable(testGTWR GTWR.cpp ${ADDON_SOURCES})
+add_executable(testGTWR testGTWR.cpp ${ADDON_SOURCES})
 target_link_libraries(testGTWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGTWR 
     COMMAND $<TARGET_FILE:testGTWR> --success
 )
 
-add_executable(testGWDA GWDA.cpp ${SAMPL_LONDONHP})
+add_executable(testGWDA testGWDA.cpp ${SAMPL_LONDONHP})
 target_link_libraries(testGWDA PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWDA 
@@ -122,7 +122,7 @@ add_test(
 )
 
 if (ENABLE_CUDA)
-add_executable(testCuMat cumat.cpp)
+add_executable(testCuMat testCuMat.cpp)
 target_link_libraries(testCuMat PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testCuMat
