@@ -389,41 +389,31 @@ TEST_CASE("BasicGWR: Benchmark")
     vec epsilon(n, fill::randn);
     vec y = sum(x % beta, 1) + epsilon;
     mat coords = join_rows(u, v);
-
-    const initializer_list<ParallelType> parallel_list = {
-        ParallelType::SerialOnly
-#ifdef ENABLE_OPENMP
-        , ParallelType::OpenMP
-#endif // ENABLE_OPENMP
-#ifdef ENABLE_CUDA
-        , ParallelType::CUDA
-#endif // ENABLE_CUDA
-    };
     
-    BENCHMARK("simulation | bw adaptive bisquare")
+    BENCHMARK("simulation | OpenMP")
     {
-        auto parallel_type = GENERATE_REF(values(parallel_list));
-        INFO("Parallel:" << ParallelTypeDict.at(parallel_type));
-
         CRSDistance distance(false);
         BandwidthWeight bw(32, true, BandwidthWeight::Bisquare);
         SpatialWeight sw(&bw, &distance);
 
         GWRBasic algorithm(x, y, coords, sw);
-        algorithm.setParallelType(parallel_type);
-        switch (parallel_type)
-        {
-        case ParallelType::OpenMP:
-            /* code */
-            algorithm.setOmpThreadNum(15);
-            break;
-        case ParallelType::CUDA:
-            algorithm.setGPUId(0);
-            algorithm.setGroupSize(64);
-            break;
-        default:
-            break;
-        }
+        algorithm.setParallelType(ParallelType::OpenMP);
+        algorithm.setOmpThreadNum(24);
+        algorithm.fit();
+
+        return algorithm.betas();
+    };
+    
+    BENCHMARK("simulation | CUDA")
+    {
+        CRSDistance distance(false);
+        BandwidthWeight bw(32, true, BandwidthWeight::Bisquare);
+        SpatialWeight sw(&bw, &distance);
+
+        GWRBasic algorithm(x, y, coords, sw);
+        algorithm.setParallelType(ParallelType::CUDA);
+        algorithm.setGPUId(0);
+        algorithm.setGroupSize(64);
         algorithm.fit();
 
         return algorithm.betas();
