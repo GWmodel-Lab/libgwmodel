@@ -584,7 +584,7 @@ double GWRBasic::indepVarsSelectionCriterionOmp(const vector<size_t>& indepVars)
 
 mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
 {
-    uword nDp = mCoords.n_rows, nVar = x.n_cols, nDim = mCoords.n_cols;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat xt = trans(x);
     mat betas = mat(nVar, nDp, arma::fill::zeros);
     betasSE = mat(nVar, nDp, arma::fill::zeros);
@@ -827,7 +827,7 @@ double GWRBasic::indepVarsSelectionCriterionCuda(const std::vector<size_t>& inde
 {
     mat x = mX.cols(VariableForwardSelector::index2uvec(indepVars, mHasIntercept));
     mat y = mY;
-    uword nDp = mCoords.n_rows, nVar = x.n_cols, elems = nDp;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     cumat u_xt(x.t()), u_y(y), u_betas(nVar, nDp);
     cumat u_weights(vec(nDp, fill::ones));
     custride u_xtw(nVar, nDp, mGroupLength);
