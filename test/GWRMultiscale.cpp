@@ -216,6 +216,40 @@ TEST_CASE("MGWR: basic flow")
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.757377391669, 1e-6));
         REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.715598248225, 1e-6));
     }
+
+    SECTION("optim bw cv | null init bw | adaptive | bisquare kernel | with hatmatrix | with bounds")
+    {
+        vector<SpatialWeight> spatials;
+        vector<bool> preditorCentered;
+        vector<GWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
+        vector<GWRMultiscale::BandwidthSelectionCriterionType> bandwidthSelectionApproach;
+        for (size_t i = 0; i < nVar; i++)
+        {
+            CRSDistance distance;
+            BandwidthWeight bandwidth(36, true, BandwidthWeight::Bisquare);
+            spatials.push_back(SpatialWeight(&bandwidth, &distance));
+            preditorCentered.push_back(i != 0);
+            bandwidthInitialize.push_back(GWRMultiscale::BandwidthInitilizeType::Initial);
+            bandwidthSelectionApproach.push_back(GWRMultiscale::BandwidthSelectionCriterionType::CV);
+        }
+
+        GWRMultiscale algorithm;
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
+        algorithm.setSpatialWeights(spatials);
+        algorithm.setHasHatMatrix(true);
+        algorithm.setCriterionType(GWRMultiscale::BackFittingCriterionType::CVR);
+        algorithm.setPreditorCentered(preditorCentered);
+        algorithm.setBandwidthInitilize(bandwidthInitialize);
+        algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
+        algorithm.setBandwidthSelectRetryTimes(5);
+        algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
+        algorithm.setParallelType(ParallelType::SerialOnly);
+        algorithm.setGoldenLowerBounds(50);
+        algorithm.setGoldenUpperBounds(100);
+        REQUIRE_NOTHROW(algorithm.fit());
+    }
 }
 
 TEST_CASE("Multiscale GWR: cancel")
