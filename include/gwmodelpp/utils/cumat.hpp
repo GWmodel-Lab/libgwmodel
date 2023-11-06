@@ -666,7 +666,7 @@ public:
             &cubase::beta0, c.dmem(), m, strideSizeC, strideC
         );
         if (error != CUBLAS_STATUS_SUCCESS) throw cublasGetStatusString(error);
-        return std::move(c);
+        return c;
     }
 
 private:
@@ -703,7 +703,7 @@ public:
             &cubase::beta0, c.dmem(), m
         );
         if (error != CUBLAS_STATUS_SUCCESS) throw cublasGetStatusString(error);
-        return std::move(c);
+        return c;
     }
 
 private:

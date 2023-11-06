@@ -48,7 +48,7 @@ custride custride::inv(int* d_info) const
     custride d_inv(mRows, mCols, mStrides);
     cubatched b_array(*this), b_inv(d_inv);
     cublasDmatinvBatched(cubase::handle, mRows, b_array.darray(), b_array.nrows(), b_inv.darray(), b_inv.nrows(), d_info, b_array.nbatch());
-    return std::move(d_inv);
+    return d_inv;
 }
 
 cumat& cumat::operator=(const cuop_trans<cumat>& right)
