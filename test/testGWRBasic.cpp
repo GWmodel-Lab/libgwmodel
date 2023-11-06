@@ -403,6 +403,7 @@ TEST_CASE("BasicGWR: Benchmark")
     BENCHMARK("simulation | bw adaptive bisquare")
     {
         auto parallel_type = GENERATE_REF(values(parallel_list));
+        INFO("Parallel:" << ParallelTypeDict.at(parallel_type));
 
         CRSDistance distance(false);
         BandwidthWeight bw(32, true, BandwidthWeight::Bisquare);
@@ -410,6 +411,19 @@ TEST_CASE("BasicGWR: Benchmark")
 
         GWRBasic algorithm(x, y, coords, sw);
         algorithm.setParallelType(parallel_type);
+        switch (parallel_type)
+        {
+        case ParallelType::OpenMP:
+            /* code */
+            algorithm.setOmpThreadNum(15);
+            break;
+        case ParallelType::CUDA:
+            algorithm.setGPUId(0);
+            algorithm.setGroupSize(64);
+            break;
+        default:
+            break;
+        }
         algorithm.fit();
 
         return algorithm.betas();
