@@ -376,3 +376,42 @@ TEST_CASE("Basic GWR: cancel")
     }
 
 }
+
+TEST_CASE("BasicGWR: Benchmark")
+{
+    size_t n = 10000, k = 3;
+    mat x(n, k, fill::randn);
+    vec u(n, fill::randu), v(n, fill::randu);
+    vec beta0 = u + v;
+    vec beta1 = u % u + v % v;
+    vec beta2 = sin(u) + cos(v);
+    mat beta = join_rows(beta0, beta1, beta2);
+    vec epsilon(n, fill::randn);
+    vec y = sum(x % beta, 1) + epsilon;
+    mat coords = join_rows(u, v);
+
+    const initializer_list<ParallelType> parallel_list = {
+        ParallelType::SerialOnly
+#ifdef ENABLE_OPENMP
+        , ParallelType::OpenMP
+#endif // ENABLE_OPENMP
+#ifdef ENABLE_CUDA
+        , ParallelType::CUDA
+#endif // ENABLE_CUDA
+    };
+    
+    BENCHMARK("simulation | bw adaptive bisquare")
+    {
+        auto parallel_type = GENERATE_REF(values(parallel_list));
+
+        CRSDistance distance(false);
+        BandwidthWeight bw(32, true, BandwidthWeight::Bisquare);
+        SpatialWeight sw(&bw, &distance);
+
+        GWRBasic algorithm(x, y, coords, sw);
+        algorithm.setParallelType(parallel_type);
+        algorithm.fit();
+
+        return algorithm.betas();
+    };
+}
