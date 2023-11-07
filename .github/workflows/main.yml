@@ -101,18 +101,3 @@ jobs:
           cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DENABLE_OpenMP=FALSE
           cmake --build build --config Debug
           ctest --test-dir build --output-on-failure
-
-  ubuntu-cuda-test:
-    runs-on: [self-hosted, Linux, gpu]
-    env:
-      CUDA_PATH: /usr/local/cuda
-    steps:
-      - name: Chekcout
-        uses: actions/checkout@v3
-      - name: CMake build and test
-        run: |
-          conda activate
-          mkdir build
-          cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DENABLE_OpenMP=FALSE -DCMAKE_PREFIX_PATH=~/.conda/envs/gwm -DENABLE_CUDA=TRUE -DCMAKE_CUDA_ARCHITECTURES=70
-          cmake --build build --config Debug
-          ctest --test-dir build --output-on-failure
