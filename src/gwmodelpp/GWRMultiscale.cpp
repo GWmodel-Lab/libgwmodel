@@ -145,9 +145,8 @@ mat GWRMultiscale::fit()
     BandwidthSelector initBwSelector;
     initBwSelector.setBandwidth(bw0);
     double maxDist = mSpatialWeights[0].distance()->maxDistance();
-    initBwSelector.setLower(adaptive ? mAdaptiveLower : maxDist / 5000.0);
-    initBwSelector.setUpper(adaptive ? mCoords.n_rows : maxDist);
-    
+    initBwSelector.setLower(mGoldenLowerBounds.value_or(adaptive ? mAdaptiveLower : maxDist / 5000.0));
+    initBwSelector.setUpper(mGoldenUpperBounds.value_or(adaptive ? mCoords.n_rows : maxDist));
     GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0));
     BandwidthWeight* initBw = initBwSelector.optimize(this);
     if (!initBw)
