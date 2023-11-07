@@ -216,11 +216,9 @@ TEST_CASE("Mat mul benchmark")
     size_t n = 10000, k = 4, g = 100;
     mat ar_x(n, k, arma::fill::randn);
     vec ar_w(n, arma::fill::randu);
-    cumat cu_x(ar_x);
-    cumat cu_w(ar_w);
     size_t groups = n / 100;
 
-    BENCHMARK("simulate weighted regression | arma")
+    BENCHMARK("simulate | arma")
     {
         cube xtwx_inv(k, k, n);
         for (size_t i = 0; i < n; i++)
@@ -230,9 +228,71 @@ TEST_CASE("Mat mul benchmark")
         return xtwx_inv;
     };
     
-    BENCHMARK("simulate weighted regression | cuda")
+    BENCHMARK("simulate | cublas")
     {
         cublasCreate(&cumat::handle);
+        int *d_info, *p_info;
+        p_info = new int[g];
+        cudaMalloc(&d_info, sizeof(int) * g);
+        double *d_x, *d_w;
+        cudaMalloc(&d_x, n * k * sizeof(double));
+        cudaMalloc(&d_w, n * sizeof(double));
+        cudaMemcpy(d_x, ar_x.mem, n * k * sizeof(double), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_w, ar_w.mem, n * sizeof(double), cudaMemcpyHostToDevice);
+        double *ds_xtwx, *ds_xtwx_inv;
+        cudaMalloc(&ds_xtwx, k * k * g * sizeof(double));
+        cudaMalloc(&ds_xtwx_inv, k * k * n * sizeof(double));
+        double **pd_xtwx = new double*[g], **pd_xtwx_inv = new double*[n];
+        for (size_t i = 0; i < g; i++)
+        {
+            pd_xtwx[i] = ds_xtwx + k * k * i;
+        }
+        for (size_t i = 0; i < n; i++)
+        {
+            pd_xtwx_inv[i] = ds_xtwx_inv + k * k * i;
+        }
+        double **dd_xtwx, **dd_xtwx_inv;
+        cudaMalloc(&dd_xtwx, g * sizeof(double*));
+        cudaMalloc(&dd_xtwx_inv, n * sizeof(double*));
+        cudaMemcpy(dd_xtwx, pd_xtwx, g * sizeof(double*), cudaMemcpyHostToDevice);
+        cudaMemcpy(dd_xtwx_inv, pd_xtwx_inv, n * sizeof(double*), cudaMemcpyHostToDevice);
+        double *ds_xtw;
+        cudaMalloc(&ds_xtw, n * k * g * sizeof(double));
+        for (size_t j = 0; j < groups; j++)
+        {
+            for (size_t i = 0; i < g; i++)
+            {
+                cublasDdgmm(cubase::handle, CUBLAS_SIDE_RIGHT, n, k, d_x, n, d_w, 1, ds_xtw + n * k * i, n);
+            }
+            cublasDgemmStridedBatched(
+                cubase::handle, CUBLAS_OP_T, CUBLAS_OP_N,
+                k, k, n, &cubase::alpha1,
+                ds_xtw, n, n * k,
+                d_x, n, 0,
+                &cubase::beta0, ds_xtwx, k, k * k, g
+            );
+            cublasDmatinvBatched(cubase::handle, k, dd_xtwx, k, dd_xtwx_inv + j * g, k, d_info, g);
+        }
+        cudaFree(d_info);
+        cudaFree(d_x);
+        cudaFree(d_w);
+        cudaFree(ds_xtwx);
+        cudaFree(ds_xtwx_inv);
+        cudaFree(dd_xtwx);
+        cudaFree(dd_xtwx_inv);
+        cudaFree(ds_xtw);
+        delete[] pd_xtwx_inv;
+        delete[] pd_xtwx;
+        delete[] p_info;
+        cublasDestroy(cumat::handle);
+        return dd_xtwx_inv;
+    };
+    
+    BENCHMARK("simulate | cumat")
+    {
+        cublasCreate(&cumat::handle);
+        cumat cu_x(ar_x);
+        cumat cu_w(ar_w);
         int *d_info, *p_info;
         p_info = new int[g];
         cudaMalloc(&d_info, sizeof(int) * g);
