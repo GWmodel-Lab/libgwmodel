@@ -379,7 +379,7 @@ TEST_CASE("Basic GWR: cancel")
 
 TEST_CASE("BasicGWR: Benchmark")
 {
-    size_t n = 10000, k = 3;
+    size_t n = 50000, k = 3;
     mat x(n, k, fill::randn);
     vec u(n, fill::randu), v(n, fill::randu);
     vec beta0 = u + v;
@@ -392,17 +392,17 @@ TEST_CASE("BasicGWR: Benchmark")
     CRSDistance distance(false);
     BandwidthWeight bw(0.2, false, BandwidthWeight::Gaussian);
     
-    // BENCHMARK("simulation | OpenMP")
-    // {
-    //     SpatialWeight sw(&bw, &distance);
+    BENCHMARK("simulation | OpenMP")
+    {
+        SpatialWeight sw(&bw, &distance);
 
-    //     GWRBasic algorithm(x, y, coords, sw);
-    //     algorithm.setParallelType(ParallelType::OpenMP);
-    //     algorithm.setOmpThreadNum(12);
-    //     algorithm.fit();
+        GWRBasic algorithm(x, y, coords, sw);
+        algorithm.setParallelType(ParallelType::OpenMP);
+        algorithm.setOmpThreadNum(12);
+        algorithm.fit();
 
-    //     return algorithm.betas();
-    // };
+        return algorithm.betas();
+    };
     
     BENCHMARK("simulation | CUDA")
     {
