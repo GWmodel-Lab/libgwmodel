@@ -126,6 +126,6 @@ add_executable(testCuMat testCuMat.cpp)
 target_link_libraries(testCuMat PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testCuMat
-    COMMAND $<TARGET_FILE:testCuMat --success --skip-benchmarks
+    COMMAND $<TARGET_FILE:testCuMat> --success --skip-benchmarks
 )
 endif()
