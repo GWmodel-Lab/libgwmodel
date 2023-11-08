@@ -149,6 +149,10 @@ struct cutraits
 template<class A, class B, cubase::Type TA = cutraits<A>::type, cubase::Type TB = cutraits<B>::type>
 class cuop_matmul;
 
+class cuop_inv;
+
+class cuop_diagmul;
+
 /**
  * @brief \~english Matrix. Elements are stored in GPU by column-major format. \~chinese 矩阵类。数据存储在 GPU 中，列主序格式。
  * 
@@ -216,6 +220,11 @@ public:
         mat.mIsRelease = false;
     }
 
+    template<class L, class R>
+    cumat(cuop_matmul<L, R, cutraits<L>::type, cutraits<R>::type>&& op);
+
+    cumat(cuop_diagmul&& op);
+
     /**
      * @brief \~english Destroy the cumat object. \~chinese 销毁 cumat 对象。
      * 
@@ -238,10 +247,15 @@ public:
 
     cumat& operator=(const cuop_trans<cumat>& right);
 
+    template<class L, class R>
+    cumat& operator=(cuop_matmul<L, R, cutraits<L>::type, cutraits<R>::type>&& op);
+
+    cumat& operator=(cuop_diagmul&& op);
+
     template<class R>
     auto operator*(const R& right) const
     {
-        return cuop_matmul<cumat, R>(*this, right).eval();
+        return cuop_matmul<cumat, R>(*this, right);
     }
 
     /**
@@ -257,7 +271,7 @@ public:
      * @param diag \~english Diagonal elements of the diagonal matrix \~chinese 对角矩阵的对角线元素
      * @return cumat \~english Result matrix \~chinese 结果矩阵
      */
-    cumat diagmul(const cumat& diag) const;
+    cuop_diagmul diagmul(const cumat& diag) const;
 
 public:
     size_t nrows() const { return mRows; }
@@ -348,6 +362,11 @@ public:
         dMem = mat.dmem();
     }
 
+    template<class L, class R>
+    custride(cuop_matmul<L, R, cutraits<L>::type, cutraits<R>::type>&& op);
+
+    custride(cuop_inv&& op);
+
     /**
      * @brief \~english Destroy the custride object. \~chinese 销毁 custride 对象。
      * 
@@ -398,13 +417,18 @@ public:
      * @param d_info \~english  \~chinese 
      * @return custride \~english  \~chinese 
      */
-    custride inv(int* d_info) const;
+    cuop_inv inv(int* d_info) const;
 
     template<class R>
     auto operator*(const R& right) const
     {
-        return cuop_matmul<custride, R>(*this, right).eval();
+        return cuop_matmul<custride, R>(*this, right);
     }
+
+    template<class L, class R>
+    custride& operator=(cuop_matmul<L, R, cutraits<L>::type, cutraits<R>::type>&& op);
+
+    custride& operator=(cuop_inv&& op);
 
 protected:
     size_t mRows = 0;
@@ -534,7 +558,7 @@ public:
     template<class R>
     auto operator*(const R& right) const
     {
-        return cuop_matmul<cuop_trans<T>, R>(*this, right).eval();
+        return cuop_matmul<cuop_trans<T>, R, cutraits<T>::type, cutraits<R>::type>(*this, right);
     }
 
     const T& ori;
@@ -590,6 +614,11 @@ public:
         return *this;
     }
 
+    template<class L, class R>
+    cuview<custride>& operator=(cuop_matmul<L, R, cutraits<L>::type, cutraits<R>::type>&& op);
+
+    cuview<custride>& operator=(cuop_diagmul&& op);
+
     cuop_trans<cuview<custride>> t()
     {
         return cuop_trans<cuview<custride>>(*this);
@@ -615,38 +644,45 @@ public:
     cuop_matmul(const A& left, const B& right): a(left), b(right) {}
 
     template<class T>
-    int getStrides(const T& m)
+    int getStrides(const T& m) const
     {
         return 1;
     }
 
     template<class T>
-    int getStrideSize(const T& m)
+    int getStrideSize(const T& m) const
     {
         return cutraits<T>::type == cubase::Type::Stride ? m.nrows() * m.ncols() : 0;
     }
 
-    int getStrides(const custride& m)
+    int getStrides(const custride& m) const
     {
         return m.nstrides();
     }
 
-    int getStrides(const cuop_trans<custride>& m)
+    int getStrides(const cuop_trans<custride>& m) const
     {
         return m.ori.nstrides();
     }
 
-    int getStrides(const cuview<custride>& m)
+    int getStrides(const cuview<custride>& m) const
     {
         return m.nstrides();
     }
 
-    int getStrides(const cuop_trans<cuview<custride>>& m)
+    int getStrides(const cuop_trans<cuview<custride>>& m) const
     {
         return m.ori.nstrides();
     }
 
-    auto eval()
+    size_t nrows() const { return a.nrows(); }
+
+    size_t ncols() const { return b.ncols(); }
+
+    size_t nstrides() const { return cutraits<A>::type == cubase::Type::Stride ? getStrides(a) : (cutraits<B>::type == cubase::Type::Stride ? getStrides(b) : 1); }
+
+    template<class C>
+    void eval(C& c)
     {
         size_t m = a.nrows(), k = a.ncols(), n = b.ncols();
         int lda = cutraits<A>::op == cuop::Op::Origin ? a.nrows() : a.ncols();
@@ -655,8 +691,7 @@ public:
         auto opb = cutraits<B>::op == cuop::Op::Origin ? CUBLAS_OP_N : CUBLAS_OP_T;
         size_t strideSizeA = getStrideSize(a);
         size_t strideSizeB = getStrideSize(b);
-        size_t strideC = cutraits<A>::type == cubase::Type::Stride ? getStrides(a) : (cutraits<B>::type == cubase::Type::Stride ? getStrides(b) : 1);
-        custride c { m, n, strideC };
+        size_t strideC = getStrides(c);
         int strideSizeC = getStrideSize(c);
         cublasStatus_t error = cublasDgemmStridedBatched(
             cubase::handle, opa, opb,
@@ -666,7 +701,6 @@ public:
             &cubase::beta0, c.dmem(), m, strideSizeC, strideC
         );
         if (error != CUBLAS_STATUS_SUCCESS) throw cublasGetStatusString(error);
-        return std::move(c);
     }
 
 private:
@@ -687,14 +721,18 @@ public:
 
     cuop_matmul(const A& left, const B& right): a(left), b(right) {}
 
-    auto eval()
+    size_t nrows() const { return a.nrows(); }
+
+    size_t ncols() const { return b.ncols(); }
+
+    template<class C>
+    void eval(C& c)
     {
         size_t m = a.nrows(), k = a.ncols(), n = b.ncols();
         int lda = cutraits<A>::op == cuop::Op::Origin ? a.nrows() : a.ncols();
         int ldb = cutraits<B>::op == cuop::Op::Origin ? b.nrows() : b.ncols();
         auto opa = cutraits<A>::op == cuop::Op::Origin ? CUBLAS_OP_N : CUBLAS_OP_T;
         auto opb = cutraits<B>::op == cuop::Op::Origin ? CUBLAS_OP_N : CUBLAS_OP_T;
-        cumat c { m, n };
         cublasStatus_t error = cublasDgemm(
             cubase::handle, opa, opb,
             m, n, k, &cubase::alpha1,
@@ -703,12 +741,95 @@ public:
             &cubase::beta0, c.dmem(), m
         );
         if (error != CUBLAS_STATUS_SUCCESS) throw cublasGetStatusString(error);
-        return std::move(c);
     }
 
 private:
     const A& a;
     const B& b;
 };
+
+class cuop_inv
+{
+public:
+    cuop_inv(const custride& left, int* info): a(left), d_info(info) {};
+
+    size_t nrows() const { return a.nrows(); }
+    size_t ncols() const { return a.nrows(); }
+    size_t nstrides() const { return a.nstrides(); }
+
+    void eval(custride& c)
+    {
+        size_t n = a.nrows();
+        cubatched b_array(a), b_inv(c);
+        cublasDmatinvBatched(cubase::handle, a.nrows(), b_array.darray(), n, b_inv.darray(), n, d_info, b_array.nbatch());
+    }
+
+private:
+    const custride& a;
+    int* d_info;
+};
+
+class cuop_diagmul
+{
+public:
+    cuop_diagmul(const cumat& left, const cumat& right): a(left), b(right) {};
+
+    size_t nrows() const { return a.nrows(); }
+    size_t ncols() const { return a.ncols(); }
+
+    template<class C>
+    void eval(C& c)
+    {
+        cublasDdgmm(
+            cubase::handle, CUBLAS_SIDE_RIGHT, a.nrows(), a.ncols(), 
+            a.dmem(), a.nrows(), 
+            b.dmem(), 1, 
+            c.dmem(), c.nrows()
+        );
+    }
+
+private:
+    const cumat& a;
+    const cumat& b;
+};
+
+template <class L, class R>
+inline cumat::cumat(cuop_matmul<L, R, cutraits<L>::type, cutraits<R>::type> &&op): cumat(op.nrows(), op.ncols())
+{
+    op.eval(*this);
+}
+
+template <class L, class R>
+inline cumat &cumat::operator=(cuop_matmul<L, R, cutraits<L>::type, cutraits<R>::type> &&op)
+{
+    op.eval(*this);
+    return *this;
+}
+
+template <class L, class R>
+inline custride::custride(cuop_matmul<L, R, cutraits<L>::type, cutraits<R>::type> &&op): custride(op.nrows(), op.ncols(), op.nstrides())
+{
+    op.eval(*this);
+}
+
+template <class L, class R>
+inline custride &custride::operator=(cuop_matmul<L, R, cutraits<L>::type, cutraits<R>::type> &&op)
+{
+    op.eval(*this);
+    return *this;
+}
+
+template <class L, class R>
+inline cuview<custride> &cuview<custride>::operator=(cuop_matmul<L, R, cutraits<L>::type, cutraits<R>::type> &&op)
+{
+    op.eval(*this);
+    return *this;
+}
+
+inline cuview<custride> &cuview<custride>::operator=(cuop_diagmul &&op)
+{
+    op.eval(*this);
+    return *this;
+}
 
 #endif  // CUMAT_HPP

@@ -584,7 +584,7 @@ double GWRBasic::indepVarsSelectionCriterionOmp(const vector<size_t>& indepVars)
 
 mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
 {
-    uword nDp = mCoords.n_rows, nVar = x.n_cols, nDim = mCoords.n_cols;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat xt = trans(x);
     mat betas = mat(nVar, nDp, arma::fill::zeros);
     betasSE = mat(nVar, nDp, arma::fill::zeros);
@@ -596,7 +596,11 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
     cumat u_betas(nVar, nDp), u_betasSE(nVar, nDp);
     cumat u_dists(nDp, 1), u_weights(nDp, 1);
     custride u_xtw(nVar, nDp, mGroupLength);//, u_s(1, nDp, mGroupLength);
-    mat si(1, nDp, fill::zeros);
+    custride u_xtwx(nVar, nVar, mGroupLength), u_xtwy(nVar, 1, mGroupLength), u_xtwxI(nVar, nVar, mGroupLength);
+    custride u_c(nVar, nDp, mGroupLength), u_s(1, nDp, mGroupLength);
+    custride u_cct(nVar, nVar, mGroupLength), u_sst(1, 1, mGroupLength);
+    mat sg(nDp, mGroupLength, fill::zeros);
+    vec sst(mGroupLength, fill::zeros);
     cube cct(nVar, nVar, mGroupLength, fill::zeros);
     int *d_info, *p_info;
     p_info = new int[mGroupLength];
@@ -612,11 +616,11 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
         }
         // xtwx and xtwy
         // xtw * x [k*n,n*k]
-        custride u_xtwx = u_xtw * u_xt.t();
+        u_xtwx = u_xtw * u_xt.t();
         // xtw * y [k*n,n*1]
-        custride u_xtwy = u_xtw * u_y;
+        u_xtwy = u_xtw * u_y;
         // inv
-        custride u_xtwxI = u_xtwx.inv(d_info);
+        u_xtwxI = u_xtwx.inv(d_info);
         checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
         for (size_t j = 0; j < mGroupLength; j++)
         {
@@ -630,23 +634,25 @@ mat GWRBasic::fitCuda(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& 
         // beta = xtwxI * xtwy [k*k,k*1]
         u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
         // ci = xtwxI * xtw [k*k,t(n*k)]
-        custride u_c = u_xtwxI * u_xtw;
+        u_c = u_xtwxI * u_xtw;
         // si = t(xti) * ci [1*k,k*n]
-        custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
+        u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
+        u_s.get(sg.memptr());
+        shat(0) += trace(sg.submat(begin, 0, arma::SizeMat(length, length)));
         // cct = ci * cit [k*n,t(k*n)]
-        custride u_cct = u_c * u_c.t();
+        u_cct = u_c * u_c.t();
+        u_sst = u_s * u_s.t();
         u_cct.get(cct.memptr());
+        u_sst.get(sst.memptr());
+        shat(1) += sum(sst.head(length));
         // Transfer to cpu Perform further diagnostic
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
-            u_s.strides(j).get(si.memptr());
             betasSE.col(e) = diagvec(cct.slice(j));
-            shat(0) += si(0, e);
-            shat(1) += det(si * si.t());
-            vec p = -si.t();
-            p(i) += 1.0;
+            vec p = -sg.col(j);
+            p(e) += 1.0;
             qDiag += p % p;
-            S.row(isStoreS() ? e : 0) = si;
+            S.row(isStoreS() ? e : 0) = sg.col(j).t();
         }
         GWM_LOG_PROGRESS(begin + length, nDp);
     }
@@ -662,6 +668,7 @@ arma::mat GWRBasic::predictCuda(const mat& locations, const mat& x, const vec& y
     mat betas(nVar, nRp, fill::zeros);
     size_t groups = nRp / mGroupLength + (nRp % mGroupLength == 0 ? 0 : 1);
     cumat u_xt(x.t()), u_y(y);
+    custride u_xtwx(nVar, nVar, mGroupLength), u_xtwy(nVar, 1, mGroupLength), u_xtwxI(nVar, nVar, mGroupLength);
     cumat u_betas(nVar, nRp);
     cumat u_dists(nDp, 1), u_weights(nDp, 1);
     custride u_xtw(nVar, nDp, mGroupLength);
@@ -677,9 +684,9 @@ arma::mat GWRBasic::predictCuda(const mat& locations, const mat& x, const vec& y
             checkCudaErrors(mSpatialWeight.weightVector(e, u_dists.dmem(), u_weights.dmem()));
             u_xtw.strides(j) = u_xt.diagmul(u_weights);
         }
-        custride u_xtwx = u_xtw * u_xt.t();
-        custride u_xtwy = u_xtw * u_y;
-        custride u_xtwxI = u_xtwx.inv(d_info);
+        u_xtwx = u_xtw * u_xt.t();
+        u_xtwy = u_xtw * u_y;
+        u_xtwxI = u_xtwx.inv(d_info);
         checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
         for (size_t j = 0; j < mGroupLength; j++)
         {
@@ -706,6 +713,8 @@ double GWRBasic::bandwidthSizeCriterionCVCuda(BandwidthWeight* bandwidthWeight)
     cumat u_xt(mX.t()), u_y(mY);
     cumat u_dists(nDp, 1), u_weights(nDp, 1);
     custride u_xtw(nVar, nDp, mGroupLength);
+    custride u_xtwx(nVar, nVar, mGroupLength), u_xtwy(nVar, 1, mGroupLength), u_xtwxI(nVar, nVar, mGroupLength);
+    custride u_betas(nVar, 1, mGroupLength), u_yhat(1, 1, mGroupLength);
     vec yhat(mGroupLength), yhat_all(nDp);
     int *d_info, *p_info;
     p_info = new int[mGroupLength];
@@ -723,9 +732,9 @@ double GWRBasic::bandwidthSizeCriterionCVCuda(BandwidthWeight* bandwidthWeight)
             checkCudaErrors(cudaMemcpy(u_weights.dmem() + e, &cubase::beta0, sizeof(double), cudaMemcpyHostToDevice));
             u_xtw.strides(j) = u_xt.diagmul(u_weights);
         }
-        custride u_xtwx = u_xtw * u_xt.t();
-        custride u_xtwy = u_xtw * u_y;
-        custride u_xtwxI = u_xtwx.inv(d_info);
+        u_xtwx = u_xtw * u_xt.t();
+        u_xtwy = u_xtw * u_y;
+        u_xtwxI = u_xtwx.inv(d_info);
         checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
         for (size_t j = 0; j < mGroupLength; j++)
         {
@@ -738,8 +747,8 @@ double GWRBasic::bandwidthSizeCriterionCVCuda(BandwidthWeight* bandwidthWeight)
         }
         if (success)
         {
-            custride u_betas = u_xtwxI * u_xtwy;
-            custride u_yhat = u_xt.as_stride().strides(begin, begin + length).t() * u_betas;
+            u_betas = u_xtwxI * u_xtwy;
+            u_yhat = u_xt.as_stride().strides(begin, begin + length).t() * u_betas;
             u_yhat.get(yhat.memptr());
             yhat_all.rows(begin, begin + length - 1) = yhat.head_rows(length);
         }
@@ -765,6 +774,9 @@ double GWRBasic::bandwidthSizeCriterionAICCuda(BandwidthWeight* bandwidthWeight)
     cumat u_xt(mX.t()), u_y(mY), u_betas(nVar, nDp);
     cumat u_dists(nDp, 1), u_weights(nDp, 1);
     custride u_xtw(nVar, nDp, mGroupLength);
+    custride u_xtwx(nVar, nVar, mGroupLength), u_xtwy(nVar, 1, mGroupLength), u_xtwxI(nVar, nVar, mGroupLength);
+    custride u_c(nVar, nDp, mGroupLength), u_s(1, nDp, mGroupLength);
+    custride u_sst(1, 1, mGroupLength);
     mat betas(nVar, nDp);
     vec shat(2), sst(mGroupLength);
     mat sg(nDp, mGroupLength);
@@ -783,9 +795,9 @@ double GWRBasic::bandwidthSizeCriterionAICCuda(BandwidthWeight* bandwidthWeight)
             checkCudaErrors(bandwidthWeight->weight(u_dists.dmem(), u_weights.dmem(), elems));
             u_xtw.strides(j) = u_xt.diagmul(u_weights);
         }
-        custride u_xtwx = u_xtw * u_xt.t();
-        custride u_xtwy = u_xtw * u_y;
-        custride u_xtwxI = u_xtwx.inv(d_info);
+        u_xtwx = u_xtw * u_xt.t();
+        u_xtwy = u_xtw * u_y;
+        u_xtwxI = u_xtwx.inv(d_info);
         checkCudaErrors(cudaMemcpy(p_info, d_info, sizeof(int) * mGroupLength, cudaMemcpyDeviceToHost));
         for (size_t j = 0; j < mGroupLength; j++)
         {
@@ -799,12 +811,12 @@ double GWRBasic::bandwidthSizeCriterionAICCuda(BandwidthWeight* bandwidthWeight)
         if (success)
         {
             u_betas.as_stride().strides(begin, begin + length) = u_xtwxI * u_xtwy;
-            custride u_c = u_xtwxI * u_xtw;
-            custride u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
-            custride u_sst = u_s * u_s.t();
+            u_c = u_xtwxI * u_xtw;
+            u_s = u_xt.as_stride().strides(begin, begin + length).t() * u_c;
             u_s.get(sg.memptr());
-            u_sst.get(sst.memptr());
             shat(0) += trace(sg.submat(begin, 0, arma::SizeMat(length, length)));
+            u_sst = u_s * u_s.t();
+            u_sst.get(sst.memptr());
             shat(1) += sum(sst);
         }
     }
@@ -827,7 +839,7 @@ double GWRBasic::indepVarsSelectionCriterionCuda(const std::vector<size_t>& inde
 {
     mat x = mX.cols(VariableForwardSelector::index2uvec(indepVars, mHasIntercept));
     mat y = mY;
-    uword nDp = mCoords.n_rows, nVar = x.n_cols, elems = nDp;
+    uword nDp = mCoords.n_rows, nVar = x.n_cols;
     cumat u_xt(x.t()), u_y(y), u_betas(nVar, nDp);
     cumat u_weights(vec(nDp, fill::ones));
     custride u_xtw(nVar, nDp, mGroupLength);

@@ -41,7 +41,7 @@ add_executable(testGWRBasic testGWRBasic.cpp ${ADDON_SOURCES})
 target_link_libraries(testGWRBasic PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRBasic 
-    COMMAND $<TARGET_FILE:testGWRBasic> --success
+    COMMAND $<TARGET_FILE:testGWRBasic> --success --skip-benchmarks
 )
 
 add_executable(testGWSS testGWSS.cpp ${ADDON_SOURCES})
@@ -126,6 +126,6 @@ add_executable(testCuMat testCuMat.cpp)
 target_link_libraries(testCuMat PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testCuMat
-    COMMAND $<TARGET_FILE:testCuMat --success
+    COMMAND $<TARGET_FILE:testCuMat> --success --skip-benchmarks
 )
 endif()

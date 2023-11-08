@@ -376,3 +376,44 @@ TEST_CASE("Basic GWR: cancel")
     }
 
 }
+
+TEST_CASE("BasicGWR: Benchmark")
+{
+    size_t n = 50000, k = 3;
+    mat x(n, k, fill::randn);
+    vec u(n, fill::randu), v(n, fill::randu);
+    vec beta0 = u + v;
+    vec beta1 = u % u + v % v;
+    vec beta2 = sin(u) + cos(v);
+    mat beta = join_rows(beta0, beta1, beta2);
+    vec epsilon(n, fill::randn);
+    vec y = sum(x % beta, 1) + epsilon;
+    mat coords = join_rows(u, v);
+    CRSDistance distance(false);
+    BandwidthWeight bw(0.2, false, BandwidthWeight::Gaussian);
+    
+    BENCHMARK("simulation | OpenMP")
+    {
+        SpatialWeight sw(&bw, &distance);
+
+        GWRBasic algorithm(x, y, coords, sw);
+        algorithm.setParallelType(ParallelType::OpenMP);
+        algorithm.setOmpThreadNum(12);
+        algorithm.fit();
+
+        return algorithm.betas();
+    };
+    
+    BENCHMARK("simulation | CUDA")
+    {
+        SpatialWeight sw(&bw, &distance);
+
+        GWRBasic algorithm(x, y, coords, sw);
+        algorithm.setParallelType(ParallelType::CUDA);
+        algorithm.setGPUId(0);
+        algorithm.setGroupSize(256);
+        algorithm.fit();
+
+        return algorithm.betas();
+    };
+}
