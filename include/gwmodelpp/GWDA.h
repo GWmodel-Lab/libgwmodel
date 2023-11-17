@@ -173,35 +173,35 @@ namespace gwm
          *
          * @return arma::mat \~english The result matrix of geographical weighted discriminant analysis \~chinese 地理加权判别分析结果矩阵
          */
-        arma::mat res() const { return mRes; }
+        const arma::mat& res() const { return mRes; }
 
         /**
          * @brief \~english Get classification results \~chinese 获取分类结果
          *
          * @return std::vector<std::string> \~english Classification results \~chinese 分类结果
          */
-        std::vector<std::string> group() const { return mGroup; }
+        const std::vector<std::string>& group() const { return mGroup; }
 
         /**
          * @brief \~english Get location-wise probabilities \~chinese 获取位置概率
          *
          * @return arma::mat \~english Location-wise probabilities \~chinese 位置概率
          */
-        arma::mat probs() const { return mProbs; }
+        const arma::mat& probs() const { return mProbs; }
 
         /**
          * @brief \~english Get max location-wise probabilities \~chinese 获取位置概率最大值
          *
          * @return arma::mat \~english max location-wise probabilities \~chinese 位置概率最大值
          */
-        arma::mat pmax() const { return mPmax; }
+        const arma::mat& pmax() const { return mPmax; }
 
         /**
          * @brief \~english Get associated entropy \~chinese 获取相关熵
          *
          * @return arma::mat \~english Associated entropy \~chinese 相关熵
          */
-        arma::mat entropy() const { return mEntropy; }
+        const arma::mat& entropy() const { return mEntropy; }
 
         /**
          * \~english
@@ -344,7 +344,7 @@ namespace gwm
         bool isValid() override;
 
     public: // IMultivariableAnalysis
-        arma::mat variables() const override { return mX; }
+        const arma::mat& variables() const override { return mX; }
         void setVariables(const arma::mat &x) override { mX = x; }
         void setGroup(std::vector<std::string> &y) { mY = y; }
         void run() override;

@@ -71,7 +71,7 @@ public:
      * @return arma::mat 表示样本位置的坐标矩阵。
      * 
      */
-    arma::mat coords()
+    const arma::mat& coords() const
     {
         return mCoords;
     }

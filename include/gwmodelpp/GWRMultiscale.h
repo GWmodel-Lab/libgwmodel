@@ -276,7 +276,7 @@ public:
      * 
      * @return std::vector<BandwidthInitilizeType> 带宽初始化值类型。
      */
-    std::vector<BandwidthInitilizeType> bandwidthInitilize() const { return GWRMultiscale::mBandwidthInitilize; }
+    const std::vector<BandwidthInitilizeType>& bandwidthInitilize() const { return GWRMultiscale::mBandwidthInitilize; }
     
     /**
      * \~english
@@ -302,7 +302,7 @@ public:
      * 
      * @return std::vector<BandwidthSelectionCriterionType> 带宽选择方法。
      */
-    std::vector<BandwidthSelectionCriterionType> bandwidthSelectionApproach() const { return GWRMultiscale::mBandwidthSelectionApproach; }
+    const std::vector<BandwidthSelectionCriterionType>& bandwidthSelectionApproach() const { return GWRMultiscale::mBandwidthSelectionApproach; }
     
     /**
      * \~english
@@ -328,7 +328,7 @@ public:
      * 
      * @return std::vector<bool> 是否中心化变量。
      */
-    std::vector<bool> preditorCentered() const { return mPreditorCentered; }
+    const std::vector<bool>& preditorCentered() const { return mPreditorCentered; }
     
     /**
      * \~english
@@ -354,7 +354,7 @@ public:
      * 
      * @return std::vector<double> 带宽选择阈值。
      */
-    std::vector<double> bandwidthSelectThreshold() const { return mBandwidthSelectThreshold; }
+    const std::vector<double>& bandwidthSelectThreshold() const { return mBandwidthSelectThreshold; }
     
     /**
      * \~english
@@ -538,7 +538,7 @@ public:
      * 
      * @return arma::mat 回归系数估计值 \f$\beta\f$。
      */
-    arma::mat betas() const { return mBetas; }
+    const arma::mat& betas() const { return mBetas; }
 
     /**
      * \~english
@@ -587,10 +587,10 @@ public:     // IBandwidthSizeSelectable interface
 
 
 public:     // IRegressionAnalysis interface
-    virtual arma::vec dependentVariable() const override { return mY; }
+    virtual const arma::vec& dependentVariable() const override { return mY; }
     virtual void setDependentVariable(const arma::vec& y) override { mY = y; }
 
-    virtual arma::mat independentVariables() const override { return mX; }
+    virtual const arma::mat& independentVariables() const override { return mX; }
     virtual void setIndependentVariables(const arma::mat& x) override { mX = x; }
 
     virtual bool hasIntercept() const override { return mHasIntercept; }

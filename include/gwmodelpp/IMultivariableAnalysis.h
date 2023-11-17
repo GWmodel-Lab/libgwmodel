@@ -24,7 +24,7 @@ struct IMultivariableAnalysis
      * 
      * @return Vector of variables.
      */
-    virtual arma::mat variables() const = 0;
+    virtual const arma::mat& variables() const = 0;
 
     /**
      * @brief Set variables.

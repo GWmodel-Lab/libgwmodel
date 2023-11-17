@@ -132,7 +132,7 @@ public:
      * 
      * @return arma::mat \~english Coefficient estimates \~chinese 回归系数估计值
      */
-    arma::mat betas() const { return mBetas; }
+    const arma::mat& betas() const { return mBetas; }
 
     /**
      * @brief \~english Get whether has hat matrix. \~chinese 获取是否有帽子矩阵。
@@ -268,7 +268,7 @@ public:
      * 
      * @return VariablesCriterionList \~english List of criterion values for each variable combination in independent variable selection \~chinese 变量优选过程中每种变量组合对应的指标值列表
      */
-    VariablesCriterionList indepVarCriterionList() const { return mIndepVarCriterionList; }
+    const VariablesCriterionList& indepVarCriterionList() const { return mIndepVarCriterionList; }
 
     /**
      * @brief \~english Get selected independent variable \~chinese 获取选中的变量组合
@@ -309,10 +309,10 @@ public: // Algorithm
     bool isValid() override;
 
 public: // IRegressionAnalysis
-    virtual arma::vec dependentVariable() const override { return mY; }
+    virtual const arma::vec& dependentVariable() const override { return mY; }
     virtual void setDependentVariable(const arma::vec& y) override { mY = y; }
 
-    virtual arma::mat independentVariables() const override { return mX; }
+    virtual const arma::mat& independentVariables() const override { return mX; }
     virtual void setIndependentVariables(const arma::mat& x) override { mX = x; }
 
     virtual bool hasIntercept() const override { return mHasIntercept; }

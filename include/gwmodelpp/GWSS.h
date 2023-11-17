@@ -173,35 +173,35 @@ public:
      * 
      * @return \~english Local mean on each sample \~chinese 每个样本的局部均值
      */
-    arma::mat localMean() const { return mLocalMean; }
+    const arma::mat& localMean() const { return mLocalMean; }
     
     /**
      * @brief \~english Get local standard deviation on each sample. \~chinese 获取每个样本的局部标准差。
      * 
      * @return \~english Local standard deviation on each sample \~chinese 每个样本的局部标准差
      */
-    arma::mat localSDev() const { return mStandardDev; }
+    const arma::mat& localSDev() const { return mStandardDev; }
     
     /**
      * @brief \~english Get local skewness on each sample. \~chinese 获取每个样本的局部偏度。
      * 
      * @return \~english Local skewness on each sample \~chinese 每个样本的局部偏度
      */
-    arma::mat localSkewness() const { return mLocalSkewness; }
+    const arma::mat& localSkewness() const { return mLocalSkewness; }
     
     /**
      * @brief \~english Get local coefficients of variation on each sample. \~chinese 获取每个样本的局部变化系数。
      * 
      * @return \~english Local coefficients of variation on each sample \~chinese 每个样本的局部变化系数
      */
-    arma::mat localCV() const { return mLCV; }
+    const arma::mat& localCV() const { return mLCV; }
     
     /**
      * @brief \~english Get local variance on each sample. \~chinese 获取每个样本的局部方差。
      * 
      * @return \~english Local variance on each sample \~chinese 每个样本的局部方差
      */
-    arma::mat localVar() const { return mLVar; }
+    const arma::mat& localVar() const { return mLVar; }
 
     
     /**
@@ -209,21 +209,21 @@ public:
      * 
      * @return \~english Local median on each sample \~chinese 每个样本的局部中位数
      */
-    arma::mat localMedian() const { return mLocalMedian; }
+    const arma::mat& localMedian() const { return mLocalMedian; }
     
     /**
      * @brief \~english Get local interquartile ranges on each sample. \~chinese 获取每个样本的局部四分位距。
      * 
      * @return \~english Local interquartile ranges on each sample \~chinese 每个样本的局部四分位距
      */
-    arma::mat iqr() const { return mIQR; }
+    const arma::mat& iqr() const { return mIQR; }
     
     /**
      * @brief \~english Get local quantile imbalances and coordinates on each sample. \~chinese 获取每个样本的局部分位数不平衡度。
      * 
      * @return \~english Local quantile imbalances and coordinates on each sample \~chinese 每个样本的局部分位数不平衡度
      */
-    arma::mat qi() const { return mQI; }
+    const arma::mat& qi() const { return mQI; }
 
     
     /**
@@ -240,7 +240,7 @@ public:
      * 对于变量 \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$ 返回字段按如下方式排序：
      * \f$cov(v_1,v_2), cov(v_1,v_3), ... , cov(v_1,v_k), cov(v_2,v_3), ... , cov(v_2,v_k), ... , cov(v_{k-1},vk)\f$
      */
-    arma::mat localCov() const { return mCovmat; }
+    const arma::mat& localCov() const { return mCovmat; }
     
     /**
      * @brief \~english Get local correlations (Pearson's) on each sample. \~chinese 获取局部皮尔逊相关系数。
@@ -256,7 +256,7 @@ public:
      * 对于变量 \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$ 返回字段按如下方式排序：
      * \f$corr(v_1,v_2), corr(v_1,v_3), ... , corr(v_1,v_k), corr(v_2,v_3), ... , corr(v_2,v_k), ... , corr(v_{k-1},vk)\f$
      */
-    arma::mat localCorr() const { return mCorrmat; }
+    const arma::mat& localCorr() const { return mCorrmat; }
     
     /**
      * @brief \~english Get local correlations (Spearman's) on each sample. \~chinese 获取局部斯皮尔曼相关系数。
@@ -272,13 +272,13 @@ public:
      * 对于变量 \f$v_1, v_2, v_3, ... , v_{k-1}, v_k\f$ 返回字段按如下方式排序：
      * \f$corr(v_1,v_2), corr(v_1,v_3), ... , corr(v_1,v_k), corr(v_2,v_3), ... , corr(v_2,v_k), ... , corr(v_{k-1},vk)\f$
      */
-    arma::mat localSCorr() const { return mSCorrmat; }
+    const arma::mat& localSCorr() const { return mSCorrmat; }
 
 public:     // SpatialAlgorithm interface
     bool isValid() override;
 
 public:     // IMultivariableAnalysis
-    arma::mat variables() const override { return mX; }
+    const arma::mat& variables() const override { return mX; }
     
     /**
      * @brief \~english set variables \~chinese 设置变量x。
