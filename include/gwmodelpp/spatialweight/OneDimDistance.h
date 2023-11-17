@@ -70,7 +70,7 @@ public:
      */
     OneDimDistance(const OneDimDistance& distance);
 
-    virtual Distance * clone() override
+    virtual Distance * clone() const override
     {
         return new OneDimDistance(*this);
     }

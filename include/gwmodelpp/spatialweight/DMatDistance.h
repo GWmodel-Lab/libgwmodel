@@ -44,7 +44,7 @@ public:
      */
     DMatDistance(const DMatDistance& distance);
 
-    virtual Distance * clone() override
+    virtual Distance * clone() const override
     {
         return new DMatDistance(*this);
     }

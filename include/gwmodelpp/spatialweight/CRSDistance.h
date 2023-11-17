@@ -155,7 +155,7 @@ public:
 #endif
     }
 
-    virtual Distance * clone() override
+    virtual Distance * clone() const override
     {
         return new CRSDistance(*this);
     }

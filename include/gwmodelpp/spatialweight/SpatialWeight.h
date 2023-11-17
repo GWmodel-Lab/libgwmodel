@@ -54,7 +54,7 @@ public:
      * \~chinese
      * @brief 构造一个新的 CGwmSpatialWeight 对象。
      */
-    SpatialWeight();
+    SpatialWeight() {}
 
     /**
      * \~english
@@ -69,7 +69,29 @@ public:
      * @param weight 指向权重配置的指针。
      * @param distance 指向距离配置的指针。
      */
-    SpatialWeight(Weight* weight, Distance* distance);
+    SpatialWeight(const Weight* weight, const Distance* distance)
+    {
+        mWeight = weight->clone();
+        mDistance = distance->clone();
+    }
+
+    /**
+     * @brief Construct a new CGwmSpatialWeight object.
+     * 
+     * @param weight Reference to a weight configuration.
+     * @param distance Reference to distance configuration.
+     * 
+     * \~chinese
+     * @brief 构造一个新的 CGwmSpatialWeight 对象。
+     * 
+     * @param weight 指向权重配置的引用。
+     * @param distance 指向距离配置的引用。
+     */
+    SpatialWeight(const Weight& weight, const Distance& distance)
+    {
+        mWeight = weight.clone();
+        mDistance = distance.clone();
+    }
 
     /**
      * \~english
@@ -82,7 +104,30 @@ public:
      * 
      * @param spatialWeight 被复制对象的引用。
      */
-    SpatialWeight(const SpatialWeight& spatialWeight);
+    SpatialWeight(const SpatialWeight& spatialWeight)
+    {
+        mWeight = spatialWeight.mWeight->clone();
+        mDistance = spatialWeight.mDistance->clone();
+    }
+
+    /**
+     * @brief Move construct a new CGwmSpatialWeight object.
+     * 
+     * @param other Reference to the object to move from.
+     * 
+     * \~chinese
+     * @brief 移动构造一个新的 CGwmSpatialWeight 对象。
+     * 
+     * @param other 被移动对象的引用。
+     */
+    SpatialWeight(SpatialWeight&& other)
+    {
+        mWeight = other.mWeight;
+        mDistance = other.mDistance;
+        
+        other.mWeight = nullptr;
+        other.mDistance = nullptr;
+    }
 
     /**
      * \~english
@@ -315,7 +360,7 @@ public:
      * @param spatialWeight 右值的引用。
      * @return 该对象的引用。
      */
-    SpatialWeight& operator=(const SpatialWeight&& spatialWeight);
+    SpatialWeight& operator=(SpatialWeight&& spatialWeight);
 
 public:
 

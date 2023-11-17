@@ -172,7 +172,7 @@ public:
         mKernel = bandwidthWeight->kernel();
     }
 
-    virtual Weight * clone() override
+    virtual Weight * clone() const override
     {
         return new BandwidthWeight(*this);
     }
