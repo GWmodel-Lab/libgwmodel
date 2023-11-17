@@ -2,22 +2,6 @@
 
 using namespace gwm;
 
-SpatialWeight::SpatialWeight()
-{
-
-}
-
-SpatialWeight::SpatialWeight(Weight *weight, Distance *distance)
-{
-    mWeight = weight->clone();
-    mDistance = distance->clone();
-}
-
-SpatialWeight::SpatialWeight(const SpatialWeight &spatialWeight)
-{
-    mWeight = spatialWeight.mWeight->clone();
-    mDistance = spatialWeight.mDistance->clone();
-}
 
 SpatialWeight::~SpatialWeight()
 {
@@ -27,13 +11,15 @@ SpatialWeight::~SpatialWeight()
     mDistance = nullptr;
 }
 
-SpatialWeight &SpatialWeight::operator=(const SpatialWeight &&spatialWeight)
+SpatialWeight &SpatialWeight::operator=(SpatialWeight &&spatialWeight)
 {
     if (this == &spatialWeight) return *this;
     if (mWeight) delete mWeight;
     if (mDistance) delete mDistance;
-    mWeight = spatialWeight.mWeight->clone();
-    mDistance = spatialWeight.mDistance->clone();
+    mWeight = spatialWeight.mWeight;
+    mDistance = spatialWeight.mDistance;
+    spatialWeight.mWeight = nullptr;
+    spatialWeight.mDistance = nullptr;
     return *this;
 }
 

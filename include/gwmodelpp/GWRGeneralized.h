@@ -345,9 +345,9 @@ public:
      */
     void setMaxiter(std::size_t maxiter);
 
-    arma::mat getWtMat1() const;
+    const arma::mat& getWtMat1() const;
 
-    arma::mat getWtMat2() const;
+    const arma::mat& getWtMat2() const;
 
     /**
      * @brief \~english Get the diagnostic information. \~chinese 获取诊断信息。
@@ -467,12 +467,12 @@ inline size_t GWRGeneralized::getMaxiter() const
     return mMaxiter;
 }
 
-inline arma::mat GWRGeneralized::getWtMat1() const
+inline const arma::mat& GWRGeneralized::getWtMat1() const
 {
     return mWtMat1;
 }
 
-inline arma::mat GWRGeneralized::getWtMat2() const
+inline const arma::mat& GWRGeneralized::getWtMat2() const
 {
     return mWtMat2;
 }

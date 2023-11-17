@@ -75,7 +75,7 @@ CRSSTDistance::CRSSTDistance(Distance* spatialDistance, gwm::OneDimDistance* tem
     mCalculator = (abs(mAngle - datum::pi / 2.0) < 1e-15) ? &OrthogonalSTDistance : &ObliqueSTDistance;
 }
 
-CRSSTDistance::CRSSTDistance(CRSSTDistance &distance)
+CRSSTDistance::CRSSTDistance(const CRSSTDistance &distance)
 {
     mAngle=distance.mAngle;
     if (distance.mLambda >= 0 && distance.mLambda <= 1){

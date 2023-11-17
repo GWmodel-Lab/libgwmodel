@@ -176,7 +176,7 @@ public:
      * 
      * @return BandwidthCriterionList \~english List of criterion values for each bandwidth value \~chinese 每种带宽对应的指标值列表
      */
-    BandwidthCriterionList bandwidthSelectionCriterionList() const
+    const BandwidthCriterionList& bandwidthSelectionCriterionList() const
     {
         return mBandwidthSelectionCriterionList;
     }

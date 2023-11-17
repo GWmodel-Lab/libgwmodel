@@ -67,31 +67,31 @@ public: // Constructors and Deconstructors
      * 
      * @return arma::mat \~english Local Principle Values matrix \~chinese 局部主成分值
      */
-    arma::mat localPV() { return mLocalPV; }
+    const arma::mat& localPV() { return mLocalPV; }
 
     /**
      * @brief \~english Get the Loadings matrix. \~chinese 获取局部载荷矩阵。
      * 
      * @return arma::mat \~english Loadings matrix \~chinese 局部载荷矩阵
      */
-    arma::cube loadings() { return mLoadings; }
+    const arma::cube& loadings() { return mLoadings; }
 
     /**
      * @brief \~english Get the Standard deviation matrix. \~chinese 获取标准差矩阵。
      * 
      * @return arma::mat \~english Standard deviation matrix \~chinese 标准差矩阵
      */
-    arma::mat sdev() { return mSDev; }
+    const arma::mat& sdev() { return mSDev; }
 
     /**
      * @brief \~english Get the Scores matrix. \~chinese 获取得分矩阵。
      * 
      * @return arma::mat \~english Scores matrix \~chinese 得分矩阵
      */
-    arma::cube scores() { return mScores; }
+    const arma::cube& scores() { return mScores; }
 
 public: // IMultivariableAnalysis
-    virtual arma::mat variables() const override { return mX; }
+    virtual const arma::mat& variables() const override { return mX; }
     virtual void setVariables(const arma::mat& x) override { mX = x; }
     virtual void run() override;
 

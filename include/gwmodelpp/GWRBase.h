@@ -153,13 +153,13 @@ public:
      * @return arma::mat 回归系数估计值。
      * 
      */
-    arma::mat betas() const { return mBetas; }
+    const arma::mat& betas() const { return mBetas; }
 
 public:     // Implement IRegressionAnalysis
-    virtual arma::vec dependentVariable() const override { return mY; }
+    virtual const arma::vec& dependentVariable() const override { return mY; }
     virtual void setDependentVariable(const arma::vec& y) override { mY = y; }
 
-    virtual arma::mat independentVariables() const override { return mX; }
+    virtual const arma::mat& independentVariables() const override { return mX; }
     virtual void setIndependentVariables(const arma::mat& x) override { mX = x; }
 
     virtual bool hasIntercept() const override { return mHasIntercept; }

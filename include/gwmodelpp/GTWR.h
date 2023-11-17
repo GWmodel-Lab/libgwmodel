@@ -289,7 +289,7 @@ public:
      * 
      * @return arma::mat 回归系数估计值的标准差。
      */
-    arma::mat betasSE() { return mBetasSE; }
+    const arma::mat& betasSE() { return mBetasSE; }
     
     /**
      * \~english
@@ -302,7 +302,7 @@ public:
      * 
      * @return arma::vec 由 \f$tr(S)\f$ 和 \f$tr(SS^T)\f$ 组成的向量。
      */
-    arma::vec sHat() { return mSHat; }
+    const arma::vec& sHat() { return mSHat; }
     
     /**
      * \~english
@@ -315,7 +315,7 @@ public:
      * 
      * @return arma::vec 矩阵 \f$Q\f$ 的对角线元素。
      */
-    arma::vec qDiag() { return mQDiag; }
+    const arma::vec& qDiag() { return mQDiag; }
     
     /**
      * \~english
@@ -328,7 +328,7 @@ public:
      * 
      * @return arma::mat 帽子矩阵 \f$S\f$。
      */
-    arma::mat s() { return mS; }
+    const arma::mat& s() { return mS; }
 
 public:     // Implement Algorithm
     bool isValid() override;

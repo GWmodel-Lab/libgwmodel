@@ -28,7 +28,7 @@ struct IRegressionAnalysis
      * @return arma::vec 因变量。
      * 
      */
-    virtual arma::vec dependentVariable() const = 0;
+    virtual const arma::vec& dependentVariable() const = 0;
 
     /**
      * \~english
@@ -56,7 +56,7 @@ struct IRegressionAnalysis
      * @return arma::mat 自变量。
      * 
      */
-    virtual arma::mat independentVariables() const = 0;
+    virtual const arma::mat& independentVariables() const = 0;
 
     /**
      * \~english

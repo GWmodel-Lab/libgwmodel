@@ -73,9 +73,9 @@ public:
      * 
      * @param distance Refernce to object for copying.
      */
-    CRSSTDistance(CRSSTDistance& distance);
+    CRSSTDistance(const CRSSTDistance& distance);
 
-    Distance * clone() override
+    Distance * clone() const override
     {
         return new CRSSTDistance(*this);
     }

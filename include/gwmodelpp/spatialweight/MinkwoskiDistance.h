@@ -70,7 +70,7 @@ public:
      */
     MinkwoskiDistance(const MinkwoskiDistance& distance);
 
-    virtual Distance * clone() override
+    virtual Distance * clone() const override
     {
         return new MinkwoskiDistance(*this);
     }
