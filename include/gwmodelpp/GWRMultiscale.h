@@ -625,7 +625,7 @@ public:     // IOpenmpParallelable interface
 
 public:     // IParallelCudaEnabled interface
     void setGPUId(const int gpuId) override { mGpuId = gpuId; }
-    void setGroupSize(const double size) override { mGroupLength = size; }
+    void setGroupSize(const size_t size) override { mGroupLength = size; }
 
 protected:
 
