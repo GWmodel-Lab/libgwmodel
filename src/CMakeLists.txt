@@ -228,8 +228,6 @@ install(
 )
 
 # CPACK
-
-set(CPACK_GENERATOR "DEB")
 set(CPACK_SET_DESTDIR ON)
 set(CPACK_PACKAGE_CONTACT "Yigong Hu")
 set(CPACK_DEBIAN_PACKAGE_NAME "libgwmodel-dev")
