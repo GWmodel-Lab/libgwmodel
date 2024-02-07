@@ -74,7 +74,7 @@ set(SOURCES_CXX
     gwmodelpp/GWAverage.cpp
     gwmodelpp/GWCorrelation.cpp
     gwmodelpp/GWPCA.cpp
-    gwmodelpp/GWDR.cpp
+    gwmodelpp/SDR.cpp
     gwmodelpp/GWRMultiscale.cpp
     gwmodelpp/GWRRobust.cpp
     gwmodelpp/GWRGeneralized.cpp
@@ -113,7 +113,7 @@ set(HEADERS_CXX
     ../include/gwmodelpp/GWAverage.h
     ../include/gwmodelpp/GWCorrelation.h
     ../include/gwmodelpp/GWPCA.h
-    ../include/gwmodelpp/GWDR.h
+    ../include/gwmodelpp/SDR.h
     ../include/gwmodelpp/GWRMultiscale.h
     ../include/gwmodelpp/Logger.h
     ../include/gwmodelpp/GWRRobust.h
