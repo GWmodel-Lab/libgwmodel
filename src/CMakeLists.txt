@@ -214,8 +214,10 @@ if(USE_CUDA_SHARED)
 endif(USE_CUDA_SHARED)
 
 install(TARGETS gwmodel
+    EXPORT libgwmodelTargets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
 )
 install(DIRECTORY ../include/ DESTINATION include)
+install(EXPORT libgwmodelTargets DESTINATION share/libgwmodel)
