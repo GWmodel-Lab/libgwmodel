@@ -221,3 +221,10 @@ install(TARGETS gwmodel
 )
 install(DIRECTORY ../include/ DESTINATION include)
 install(EXPORT libgwmodelTargets DESTINATION share/libgwmodel)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(libgwmodelConfigVersion.cmake
+    VERSION 0.9.4
+    COMPATIBILITY AnyNewerVersion
+)
+install(FILES libgwmodelConfig.cmake "${CMAKE_CURRENT_BINARY_DIR}/libgwmodelConfigVersion.cmake" DESTINATION share/libgwmodel)
