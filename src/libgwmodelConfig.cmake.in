@@ -1,0 +1,9 @@
+@PACKAGE_INIT@
+
+include(${CMAKE_CURRENT_LIST_DIR}/libgwmodelTargets.cmake)
+
+set(@PROJECT_NAME@_LIBRARIES gwmodel)
+set(@PROJECT_NAME@_INCLUDE_DIRS "${PACKAGE_PREFIX_DIR}/include")
+set(@PROJECT_NAME@_LIBRARY_DIR "${PACKAGE_PREFIX_DIR}/lib")
+
+check_required_components(${PROJECT_NAME})
