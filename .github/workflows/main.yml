@@ -32,54 +32,29 @@ jobs:
         with:
           entrypoint: /bin/bash
           args: -c "cmake -B build -S . -DCMAKE_BUILD_TYPE:STRING=Debug -DENABLE_OpenMP=${{ matrix.openmp }} && cmake --build build --config Debug && ctest --test-dir build --output-on-failure"
-  
-  windows-prepare:
-    runs-on: windows-latest
-    steps:
-      - name: Cache Dependencies
-        id: cache-dep
-        uses: actions/cache@v3
-        with:
-          path: |
-            C:/vcpkg
-            C:/vcpkg/build/vcpkg_installed
-            !C:/vcpkg/.git
-            !C:/vcpkg/buildtrees
-            !C:/vcpkg/packages
-            !C:/vcpkg/downloads
-          key: |
-            ${{ runner.os }}-cache-key-v1
-      - name: Install Vcpkg Dependencies
-        if: steps.cache-dep.outputs.cache-hit != 'true'
-        run: |
-          git pull --rebase
-          ./bootstrap-vcpkg.bat
-          ./vcpkg.exe update
-          ./vcpkg.exe install gsl:x64-windows openblas[threads]:x64-windows armadillo:x64-windows catch2:x64-windows
-        working-directory: C:/vcpkg
 
   windows-test:
     runs-on: windows-latest
-    needs: [windows-prepare]
     strategy:
       matrix:
         openmp: [TRUE, FALSE]
+    env: 
+      USERNAME: GWmodel-Lab
+      VCPKG_EXE: ${{ env.VCPKG_INSTALLATION_ROOT }}/vcpkg.exe
+      FEED_URL: https://nuget.pkg.github.com/GWmodel-Lab/index.json
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/GWmodel-Lab/index.json,readwrite"
+    permissions:
+      content: read
+      package: read
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Cache Dependencies
-        id: cache-dep
-        uses: actions/cache/restore@v3
-        with:
-          path: |
-            C:/vcpkg
-            C:/vcpkg/build/vcpkg_installed
-            !C:/vcpkg/.git
-            !C:/vcpkg/buildtrees
-            !C:/vcpkg/packages
-            !C:/vcpkg/downloads
-          key: |
-            ${{ runner.os }}-cache-key-v1
+      - name: Install Vcpkg Dependencies
+        shell: pwsh
+        run: |
+          .$(${{ env.VCPKG_EXE }} fetch nuget) sources add ${{ env.FEED_URL }} -n github -u ${{ env.USERNAME }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+          .$(${{ env.VCPKG_EXE }} fetch nuget) setapikey ${{ secrets.GITHUB_TOKEN }} -Source "${{ env.FEED_URL }}"
+          ."${{ env.VCPKG_EXE }}" install armadillo gsl catch2 --triplet x64-windows
       - name: CMake build and test
         if: steps.cache-dep.outputs.cache-hit == 'true'
         run: |
