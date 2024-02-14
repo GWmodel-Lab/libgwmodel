@@ -41,21 +41,26 @@ jobs:
     env: 
       USERNAME: GWmodel-Lab
       FEED_URL: https://nuget.pkg.github.com/GWmodel-Lab/index.json
-      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/GWmodel-Lab/index.json,readwrite"
+      VCPKG_BINARY_SOURCES: "clear;nuget,github,readwrite"
+      VCPKG_USE_NUGET_CACHE: 1
     permissions:
       contents: read
       packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install Vcpkg Dependencies
+      - name: Setup NuGet Credentials
         shell: pwsh
         run: |
           $VCPKG_EXE="$env:VCPKG_INSTALLATION_ROOT/vcpkg.exe"
           $NUGET_EXE="$(.$VCPKG_EXE fetch nuget)"
           .$NUGET_EXE sources add -Source ${{ env.FEED_URL }} -Name github -UserName ${{ env.USERNAME }} -Password ${{ secrets.GITHUB_TOKEN }} -StorePasswordInClearText 
           .$NUGET_EXE setapikey ${{ secrets.GITHUB_TOKEN }} -Source "${{ env.FEED_URL }}"
-          .$VCPKG_EXE install armadillo gsl catch2 openblas[threads] --triplet x64-windows --only-binarycaching
+      - name: Vcpkg Package Restore
+        shell: pwsh
+        run: |
+          $VCPKG_EXE="$env:VCPKG_INSTALLATION_ROOT/vcpkg.exe"
+          .$VCPKG_EXE install armadillo gsl catch2 openblas[threads] --triplet x64-windows
       - name: CMake build and test
         if: steps.cache-dep.outputs.cache-hit == 'true'
         run: |
