@@ -55,7 +55,7 @@ jobs:
           $NUGET_EXE="$(.$VCPKG_EXE fetch nuget)"
           .$NUGET_EXE sources add -Source ${{ env.FEED_URL }} -Name github -UserName ${{ env.USERNAME }} -Password ${{ secrets.GITHUB_TOKEN }} -StorePasswordInClearText 
           .$NUGET_EXE setapikey ${{ secrets.GITHUB_TOKEN }} -Source "${{ env.FEED_URL }}"
-          .$VCPKG_EXE install armadillo gsl catch2 openblas[threads] --triplet x64-windows
+          .$VCPKG_EXE install armadillo gsl catch2 openblas[threads] --triplet x64-windows --only-binarycaching
       - name: CMake build and test
         if: steps.cache-dep.outputs.cache-hit == 'true'
         run: |
