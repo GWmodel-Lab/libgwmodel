@@ -51,7 +51,7 @@ jobs:
       - name: Install Vcpkg Dependencies
         shell: pwsh
         run: |
-          $VCPKG_EXE="$env.VCPKG_INSTALLATION_ROOT/vcpkg.exe"
+          $VCPKG_EXE="$env:VCPKG_INSTALLATION_ROOT/vcpkg.exe"
           $NUGET_EXE="$(.$VCPKG_EXE) fetch nuget"
           .$NUGET_EXE sources add ${{ env.FEED_URL }} -n github -u ${{ env.USERNAME }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
           .$NUGET_EXE setapikey ${{ secrets.GITHUB_TOKEN }} -Source "${{ env.FEED_URL }}"
