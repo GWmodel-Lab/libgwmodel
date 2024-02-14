@@ -4,7 +4,7 @@ project(test_cmake_find)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(libgwmodel REQUIRED)
-include_directories(${LIBGWMODEL_INCLUDE_DIRS})
+include_directories(${libgwmodel_INCLUDE_DIRS})
 
 find_package(Armadillo REQUIRED)
 include_directories(${ARMADILLO_INCLUDE_DIRS})
