@@ -43,8 +43,8 @@ jobs:
       FEED_URL: https://nuget.pkg.github.com/GWmodel-Lab/index.json
       VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/GWmodel-Lab/index.json,readwrite"
     permissions:
-      content: read
-      package: read
+      contents: read
+      packages: read
     steps:
       - name: Checkout
         uses: actions/checkout@v3
