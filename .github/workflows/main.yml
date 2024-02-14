@@ -52,9 +52,10 @@ jobs:
         shell: pwsh
         run: |
           $env.VCPKG_EXE="$env.VCPKG_INSTALLATION_ROOT/vcpkg.exe"
-          .$($env.VCPKG_EXE fetch nuget) sources add ${{ env.FEED_URL }} -n github -u ${{ env.USERNAME }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
-          .$($env.VCPKG_EXE fetch nuget) setapikey ${{ secrets.GITHUB_TOKEN }} -Source "${{ env.FEED_URL }}"
-          ."$env.VCPKG_EXE" install armadillo gsl catch2 --triplet x64-windows
+          $env.NUGET_EXE="$(.$env.VCPKG_EXE) fetch nuget"
+          .$env.NUGET_EXE sources add ${{ env.FEED_URL }} -n github -u ${{ env.USERNAME }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+          .$env.NUGET_EXE setapikey ${{ secrets.GITHUB_TOKEN }} -Source "${{ env.FEED_URL }}"
+          .$env.VCPKG_EXE install armadillo gsl catch2 --triplet x64-windows
       - name: CMake build and test
         if: steps.cache-dep.outputs.cache-hit == 'true'
         run: |
