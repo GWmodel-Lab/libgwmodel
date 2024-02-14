@@ -62,7 +62,6 @@ jobs:
           $VCPKG_EXE="$env:VCPKG_INSTALLATION_ROOT/vcpkg.exe"
           .$VCPKG_EXE install armadillo gsl catch2 openblas[threads] --triplet x64-windows
       - name: CMake build and test
-        if: steps.cache-dep.outputs.cache-hit == 'true'
         run: |
           mkdir build
           cmake -B build -S . "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Debug -DENABLE_OpenMP=${{ matrix.openmp }}
