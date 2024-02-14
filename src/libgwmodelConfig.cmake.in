@@ -1,8 +1,9 @@
 @PACKAGE_INIT@
 
-include(CMakeFindDependencyMacro)
-find_dependency(GSL)
-find_dependency(Armadillo)
+find_package(GSL REQUIRED)
+include_directories(GSL_INCLUDE_DIRS)
+
+find_package(Armadillo REQUIRED)
 include_directories(ARMADILLO_INCLUDE_DIRS)
 
 include(${CMAKE_CURRENT_LIST_DIR}/libgwmodelTargets.cmake)
