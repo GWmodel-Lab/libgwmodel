@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Run all CMake Tests
+name: Test CMake find
 
 # Controls when the workflow will run
 on:
@@ -8,9 +8,16 @@ on:
   push:
     branches: [ "master", "release" ]
     tags: ["v*"]
+    paths:
+      - '**/CMakeLists.txt'
+      - '**/*.cmake'
+      - '**/*.cmake.in'
   pull_request:
     branches: [ "master" ]
-
+    paths:
+      - '**/CMakeLists.txt'
+      - '**/*.cmake'
+      - '**/*.cmake.in'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -23,24 +30,25 @@ jobs:
   ubuntu-container-test:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        openmp: [TRUE, FALSE]
     # Steps represent a sequence of tasks that will be executed as part of the job
+    container:
+      image: ghcr.io/gwmodel-lab/libgwmodel-docker4test:latest
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
       # Runs the test container to run test scripts
-      - uses: docker://ghcr.io/gwmodel-lab/libgwmodel-docker4test:latest
-        with:
-          entrypoint: /bin/bash
-          args: -c "cmake -B build -S . -DCMAKE_BUILD_TYPE:STRING=Debug -DENABLE_OpenMP=${{ matrix.openmp }} && cmake --build build --config Debug && ctest --test-dir build --output-on-failure"
+      - name: Build and Install Package
+        run: |
+          cmake -B build -S . -DCMAKE_BUILD_TYPE:STRING=Release -DWITH_TESTS:BOOL=OFF
+          cmake --build build --config Release
+          cmake --install build
+      - name: Test Find
+        run: |
+          cmake -B build/CMakeFind -S test/CMakeFind
+          cmake --build build/CMakeFind
 
   windows-test:
     runs-on: windows-2019
-    strategy:
-      matrix:
-        openmp: [TRUE, FALSE]
     env: 
       USERNAME: GWmodel-Lab
       FEED_URL: https://nuget.pkg.github.com/GWmodel-Lab/index.json
@@ -72,9 +80,13 @@ jobs:
       - name: CMake build and test
         run: |
           mkdir build
-          cmake -B build -S . "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Debug -DENABLE_OpenMP=${{ matrix.openmp }}
-          cmake --build build --config Debug
-          ctest --test-dir build -C Debug --output-on-failure
+          cmake -B build -S . "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE:STRING=Release -DWITH_TESTS:BOOL=OFF
+          cmake --build build --config Release
+          cmake --install build
+      - name: Test Find
+        run: |
+          cmake -B build/CMakeFind -S test/CMakeFind "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
+          cmake --build build/CMakeFind --config Release
 
   macos-test:
     runs-on: macos-latest
@@ -86,6 +98,10 @@ jobs:
       - name: CMake build and test
         run: |
           mkdir build
-          cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DENABLE_OpenMP=FALSE
-          cmake --build build --config Debug
-          ctest --test-dir build --output-on-failure
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_BUILD_TYPE:STRING=Release -DWITH_TESTS:BOOL=OFF
+          cmake --build build --config Release
+          cmake --install build
+      - name: Test Find
+        run: |
+          cmake -B build/CMakeFind -S test/CMakeFind
+          cmake --build build/CMakeFind
