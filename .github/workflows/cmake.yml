@@ -85,7 +85,7 @@ jobs:
           cmake --install build
       - name: Test Find
         run: |
-          cmake -B build/CMakeFind -S test/CMakeFind
+          cmake -B build/CMakeFind -S test/CMakeFind "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
           cmake --build build/CMakeFind
 
   macos-test:
