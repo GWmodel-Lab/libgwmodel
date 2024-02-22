@@ -37,7 +37,7 @@ jobs:
           args: -c "cmake -B build -S . -DCMAKE_BUILD_TYPE:STRING=Debug -DENABLE_OpenMP=${{ matrix.openmp }} && cmake --build build --config Debug && ctest --test-dir build --output-on-failure"
 
   windows-test:
-    runs-on: windows-latest
+    runs-on: windows-2019
     strategy:
       matrix:
         openmp: [TRUE, FALSE]
