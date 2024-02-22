@@ -1,0 +1,107 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Test CMake find
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "master" branch
+  push:
+    branches: [ "master", "release" ]
+    tags: ["v*"]
+    paths:
+      - '**/CMakeLists.txt'
+      - '**/*.cmake'
+      - '**/*.cmake.in'
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - '**/CMakeLists.txt'
+      - '**/*.cmake'
+      - '**/*.cmake.in'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  OMP_NUM_THREADS: 2
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  ubuntu-container-test:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    container:
+      image: ghcr.io/gwmodel-lab/libgwmodel-docker4test:latest
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      # Runs the test container to run test scripts
+      - name: Build and Install Package
+        run: |
+          cmake -B build -S . -DCMAKE_BUILD_TYPE:STRING=Release -DWITH_TESTS:BOOL=OFF
+          cmake --build build --config Release
+          cmake --install build
+      - name: Test Find
+        run: |
+          cmake -B build/CMakeFind -S test/CMakeFind
+          cmake --build build/CMakeFind
+
+  windows-test:
+    runs-on: windows-latest
+    env: 
+      USERNAME: GWmodel-Lab
+      FEED_URL: https://nuget.pkg.github.com/GWmodel-Lab/index.json
+      VCPKG_BINARY_SOURCES: "clear;nuget,github,readwrite"
+      VCPKG_USE_NUGET_CACHE: 1
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Scrollback Vcpkg
+        shell: pwsh
+        run: |
+          cd "$env:VCPKG_INSTALLATION_ROOT"
+          git switch 2023.12.12 --detach
+      - name: Setup NuGet Credentials
+        shell: pwsh
+        run: |
+          $VCPKG_EXE="$env:VCPKG_INSTALLATION_ROOT/vcpkg.exe"
+          $NUGET_EXE="$(.$VCPKG_EXE fetch nuget)"
+          .$NUGET_EXE sources add -Source ${{ env.FEED_URL }} -Name github -UserName ${{ env.USERNAME }} -Password ${{ secrets.GITHUB_TOKEN }} -StorePasswordInClearText 
+          .$NUGET_EXE setapikey ${{ secrets.GITHUB_TOKEN }} -Source "${{ env.FEED_URL }}"
+      - name: Vcpkg Package Restore
+        shell: pwsh
+        run: |
+          $VCPKG_EXE="$env:VCPKG_INSTALLATION_ROOT/vcpkg.exe"
+          .$VCPKG_EXE install armadillo gsl catch2 openblas[threads] --triplet x64-windows
+      - name: CMake build and test
+        run: |
+          mkdir build
+          cmake -B build -S . "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE:STRING=Release -DWITH_TESTS:BOOL=OFF
+          cmake --build build --config Release
+          cmake --install build
+      - name: Test Find
+        run: |
+          cmake -B build/CMakeFind -S test/CMakeFind
+          cmake --build build/CMakeFind
+
+  macos-test:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install Dependencies
+        run: brew install gsl armadillo catch2
+      - name: CMake build and test
+        run: |
+          mkdir build
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_BUILD_TYPE:STRING=Release -DWITH_TESTS:BOOL=OFF
+          cmake --build build --config Release
+          cmake --install build
+      - name: Test Find
+        run: |
+          cmake -B build/CMakeFind -S test/CMakeFind
+          cmake --build build/CMakeFind
