@@ -6,7 +6,7 @@ build:
     python: "3.12"
 
 sphinx:
-  configuration: conf.py
+  configuration: docs/conf.py
   # You can configure Sphinx to use a different builder
   # builder: "dirhtml"
   # Fail on all warnings to avoid broken references
@@ -20,4 +20,4 @@ formats:
 # Optional but recommended, declare the Python requirements required to build your documentation
 python:
   install:
-    - requirements: requirements.txt
+    - requirements: docs/requirements.txt
