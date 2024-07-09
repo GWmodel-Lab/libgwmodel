@@ -1,6 +1,6 @@
 #include "CudaUtils.h"
 #include <iostream>
-#include <armadillo>
+#include "armadillo_config.h"
 using namespace std;
 using namespace arma;
 

@@ -9,7 +9,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <armadillo>
+#include "armadillo_config.h"
 #include <variant>
 
 

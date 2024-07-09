@@ -1,7 +1,7 @@
 #ifndef GENERALIZEDLINEARMODEL_H
 #define GENERALIZEDLINEARMODEL_H
 
-#include <armadillo>
+#include "armadillo_config.h"
 #include "LinearModel.h"
 #include "GWRGeneralized.h"
 

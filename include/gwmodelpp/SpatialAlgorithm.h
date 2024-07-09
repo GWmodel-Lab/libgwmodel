@@ -2,7 +2,7 @@
 #define SPATIALALGORITHM_H
 
 #include "Algorithm.h"
-#include <armadillo>
+#include "armadillo_config.h"
 
 namespace gwm
 {

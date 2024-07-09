@@ -2,7 +2,7 @@
 #define CUMAT_HPP
 
 #include <exception>
-#include <armadillo>
+#include "armadillo_config.h"
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
 
