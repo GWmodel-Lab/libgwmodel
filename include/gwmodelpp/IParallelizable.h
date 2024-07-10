@@ -141,7 +141,7 @@ struct IParallelCudaEnabled
      * 对于大多数 GPU 可选择值 64。
      * 
      */
-    virtual void setGroupSize(const size_t size) = 0;
+    virtual void setGroupSize(const std::size_t size) = 0;
     
 };
 

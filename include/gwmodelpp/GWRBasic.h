@@ -708,7 +708,7 @@ public:     // Implement IParallelizable
 public:     // Implement IGwmParallelOpenmpEnabled
     void setOmpThreadNum(const int threadNum) override { mOmpThreadNum = threadNum; }
     void setGPUId(const int gpuId) override { mGpuId = gpuId; };
-    void setGroupSize(const size_t size) override { mGroupLength = size; };
+    void setGroupSize(const std::size_t size) override { mGroupLength = size; };
     int workerId() override { return mWorkerId; }
     void setWorkerId(int id) override { mWorkerId = id; };
     void setWorkerNum(int size) override { mWorkerNum = size; };
