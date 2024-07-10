@@ -2,7 +2,7 @@
 #define IREGRESSIONANALYSIS_H
 
 #include <vector>
-#include <armadillo>
+#include "armadillo_config.h"
 #include "RegressionDiagnostic.h"
 
 

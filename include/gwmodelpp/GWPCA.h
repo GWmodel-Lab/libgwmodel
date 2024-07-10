@@ -1,7 +1,7 @@
 #ifndef GWPCA_H
 #define GWPCA_H
 
-#include <armadillo>
+#include "armadillo_config.h"
 #include <vector>
 #include <tuple>
 #include "SpatialMonoscaleAlgorithm.h"

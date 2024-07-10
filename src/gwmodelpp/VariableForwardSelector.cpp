@@ -1,6 +1,6 @@
 #include "VariableForwardSelector.h"
 
-#include <armadillo>
+#include "armadillo_config.h"
 
 using namespace arma;
 using namespace std;

@@ -8,7 +8,7 @@
 
 #include <unordered_map>
 #include <string>
-#include <armadillo>
+#include "armadillo_config.h"
 
 
 namespace gwm

@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <memory>
-#include <armadillo>
+#include "armadillo_config.h"
 
 #include "IGWRBasicGpuTask.h"
 #include "../gwmodel.h"

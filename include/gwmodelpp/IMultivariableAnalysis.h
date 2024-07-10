@@ -1,7 +1,7 @@
 #ifndef IMULTIVARIABLEANALYSIS_H
 #define IMULTIVARIABLEANALYSIS_H
 
-#include <armadillo>
+#include "armadillo_config.h"
 
 namespace gwm
 {

@@ -2,7 +2,7 @@
 #define VARIABLEFORWARDSELECTOR_H
 
 #include <utility>
-#include <armadillo>
+#include "armadillo_config.h"
 #include "IVarialbeSelectable.h"
 
 namespace gwm

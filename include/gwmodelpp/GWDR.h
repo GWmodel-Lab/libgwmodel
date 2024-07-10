@@ -2,7 +2,7 @@
 #define GWDR_H
 
 #include <vector>
-#include <armadillo>
+#include "armadillo_config.h"
 #include <gsl/gsl_vector.h>
 #include "SpatialAlgorithm.h"
 #include "spatialweight/SpatialWeight.h"

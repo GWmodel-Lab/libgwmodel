@@ -1,7 +1,7 @@
 #ifndef GWMLINEARMODEL_H
 #define GWMLINEARMODEL_H
 
-#include <armadillo>
+#include "armadillo_config.h"
 
 namespace gwm
 {
