@@ -10,7 +10,7 @@ void mat_mul_mpi(mat& a, mat& b, mat& c, const int ip, const int np, const size_
     auto m = a.n_rows, n = b.n_cols;
     arma::uvec b_rows(np, arma::fill::zeros);
     MPI_Allgather(&b.n_rows, 1, MPI_UNSIGNED_LONG_LONG, b_rows.memptr(), 1, MPI_UNSIGNED_LONG_LONG, MPI_COMM_WORLD);
-    auto b_rows_i = arma::conv_to<arma::Col<int>>::from(b_rows)
+    auto b_rows_i = arma::conv_to<arma::Col<int>>::from(b_rows);
     c = mat(m, n, arma::fill::zeros);
     mat a_buf;
     for (int pi = 0; pi < np; pi++)
