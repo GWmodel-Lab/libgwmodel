@@ -26,5 +26,5 @@ add_executable(testGWRMultiscaleMpi testGWRMultiscaleMpi.cpp ${ADDON_SOURCES})
 target_link_libraries(testGWRMultiscaleMpi PRIVATE gwmodel ${ARMADILLO_LIBRARIES} ${MPI_CXX_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRMultiscaleMpi 
-    COMMAND ${MPIEXEC_EXECUTABLE} -np 4 $<TARGET_FILE:testGWRBasicMpi> --success --skip-benchmarks
+    COMMAND ${MPIEXEC_EXECUTABLE} -np 4 $<TARGET_FILE:testGWRMultiscaleMpi> --success --skip-benchmarks
 )

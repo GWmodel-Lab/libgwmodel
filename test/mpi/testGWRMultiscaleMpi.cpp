@@ -248,6 +248,9 @@ TEST_CASE("MGWR: basic flow")
 
     SECTION("optim bw cv | null init bw | adaptive | bisquare kernel | with hatmatrix | with bounds")
     {
+        auto parallel = GENERATE_REF(values(parallelTypes));
+        INFO("Parallel type: " << ParallelTypeDict.at(parallel));
+
         vector<SpatialWeight> spatials;
         vector<bool> preditorCentered;
         vector<GWRMultiscale::BandwidthInitilizeType> bandwidthInitialize;
@@ -275,7 +278,9 @@ TEST_CASE("MGWR: basic flow")
         algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
         algorithm.setBandwidthSelectRetryTimes(5);
         algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
-        algorithm.setParallelType(ParallelType::SerialOnly);
+        algorithm.setParallelType(parallel);
+        algorithm.setWorkerId(iProcess);
+        algorithm.setWorkerNum(nProcess);
         algorithm.setGoldenLowerBounds(50);
         algorithm.setGoldenUpperBounds(100);
         REQUIRE_NOTHROW(algorithm.fit());
