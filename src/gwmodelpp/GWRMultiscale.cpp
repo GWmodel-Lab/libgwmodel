@@ -964,8 +964,8 @@ vec GWRMultiscale::fitVarMpi(const size_t var)
 double GWRMultiscale::bandwidthSizeCriterionVarCVMpi(BandwidthWeight* bandwidthWeight)
 {
     SpatialWeight sw(bandwidthWeight, mSpatialWeights[mBandwidthSelectionCurrentIndex].distance());
-    uword status = 1;
-    uvec status_all(mWorkerNum);
+    int status = 1;
+    arma::Col<int> status_all(mWorkerNum);
     vec betas;
     try
     {
@@ -975,7 +975,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVMpi(BandwidthWeight* bandwidthW
     {
         status = 0;
     }
-    MPI_Allgather(&status, 1, GWM_MPI_UWORD, status_all.memptr(), 1, GWM_MPI_UWORD, MPI_COMM_WORLD);
+    MPI_Allgather(&status, 1, MPI_INT, status_all.memptr(), 1, MPI_INT, MPI_COMM_WORLD);
     if (!all(status_all))
         return DBL_MAX;
     
@@ -1004,8 +1004,8 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVMpi(BandwidthWeight* bandwidthW
 double GWRMultiscale::bandwidthSizeCriterionVarAICMpi(BandwidthWeight* bandwidthWeight)
 {
     SpatialWeight sw(bandwidthWeight, mSpatialWeights[mBandwidthSelectionCurrentIndex].distance());
-    uword status = 1;
-    uvec status_all(mWorkerNum);
+    int status = 1;
+    arma::Col<int> status_all(mWorkerNum);
     vec betas, shat;
     try
     {
@@ -1015,7 +1015,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICMpi(BandwidthWeight* bandwidth
     {
         status = 0;
     }
-    MPI_Allgather(&status, 1, GWM_MPI_UWORD, status_all.memptr(), 1, GWM_MPI_UWORD, MPI_COMM_WORLD);
+    MPI_Allgather(&status, 1, MPI_INT, status_all.memptr(), 1, MPI_INT, MPI_COMM_WORLD);
     if (!all(status_all))
         return DBL_MAX;
     
