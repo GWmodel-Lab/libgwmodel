@@ -79,7 +79,7 @@ mat GWRBasic::fit()
             aShape[3] = mWorkRangeSize;
             // cout << mWorkerId << " process send size: [" << aShape[0] << "," << aShape[1] << "," << aShape[2] << "," << aShape[3] << "]\n";
         }
-        MPI_Bcast(aShape, 4, MY_MPI_UWORD, 0, MPI_COMM_WORLD);
+        MPI_Bcast(aShape, 4, GWM_MPI_UWORD, 0, MPI_COMM_WORLD);
         if (mWorkerId > 0)                // slave process
         {
             // cout << mWorkerId << " process recv size: [" << aShape[0] << "," << aShape[1] << "," << aShape[2] << "," << aShape[3] << "]\n";
