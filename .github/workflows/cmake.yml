@@ -41,7 +41,7 @@ jobs:
         run: |
           cmake -B build -S . -DCMAKE_BUILD_TYPE:STRING=Release -DWITH_TESTS:BOOL=OFF
           cmake --build build --config Release
-          cmake --install build
+          sudo cmake --install build
       - name: Test Find
         run: |
           cmake -B build/CMakeFind -S test/CMakeFind
@@ -100,7 +100,7 @@ jobs:
           mkdir build
           cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_BUILD_TYPE:STRING=Release -DWITH_TESTS:BOOL=OFF
           cmake --build build --config Release
-          cmake --install build
+          sudo cmake --install build
       - name: Test Find
         run: |
           cmake -B build/CMakeFind -S test/CMakeFind
