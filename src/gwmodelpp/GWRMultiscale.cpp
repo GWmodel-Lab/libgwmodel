@@ -160,7 +160,7 @@ mat GWRMultiscale::fit()
             aShape[2] = nDim;
             aShape[3] = mWorkRangeSize;
         }
-        MPI_Bcast(aShape, 4, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+        MPI_Bcast(aShape, 4, MY_MPI_UWORD, 0, MPI_COMM_WORLD);
         if (mWorkerId > 0)                // slave process
         {
             nDp = aShape[0];
@@ -975,7 +975,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVMpi(BandwidthWeight* bandwidthW
     {
         status = 0;
     }
-    MPI_Allgather(&status, 1, MPI_UNSIGNED_LONG_LONG, status_all.memptr(), 1, MPI_UNSIGNED_LONG_LONG, MPI_COMM_WORLD);
+    MPI_Allgather(&status, 1, MY_MPI_UWORD, status_all.memptr(), 1, MY_MPI_UWORD, MPI_COMM_WORLD);
     if (!all(status_all))
         return DBL_MAX;
     
@@ -1015,7 +1015,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarAICMpi(BandwidthWeight* bandwidth
     {
         status = 0;
     }
-    MPI_Allgather(&status, 1, MPI_UNSIGNED_LONG_LONG, status_all.memptr(), 1, MPI_UNSIGNED_LONG_LONG, MPI_COMM_WORLD);
+    MPI_Allgather(&status, 1, MY_MPI_UWORD, status_all.memptr(), 1, MY_MPI_UWORD, MPI_COMM_WORLD);
     if (!all(status_all))
         return DBL_MAX;
     
