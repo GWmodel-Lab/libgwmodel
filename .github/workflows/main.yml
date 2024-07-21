@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get -qq update
-          sudo apt-get -qq install libarmadillo-dev libopenblas-dev catch2
+          sudo apt-get -qq install libarmadillo-dev libopenblas-dev libgsl-dev libopenmpi-dev catch2
       # Runs the test container to run test scripts
       - name: CMake test
         run: |
