@@ -6,6 +6,10 @@ if(ENABLE_OpenMP)
 find_package(OpenMP)
 if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
     if(ENABLE_OpenMP)
+        if(MSVC)
+            set(OpenMP_C_FLAGS "${OpenMP_C_FLAGS} -openmp:llvm")
+            set(OpenMP_CXX_FLAGS "${OpenMP_CXX_FLAGS} -openmp:llvm")
+        endif(MSVC)
         add_definitions(-DENABLE_OPENMP)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -208,10 +212,6 @@ target_link_libraries(gwmodel
 )
 
 if(OpenMP_FOUND)
-    if(MSVC)
-        set(OpenMP_C_FLAGS "${OpenMP_C_FLAGS} /openmp:llvm")
-        set(OpenMP_CXX_FLAGS "${OpenMP_CXX_FLAGS} /openmp:llvm")
-    endif(MSVC)
     target_link_libraries(gwmodel
         ${OpenMP_C_LIBRARIES}
         ${OpenMP_CXX_LIBRARIES}
