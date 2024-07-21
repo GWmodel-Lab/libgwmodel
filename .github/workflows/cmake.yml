@@ -30,9 +30,6 @@ jobs:
   ubuntu-test:
     # The type of runner that the job will run on
     runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        openmp: [TRUE, FALSE]
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -47,7 +44,7 @@ jobs:
         run: |
           cmake -B build -S . -DCMAKE_BUILD_TYPE:STRING=Release -DWITH_TESTS:BOOL=OFF
           cmake --build build --config Release
-          cmake --install build
+          sudo cmake --install build
       - name: Test Find
         run: |
           cmake -B build/CMakeFind -S test/CMakeFind
