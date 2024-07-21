@@ -318,12 +318,16 @@ TEST_CASE("Basic GWR: cancel")
             algorithm.setParallelType(parallel);
             switch (parallel)
             {
+#ifdef ENABLE_OPENMP
             case ParallelType::OpenMP:
                 algorithm.setOmpThreadNum(omp_get_num_threads());
                 break;
+#endif // ENABLE_OPENMP
+#ifdef ENABLE_CUDA
             case ParallelType::CUDA:
                 algorithm.setGPUId(0);
                 algorithm.setGroupSize(64);
+#endif // ENABLE_CUDA
             default:
                 break;
             }
@@ -349,12 +353,16 @@ TEST_CASE("Basic GWR: cancel")
             algorithm.setParallelType(parallel);
             switch (parallel)
             {
+#ifdef ENABLE_OPENMP
             case ParallelType::OpenMP:
                 algorithm.setOmpThreadNum(omp_get_num_threads());
                 break;
+#endif // ENABLE_OPENMP
+#ifdef ENABLE_CUDA
             case ParallelType::CUDA:
                 algorithm.setGPUId(0);
                 algorithm.setGroupSize(64);
+#endif // ENABLE_CUDA
             default:
                 break;
             }
@@ -380,12 +388,16 @@ TEST_CASE("Basic GWR: cancel")
             algorithm.setParallelType(parallel);
             switch (parallel)
             {
+#ifdef ENABLE_OPENMP
             case ParallelType::OpenMP:
                 algorithm.setOmpThreadNum(omp_get_num_threads());
                 break;
+#endif // ENABLE_OPENMP
+#ifdef ENABLE_CUDA
             case ParallelType::CUDA:
                 algorithm.setGPUId(0);
                 algorithm.setGroupSize(64);
+#endif // ENABLE_CUDA
             default:
                 break;
             }
