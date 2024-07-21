@@ -8,8 +8,8 @@ add_compile_options(${MPI_CXX_COMPILE_OPTIONS})
 add_definitions(${MPI_CXX_COMPILE_DEFINITIONS})
 endif(ENABLE_MPI)
 
-add_executable(testGWRBasicMpi testGWRBasicMpi.cpp ${ADDON_SOURCES})
-target_link_libraries(testGWRBasicMpi PRIVATE gwmodel ${ARMADILLO_LIBRARIES} ${MPI_CXX_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRBasicMpi testGWRBasicMpi.cpp)
+target_link_libraries(testGWRBasicMpi PRIVATE gwmodel londonhp100 ${ARMADILLO_LIBRARIES} ${MPI_CXX_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRBasicMpi 
     COMMAND ${MPIEXEC_EXECUTABLE} -np 4 $<TARGET_FILE:testGWRBasicMpi> --success --skip-benchmarks
@@ -22,8 +22,8 @@ add_test(
     COMMAND ${MPIEXEC_EXECUTABLE} -np 4 $<TARGET_FILE:testMpiMatMul> --success --skip-benchmarks
 )
 
-add_executable(testGWRMultiscaleMpi testGWRMultiscaleMpi.cpp ${ADDON_SOURCES})
-target_link_libraries(testGWRMultiscaleMpi PRIVATE gwmodel ${ARMADILLO_LIBRARIES} ${MPI_CXX_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRMultiscaleMpi testGWRMultiscaleMpi.cpp)
+target_link_libraries(testGWRMultiscaleMpi PRIVATE gwmodel londonhp100 ${ARMADILLO_LIBRARIES} ${MPI_CXX_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRMultiscaleMpi 
     COMMAND ${MPIEXEC_EXECUTABLE} -np 4 $<TARGET_FILE:testGWRMultiscaleMpi> --success --skip-benchmarks
