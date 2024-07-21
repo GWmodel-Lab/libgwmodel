@@ -208,6 +208,10 @@ target_link_libraries(gwmodel
 )
 
 if(OpenMP_FOUND)
+    if(MSVC)
+        set(OpenMP_C_FLAGS "${OpenMP_C_FLAGS} /openmp:llvm")
+        set(OpenMP_CXX_FLAGS "${OpenMP_CXX_FLAGS} /openmp:llvm")
+    endif(MSVC)
     target_link_libraries(gwmodel
         ${OpenMP_C_LIBRARIES}
         ${OpenMP_CXX_LIBRARIES}

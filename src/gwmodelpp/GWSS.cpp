@@ -180,7 +180,7 @@ void GWSS::GWAverageOmp()
     uword nVar = mX.n_cols;
     uword nRp = mCoords.n_rows;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; (uword) i < nRp; i++)
+    for (uword i = 0; i < nRp; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         vec w = mSpatialWeight.weightVector(i);
@@ -219,7 +219,7 @@ void GWSS::GWCorrelationOmp()
     if (nVar >= 2)
     {
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (int i = 0; (uword) i < nRp; i++)
+        for (uword i = 0; i < nRp; i++)
         {
             GWM_LOG_STOP_CONTINUE(mStatus);
             vec w = mSpatialWeight.weightVector(i);

@@ -287,7 +287,7 @@ mat GTWR::predictOmp(const mat& locations, const mat& x, const vec& y)
     bool success = true;
     std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; (uword)i < nRp; i++)
+    for (uword i = 0; i < nRp; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (success)
@@ -328,7 +328,7 @@ mat GTWR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag
     bool success = true;
     std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; (uword)i < nDp; i++)
+    for (uword i = 0; i < nDp; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (success)
@@ -379,7 +379,7 @@ double GTWR::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight)
     vec cv_all(mOmpThreadNum, fill::zeros);
     bool flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; (uword)i < nDp; i++)
+    for (uword i = 0; i < nDp; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
@@ -425,7 +425,7 @@ double GTWR::bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight)
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; (uword)i < nDp; i++)
+    for (uword i = 0; i < nDp; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)

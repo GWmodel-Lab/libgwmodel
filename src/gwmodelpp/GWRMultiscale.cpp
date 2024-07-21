@@ -624,7 +624,7 @@ vec GWRMultiscale::fitVarCoreOmp(const vec &x, const vec &y, const SpatialWeight
         uword rangeSize = workRange.second - workRange.first;
         S = mat(rangeSize, nDp, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (int i = int(workRange.first); (uword)i < workRange.second; i++)
+        for (uword i = workRange.first; i < workRange.second; i++)
         {
             GWM_LOG_STOP_CONTINUE(mStatus);
             vec w = sw.weightVector(i);
@@ -651,7 +651,7 @@ vec GWRMultiscale::fitVarCoreOmp(const vec &x, const vec &y, const SpatialWeight
     else
     {
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (int i = int(workRange.first); (uword)i < workRange.second; i++)
+        for (uword i = workRange.first; i < workRange.second; i++)
         {
             GWM_LOG_STOP_CONTINUE(mStatus);
             vec w = sw.weightVector(i);
@@ -686,7 +686,7 @@ vec GWRMultiscale::fitVarCoreCVOmp(const vec &x, const vec &y, const SpatialWeig
     bool flag = true;
     std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = workRange.first; (uword)i < workRange.second; i++)
+    for (uword i = workRange.first; i < workRange.second; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
@@ -719,7 +719,7 @@ vec GWRMultiscale::fitVarCoreSHatOmp(const vec &x, const vec &y, const SpatialWe
     bool flag = true;
     std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = workRange.first; (uword)i < workRange.second; i++)
+    for (uword i = workRange.first; i < workRange.second; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)

@@ -425,7 +425,7 @@ mat GWRBasic::predictOmp(const mat& locations, const mat& x, const vec& y)
     bool success = true;
     std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; (uword)i < nRp; i++)
+    for (uword i = 0; i < nRp; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (success)
@@ -469,7 +469,7 @@ mat GWRBasic::fitCoreOmp(const mat& x, const vec& y, const SpatialWeight& sw)
     bool success = true;
     std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = int(workRange.first); (uword)i < workRange.second; i++)
+    for (uword i = workRange.first; i < workRange.second; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (success)
@@ -520,7 +520,7 @@ arma::mat GWRBasic::fitCoreCVOmp(const arma::mat& x, const arma::vec& y, const S
     bool flag = true;
     std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = int(workRange.first); (uword)i < workRange.second; i++)
+    for (uword i = workRange.first; i < workRange.second; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
@@ -553,7 +553,7 @@ arma::mat GWRBasic::fitCoreSHatOmp(const arma::mat& x, const arma::vec& y, const
     int flag = true;
     std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = int(workRange.first); (uword)i < workRange.second; i++)
+    for (uword i = workRange.first; i < workRange.second; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)

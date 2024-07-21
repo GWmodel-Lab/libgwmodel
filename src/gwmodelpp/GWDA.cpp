@@ -122,7 +122,7 @@ void GWDA::discriminantAnalysisOmp()
     vector<string> lev = levels(mY);
     mat wt(nRp, nRp, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (int i = 0; (uword)i < nRp; i++)
+    for (uword i = 0; i < nRp; i++)
     {
         wt.col(i) = mSpatialWeight.weightVector(i);
     }
