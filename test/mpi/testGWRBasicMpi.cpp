@@ -13,6 +13,10 @@
 #include "TerminateCheckTelegram.h"
 #include "FileTelegram.h"
 
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif // ENABLE_OPENMP
+
 using namespace std;
 using namespace arma;
 using namespace gwm;
@@ -107,7 +111,7 @@ TEST_CASE("BasicGWR: LondonHP")
 #ifdef ENABLE_OPENMP
         if (parallel == ParallelType::MPI_MP)
         {
-            algorithm.setOmpThreadNum(2);
+            algorithm.setOmpThreadNum(omp_get_num_threads());
         }
 #endif // ENABLE_OPENMP
 #ifdef ENABLE_CUDA
@@ -153,7 +157,7 @@ TEST_CASE("BasicGWR: LondonHP")
 #ifdef ENABLE_OPENMP
         if (parallel == ParallelType::MPI_MP)
         {
-            algorithm.setOmpThreadNum(2);
+            algorithm.setOmpThreadNum(omp_get_num_threads());
         }
 #endif // ENABLE_OPENMP
 #ifdef ENABLE_CUDA
@@ -204,7 +208,7 @@ TEST_CASE("BasicGWR: LondonHP")
 #ifdef ENABLE_OPENMP
         if (parallel == ParallelType::MPI_MP)
         {
-            algorithm.setOmpThreadNum(2);
+            algorithm.setOmpThreadNum(omp_get_num_threads());
         }
 #endif // ENABLE_OPENMP
 #ifdef ENABLE_CUDA
@@ -261,7 +265,7 @@ TEST_CASE("BasicGWR: LondonHP")
 #ifdef ENABLE_OPENMP
         if (parallel == ParallelType::MPI_MP)
         {
-            algorithm.setOmpThreadNum(2);
+            algorithm.setOmpThreadNum(omp_get_num_threads());
         }
 #endif // ENABLE_OPENMP
 #ifdef ENABLE_CUDA

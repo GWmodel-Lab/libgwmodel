@@ -14,6 +14,10 @@
 #include "TerminateCheckTelegram.h"
 #include "FileTelegram.h"
 
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif // ENABLE_OPENMP
+
 using namespace std;
 using namespace arma;
 using namespace gwm;
@@ -330,7 +334,7 @@ TEST_CASE("Multiscale GWR: cancel")
         algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
         algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
         algorithm.setParallelType(parallel);
-        algorithm.setOmpThreadNum(6);
+        algorithm.setOmpThreadNum(omp_get_num_threads());
         REQUIRE_NOTHROW(algorithm.fit());
         REQUIRE(algorithm.status() == Status::Terminated);
     }

@@ -11,6 +11,10 @@
 #include "londonhp100.h"
 #include "TerminateCheckTelegram.h"
 
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif // ENABLE_OPENMP
+
 using namespace std;
 using namespace arma;
 using namespace gwm;
@@ -208,7 +212,7 @@ TEST_CASE("RobustGWR: multithread basic flow")
     algorithm.setIsAutoselectIndepVars(true);
     algorithm.setIndepVarSelectionThreshold(3.0);
     algorithm.setParallelType(ParallelType::OpenMP);
-    algorithm.setOmpThreadNum(6);
+    algorithm.setOmpThreadNum(omp_get_num_threads());
     REQUIRE_NOTHROW(algorithm.fit());
 
     VariablesCriterionList criterions = algorithm.indepVarsSelectionCriterionList();
@@ -284,7 +288,7 @@ TEST_CASE("Robust GWR: cancel")
         algorithm.setIsAutoselectBandwidth(true);
         algorithm.setBandwidthSelectionCriterion(bwCriterion);
         algorithm.setParallelType(parallel);
-        algorithm.setOmpThreadNum(6);
+        algorithm.setOmpThreadNum(omp_get_num_threads());
         REQUIRE_NOTHROW(algorithm.fit());
         REQUIRE(algorithm.status() == Status::Terminated);
     }
@@ -308,7 +312,7 @@ TEST_CASE("Robust GWR: cancel")
         algorithm.setIsAutoselectBandwidth(true);
         algorithm.setBandwidthSelectionCriterion(GWRRobust::BandwidthSelectionCriterionType::AIC);
         algorithm.setParallelType(parallel);
-        algorithm.setOmpThreadNum(6);
+        algorithm.setOmpThreadNum(omp_get_num_threads());
         REQUIRE_NOTHROW(algorithm.fit());
         REQUIRE_NOTHROW(algorithm.predict(londonhp100_coord));
         REQUIRE(algorithm.status() == Status::Terminated);

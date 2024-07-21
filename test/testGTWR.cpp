@@ -15,6 +15,10 @@
 #include "include/londonhp100.h"
 #include "TerminateCheckTelegram.h"
 
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif // ENABLE_OPENMP
+
 using namespace std;
 using namespace arma;
 using namespace gwm;
@@ -147,6 +151,7 @@ TEST_CASE("GTWR: londonhp100")
         size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
         REQUIRE(bw == 70);
     }
+#ifdef ENABLE_OPENMP
     SECTION("adaptive bandwidth | CV bandwidth optimization | lambda=0.05 | omp parallel ") {
         CRSSTDistance distance(&sdist, &tdist, 0.05);
         BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
@@ -156,7 +161,7 @@ TEST_CASE("GTWR: londonhp100")
         algorithm.setIsAutoselectBandwidth(true);
         algorithm.setBandwidthSelectionCriterion(GTWR::BandwidthSelectionCriterionType::CV);
         algorithm.setParallelType(ParallelType::OpenMP);
-        algorithm.setOmpThreadNum(6);
+        algorithm.setOmpThreadNum(omp_get_num_threads());
         REQUIRE_NOTHROW(algorithm.fit());
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
@@ -174,7 +179,7 @@ TEST_CASE("GTWR: londonhp100")
         algorithm.setSpatialWeight(spatial);
         algorithm.setHasHatMatrix(true);
         algorithm.setParallelType(ParallelType::OpenMP);
-        algorithm.setOmpThreadNum(6);
+        algorithm.setOmpThreadNum(omp_get_num_threads());
         REQUIRE_NOTHROW(algorithm.fit());
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
@@ -183,6 +188,7 @@ TEST_CASE("GTWR: londonhp100")
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.68281765798389, 1e-8));
         REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.65541987797358, 1e-8));
     }
+#endif // ENABLE_OPENMP
 }
 
 

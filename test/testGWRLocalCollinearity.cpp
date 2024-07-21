@@ -11,6 +11,10 @@
 #include "londonhp100.h"
 #include "TerminateCheckTelegram.h"
 
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif // ENABLE_OPENMP
+
 using namespace std;
 using namespace arma;
 using namespace gwm;
@@ -141,7 +145,7 @@ TEST_CASE("LocalCollinearityGWR: multithread basic flow")
     algorithm.setIsAutoselectBandwidth(true);
     algorithm.setBandwidthSelectionCriterion(GWRLocalCollinearity::BandwidthSelectionCriterionType::CV);
     algorithm.setParallelType(ParallelType::OpenMP);
-    algorithm.setOmpThreadNum(6);
+    algorithm.setOmpThreadNum(omp_get_num_threads());
     REQUIRE_NOTHROW(algorithm.fit());
 
 
@@ -197,7 +201,7 @@ TEST_CASE("LcGWR: cancel")
         algorithm.setIsAutoselectBandwidth(true);
         algorithm.setBandwidthSelectionCriterion(GWRLocalCollinearity::BandwidthSelectionCriterionType::CV);
         algorithm.setParallelType(parallel);
-        algorithm.setOmpThreadNum(6);
+        algorithm.setOmpThreadNum(omp_get_num_threads());
         REQUIRE_NOTHROW(algorithm.fit());
         REQUIRE(algorithm.status() == Status::Terminated);
     }

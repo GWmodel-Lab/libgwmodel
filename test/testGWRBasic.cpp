@@ -12,6 +12,10 @@
 #include "TerminateCheckTelegram.h"
 #include "FileTelegram.h"
 
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif // ENABLE_OPENMP
+
 using namespace std;
 using namespace arma;
 using namespace gwm;
@@ -51,6 +55,12 @@ TEST_CASE("BasicGWR: LondonHP")
         algorithm.setIndependentVariables(x);
         algorithm.setSpatialWeight(spatial);
         algorithm.setParallelType(parallel);
+#ifdef ENABLE_OPENMP
+        if (parallel == ParallelType::OpenMP)
+        {
+            algorithm.setOmpThreadNum(omp_get_num_threads());
+        }
+#endif // ENABLE_OPENMP
 #ifdef ENABLE_CUDA
         if (parallel == ParallelType::CUDA)
         {
@@ -84,7 +94,7 @@ TEST_CASE("BasicGWR: LondonHP")
 #ifdef ENABLE_OPENMP
         if (parallel == ParallelType::OpenMP)
         {
-            algorithm.setOmpThreadNum(6);
+            algorithm.setOmpThreadNum(omp_get_num_threads());
         }
 #endif // ENABLE_OPENMP
 #ifdef ENABLE_CUDA
@@ -122,7 +132,7 @@ TEST_CASE("BasicGWR: LondonHP")
 #ifdef ENABLE_OPENMP
         if (parallel == ParallelType::OpenMP)
         {
-            algorithm.setOmpThreadNum(6);
+            algorithm.setOmpThreadNum(omp_get_num_threads());
         }
 #endif // ENABLE_OPENMP
 #ifdef ENABLE_CUDA
@@ -165,7 +175,7 @@ TEST_CASE("BasicGWR: LondonHP")
 #ifdef ENABLE_OPENMP
         if (parallel == ParallelType::OpenMP)
         {
-            algorithm.setOmpThreadNum(6);
+            algorithm.setOmpThreadNum(omp_get_num_threads());
         }
 #endif // ENABLE_OPENMP
 #ifdef ENABLE_CUDA
@@ -214,7 +224,7 @@ TEST_CASE("BasicGWR: LondonHP")
 #ifdef ENABLE_OPENMP
         if (parallel == ParallelType::OpenMP)
         {
-            algorithm.setOmpThreadNum(6);
+            algorithm.setOmpThreadNum(omp_get_num_threads());
         }
 #endif // ENABLE_OPENMP
 #ifdef ENABLE_CUDA
@@ -309,7 +319,7 @@ TEST_CASE("Basic GWR: cancel")
             switch (parallel)
             {
             case ParallelType::OpenMP:
-                algorithm.setOmpThreadNum(8);
+                algorithm.setOmpThreadNum(omp_get_num_threads());
                 break;
             case ParallelType::CUDA:
                 algorithm.setGPUId(0);
@@ -340,7 +350,7 @@ TEST_CASE("Basic GWR: cancel")
             switch (parallel)
             {
             case ParallelType::OpenMP:
-                algorithm.setOmpThreadNum(8);
+                algorithm.setOmpThreadNum(omp_get_num_threads());
                 break;
             case ParallelType::CUDA:
                 algorithm.setGPUId(0);
@@ -371,7 +381,7 @@ TEST_CASE("Basic GWR: cancel")
             switch (parallel)
             {
             case ParallelType::OpenMP:
-                algorithm.setOmpThreadNum(8);
+                algorithm.setOmpThreadNum(omp_get_num_threads());
                 break;
             case ParallelType::CUDA:
                 algorithm.setGPUId(0);
@@ -409,7 +419,7 @@ TEST_CASE("BasicGWR: Benchmark")
 
         GWRBasic algorithm(x, y, coords, sw);
         algorithm.setParallelType(ParallelType::OpenMP);
-        algorithm.setOmpThreadNum(12);
+        algorithm.setOmpThreadNum(omp_get_num_threads());
         algorithm.fit();
 
         return algorithm.betas();

@@ -12,6 +12,10 @@
 #include "londonhp.h"
 #include "TerminateCheckTelegram.h"
 
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif // ENABLE_OPENMP
+
 using namespace std;
 using namespace arma;
 using namespace gwm;
@@ -154,7 +158,7 @@ TEST_CASE("GGWR: multithread basic flow")
     algorithm.setIsAutoselectBandwidth(true);
     algorithm.setBandwidthSelectionCriterionType(GWRGeneralized::BandwidthSelectionCriterionType::CV);
     algorithm.setParallelType(ParallelType::OpenMP);
-    algorithm.setOmpThreadNum(6);
+    algorithm.setOmpThreadNum(omp_get_num_threads());
     algorithm.setFamily(GWRGeneralized::Family::Poisson);
     REQUIRE_NOTHROW(algorithm.fit());
 

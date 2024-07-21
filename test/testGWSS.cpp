@@ -11,6 +11,10 @@
 #include "londonhp100.h"
 #include "TerminateCheckTelegram.h"
 
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif // ENABLE_OPENMP
+
 using namespace std;
 using namespace arma;
 using namespace gwm;
@@ -160,7 +164,7 @@ TEST_CASE("GWSS: londonhp100")
         algorithm.setGWSSMode(GWSS::GWSSMode::Average);
         algorithm.setSpatialWeight(spatial);
         algorithm.setParallelType(ParallelType::OpenMP);
-        algorithm.setOmpThreadNum(6);
+        algorithm.setOmpThreadNum(omp_get_num_threads());
         REQUIRE_NOTHROW(algorithm.run());
 
         vec p = {0.0, 0.25, 0.5, 0.75, 1.0};
@@ -218,7 +222,7 @@ TEST_CASE("GWSS: londonhp100")
         algorithm.setSpatialWeight(spatial);
         algorithm.setGWSSMode(GWSS::GWSSMode::Correlation);
         algorithm.setParallelType(ParallelType::OpenMP);
-        algorithm.setOmpThreadNum(6);
+        algorithm.setOmpThreadNum(omp_get_num_threads());
         REQUIRE_NOTHROW(algorithm.run());
 
         vec p = {0.0, 0.25, 0.5, 0.75, 1.0};
