@@ -334,7 +334,9 @@ TEST_CASE("Multiscale GWR: cancel")
         algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
         algorithm.setBandwidthSelectThreshold(vector(3, 1e-5));
         algorithm.setParallelType(parallel);
+#ifdef ENABLE_OPENMP
         algorithm.setOmpThreadNum(omp_get_num_threads());
+#endif // ENABLE_OPENMP
         REQUIRE_NOTHROW(algorithm.fit());
         REQUIRE(algorithm.status() == Status::Terminated);
     }

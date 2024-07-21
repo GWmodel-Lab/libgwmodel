@@ -288,7 +288,9 @@ TEST_CASE("Robust GWR: cancel")
         algorithm.setIsAutoselectBandwidth(true);
         algorithm.setBandwidthSelectionCriterion(bwCriterion);
         algorithm.setParallelType(parallel);
+#ifdef ENABLE_OPENMP
         algorithm.setOmpThreadNum(omp_get_num_threads());
+#endif // ENABLE_OPENMP
         REQUIRE_NOTHROW(algorithm.fit());
         REQUIRE(algorithm.status() == Status::Terminated);
     }
@@ -312,7 +314,9 @@ TEST_CASE("Robust GWR: cancel")
         algorithm.setIsAutoselectBandwidth(true);
         algorithm.setBandwidthSelectionCriterion(GWRRobust::BandwidthSelectionCriterionType::AIC);
         algorithm.setParallelType(parallel);
+#ifdef ENABLE_OPENMP
         algorithm.setOmpThreadNum(omp_get_num_threads());
+#endif // ENABLE_OPENMP
         REQUIRE_NOTHROW(algorithm.fit());
         REQUIRE_NOTHROW(algorithm.predict(londonhp100_coord));
         REQUIRE(algorithm.status() == Status::Terminated);

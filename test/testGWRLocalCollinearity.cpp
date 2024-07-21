@@ -201,7 +201,9 @@ TEST_CASE("LcGWR: cancel")
         algorithm.setIsAutoselectBandwidth(true);
         algorithm.setBandwidthSelectionCriterion(GWRLocalCollinearity::BandwidthSelectionCriterionType::CV);
         algorithm.setParallelType(parallel);
+#ifdef ENABLE_OPENMP
         algorithm.setOmpThreadNum(omp_get_num_threads());
+#endif // ENABLE_OPENMP
         REQUIRE_NOTHROW(algorithm.fit());
         REQUIRE(algorithm.status() == Status::Terminated);
     }
