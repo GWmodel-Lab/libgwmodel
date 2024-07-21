@@ -377,7 +377,7 @@ public:
      * @param focus 当前样本的索引值。
      * @return vec 当前样本到其他所有样本的空间权重向量。
      */
-    virtual arma::vec weightVector(arma::uword focus)
+    virtual arma::vec weightVector(arma::uword focus) const
     {
         return mWeight->weight(mDistance->distance(focus));
     }
@@ -412,7 +412,7 @@ public:
      * @param d_weights \~english Device pointer to distances \~chinese 指向输出权重的设备指针
      * @return cudaError_t \~english CUDA error or success \~chinese CUDA 错误或成功 
      */
-    virtual cudaError_t weightVector(arma::uword focus, double* d_dists, double* d_weights)
+    virtual cudaError_t weightVector(arma::uword focus, double* d_dists, double* d_weights) const
     {
         cudaError_t error;
         size_t elems = 0;

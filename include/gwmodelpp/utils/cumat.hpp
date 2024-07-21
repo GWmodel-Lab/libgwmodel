@@ -47,6 +47,21 @@ class cubase
 {
 public:
     static cublasHandle_t handle;   //!< Save handle for cublas
+    static auto create_handle()
+    {
+        if (handle == nullptr) return cublasCreate(&handle);
+        else return CUBLAS_STATUS_SUCCESS;
+    }
+    static auto destory_handle()
+    {
+        if (handle != nullptr)
+        {
+            auto error = cublasDestroy(handle);
+            handle = nullptr;
+            return error;
+        }
+        else return CUBLAS_STATUS_SUCCESS;
+    }
     constexpr static const double alpha1 = 1.0;
     constexpr static const double beta0 = 0.0;
     constexpr static const double beta1 = 1.0;
@@ -245,6 +260,32 @@ public:
      */
     const cuop_trans<cumat> t() const;
 
+    void resize(size_t rows, size_t cols)
+    {
+        if (dMem != nullptr && mIsRelease)
+        {
+            cudaFree(dMem);
+        }
+        cudaMalloc(&dMem, sizeof(double) * rows * cols);
+    }
+
+    cumat& operator=(const cumat& right)
+    {
+        resize(right.mRows, right.mCols);
+        cudaMemcpy(dMem, right.dMem, nbytes(), cudaMemcpyDeviceToDevice);
+        return *this;
+    }
+
+    cumat& operator=(cumat&& right)
+    {
+        mRows = right.mRows;
+        mCols = right.mCols;
+        dMem = right.dMem;
+        mIsRelease = true;
+        right.mIsRelease = false;
+        return *this;
+    }
+
     cumat& operator=(const cuop_trans<cumat>& right);
 
     template<class L, class R>
@@ -281,6 +322,8 @@ protected:
     size_t mRows = 0;
     size_t mCols = 0;
 };
+
+void print(const cumat& mat);
 
 /**
  * @brief \~english Strided matrix. \~chinese 条带矩阵。

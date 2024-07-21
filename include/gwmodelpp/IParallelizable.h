@@ -16,7 +16,11 @@ enum ParallelType
 {
     SerialOnly = 1 << 0,    //!< \~english Use no parallel methods. \~chinese 不并行。
     OpenMP = 1 << 1,        //!< \~english Use multithread methods. \~chinese 多线程并行。
-    CUDA = 1 << 2           //!< \~english Use CUDA accelerated methods. \~chinese CUDA加速。
+    CUDA = 1 << 2,          //!< \~english Use CUDA accelerated methods. \~chinese CUDA加速。
+    MPI = (1 << 3),
+    MPI_Serial = (1 << 3) | (1 << 0),
+    MPI_MP = (1 << 3) | (1 << 1),
+    MPI_CUDA = (1 << 3) | (1 << 2)
 };
 
 /**
@@ -137,9 +141,22 @@ struct IParallelCudaEnabled
      * 对于大多数 GPU 可选择值 64。
      * 
      */
-    virtual void setGroupSize(const size_t size) = 0;
+    virtual void setGroupSize(const std::size_t size) = 0;
     
 };
+
+struct IParallelMpiEnabled
+{
+    virtual int workerId() = 0;
+    virtual void setWorkerId(int id) = 0;
+    virtual void setWorkerNum(int size) = 0;
+};
+
+#define GWM_MPI_MASTER_BEGIN if (workerId() == 0) {
+#define GWM_MPI_MASTER_END }
+#define GWM_MPI_WORKER_BEGIN if (workerId() != 0) {
+#define GWM_MPI_WORKER_END }
+#define GWM_MPI_MASTER_WORKER_SWITCH } else {
 
 }
 

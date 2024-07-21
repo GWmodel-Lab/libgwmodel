@@ -15,6 +15,15 @@ if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
 endif(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
 endif()
 
+if(ENABLE_MPI)
+    find_package(MPI REQUIRED)
+    add_definitions(-DENABLE_MPI)
+    include_directories(${MPI_CXX_HEADER_DIR})
+    add_link_options(${MPI_CXX_LINK_FLAGS})
+    add_compile_options(${MPI_CXX_COMPILE_OPTIONS})
+    add_definitions(${MPI_CXX_COMPILE_DEFINITIONS})
+endif(ENABLE_MPI)
+
 find_package(GSL REQUIRED)
 if(GSL_FOUND)
     include_directories(${GSL_INCLUDE_DIRS})
@@ -137,6 +146,17 @@ if(ENABLE_CUDA)
     list(PREPEND SOURCES_ALL ${SOURCES_CUDA})
 endif(ENABLE_CUDA)
 
+if(ENABLE_MPI)
+    set(HEADERS_MPI
+        ../include/gwmodelpp/utils/armampi.h
+    )
+    set(SOURCES_MPI
+        gwmodelpp/utils/armampi.cpp
+    )
+    list(PREPEND HEADERS_ALL ${HEADERS_MPI})
+    list(PREPEND SOURCES_ALL ${SOURCES_MPI})
+endif(ENABLE_MPI)
+
 add_library(gwmodel STATIC ${HEADERS_ALL} ${SOURCES_ALL})
 set_property(TARGET gwmodel PROPERTY POSITION_INDEPENDENT_CODE ON)
 
@@ -193,6 +213,12 @@ if(OpenMP_FOUND)
         ${OpenMP_CXX_LIBRARIES}
     )
 endif(OpenMP_FOUND)
+
+if(ENABLE_MPI AND MPI_FOUND)
+    target_link_libraries(gwmodel
+        ${MPI_CXX_LIBRARIES}
+    )
+endif()
 
 if(USE_CUDA_SHARED)
     set(HEADERS_CUDA_SHARED
