@@ -20,21 +20,27 @@ env:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  ubuntu-container-test:
+  ubuntu-test:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         openmp: [TRUE, FALSE]
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq install libarmadillo-dev libopenblas-dev libgsl-dev libopenmpi-dev catch2
       # Runs the test container to run test scripts
-      - uses: docker://ghcr.io/gwmodel-lab/libgwmodel-docker4test:latest
-        with:
-          entrypoint: /bin/bash
-          args: -c "cmake -B build -S . -DCMAKE_BUILD_TYPE:STRING=Debug -DENABLE_OpenMP=${{ matrix.openmp }} && cmake --build build --config Debug && ctest --test-dir build --output-on-failure"
+      - name: CMake test
+        run: |
+          cmake -B build -S . -DCMAKE_BUILD_TYPE:STRING=Debug -DENABLE_OpenMP=${{ matrix.openmp }}
+          cmake --build build --config Debug
+          ctest --test-dir build --output-on-failure
 
   windows-test:
     runs-on: windows-2019

@@ -10,6 +10,10 @@
 #include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp.h"
 
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif // ENABLE_OPENMP
+
 using namespace std;
 using namespace arma;
 using namespace gwm;
@@ -135,7 +139,7 @@ TEST_CASE("GWSS: multithread basic flow")
     algorithm.setVariables(x);
     algorithm.setSpatialWeight(spatial);
     algorithm.setParallelType(ParallelType::OpenMP);
-    algorithm.setOmpThreadNum(6);
+    algorithm.setOmpThreadNum(omp_get_num_threads());
     REQUIRE_NOTHROW(algorithm.run());
 
     vec p = {0.0, 0.25, 0.5, 0.75, 1.0};

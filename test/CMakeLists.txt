@@ -9,6 +9,10 @@ if(ENABLE_OpenMP)
     find_package(OpenMP)
     if(OpenMP_FOUND AND OpenMP_C_FOUND AND OpenMP_CXX_FOUND)
         if(ENABLE_OpenMP)
+            if(MSVC)
+                set(OpenMP_C_FLAGS "${OpenMP_C_FLAGS} -openmp:llvm")
+                set(OpenMP_CXX_FLAGS "${OpenMP_CXX_FLAGS} -openmp:llvm")
+            endif(MSVC)
             add_definitions(-DENABLE_OPENMP)
             set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -28,94 +32,94 @@ include_directories(
 set(SAMPLE_DATA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/data)
 add_definitions(-DSAMPLE_DATA_DIR="${SAMPLE_DATA_DIR}")
 
-set(ADDON_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/data/londonhp100.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/TerminateCheckTelegram.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/FileTelegram.cpp
-)
+add_library(londonhp100 data/londonhp100.cpp)
+target_link_libraries(londonhp100 ${ARMADILLO_LIBRARIES})
 
-add_definitions(-DSAMPLE_DATA_DIR="${SAMPLE_DATA_DIR}")
-set(SAMPL_LONDONHP ${CMAKE_CURRENT_SOURCE_DIR}/data/londonhp.cpp)
+add_library(londonhp data/londonhp.cpp)
+target_link_libraries(londonhp ${ARMADILLO_LIBRARIES})
 
-add_executable(testGWRBasic testGWRBasic.cpp ${ADDON_SOURCES})
-target_link_libraries(testGWRBasic PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_library(telegram TerminateCheckTelegram.cpp FileTelegram.cpp)
+target_link_libraries(telegram Catch2::Catch2WithMain)
+
+add_executable(testGWRBasic testGWRBasic.cpp)
+target_link_libraries(testGWRBasic PRIVATE gwmodel londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRBasic 
     COMMAND $<TARGET_FILE:testGWRBasic> --success --skip-benchmarks
 )
 
-add_executable(testGWSS testGWSS.cpp ${ADDON_SOURCES})
-target_link_libraries(testGWSS PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWSS testGWSS.cpp)
+target_link_libraries(testGWSS PRIVATE gwmodel londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWSS 
     COMMAND $<TARGET_FILE:testGWSS> --success
 )
 
-add_executable(testGWPCA testGWPCA.cpp ${ADDON_SOURCES})
-target_link_libraries(testGWPCA PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWPCA testGWPCA.cpp)
+target_link_libraries(testGWPCA PRIVATE gwmodel londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWPCA 
     COMMAND $<TARGET_FILE:testGWPCA> --success
 )
 
-add_executable(testGWDR testGWDR.cpp ${ADDON_SOURCES})
-target_link_libraries(testGWDR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWDR testGWDR.cpp)
+target_link_libraries(testGWDR PRIVATE gwmodel londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWDR 
     COMMAND $<TARGET_FILE:testGWDR> --success
 )
 
-add_executable(testGWRMultiscale testGWRMultiscale.cpp ${ADDON_SOURCES})
-target_link_libraries(testGWRMultiscale PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRMultiscale testGWRMultiscale.cpp)
+target_link_libraries(testGWRMultiscale PRIVATE gwmodel londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRMultiscale 
     COMMAND $<TARGET_FILE:testGWRMultiscale> --success
 )
 
-add_executable(testLogger testLogger.cpp ${ADDON_SOURCES})
-target_link_libraries(testLogger PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testLogger testLogger.cpp)
+target_link_libraries(testLogger PRIVATE gwmodel londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testLogger 
     COMMAND $<TARGET_FILE:testLogger> --success
 )
 
-add_executable(testGWRRobust testGWRRobust.cpp ${ADDON_SOURCES})
-target_link_libraries(testGWRRobust PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRRobust testGWRRobust.cpp)
+target_link_libraries(testGWRRobust PRIVATE gwmodel londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRRobust 
     COMMAND $<TARGET_FILE:testGWRRobust> --success
 )
 
-add_executable(testGWRGeneralized testGWRGeneralized.cpp ${ADDON_SOURCES} ${SAMPL_LONDONHP})
-target_link_libraries(testGWRGeneralized PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRGeneralized testGWRGeneralized.cpp)
+target_link_libraries(testGWRGeneralized PRIVATE gwmodel londonhp londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRGeneralized 
     COMMAND $<TARGET_FILE:testGWRGeneralized> --success
 )
 
-add_executable(testGWRScalable testGWRScalable.cpp ${ADDON_SOURCES})
-target_link_libraries(testGWRScalable PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRScalable testGWRScalable.cpp)
+target_link_libraries(testGWRScalable PRIVATE gwmodel londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRScalable 
     COMMAND $<TARGET_FILE:testGWRScalable> --success
 )
 
-add_executable(testGWRLocalCollinearity testGWRLocalCollinearity.cpp ${ADDON_SOURCES})
-target_link_libraries(testGWRLocalCollinearity PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWRLocalCollinearity testGWRLocalCollinearity.cpp)
+target_link_libraries(testGWRLocalCollinearity PRIVATE gwmodel londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWRLocalCollinearity 
     COMMAND $<TARGET_FILE:testGWRLocalCollinearity> --success
 )
 
-add_executable(testGTWR testGTWR.cpp ${ADDON_SOURCES})
-target_link_libraries(testGTWR PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGTWR testGTWR.cpp)
+target_link_libraries(testGTWR PRIVATE gwmodel londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGTWR 
     COMMAND $<TARGET_FILE:testGTWR> --success
 )
 
-add_executable(testGWDA testGWDA.cpp ${SAMPL_LONDONHP})
-target_link_libraries(testGWDA PRIVATE gwmodel ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGWDA testGWDA.cpp)
+target_link_libraries(testGWDA PRIVATE gwmodel londonhp ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
     NAME testGWDA 
     COMMAND $<TARGET_FILE:testGWDA> --success
