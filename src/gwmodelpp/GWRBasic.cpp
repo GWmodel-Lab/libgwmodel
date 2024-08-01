@@ -749,44 +749,46 @@ double GWRBasic::calcTrQtQCoreOmp()
     double trQtQ = 0.0;
     uword nDp = mCoords.n_rows, nVar = mCoords.n_cols;
     mat wspan(1, nVar, fill::ones);
+    int flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (uword i = 0; i < nDp; i++)
     {
-        vec wi = mSpatialWeight.weightVector(i);
-        mat xtwi = trans(mX % (wi * wspan));
-        try
-        {
-            mat xtwxR = inv_sympd(xtwi * mX);
-            mat ci = xtwxR * xtwi;
-            mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
-            vec pi = -trans(si);
-            pi(i) += 1.0;
-            double qi = sum(pi % pi);
-            trQtQ += qi * qi;
-            for (arma::uword j = i + 1; j < nDp; j++)
+        if (flag) {
+            vec wi = mSpatialWeight.weightVector(i);
+            mat xtwi = trans(mX % (wi * wspan));
+            try
             {
-                vec wj = mSpatialWeight.weightVector(j);
-                mat xtwj = trans(mX % (wj * wspan));
-                try {
-                    mat sj = mX.row(j) * inv_sympd(xtwj * mX) * xtwj;
-                    vec pj = -trans(sj);
-                    pj(j) += 1.0;
-                    double qj = sum(pi % pj);
-                    trQtQ += qj * qj * 2.0;
-                }
-                catch (const std::exception& e)
+                mat xtwxR = inv_sympd(xtwi * mX);
+                mat ci = xtwxR * xtwi;
+                mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
+                vec pi = -trans(si);
+                pi(i) += 1.0;
+                double qi = sum(pi % pi);
+                trQtQ += qi * qi;
+                for (arma::uword j = i + 1; j < nDp; j++)
                 {
-                    return DBL_MAX;
+                    vec wj = mSpatialWeight.weightVector(j);
+                    mat xtwj = trans(mX % (wj * wspan));
+                    try {
+                        mat sj = mX.row(j) * inv_sympd(xtwj * mX) * xtwj;
+                        vec pj = -trans(sj);
+                        pj(j) += 1.0;
+                        double qj = sum(pi % pj);
+                        trQtQ += qj * qj * 2.0;
+                    }
+                    catch (const std::exception& e)
+                    {
+                        flag = false;
+                    }
                 }
             }
+            catch(const std::exception& e)
+            {
+                flag = false;
+            }
         }
-        catch(const std::exception& e)
-        {
-            return DBL_MAX;
-        }
-        
     }
-    return trQtQ;
+    return flag ? trQtQ : DBL_MAX;
 }
 
 vec GWRBasic::calcDiagBCoreOmp(uword i)
@@ -809,21 +811,27 @@ vec GWRBasic::calcDiagBCoreOmp(uword i)
             return { DBL_MAX, DBL_MAX };
         }
     }
+    int flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (arma::uword k = 0; k < nDp; k++)
     {
-        vec w = mSpatialWeight.weightVector(k);
-        mat xtw = trans(mX % (w * wspan));
-        try
-        {
-            mat C = trans(xtw) * inv_sympd(xtw * mX);
-            vec b = C.col(i);
-            diagB += (b % b - (1.0 / nDp) * (b % c));
+        if (flag) {
+            vec w = mSpatialWeight.weightVector(k);
+            mat xtw = trans(mX % (w * wspan));
+            try
+            {
+                mat C = trans(xtw) * inv_sympd(xtw * mX);
+                vec b = C.col(i);
+                diagB += (b % b - (1.0 / nDp) * (b % c));
+            }
+            catch (const std::exception& e)
+            {
+                flag = false;
+            }
         }
-        catch (const std::exception& e)
-        {
-            return { DBL_MAX, DBL_MAX };
-        }
+    }
+    if (!flag) {
+        return { DBL_MAX, DBL_MAX };
     }
     diagB = 1.0 / nDp * diagB;
     return { sum(diagB), sum(diagB % diagB) };
