@@ -108,6 +108,42 @@ TEST_CASE("mat quad mpi")
     }
 }
 
+TEST_CASE("mat trace mpi")
+{
+    int ip, np;
+    MPI_Comm_size(MPI_COMM_WORLD, &np);
+    MPI_Comm_rank(MPI_COMM_WORLD, &ip);
+
+    uword n = 100;
+    uword size = n / np + (n % np == 0 ? 0 : 1);
+    uword from = ip * size, to = min(from + size, n);
+
+    // printf("range from %llu to %llu\n", from, to);
+
+    mat A_all;
+    double trA_all;
+    A_all = mat(n, n, arma::fill::randn);
+    if (ip == 0)
+    {
+        trA_all = trace(A_all);
+    }
+
+    mat A;
+    double trA = 0.0;
+    A = A_all.rows(from, to - 1);
+    // printf("process %d begin mat mul\n", ip);
+    REQUIRE_NOTHROW(([&]()
+    {
+        trA = mat_trace_mpi(A, ip, np);
+    })());
+    // printf("process %d end mat mul\n", ip);
+
+    if (ip == 0)
+    {
+        REQUIRE_THAT(trA, Catch::Matchers::WithinAbs(trA_all, 1e-6));
+    }
+}
+
 int main(int argc, char *argv[])
 {
     MPI_Init(&argc, &argv);

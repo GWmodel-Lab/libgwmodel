@@ -40,3 +40,16 @@ void mat_quad_mpi(mat& a, mat& aTa, const int ip, const int np)
         MPI_Reduce(aTai.memptr(), aTa.memptr(), aTai.n_elem, MPI_DOUBLE, MPI_SUM, pi, MPI_COMM_WORLD);
     }
 }
+
+double mat_trace_mpi(arma::mat& a, const int ip, const int np)
+{
+    int k = (int) a.n_rows;
+    arma::Col<int> a_rows(np, arma::fill::zeros);
+    MPI_Allgather(&k, 1, MPI_INT, a_rows.memptr(), 1, MPI_INT, MPI_COMM_WORLD);
+    arma::Col<int> a_disp = arma::cumsum(a_rows) - a_rows;
+    mat ai = a.cols(a_disp(ip), a_disp(ip) + a_rows(ip) - 1);
+    double ti = trace(ai);
+    double tr = 0.0;
+    MPI_Allreduce(&ti, &tr, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return tr;
+}
