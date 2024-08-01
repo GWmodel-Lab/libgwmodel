@@ -623,6 +623,10 @@ private:
      */
     arma::mat fitCoreSHatOmp(const arma::mat& x, const arma::vec& y, const SpatialWeight& sw, arma::vec& shat);
 
+    double calcTrQtQCoreOmp();
+
+    arma::vec calcDiagBCoreOmp(arma::uword i);
+
 #endif
 
 #ifdef ENABLE_CUDA

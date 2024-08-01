@@ -743,6 +743,91 @@ arma::mat GWRBasic::fitCoreSHatOmp(const arma::mat& x, const arma::vec& y, const
     shat = sum(shat_all, 1);
     return betas.t();
 }
+
+double GWRBasic::calcTrQtQCoreOmp()
+{
+    double trQtQ = 0.0;
+    uword nDp = mCoords.n_rows, nVar = mCoords.n_cols;
+    mat wspan(1, nVar, fill::ones);
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (uword i = 0; i < nDp; i++)
+    {
+        vec wi = mSpatialWeight.weightVector(i);
+        mat xtwi = trans(mX % (wi * wspan));
+        try
+        {
+            mat xtwxR = inv_sympd(xtwi * mX);
+            mat ci = xtwxR * xtwi;
+            mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
+            vec pi = -trans(si);
+            pi(i) += 1.0;
+            double qi = sum(pi % pi);
+            trQtQ += qi * qi;
+            for (arma::uword j = i + 1; j < nDp; j++)
+            {
+                vec wj = mSpatialWeight.weightVector(j);
+                mat xtwj = trans(mX % (wj * wspan));
+                try {
+                    mat sj = mX.row(j) * inv_sympd(xtwj * mX) * xtwj;
+                    vec pj = -trans(sj);
+                    pj(j) += 1.0;
+                    double qj = sum(pi % pj);
+                    trQtQ += qj * qj * 2.0;
+                }
+                catch (const std::exception& e)
+                {
+                    return DBL_MAX;
+                }
+            }
+        }
+        catch(const std::exception& e)
+        {
+            return DBL_MAX;
+        }
+        
+    }
+    return trQtQ;
+}
+
+vec GWRBasic::calcDiagBCoreOmp(uword i)
+{
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    vec diagB(nDp, fill::zeros), c(nDp, fill::zeros);
+    mat ek = eye(nVar, nVar);
+    mat wspan(1, nVar, fill::ones);
+    for (arma::uword j = 0; j < nDp; j++)
+    {
+        vec w = mSpatialWeight.weightVector(j);
+        mat xtw = trans(mX % (w * wspan));
+        try
+        {
+            mat C = trans(xtw) * inv_sympd(xtw * mX);
+            c += C.col(i);
+        }
+        catch (const std::exception& e)
+        {
+            return { DBL_MAX, DBL_MAX };
+        }
+    }
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (arma::uword k = 0; k < nDp; k++)
+    {
+        vec w = mSpatialWeight.weightVector(k);
+        mat xtw = trans(mX % (w * wspan));
+        try
+        {
+            mat C = trans(xtw) * inv_sympd(xtw * mX);
+            vec b = C.col(i);
+            diagB += (b % b - (1.0 / nDp) * (b % c));
+        }
+        catch (const std::exception& e)
+        {
+            return { DBL_MAX, DBL_MAX };
+        }
+    }
+    diagB = 1.0 / nDp * diagB;
+    return { sum(diagB), sum(diagB % diagB) };
+}
 #endif
 
 #ifdef ENABLE_CUDA
@@ -1248,6 +1333,8 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitCoreFunction = &GWRBasic::fitCoreSerial;
             mFitCoreCVFunction = &GWRBasic::fitCoreCVSerial;
             mFitCoreSHatFunction = &GWRBasic::fitCoreSHatSerial;
+            mCalcTrQtQCoreFUnction = &GWRBasic::calcTrQtQCoreSerial;
+            mCalcDiagBCoreFunction = &GWRBasic::calcDiagBCoreSerial;
             break;
 #ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
@@ -1256,6 +1343,8 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitCoreFunction = &GWRBasic::fitCoreOmp;
             mFitCoreCVFunction = &GWRBasic::fitCoreCVOmp;
             mFitCoreSHatFunction = &GWRBasic::fitCoreSHatOmp;
+            mCalcTrQtQCoreFUnction = &GWRBasic::calcTrQtQCoreOmp;
+            mCalcDiagBCoreFunction = &GWRBasic::calcDiagBCoreOmp;
             break;
 #endif // ENABLE_OPENMP
 #ifdef ENABLE_CUDA
@@ -1272,6 +1361,8 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitCoreFunction = &GWRBasic::fitCoreSerial;
             mFitCoreCVFunction = &GWRBasic::fitCoreCVSerial;
             mFitCoreSHatFunction = &GWRBasic::fitCoreSHatSerial;
+            mCalcTrQtQCoreFUnction = &GWRBasic::calcTrQtQCoreSerial;
+            mCalcDiagBCoreFunction = &GWRBasic::calcDiagBCoreSerial;
             break;
         }
 #ifdef ENABLE_MPI
@@ -1279,11 +1370,17 @@ void GWRBasic::setParallelType(const ParallelType& type)
         {
             mFitFunction = &GWRBasic::fitMpi;
             mIndepVarsSelectionCriterionFunction = &GWRBasic::indepVarsSelectionCriterionMpi;
+            mFTestFunction = &GWRBasic::fTestBase;
+            mCalcTrQtQFunction = &GWRBasic::calcTrQtQBase;
+            mCalcDiagBFunction = &GWRBasic::calcDiagBBase;
         }
         else
         {
             mFitFunction = &GWRBasic::fitBase;
             mIndepVarsSelectionCriterionFunction = &GWRBasic::indepVarsSelectionCriterion;
+            mFTestFunction = &GWRBasic::fTestBase;
+            mCalcTrQtQFunction = &GWRBasic::calcTrQtQBase;
+            mCalcDiagBFunction = &GWRBasic::calcDiagBBase;
         }
 #endif
         setBandwidthSelectionCriterion(mBandwidthSelectionCriterion);
