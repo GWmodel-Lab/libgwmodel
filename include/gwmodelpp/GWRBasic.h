@@ -51,6 +51,10 @@ public:
     typedef arma::mat (GWRBasic::*FitCoreCalculator)(const arma::mat&, const arma::vec&, const SpatialWeight&);   //!< \~english Fit function declaration. \~chinese 拟合函数声明。
     typedef arma::mat (GWRBasic::*FitCoreSHatCalculator)(const arma::mat&, const arma::vec&, const SpatialWeight&, arma::vec&);   //!< \~english Fit function declaration. \~chinese 拟合函数声明。
     typedef arma::mat (GWRBasic::*FitCoreCVCalculator)(const arma::mat&, const arma::vec&, const SpatialWeight&);   //!< \~english Fit function declaration. \~chinese 拟合函数声明。
+    typedef double (GWRBasic::*TrQtQCalculator)();
+    typedef double (GWRBasic::*TrQtQCoreCalculator)();
+    typedef arma::vec (GWRBasic::*DiagBCalculator)(arma::uword);
+    typedef arma::vec (GWRBasic::*DiagBCoreCalculator)(arma::uword);
 
     typedef double (GWRBasic::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);        //!< \~english Declaration of criterion calculator for bandwidth selection. \~chinese 带宽优选指标计算函数声明。
     typedef double (GWRBasic::*IndepVarsSelectCriterionCalculator)(const std::vector<std::size_t>&); //!< \~english Declaration of criterion calculator for variable selection. \~chinese 变量优选指标计算函数声明。
@@ -508,6 +512,12 @@ private:
      */
     arma::mat fitBase();
 
+    double calcTrQtQBase();
+
+    arma::vec calcDiagBBase(arma::uword i)
+    {
+        return (this->*mCalcDiagBCoreFunction)(i);
+    }
 
 private:
 
@@ -516,6 +526,10 @@ private:
     arma::mat fitCoreSHatSerial(const arma::mat& x, const arma::vec& y, const SpatialWeight& sw, arma::vec& shat);
 
     arma::mat fitCoreCVSerial(const arma::mat& x, const arma::vec& y, const SpatialWeight& sw);
+
+    double calcTrQtQCoreSerial();
+
+    arma::vec calcDiagBCoreSerial(arma::uword i);
 
 #ifdef ENABLE_OPENMP
 
@@ -772,6 +786,10 @@ protected:
     arma::cube mC;//!< \~english All \f$S\f$ matrices. \~chinese 所有 \f$C\f$ 矩阵。
     bool mStoreS = false; //!< \~english Whether to save S \~chinese 是否保存 S 矩阵
     bool mStoreC = false; //!< \~english Whether to save C \~chinese 是否保存 C 矩阵
+    TrQtQCalculator mCalcTrQtQFunction = &GWRBasic::calcTrQtQBase;
+    TrQtQCoreCalculator mCalcTrQtQCoreFUnction = &GWRBasic::calcTrQtQCoreSerial;
+    DiagBCalculator mCalcDiagBFunction = &GWRBasic::calcDiagBBase;
+    DiagBCoreCalculator mCalcDiagBCoreFunction = &GWRBasic::calcDiagBCoreSerial;
 };
 
 }

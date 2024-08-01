@@ -416,6 +416,105 @@ double gwm::GWRBasic::indepVarsSelectionCriterion(const vector<size_t>& indepVar
         return DBL_MAX;
     }
 }
+double GWRBasic::calcTrQtQBase()
+{
+    double trQtQ = 0.0;
+    uword nDp = mCoords.n_rows;
+    if (isStoreS())
+    {
+        mat EmS = eye(nDp, nDp) - mS;
+        mat Q = trans(EmS) * EmS;
+        trQtQ = sum(diagvec(trans(Q) * Q));
+    }
+    else
+    {
+        trQtQ = (this->*mCalcTrQtQCoreFUnction)();
+    }
+    return trQtQ;
+}
+
+double GWRBasic::calcTrQtQCoreSerial()
+{
+    double trQtQ = 0.0;
+    uword nDp = mCoords.n_rows, nVar = mCoords.n_cols;
+    mat wspan(1, nVar, fill::ones);
+    for (uword i = 0; i < nDp; i++)
+    {
+        vec wi = mSpatialWeight.weightVector(i);
+        mat xtwi = trans(mX % (wi * wspan));
+        try
+        {
+            mat xtwxR = inv_sympd(xtwi * mX);
+            mat ci = xtwxR * xtwi;
+            mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
+            vec pi = -trans(si);
+            pi(i) += 1.0;
+            double qi = sum(pi % pi);
+            trQtQ += qi * qi;
+            for (arma::uword j = i + 1; j < nDp; j++)
+            {
+                vec wj = mSpatialWeight.weightVector(j);
+                mat xtwj = trans(mX % (wj * wspan));
+                try {
+                    mat sj = mX.row(j) * inv_sympd(xtwj * mX) * xtwj;
+                    vec pj = -trans(sj);
+                    pj(j) += 1.0;
+                    double qj = sum(pi % pj);
+                    trQtQ += qj * qj * 2.0;
+                }
+                catch (const std::exception& e)
+                {
+                    return DBL_MAX;
+                }
+            }
+        }
+        catch(const std::exception& e)
+        {
+            return DBL_MAX;
+        }
+        
+    }
+    return trQtQ;
+}
+
+vec GWRBasic::calcDiagBCoreSerial(uword i)
+{
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    vec diagB(nDp, fill::zeros), c(nDp, fill::zeros);
+    mat ek = eye(nVar, nVar);
+    mat wspan(1, nVar, fill::ones);
+    for (arma::uword j = 0; j < nDp; j++)
+    {
+        vec w = mSpatialWeight.weightVector(j);
+        mat xtw = trans(mX % (w * wspan));
+        try
+        {
+            mat C = trans(xtw) * inv_sympd(xtw * mX);
+            c += C.col(i);
+        }
+        catch (const std::exception& e)
+        {
+            return { DBL_MAX, DBL_MAX };
+        }
+    }
+    for (arma::uword k = 0; k < nDp; k++)
+    {
+        vec w = mSpatialWeight.weightVector(k);
+        mat xtw = trans(mX % (w * wspan));
+        try
+        {
+            mat C = trans(xtw) * inv_sympd(xtw * mX);
+            vec b = C.col(i);
+            diagB += (b % b - (1.0 / nDp) * (b % c));
+        }
+        catch (const std::exception& e)
+        {
+            return { DBL_MAX, DBL_MAX };
+        }
+    }
+    diagB = 1.0 / nDp * diagB;
+    return { sum(diagB), sum(diagB % diagB) };
+}
 
 #ifdef ENABLE_OPENMP
 mat GWRBasic::predictOmp(const mat& locations, const mat& x, const vec& y)
