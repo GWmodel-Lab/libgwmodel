@@ -1,3 +1,4 @@
+#include <gsl/gsl_cdf.h>
 #include "GWRBasic.h"
 #include "BandwidthSelector.h"
 #include "VariableForwardSelector.h"
@@ -416,6 +417,67 @@ double gwm::GWRBasic::indepVarsSelectionCriterion(const vector<size_t>& indepVar
         return DBL_MAX;
     }
 }
+
+void gwm::GWRBasic::fTestBase()
+{
+    double v1 = mSHat(0), v2 = mSHat(1);
+    double nDp = double(mCoords.n_rows), nVar = double(mX.n_cols);
+    double RSSg = RSS(mX, mY, mBetas);
+    vec betaOls = solve(mX, mY);
+    vec residualOls = mY - mX * betaOls;
+    double RSSo = sum(residualOls % residualOls);
+    double DFo = nDp - nVar;
+    double delta1 = 1.0 * nDp - 2.0 * v1 + v2;
+    double sigma21 = RSSg / delta1;
+    double lDelta1 = sum(mQDiag), lDelta2 = (this->*mCalcTrQtQFunction)();
+    //=========
+    // F1 Test
+    //=========
+    mF1Test.s = (RSSg/lDelta1)/(RSSo/DFo);
+    mF1Test.df1 = lDelta1 * lDelta1 / lDelta2;
+    mF1Test.df2 = DFo;
+    mF1Test.p = gsl_cdf_fdist_P(mF1Test.s, mF1Test.df1, mF1Test.df2);
+    //=========
+    // F2 Test
+    //=========
+    mF2Test.s = ((RSSo-RSSg)/(DFo-lDelta1))/(RSSo/DFo);
+    mF2Test.df1 = (DFo-lDelta1) * (DFo-lDelta1) / (DFo - 2 * lDelta1 + lDelta2);
+    mF2Test.df2 = DFo;
+    mF2Test.p = gsl_cdf_fdist_Q(mF2Test.s, mF2Test.df1, mF2Test.df2);
+    //=========
+    // F3 Test
+    //=========
+    mF3Test.resize(mX.n_cols);
+    vec vk2(nVar, arma::fill::zeros);
+    for (int i = 0; i < nVar; i++)
+    {
+        vec betasi = mBetas.col(i);
+        vec betasJndp = vec(nDp, fill::ones) * (sum(betasi) * 1.0 / nDp);
+        vk2(i) = (1.0 / nDp) * det(trans(betasi - betasJndp) * betasi);
+    }
+
+    for (uword i = 0; i < mX.n_cols; i++)
+    {
+        vec diagB = (this->*mCalcDiagBFunction)(i);
+        double g1 = diagB(0);
+        double g2 = diagB(1);
+        double numdf = g1 * g1 / g2;
+        FTestResult f3i;
+        f3i.s = (vk2(i) / g1) / sigma21;
+        f3i.df1 = numdf;
+        f3i.df2 = mF1Test.df1;
+        f3i.p = gsl_cdf_fdist_Q(f3i.s, numdf, mF1Test.df1);
+        mF3Test[i] = f3i;
+    }
+    //=========
+    // F4 Test
+    //=========
+    mF4Test.s = RSSg / RSSo;
+    mF4Test.df1 = delta1;
+    mF4Test.df2 = DFo;
+    mF4Test.p = gsl_cdf_fdist_P(mF4Test.s, mF4Test.df1, mF4Test.df2);
+}
+
 double GWRBasic::calcTrQtQBase()
 {
     double trQtQ = 0.0;

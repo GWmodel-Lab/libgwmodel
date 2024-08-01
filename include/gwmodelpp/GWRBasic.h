@@ -51,6 +51,7 @@ public:
     typedef arma::mat (GWRBasic::*FitCoreCalculator)(const arma::mat&, const arma::vec&, const SpatialWeight&);   //!< \~english Fit function declaration. \~chinese 拟合函数声明。
     typedef arma::mat (GWRBasic::*FitCoreSHatCalculator)(const arma::mat&, const arma::vec&, const SpatialWeight&, arma::vec&);   //!< \~english Fit function declaration. \~chinese 拟合函数声明。
     typedef arma::mat (GWRBasic::*FitCoreCVCalculator)(const arma::mat&, const arma::vec&, const SpatialWeight&);   //!< \~english Fit function declaration. \~chinese 拟合函数声明。
+    typedef void (GWRBasic::*FTestCalculator)();
     typedef double (GWRBasic::*TrQtQCalculator)();
     typedef double (GWRBasic::*TrQtQCoreCalculator)();
     typedef arma::vec (GWRBasic::*DiagBCalculator)(arma::uword);
@@ -58,6 +59,14 @@ public:
 
     typedef double (GWRBasic::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);        //!< \~english Declaration of criterion calculator for bandwidth selection. \~chinese 带宽优选指标计算函数声明。
     typedef double (GWRBasic::*IndepVarsSelectCriterionCalculator)(const std::vector<std::size_t>&); //!< \~english Declaration of criterion calculator for variable selection. \~chinese 变量优选指标计算函数声明。
+
+    struct FTestResult
+    {
+        double s = 0.0;
+        double df1 = 0.0;
+        double df2 = 0.0;
+        double p = 0.0;
+    };
 
 private:
 
@@ -400,6 +409,11 @@ public:     // Implement IRegressionAnalysis
 
     arma::mat fit() override;
 
+    void fTest()
+    {
+        (this->*mFTestFunction)();
+    }
+
 public:     // Implement IVariableSelectable
     Status getCriterion(const std::vector<size_t>& variables, double& criterion) override
     {
@@ -511,6 +525,8 @@ private:
      * @return mat 回归系数估计值
      */
     arma::mat fitBase();
+
+    void fTestBase();
 
     double calcTrQtQBase();
 
@@ -786,6 +802,12 @@ protected:
     arma::cube mC;//!< \~english All \f$S\f$ matrices. \~chinese 所有 \f$C\f$ 矩阵。
     bool mStoreS = false; //!< \~english Whether to save S \~chinese 是否保存 S 矩阵
     bool mStoreC = false; //!< \~english Whether to save C \~chinese 是否保存 C 矩阵
+
+    FTestResult mF1Test;
+    FTestResult mF2Test;
+    std::vector<FTestResult> mF3Test;
+    FTestResult mF4Test;
+    FTestCalculator mFTestFunction = &GWRBasic::fTestBase;
     TrQtQCalculator mCalcTrQtQFunction = &GWRBasic::calcTrQtQBase;
     TrQtQCoreCalculator mCalcTrQtQCoreFUnction = &GWRBasic::calcTrQtQCoreSerial;
     DiagBCalculator mCalcDiagBFunction = &GWRBasic::calcDiagBBase;
