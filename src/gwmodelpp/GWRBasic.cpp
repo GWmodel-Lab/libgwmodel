@@ -159,6 +159,12 @@ mat GWRBasic::fit()
 
     GWM_LOG_STAGE("Model fitting");
     mBetas = (this->*mFitFunction)();
+
+    if (mIsDoFTest)
+    {
+        GWM_LOG_STAGE("F Test");
+        (this->*mFTestFunction)();
+    }
     
 #ifdef ENABLE_CUDA
     if (mParallelType & ParallelType::CUDA)
@@ -423,11 +429,11 @@ void gwm::GWRBasic::fTestBase()
     double v1 = mSHat(0), v2 = mSHat(1);
     double nDp = double(mCoords.n_rows), nVar = double(mX.n_cols);
     double RSSg = RSS(mX, mY, mBetas);
-    vec betaOls = solve(mX, mY);
+    vec betaOls = (mX.t() * mX).i() * (mX.t() * mY);
     vec residualOls = mY - mX * betaOls;
     double RSSo = sum(residualOls % residualOls);
     double DFo = nDp - nVar;
-    double delta1 = 1.0 * nDp - 2.0 * v1 + v2;
+    double delta1 = nDp - 2.0 * v1 + v2;
     double sigma21 = RSSg / delta1;
     double lDelta1 = sum(mQDiag), lDelta2 = (this->*mCalcTrQtQFunction)();
     //=========
@@ -542,7 +548,7 @@ double GWRBasic::calcTrQtQCoreSerial()
 
 arma::vec GWRBasic::calcDiagBBase(arma::uword i)
 {
-    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    arma::uword nDp = mX.n_rows;
     vec c(nDp, fill::zeros);
     for (arma::uword j = 0; j < nDp; j++)
     {
@@ -563,8 +569,8 @@ arma::vec GWRBasic::calcDiagBBase(arma::uword i)
 
 vec GWRBasic::calcDiagBCoreSerial(uword i, const vec& c)
 {
-    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
-    vec diagB(nDp, fill::zeros)
+    arma::uword nDp = mX.n_rows;
+    vec diagB(nDp, fill::zeros);
     std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
     for (arma::uword k = workRange.first; k < workRange.second; k++)
     {
@@ -801,7 +807,7 @@ double GWRBasic::calcTrQtQCoreOmp()
 
 vec GWRBasic::calcDiagBCoreOmp(uword i, const vec& c)
 {
-    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    arma::uword nDp = mX.n_rows;
     vec diagB(nDp, fill::zeros);
     std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
     int flag = true;

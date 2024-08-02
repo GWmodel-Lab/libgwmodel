@@ -403,6 +403,10 @@ public:
 
     void setStoreC(bool flag) { mStoreC = flag; }
 
+    bool isDoFTest() { return mIsDoFTest; };
+
+    void setIsDoFtest(bool value) { mIsDoFTest = value; }
+
     FTestResultCombine fTestResults()
     {
         return std::make_tuple(mF1Test, mF2Test, mF3Test, mF4Test);
@@ -813,6 +817,7 @@ protected:
     bool mStoreS = false; //!< \~english Whether to save S \~chinese 是否保存 S 矩阵
     bool mStoreC = false; //!< \~english Whether to save C \~chinese 是否保存 C 矩阵
 
+    bool mIsDoFTest = false;
     FTestResult mF1Test;
     FTestResult mF2Test;
     std::vector<FTestResult> mF3Test;
