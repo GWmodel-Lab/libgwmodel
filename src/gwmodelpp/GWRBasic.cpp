@@ -558,22 +558,21 @@ arma::vec GWRBasic::calcDiagBBase(arma::uword i)
             return { DBL_MAX, DBL_MAX };
         }
     }
-    return (this->*mCalcDiagBCoreFunction)(i);
+    return (this->*mCalcDiagBCoreFunction)(i, c);
 }
 
 vec GWRBasic::calcDiagBCoreSerial(uword i, const vec& c)
 {
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     vec diagB(nDp, fill::zeros)
-    mat ek = eye(nVar, nVar);
     std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
     for (arma::uword k = workRange.first; k < workRange.second; k++)
     {
         vec w = mSpatialWeight.weightVector(k);
-        mat xtw = trans(mX % (w * wspan));
+        mat xtw = (mX.each_col() % w).t();
         try
         {
-            mat C = trans(xtw) * inv_sympd(xtw * mX);
+            mat C = xtw.t() * inv_sympd(xtw * mX);
             vec b = C.col(i);
             diagB += (b % b - (1.0 / nDp) * (b % c));
         }
@@ -804,7 +803,6 @@ vec GWRBasic::calcDiagBCoreOmp(uword i, const vec& c)
 {
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
     vec diagB(nDp, fill::zeros);
-    mat ek = eye(nVar, nVar);
     std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
     int flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
