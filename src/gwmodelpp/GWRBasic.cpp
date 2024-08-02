@@ -490,7 +490,7 @@ double GWRBasic::calcTrQtQBase()
     }
     else
     {
-        trQtQ = (this->*mCalcTrQtQCoreFUnction)();
+        trQtQ = (this->*mCalcTrQtQCoreFunction)();
     }
     return trQtQ;
 }
@@ -500,7 +500,8 @@ double GWRBasic::calcTrQtQCoreSerial()
     double trQtQ = 0.0;
     uword nDp = mCoords.n_rows, nVar = mCoords.n_cols;
     mat wspan(1, nVar, fill::ones);
-    for (uword i = 0; i < nDp; i++)
+    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
+    for (uword i = workRange.first; i < workRange.second; i++)
     {
         vec wi = mSpatialWeight.weightVector(i);
         mat xtwi = trans(mX % (wi * wspan));
@@ -539,16 +540,14 @@ double GWRBasic::calcTrQtQCoreSerial()
     return trQtQ;
 }
 
-vec GWRBasic::calcDiagBCoreSerial(uword i)
+arma::vec GWRBasic::calcDiagBBase(arma::uword i)
 {
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
-    vec diagB(nDp, fill::zeros), c(nDp, fill::zeros);
-    mat ek = eye(nVar, nVar);
-    mat wspan(1, nVar, fill::ones);
+    vec c(nDp, fill::zeros);
     for (arma::uword j = 0; j < nDp; j++)
     {
         vec w = mSpatialWeight.weightVector(j);
-        mat xtw = trans(mX % (w * wspan));
+        mat xtw = trans(mX.each_col() % w);
         try
         {
             mat C = trans(xtw) * inv_sympd(xtw * mX);
@@ -559,7 +558,16 @@ vec GWRBasic::calcDiagBCoreSerial(uword i)
             return { DBL_MAX, DBL_MAX };
         }
     }
-    for (arma::uword k = 0; k < nDp; k++)
+    return (this->*mCalcDiagBCoreFunction)(i);
+}
+
+vec GWRBasic::calcDiagBCoreSerial(uword i, const vec& c)
+{
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
+    vec diagB(nDp, fill::zeros)
+    mat ek = eye(nVar, nVar);
+    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
+    for (arma::uword k = workRange.first; k < workRange.second; k++)
     {
         vec w = mSpatialWeight.weightVector(k);
         mat xtw = trans(mX % (w * wspan));
@@ -749,9 +757,10 @@ double GWRBasic::calcTrQtQCoreOmp()
     double trQtQ = 0.0;
     uword nDp = mCoords.n_rows, nVar = mCoords.n_cols;
     mat wspan(1, nVar, fill::ones);
+    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
     int flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (uword i = 0; i < nDp; i++)
+    for (uword i = workRange.first; i < workRange.second; i++)
     {
         if (flag) {
             vec wi = mSpatialWeight.weightVector(i);
@@ -791,33 +800,19 @@ double GWRBasic::calcTrQtQCoreOmp()
     return flag ? trQtQ : DBL_MAX;
 }
 
-vec GWRBasic::calcDiagBCoreOmp(uword i)
+vec GWRBasic::calcDiagBCoreOmp(uword i, const vec& c)
 {
     arma::uword nDp = mX.n_rows, nVar = mX.n_cols;
-    vec diagB(nDp, fill::zeros), c(nDp, fill::zeros);
+    vec diagB(nDp, fill::zeros);
     mat ek = eye(nVar, nVar);
-    mat wspan(1, nVar, fill::ones);
-    for (arma::uword j = 0; j < nDp; j++)
-    {
-        vec w = mSpatialWeight.weightVector(j);
-        mat xtw = trans(mX % (w * wspan));
-        try
-        {
-            mat C = trans(xtw) * inv_sympd(xtw * mX);
-            c += C.col(i);
-        }
-        catch (const std::exception& e)
-        {
-            return { DBL_MAX, DBL_MAX };
-        }
-    }
+    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
     int flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (arma::uword k = 0; k < nDp; k++)
+    for (arma::uword k = workRange.first; k < workRange.second; k++)
     {
         if (flag) {
             vec w = mSpatialWeight.weightVector(k);
-            mat xtw = trans(mX % (w * wspan));
+            mat xtw = trans(mX.each_col() % w);
             try
             {
                 mat C = trans(xtw) * inv_sympd(xtw * mX);
@@ -830,7 +825,8 @@ vec GWRBasic::calcDiagBCoreOmp(uword i)
             }
         }
     }
-    if (!flag) {
+    if (!flag)
+    {
         return { DBL_MAX, DBL_MAX };
     }
     diagB = 1.0 / nDp * diagB;
@@ -1274,26 +1270,34 @@ arma::mat gwm::GWRBasic::fitMpi()
     return mBetas;
 }
 
-// double GWRBasic::indepVarsSelectionCriterion(const mat& x, const vec& y, vec& shat)
-// {
-//     try
-//     {
-//         mat S;
-//         mat betas = (this->*mFitCoreSHatFunction)(x, y, mSpatialWeight, shat, S);
-//         GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressTotal);
-//         if (mStatus == Status::Success)
-//         {
-//             double rss = GWRBase::RSS(x, y, betas);
-//             return rss;
-//         }
-//         else return DBL_MAX;
-//     }
-//     catch(const std::exception& e)
-//     {
-//         return DBL_MAX;
-//     }
-    
-// }
+double GWRBasic::calcTrQtQMpi()
+{
+    double trQtQ = 0.0;
+    uword nDp = mCoords.n_rows;
+    if (isStoreS())
+    {
+        std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
+        mat EmS = eye(nDp, nDp).eval().rows(workRange.first, workRange.second - 1) - mS;
+        mat Q, QtQ;
+        mat_quad_mpi(EmS, Q, mWorkerId, mWorkerNum);
+        mat_quad_mpi(Q, QtQ, mWorkerId, mWorkerNum);
+        trQtQ = mat_trace_mpi(QtQ, mWorkerId, mWorkerNum);
+    }
+    else
+    {
+        double trQtQi = (this->*mCalcTrQtQCoreFunction)();
+        MPI_Allreduce(&trQtQi, &trQtQ, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    }
+    return trQtQ;
+}
+
+vec GWRBasic::calcDiagBMpi(uword i)
+{
+    vec diagBi = calcDiagBBase(i);
+    vec diagB;
+    MPI_Allreduce(diagBi.memptr(), diagB.memptr(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return diagB;
+}
 #endif // ENABLE_MPI
 
 void GWRBasic::setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion)
@@ -1341,7 +1345,7 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitCoreFunction = &GWRBasic::fitCoreSerial;
             mFitCoreCVFunction = &GWRBasic::fitCoreCVSerial;
             mFitCoreSHatFunction = &GWRBasic::fitCoreSHatSerial;
-            mCalcTrQtQCoreFUnction = &GWRBasic::calcTrQtQCoreSerial;
+            mCalcTrQtQCoreFunction = &GWRBasic::calcTrQtQCoreSerial;
             mCalcDiagBCoreFunction = &GWRBasic::calcDiagBCoreSerial;
             break;
 #ifdef ENABLE_OPENMP
@@ -1351,7 +1355,7 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitCoreFunction = &GWRBasic::fitCoreOmp;
             mFitCoreCVFunction = &GWRBasic::fitCoreCVOmp;
             mFitCoreSHatFunction = &GWRBasic::fitCoreSHatOmp;
-            mCalcTrQtQCoreFUnction = &GWRBasic::calcTrQtQCoreOmp;
+            mCalcTrQtQCoreFunction = &GWRBasic::calcTrQtQCoreOmp;
             mCalcDiagBCoreFunction = &GWRBasic::calcDiagBCoreOmp;
             break;
 #endif // ENABLE_OPENMP
@@ -1369,7 +1373,7 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitCoreFunction = &GWRBasic::fitCoreSerial;
             mFitCoreCVFunction = &GWRBasic::fitCoreCVSerial;
             mFitCoreSHatFunction = &GWRBasic::fitCoreSHatSerial;
-            mCalcTrQtQCoreFUnction = &GWRBasic::calcTrQtQCoreSerial;
+            mCalcTrQtQCoreFunction = &GWRBasic::calcTrQtQCoreSerial;
             mCalcDiagBCoreFunction = &GWRBasic::calcDiagBCoreSerial;
             break;
         }
@@ -1379,8 +1383,8 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitFunction = &GWRBasic::fitMpi;
             mIndepVarsSelectionCriterionFunction = &GWRBasic::indepVarsSelectionCriterionMpi;
             mFTestFunction = &GWRBasic::fTestBase;
-            mCalcTrQtQFunction = &GWRBasic::calcTrQtQBase;
-            mCalcDiagBFunction = &GWRBasic::calcDiagBBase;
+            mCalcTrQtQFunction = &GWRBasic::calcTrQtQMpi;
+            mCalcDiagBFunction = &GWRBasic::calcDiagBMpi;
         }
         else
         {

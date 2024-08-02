@@ -55,7 +55,7 @@ public:
     typedef double (GWRBasic::*TrQtQCalculator)();
     typedef double (GWRBasic::*TrQtQCoreCalculator)();
     typedef arma::vec (GWRBasic::*DiagBCalculator)(arma::uword);
-    typedef arma::vec (GWRBasic::*DiagBCoreCalculator)(arma::uword);
+    typedef arma::vec (GWRBasic::*DiagBCoreCalculator)(arma::uword, const arma::vec&);
 
     typedef double (GWRBasic::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);        //!< \~english Declaration of criterion calculator for bandwidth selection. \~chinese 带宽优选指标计算函数声明。
     typedef double (GWRBasic::*IndepVarsSelectCriterionCalculator)(const std::vector<std::size_t>&); //!< \~english Declaration of criterion calculator for variable selection. \~chinese 变量优选指标计算函数声明。
@@ -67,6 +67,8 @@ public:
         double df2 = 0.0;
         double p = 0.0;
     };
+
+    using FTestResultCombine = std::tuple<FTestResult, FTestResult, std::vector<FTestResult>, FTestResult>;
 
 private:
 
@@ -401,6 +403,11 @@ public:
 
     void setStoreC(bool flag) { mStoreC = flag; }
 
+    FTestResultCombine fTestResults()
+    {
+        return std::make_tuple(mF1Test, mF2Test, mF3Test, mF4Test);
+    }
+
 public:     // Implement Algorithm
     bool isValid() override;
 
@@ -530,10 +537,7 @@ private:
 
     double calcTrQtQBase();
 
-    arma::vec calcDiagBBase(arma::uword i)
-    {
-        return (this->*mCalcDiagBCoreFunction)(i);
-    }
+    arma::vec calcDiagBBase(arma::uword i);
 
 private:
 
@@ -545,7 +549,7 @@ private:
 
     double calcTrQtQCoreSerial();
 
-    arma::vec calcDiagBCoreSerial(arma::uword i);
+    arma::vec calcDiagBCoreSerial(arma::uword i, const arma::vec& c);
 
 #ifdef ENABLE_OPENMP
 
@@ -625,7 +629,7 @@ private:
 
     double calcTrQtQCoreOmp();
 
-    arma::vec calcDiagBCoreOmp(arma::uword i);
+    arma::vec calcDiagBCoreOmp(arma::uword i, const arma::vec& c);
 
 #endif
 
@@ -712,6 +716,8 @@ private:
     double bandwidthSizeCriterionCVMpi(BandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionAICMpi(BandwidthWeight* bandwidthWeight);
     arma::mat fitMpi();
+    double calcTrQtQMpi();
+    arma::vec calcDiagBMpi(arma::uword i);
 #endif // ENABLE_MPI
 
 public:     // Implement IParallelizable
@@ -813,7 +819,7 @@ protected:
     FTestResult mF4Test;
     FTestCalculator mFTestFunction = &GWRBasic::fTestBase;
     TrQtQCalculator mCalcTrQtQFunction = &GWRBasic::calcTrQtQBase;
-    TrQtQCoreCalculator mCalcTrQtQCoreFUnction = &GWRBasic::calcTrQtQCoreSerial;
+    TrQtQCoreCalculator mCalcTrQtQCoreFunction = &GWRBasic::calcTrQtQCoreSerial;
     DiagBCalculator mCalcDiagBFunction = &GWRBasic::calcDiagBBase;
     DiagBCoreCalculator mCalcDiagBCoreFunction = &GWRBasic::calcDiagBCoreSerial;
 };
