@@ -51,9 +51,24 @@ public:
     typedef arma::mat (GWRBasic::*FitCoreCalculator)(const arma::mat&, const arma::vec&, const SpatialWeight&);   //!< \~english Fit function declaration. \~chinese 拟合函数声明。
     typedef arma::mat (GWRBasic::*FitCoreSHatCalculator)(const arma::mat&, const arma::vec&, const SpatialWeight&, arma::vec&);   //!< \~english Fit function declaration. \~chinese 拟合函数声明。
     typedef arma::mat (GWRBasic::*FitCoreCVCalculator)(const arma::mat&, const arma::vec&, const SpatialWeight&);   //!< \~english Fit function declaration. \~chinese 拟合函数声明。
+    typedef void (GWRBasic::*FTestCalculator)();
+    typedef double (GWRBasic::*TrQtQCalculator)();
+    typedef double (GWRBasic::*TrQtQCoreCalculator)();
+    typedef arma::vec (GWRBasic::*DiagBCalculator)(arma::uword);
+    typedef arma::vec (GWRBasic::*DiagBCoreCalculator)(arma::uword, const arma::vec&);
 
     typedef double (GWRBasic::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);        //!< \~english Declaration of criterion calculator for bandwidth selection. \~chinese 带宽优选指标计算函数声明。
     typedef double (GWRBasic::*IndepVarsSelectCriterionCalculator)(const std::vector<std::size_t>&); //!< \~english Declaration of criterion calculator for variable selection. \~chinese 变量优选指标计算函数声明。
+
+    struct FTestResult
+    {
+        double s = 0.0;
+        double df1 = 0.0;
+        double df2 = 0.0;
+        double p = 0.0;
+    };
+
+    using FTestResultCombine = std::tuple<FTestResult, FTestResult, std::vector<FTestResult>, FTestResult>;
 
 private:
 
@@ -388,6 +403,15 @@ public:
 
     void setStoreC(bool flag) { mStoreC = flag; }
 
+    bool isDoFTest() { return mIsDoFTest; };
+
+    void setIsDoFtest(bool value) { mIsDoFTest = value; }
+
+    FTestResultCombine fTestResults()
+    {
+        return std::make_tuple(mF1Test, mF2Test, mF3Test, mF4Test);
+    }
+
 public:     // Implement Algorithm
     bool isValid() override;
 
@@ -395,6 +419,11 @@ public:     // Implement IRegressionAnalysis
     arma::mat predict(const arma::mat& locations) override;
 
     arma::mat fit() override;
+
+    void fTest()
+    {
+        (this->*mFTestFunction)();
+    }
 
 public:     // Implement IVariableSelectable
     Status getCriterion(const std::vector<size_t>& variables, double& criterion) override
@@ -508,6 +537,11 @@ private:
      */
     arma::mat fitBase();
 
+    void fTestBase();
+
+    double calcTrQtQBase();
+
+    arma::vec calcDiagBBase(arma::uword i);
 
 private:
 
@@ -516,6 +550,10 @@ private:
     arma::mat fitCoreSHatSerial(const arma::mat& x, const arma::vec& y, const SpatialWeight& sw, arma::vec& shat);
 
     arma::mat fitCoreCVSerial(const arma::mat& x, const arma::vec& y, const SpatialWeight& sw);
+
+    double calcTrQtQCoreSerial();
+
+    arma::vec calcDiagBCoreSerial(arma::uword i, const arma::vec& c);
 
 #ifdef ENABLE_OPENMP
 
@@ -592,6 +630,10 @@ private:
      * @return double 变量优选的指标值。
      */
     arma::mat fitCoreSHatOmp(const arma::mat& x, const arma::vec& y, const SpatialWeight& sw, arma::vec& shat);
+
+    double calcTrQtQCoreOmp();
+
+    arma::vec calcDiagBCoreOmp(arma::uword i, const arma::vec& c);
 
 #endif
 
@@ -678,6 +720,8 @@ private:
     double bandwidthSizeCriterionCVMpi(BandwidthWeight* bandwidthWeight);
     double bandwidthSizeCriterionAICMpi(BandwidthWeight* bandwidthWeight);
     arma::mat fitMpi();
+    double calcTrQtQMpi();
+    arma::vec calcDiagBMpi(arma::uword i);
 #endif // ENABLE_MPI
 
 public:     // Implement IParallelizable
@@ -772,6 +816,17 @@ protected:
     arma::cube mC;//!< \~english All \f$S\f$ matrices. \~chinese 所有 \f$C\f$ 矩阵。
     bool mStoreS = false; //!< \~english Whether to save S \~chinese 是否保存 S 矩阵
     bool mStoreC = false; //!< \~english Whether to save C \~chinese 是否保存 C 矩阵
+
+    bool mIsDoFTest = false;
+    FTestResult mF1Test;
+    FTestResult mF2Test;
+    std::vector<FTestResult> mF3Test;
+    FTestResult mF4Test;
+    FTestCalculator mFTestFunction = &GWRBasic::fTestBase;
+    TrQtQCalculator mCalcTrQtQFunction = &GWRBasic::calcTrQtQBase;
+    TrQtQCoreCalculator mCalcTrQtQCoreFunction = &GWRBasic::calcTrQtQCoreSerial;
+    DiagBCalculator mCalcDiagBFunction = &GWRBasic::calcDiagBBase;
+    DiagBCoreCalculator mCalcDiagBCoreFunction = &GWRBasic::calcDiagBCoreSerial;
 };
 
 }
