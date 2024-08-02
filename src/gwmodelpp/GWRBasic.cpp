@@ -465,8 +465,7 @@ void gwm::GWRBasic::fTestBase()
     for (uword i = 0; i < mX.n_cols; i++)
     {
         vec diagB = (this->*mCalcDiagBFunction)(i);
-        double g1 = diagB(0);
-        double g2 = diagB(1);
+        double g1 = diagB(0), g2 = diagB(1);
         double numdf = g1 * g1 / g2;
         FTestResult f3i;
         f3i.s = (vk2(i) / g1) / sigma21;
@@ -564,7 +563,9 @@ arma::vec GWRBasic::calcDiagBBase(arma::uword i)
             return { DBL_MAX, DBL_MAX };
         }
     }
-    return (this->*mCalcDiagBCoreFunction)(i, c);
+    vec diagB = (this->*mCalcDiagBCoreFunction)(i, c);
+    diagB = 1.0 / nDp * diagB;
+    return { sum(diagB), sum(diagB % diagB) };
 }
 
 vec GWRBasic::calcDiagBCoreSerial(uword i, const vec& c)
@@ -584,11 +585,11 @@ vec GWRBasic::calcDiagBCoreSerial(uword i, const vec& c)
         }
         catch (const std::exception& e)
         {
-            return { DBL_MAX, DBL_MAX };
+            diagB.fill(DBL_MAX);
+            return diagB;
         }
     }
-    diagB = 1.0 / nDp * diagB;
-    return { sum(diagB), sum(diagB % diagB) };
+    return diagB;
 }
 
 #ifdef ENABLE_OPENMP
@@ -808,20 +809,21 @@ double GWRBasic::calcTrQtQCoreOmp()
 vec GWRBasic::calcDiagBCoreOmp(uword i, const vec& c)
 {
     arma::uword nDp = mX.n_rows;
-    vec diagB(nDp, fill::zeros);
+    mat diagB_all(nDp, mOmpThreadNum, fill::zeros);
     std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
     int flag = true;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (arma::uword k = workRange.first; k < workRange.second; k++)
     {
         if (flag) {
+            int thread = omp_get_thread_num();
             vec w = mSpatialWeight.weightVector(k);
             mat xtw = trans(mX.each_col() % w);
             try
             {
                 mat C = trans(xtw) * inv_sympd(xtw * mX);
                 vec b = C.col(i);
-                diagB += (b % b - (1.0 / nDp) * (b % c));
+                diagB_all.col(thread) += (b % b - (1.0 / nDp) * (b % c));
             }
             catch (const std::exception& e)
             {
@@ -831,10 +833,10 @@ vec GWRBasic::calcDiagBCoreOmp(uword i, const vec& c)
     }
     if (!flag)
     {
-        return { DBL_MAX, DBL_MAX };
+        diagB_all.fill(DBL_MAX);
     }
-    diagB = 1.0 / nDp * diagB;
-    return { sum(diagB), sum(diagB % diagB) };
+    vec diagB = sum(diagB_all, 1);
+    return diagB;
 }
 #endif
 
@@ -1297,10 +1299,27 @@ double GWRBasic::calcTrQtQMpi()
 
 vec GWRBasic::calcDiagBMpi(uword i)
 {
-    vec diagBi = calcDiagBBase(i);
-    vec diagB;
-    MPI_Allreduce(diagBi.memptr(), diagB.memptr(), 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    return diagB;
+    arma::uword nDp = mX.n_rows;
+    vec c(nDp, fill::zeros);
+    for (arma::uword j = 0; j < nDp; j++)
+    {
+        vec w = mSpatialWeight.weightVector(j);
+        mat xtw = trans(mX.each_col() % w);
+        try
+        {
+            mat C = trans(xtw) * inv_sympd(xtw * mX);
+            c += C.col(i);
+        }
+        catch (const std::exception& e)
+        {
+            return { DBL_MAX, DBL_MAX };
+        }
+    }
+    vec diagBi = (this->*mCalcDiagBCoreFunction)(i, c);
+    vec diagB(nDp, arma::fill::zeros);
+    MPI_Allreduce(diagBi.memptr(), diagB.memptr(), int(nDp), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    diagB = 1.0 / double(nDp) * diagB;
+    return { sum(diagB), sum(diagB % diagB) };
 }
 #endif // ENABLE_MPI
 
