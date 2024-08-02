@@ -1389,6 +1389,8 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitCoreFunction = &GWRBasic::fitCoreCuda;
             mFitCoreCVFunction = &GWRBasic::fitCoreCVCuda;
             mFitCoreSHatFunction = &GWRBasic::fitCoreSHatCuda;
+            mCalcTrQtQCoreFunction = &GWRBasic::calcTrQtQCoreSerial;
+            mCalcDiagBCoreFunction = &GWRBasic::calcDiagBCoreSerial;
             break;
 #endif // ENABLE_CUDA
         default:
