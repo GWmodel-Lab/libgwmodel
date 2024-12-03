@@ -64,6 +64,7 @@ TEST_CASE("GTWR: londonhp100")
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
         ////lambda=0.8519019//这里精度可能有出入，所以修改一下
+        REQUIRE_THAT(algorithm.getLambda(), Catch::Matchers::WithinAbs(0.8519019, 1e-6));
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2442.1827485583, 1e-6));
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2454.3397429948, 1e-6));
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.69230641334411, 1e-6));
@@ -79,6 +80,7 @@ TEST_CASE("GTWR: londonhp100")
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
         ////lambda=1
+        REQUIRE_THAT(algorithm.getLambda(), Catch::Matchers::WithinAbs(1.0, 1e-12));
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2436.6044573089, 1e-8));
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2448.2720652516, 1e-8));
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.7080106320292, 1e-8));
@@ -94,6 +96,7 @@ TEST_CASE("GTWR: londonhp100")
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
         //lambda=0.05
+        REQUIRE_THAT(algorithm.getLambda(), Catch::Matchers::WithinAbs(0.05, 1e-12));
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2442.2013929832, 1e-8));
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2454.3785650481, 1e-8));
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.69229184128813, 1e-8));
@@ -109,6 +112,7 @@ TEST_CASE("GTWR: londonhp100")
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
         //lambda=1
+        REQUIRE_THAT(algorithm.getLambda(), Catch::Matchers::WithinAbs(1.0, 1e-12));
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2437.6495742714, 1e-8));
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2447.6762811677, 1e-8));
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.70146629544468, 1e-8));
@@ -124,6 +128,7 @@ TEST_CASE("GTWR: londonhp100")
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
         // lambda=0.05
+        REQUIRE_THAT(algorithm.getLambda(), Catch::Matchers::WithinAbs(0.05, 1e-12));
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2442.8360028579, 1e-8));
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2459.9274395074, 1e-8));
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.70005079437906, 1e-8));
@@ -183,6 +188,7 @@ TEST_CASE("GTWR: londonhp100")
         REQUIRE_NOTHROW(algorithm.fit());
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
+        REQUIRE_THAT(algorithm.getLambda(), Catch::Matchers::WithinAbs(0.50, 1e-12));
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2443.4855135383, 1e-8));
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2453.2073732101, 1e-8));
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.68281765798389, 1e-8));

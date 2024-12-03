@@ -77,6 +77,18 @@ public:
         return std::string(GWM_LOG_TAG_LAMBDA_OPTIMIZATION) + std::to_string(lambda) + "," + std::to_string(criterion);
     }
 
+    const double getLambda() {
+        if (mStdistance != nullptr) {
+            return mStdistance->lambda();
+        } else {
+            throw std::runtime_error("mStdistance is not initialized");
+        }
+    }
+
+    const double getAngle(){
+        return mStdistance->angle();
+    }
+
 private:
 
     /**
