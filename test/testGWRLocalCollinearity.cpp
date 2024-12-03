@@ -28,15 +28,15 @@ TEST_CASE("LocalCollinearityGWR")
         FAIL("Cannot load londonhp100 data.");
     }
 
+    vec y = londonhp100_data.col(0);
+    mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
+
     SECTION("adaptive bandwidth | no bandwidth optimization | no lambda adjust")
     {
 
         CRSDistance distance(false);
         BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
-
-        vec y = londonhp100_data.col(0);
-        mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
 
         GWRLocalCollinearity algorithm;
         algorithm.setCoords(londonhp100_coord);
@@ -62,9 +62,6 @@ TEST_CASE("LocalCollinearityGWR")
         BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
 
-        vec y = londonhp100_data.col(0);
-        mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
-
         GWRLocalCollinearity algorithm;
         algorithm.setCoords(londonhp100_coord);
         algorithm.setDependentVariable(y);
@@ -88,9 +85,6 @@ TEST_CASE("LocalCollinearityGWR")
         BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
 
-        vec y = londonhp100_data.col(0);
-        mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
-
         GWRLocalCollinearity algorithm;
         algorithm.setCoords(londonhp100_coord);
         algorithm.setDependentVariable(y);
@@ -108,17 +102,36 @@ TEST_CASE("LocalCollinearityGWR")
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.70714253941241, 1e-8));
         REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.67400903424089, 1e-8));
     }
-    
-    #ifdef ENABLE_OPENMP
-    SECTION("adaptive bandwidth | no bandwidth optimization | lambda adjust | CnThresh=20 ")
+
+    SECTION("adaptive bandwidth | no bandwidth optimization | lambda 0.1 ")
     {
 
         CRSDistance distance(false);
-        BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
+        BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
 
-        vec y = londonhp100_data.col(0);
-        mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
+        GWRLocalCollinearity algorithm;
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
+        algorithm.setSpatialWeight(spatial);
+        algorithm.setHasHatMatrix(true);
+        algorithm.setLambda(0.1);
+        REQUIRE_NOTHROW(algorithm.fit());
+
+        RegressionDiagnostic diagnostic = algorithm.diagnostic();
+        REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2462.0038025123, 1e-8));
+        REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2465.0386018980, 1e-8));
+        REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.706727898945, 1e-8));
+        REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.673547481901, 1e-8));
+    }
+    
+#ifdef ENABLE_OPENMP
+    SECTION("adaptive bandwidth | bandwidth optimization ")
+    {
+        CRSDistance distance(false);
+        BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
+        SpatialWeight spatial(&bandwidth, &distance);
 
         GWRLocalCollinearity algorithm;
         algorithm.setCoords(londonhp100_coord);
@@ -129,9 +142,8 @@ TEST_CASE("LocalCollinearityGWR")
         algorithm.setIsAutoselectBandwidth(true);
         algorithm.setBandwidthSelectionCriterion(GWRLocalCollinearity::BandwidthSelectionCriterionType::CV);
         algorithm.setParallelType(ParallelType::OpenMP);
-        algorithm.setOmpThreadNum(6);
+        algorithm.setOmpThreadNum(omp_get_num_threads());
         REQUIRE_NOTHROW(algorithm.fit());
-
 
         double bw = algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
         REQUIRE(bw == 67.0);
@@ -142,52 +154,9 @@ TEST_CASE("LocalCollinearityGWR")
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.6873384732363, 1e-8));
         REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.664362879709, 1e-8));
     }
-    #endif
+#endif
+
 }
-<<<<<<< HEAD
-/*
-#ifdef ENABLE_OPENMP
-TEST_CASE("LocalCollinearityGWR: multithread basic flow")
-{
-    mat londonhp100_coord, londonhp100_data;
-    vector<string> londonhp100_fields;
-    if (!read_londonhp100(londonhp100_coord, londonhp100_data, londonhp100_fields))
-    {
-        FAIL("Cannot load londonhp100 data.");
-    }
-
-    CRSDistance distance(false);
-    BandwidthWeight bandwidth(0, true, BandwidthWeight::Gaussian);
-    SpatialWeight spatial(&bandwidth, &distance);
-
-    vec y = londonhp100_data.col(0);
-    mat x = join_rows(ones(londonhp100_coord.n_rows), londonhp100_data.cols(1, 3));
-
-    GWRLocalCollinearity algorithm;
-    algorithm.setCoords(londonhp100_coord);
-    algorithm.setDependentVariable(y);
-    algorithm.setIndependentVariables(x);
-    algorithm.setSpatialWeight(spatial);
-    algorithm.setHasHatMatrix(true);
-    algorithm.setIsAutoselectBandwidth(true);
-    algorithm.setBandwidthSelectionCriterion(GWRLocalCollinearity::BandwidthSelectionCriterionType::CV);
-    algorithm.setParallelType(ParallelType::OpenMP);
-    algorithm.setOmpThreadNum(omp_get_num_threads());
-    REQUIRE_NOTHROW(algorithm.fit());
-
-
-    double bw = algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
-    REQUIRE(bw == 67.0);
-
-    RegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AIC, Catch::MatchersWithinAbs(2458.2472656218, 1e-6));
-    REQUIRE_THAT(diagnostic.AICc, Catch::MatchersWithinAbs(2459.743757379, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::MatchersWithinAbs(0.68733847, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::MatchersWithinAbs(0.66436287, 1e-6));
-}
-#endif*/
-=======
->>>>>>> 59ec57b (update test, all tests passed)
 
 TEST_CASE("LcGWR: cancel")
 {

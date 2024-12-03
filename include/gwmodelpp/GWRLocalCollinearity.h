@@ -323,7 +323,7 @@ private:
 
     double mLambda = 0;
     bool mLambdaAdjust = false;
-    double mCnThresh = 30;
+    double mCnThresh = 30; //maximum value for condition number, commonly set between 20 and 30
     bool mHasHatMatrix = false;
     bool mIsAutoselectBandwidth = false;
     double mTrS = 0;
