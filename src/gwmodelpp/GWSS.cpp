@@ -252,6 +252,32 @@ void GWSS::GWCorrelationOmp()
 }
 #endif
 
+void GWSS::calibration(const mat& locations, const mat& x)
+{
+    // uword nRp = locations.n_rows, nVar = x.n_cols;
+    // mat betas(nVar, nRp, fill::zeros);
+    // for (uword i = 0; i < nRp; i++)
+    // {
+    //     GWM_LOG_STOP_BREAK(mStatus);
+    //     vec w = mSpatialWeight.weightVector(i);
+    //     mat xtw = trans(x.each_col() % w);
+    //     mat xtwx = xtw * x;
+    //     mat xtwy = xtw * y;
+    //     try
+    //     {
+    //         mat xtwx_inv = inv_sympd(xtwx);
+    //         betas.col(i) = xtwx_inv * xtwy;
+    //     }
+    //     catch (const exception& e)
+    //     {
+    //         GWM_LOG_ERROR(e.what());
+    //         throw e;
+    //     }
+    //     GWM_LOG_PROGRESS(i + 1, nRp);
+    // }
+    // return betas.t();
+}
+
 void GWSS::setParallelType(const ParallelType &type)
 {
     if (type & parallelAbility())
@@ -316,4 +342,85 @@ void GWSS::updateCalculator()
         }
         break;
     }
+}
+
+
+double GWSS::bandwidthSizeCriterionCVSerial(BandwidthWeight *bandwidthWeight)
+{
+    // int var = mBandwidthSelectionCurrentIndex;
+    // uword nDp = mCoords.n_rows;
+    // vec shat(2, fill::zeros);
+    // double cv = 0.0;
+    // for (uword i = 0; i < nDp; i++)
+    // {
+    //     vec d = mSpatialWeight.distance()->distance(i);
+    //     vec w = bandwidthWeight->weight(d);
+    //     w(i) = 0.0;
+    //     mat xtw = trans(mXi % w);
+    //     mat xtwx = xtw * mXi;
+    //     mat xtwy = xtw * mYi;
+    //     try
+    //     {
+    //         mat xtwx_inv = inv_sympd(xtwx);
+    //         vec beta = xtwx_inv * xtwy;
+    //         double res = mYi(i) - det(mXi(i) * beta);
+    //         cv += res * res;
+    //     }
+    //     catch (...)
+    //     {
+    //         return DBL_MAX;
+    //     }
+    // }
+    // if (mStatus == Status::Success && isfinite(cv))
+    // {
+    //     GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
+    //     mBandwidthLastCriterion = cv;
+    //     return cv;
+    // }
+    // else return DBL_MAX;
+
+    return DBL_MAX;
+}
+
+double GWSS::bandwidthSizeCriterionAICSerial(BandwidthWeight *bandwidthWeight)
+{
+    // int var = mBandwidthSelectionCurrentIndex;
+    // uword nDp = mDataPoints.n_rows;
+    // mat betas(1, nDp, fill::zeros);
+    // vec shat(2, fill::zeros);
+    // for (uword i = 0; i < nDp & !checkCanceled(); i++)
+    // {
+    //     vec d = mSpatialWeights[var].distance()->distance(i);
+    //     vec w = bandwidthWeight->weight(d);
+    //     mat xtw = trans(mXi % w);
+    //     mat xtwx = xtw * mXi;
+    //     mat xtwy = xtw * mYi;
+    //     try
+    //     {
+    //         mat xtwx_inv = inv_sympd(xtwx);
+    //         betas.col(i) = xtwx_inv * xtwy;
+    //         mat ci = xtwx_inv * xtw;
+    //         mat si = mXi(i) * ci;
+    //         shat(0) += si(0, i);
+    //         shat(1) += det(si * si.t());
+    //     }
+    //     catch (std::exception e)
+    //     {
+    //         return DBL_MAX;
+    //     }
+    // }
+    // double value = GwmGWcorrelationTaskThread::AICc(mXi, mYi, betas.t(), shat);
+    // if(!checkCanceled()) return value;
+    // else return DBL_MAX;
+        
+    // double value = GWRBase::AICc(mX, mY, betas.t(), shat);
+    // if (mStatus == Status::Success && isfinite(value))
+    // {
+    //     GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
+    //     mBandwidthLastCriterion = value;
+    //     return value;
+    // }
+    // else return DBL_MAX;
+
+    return DBL_MAX;
 }

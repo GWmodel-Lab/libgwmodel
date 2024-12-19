@@ -15,6 +15,7 @@
 #include "SpatialMonoscaleAlgorithm.h"
 #include "IMultivariableAnalysis.h"
 #include "IParallelizable.h"
+#include "IBandwidthSelectable.h"
 
 namespace gwm
 {
@@ -60,7 +61,7 @@ namespace gwm
  * - local interquartile ranges <- GWSS::iqr()
  * - local quantile imbalances and coordinates <- GWSS::qi()
  */
-class GWSS : public SpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IParallelizable, public IParallelOpenmpEnabled
+class GWSS : public SpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IParallelizable, public IParallelOpenmpEnabled, public IBandwidthSelectable
 {
 public:
 
@@ -137,6 +138,136 @@ public:
      * 
      */
     ~GWSS() {}
+
+public:
+
+    /**
+     * \~english
+     * @brief Type of criterion for bandwidth selection.
+     * \~chinese
+     * @brief 用于带宽优选的指标类型。
+     */
+    enum BandwidthSelectionCriterionType
+    {
+        AIC,
+        CV
+    };
+
+    /**
+     * \~english
+     * @brief Declaration of criterion calculator for bandwidth selection. 
+     * \~chinese
+     * @brief 带宽优选指标计算函数声明。
+     */
+    typedef double (GWSS::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);
+
+
+    /**
+     * \~english
+     * @brief Get whether auto select bandwidth.
+     * 
+     * @return true if auto select bandwidth.
+     * @return false if not auto select bandwidth.
+     * 
+     * \~chinese
+     * @brief 获取是否自动优选带宽。
+     * 
+     * @return true 如果自动优选带宽。
+     * @return false 如果不自动优选带宽。
+     * 
+     */
+    bool isAutoselectBandwidth() const { return mGWSSMode==GWSSMode::Correlation ? mIsAutoselectBandwidth : false; }
+  
+    /**
+     * \~english
+     * @brief Set whether auto select bandwidth.
+     * 
+     * @param isAutoSelect true if auto select bandwidth, otherwise false.
+     * 
+     * \~chinese
+     * @brief 设置是否自动优选带宽。
+     * 
+     * @param isAutoSelect true 如果要自动优选带宽，否则 false。
+     */
+    void setIsAutoselectBandwidth(bool isAutoSelect) { mIsAutoselectBandwidth = isAutoSelect; }
+
+    /**
+     * \~english
+     * @brief Get type of criterion for bandwidth selection.
+     * 
+     * @return BandwidthSelectionCriterionType Type of criterion for bandwidth selection.
+     * 
+     * \~chinese
+     * @brief 获取带宽自动优选指标值类型。
+     * 
+     * @return BandwidthSelectionCriterionType 带宽自动优选指标值类型。
+     */
+    BandwidthSelectionCriterionType bandwidthSelectionCriterion() const { return mBandwidthSelectionCriterion; }
+    
+    /**
+     * \~english
+     * @brief Set type of criterion for bandwidth selection.
+     * 
+     * @param criterion Type of criterion for bandwidth selection.
+     * 
+     * \~chinese
+     * @brief 设置带宽自动优选指标值类型。
+     * 
+     * @param criterion 带宽自动优选指标值类型。
+     */
+    void setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion);
+
+    /**
+     * \~english
+     * @brief Get criterion list for bandwidth selection.
+     * 
+     * @return BandwidthCriterionList Criterion list for bandwidth selection.
+     * 
+     * \~chinese
+     * @brief 获取带宽优选过程的指标值列表。
+     * 
+     * @return BandwidthCriterionList 带宽优选过程的指标值列表。
+     */
+    BandwidthCriterionList bandwidthSelectionCriterionList() const { return mBandwidthSelectionCriterionList; }
+
+private:
+
+    /**
+     * \~english
+     * @brief Get CV value with given bandwidth for bandwidth optimization (serial implementation).
+     * 
+     * @param bandwidthWeight Given bandwidth
+     * @return double Criterion value
+     * 
+     * \~chinese
+     * @brief 根据指定的带宽计算带宽优选的CV值（串行实现）。
+     * 
+     * @param bandwidthWeight 指定的带宽。
+     * @return double 带宽优选的指标值。
+     */
+    double bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight);
+        
+    /**
+     * \~english
+     * @brief Get AIC value with given bandwidth for bandwidth optimization (serial implementation).
+     * 
+     * @param bandwidthWeight Given bandwidth
+     * @return double Criterion value
+     * 
+     * \~chinese
+     * @brief 根据指定的带宽计算带宽优选的AIC值（串行实现）。
+     * 
+     * @param weigbandwidthWeightht 指定的带宽。
+     * @return double 带宽优选的指标值。
+     */
+    double bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeight);
+
+public:     // Implement IBandwidthSelectable
+    Status getCriterion(BandwidthWeight* weight, double& criterion) override
+    {
+        criterion = (this->*mBandwidthSelectionCriterionFunction)(weight);
+        return mStatus;
+    }
 
     /**
      * @brief \~english Get whether use quantile algorithms. \~chinese 获取是否使用基于排序的算法。
@@ -357,9 +488,18 @@ private:
     void GWCorrelationOmp();
 #endif
 
+    void calibration(const arma::mat& locations, const arma::mat& x);
+
 private:
     bool mQuantile = false;             //!< \~english Indicator of whether calculate quantile statistics. \~chinese 是否使用基于排序的算法
     bool mIsCorrWithFirstOnly = false;  //!< \~english Indicator of whether calculate local correlations and covariances between the first variable and the other variables. \~chinese 是否仅为第一个变量计算与其他变量的相关系数
+
+    bool mIsAutoselectBandwidth = false;//!< \~english Whether need bandwidth autoselect. \~chinese 是否需要自动优选带宽。
+    bool mIsAutoselectLambda = false;//!< \~english Whether need lambda autoselect. \~chinese 是否需要自动优选lambda。
+    BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::AIC;//!< \~english Bandwidth Selection Criterion Type. \~chinese 默认的带宽优选方式。
+    BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &GWSS::bandwidthSizeCriterionCVSerial;//!< \~english Bandwidth Selection Criterion Function. \~chinese 默认的带宽优选函数。
+    BandwidthCriterionList mBandwidthSelectionCriterionList;//!< \~english Bandwidth Selection Criterion List. \~chinese 默认的带宽优选参数列表。
+    double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
 
     arma::mat mX;             //!< \~english Variable matrix \~chinese 变量矩阵
     arma::mat mLocalMean;     //!< \~english Local mean \~chinese 局部均值
