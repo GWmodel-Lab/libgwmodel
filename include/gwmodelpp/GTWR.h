@@ -590,7 +590,7 @@ protected:
      * @param bandwidthWeight 传入带宽值，来获取权重，后续更方便改成多元优化.
      * @return double 返回优选以后的lambda值.
      */
-    double LambdaAutoSelection(BandwidthWeight* bandwidthWeight);
+    double lambdaAutoSelection(BandwidthWeight* bandwidthWeight);
 
     /**
      * \~english
@@ -606,7 +606,17 @@ protected:
      * @param rsquare 根据输入的lambda值和带宽获取的R方值.
      * @return Status 算法运行状态。
      */
-    Status RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda, double& rsquare);
+    Status r_squareByLambda(BandwidthWeight* bandwidthWeight,double lambda, double& rsquare);
+
+    struct Parameter {
+        GTWR* instance;     // GTWR实例
+        BandwidthWeight* bandwidth;    // 带宽
+        double lambda;  // lambda
+    };
+
+    static double criterion_function (const gsl_vector *v, void *params);
+    void lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, double min_eps);
+    double criterionByLambdaBw(BandwidthWeight* bandwidth, double lambda, BandwidthSelectionCriterionType criterion);
 
 public:
     /**
