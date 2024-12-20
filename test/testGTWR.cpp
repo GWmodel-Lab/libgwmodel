@@ -59,7 +59,6 @@ TEST_CASE("GTWR: londonhp100")
         algorithm.setSpatialWeight(spatial);
         algorithm.setHasHatMatrix(true);
         algorithm.setIsAutoselectLambda(true);
-        // algorithm.getDistance(&distance);
         REQUIRE_NOTHROW(algorithm.fit());
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE(algorithm.hasIntercept() == true);
@@ -155,6 +154,23 @@ TEST_CASE("GTWR: londonhp100")
         REQUIRE_NOTHROW(algorithm.fit());
         size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
         REQUIRE(bw == 70);
+    }
+    SECTION("prediction |adaptive bandwidth 36 | no optimization | lambda=0.05 | serial") {
+        mat londonhp100_coord_predict = londonhp100_coord * 1.1;
+        // londonhp100_coord.head_rows(5).print("origin");
+        // londonhp100_coord_predict.head_rows(5).print("zoom");
+        CRSSTDistance distance(&sdist, &tdist, 0.05);
+        BandwidthWeight bandwidth(36,true, BandwidthWeight::Gaussian);
+        SpatialWeight spatial(&bandwidth, &distance);
+        algorithm.setSpatialWeight(spatial);
+        algorithm.setHasHatMatrix(true);
+        // REQUIRE_NOTHROW(algorithm.fit());
+        // algorithm.betas().head_rows(5).print("betas");
+        REQUIRE_NOTHROW(algorithm.predict(londonhp100_coord_predict));
+        RegressionDiagnostic diagnostic = algorithm.diagnostic();
+        REQUIRE(algorithm.hasIntercept() == true);
+        REQUIRE_THAT(algorithm.getLambda(), Catch::Matchers::WithinAbs(0.05, 1e-12));
+        // algorithm.betas().head_rows(5).print("betas predict");
     }
 
     SECTION("adaptive bandwidth: from 60 to optimize | lambda bandwidth optimization") {

@@ -34,7 +34,7 @@ mat GTWR::fit()
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
 
     if(mIsAutoselectLambdaBw){
-        GWM_LOG_STAGE("lambda and bandwidth optimization")
+        GWM_LOG_STAGE("Lambda and bandwidth optimization")
         BandwidthWeight *bw0 = mSpatialWeight.weight<BandwidthWeight>();
         mStdistance = mSpatialWeight.distance<CRSSTDistance>();
         // double lambda0 = 0.05;
@@ -45,7 +45,7 @@ mat GTWR::fit()
 
         mStdistance->setLambda(optim(0));
         bw0->setBandwidth(optim(1));
-
+        //不能再进行后面的优化
         mIsAutoselectBandwidth=false;
         mIsAutoselectLambda=false;
     }
@@ -719,7 +719,7 @@ double GTWR::criterion_function (const gsl_vector *target, void *params)
     // 获取参数指针
     GTWR* instance = p->instance;
     BandwidthWeight* bandwidth = p->bandwidth;
-    // double lambda = p->lambda;//没有用上
+    // double lambda = p->lambda;
     BandwidthSelectionCriterionType criterionType=instance->mBandwidthSelectionCriterion;
 
     // 从 gsl_vector 更新
@@ -732,7 +732,7 @@ double GTWR::criterion_function (const gsl_vector *target, void *params)
     return instance->criterionByLambdaBw(bandwidth, lambda_value, criterionType);
 }
 
-vec GTWR::lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, double min_eps)
+vec GTWR::lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, double min_step)
 {
     vec optim(2, fill::zeros);
     uword nDp = mCoords.n_rows;
@@ -744,9 +744,8 @@ vec GTWR::lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, dou
     // gsl_vector_set(lambda_bw, 1, bandwidth->adaptive() ? 0.618 : bandwidth->bandwidth());
     gsl_vector_set(lambda_bw, 1, bandwidth->adaptive() ? bandwidth->bandwidth() / double(nDp) : bandwidth->bandwidth());
     // gsl_vector_set(lambda_bw, 1, bandwidth->bandwidth());
-    gsl_vector_set_all(steps, min_eps);
+    gsl_vector_set_all(steps, min_step);
 
-    // 创建并初始化参数结构体
     GTWR::Parameter params;
     params.instance = this;  // GTWR类的实例是当前对象
     params.bandwidth = bandwidth;
@@ -769,7 +768,7 @@ vec GTWR::lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, dou
             if (status && params.instance->status() != Status::Success)
                 break;
             size = gsl_multimin_fminimizer_size(minimizer);
-            status = gsl_multimin_test_size(size, min_eps/1000);
+            status = gsl_multimin_test_size(size, min_step/1000);
             // cout<<"lambda:"<< abs(gsl_vector_get(minimizer->x, 0))<<endl;
             // cout<<"bandwidth:"<< abs(gsl_vector_get(minimizer->x, 1))<<endl;
 

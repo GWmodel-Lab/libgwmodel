@@ -614,8 +614,50 @@ protected:
         double lambda;  // lambda
     };
 
+    /**
+     * \~english
+     * @brief criterion function for gsl_multimin_function and params.
+     * @param v gsl_vector target,     
+     * @param params the params.
+     * @return criterion.
+     * \~chinese
+     * @brief 构建gsl的gsl_multimin_function以及优化指标
+     * @param v gsl的优化向量（lambda, bw）
+     * @param params 传入的参数，从void*转换成Parameter*
+     * @return CV或AIC的指标值
+     */
     static double criterion_function (const gsl_vector *v, void *params);
-    arma::vec lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, double min_eps);
+
+    /**
+     * \~english
+     * @brief gsl lambda bandwidth auto-selection function.
+     * @param bandwidth BandwidthWeight,     
+     * @param max_iter max iter, internal set 1000.
+     * @param min_step min steps for optimize change, internal set 0.01.
+     * @return vector for (lambda, bw).
+     * \~chinese
+     * @brief 优化的主函数
+     * @param bandwidth BandwidthWeight类型，带宽     
+     * @param max_iter 最大迭代次数，设置为1000
+     * @param min_step 优化中的步长，设置为0.01（变化阈值为步长/1000）
+     * @return 优化结果，一个向量：(lambda, bw).
+     */
+    arma::vec lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, double min_step);
+
+    /**
+     * \~english
+     * @brief criterion function by Lambda and Bw.
+     * @param bandwidth bandwidth weight parameters,     
+     * @param lambda the lambda value.
+     * @param criterion criterion type, BandwidthSelectionCriterionType.
+     * @return criterion value.
+     * \~chinese
+     * @brief 利用带宽和lambda计算指标的函数
+     * @param bandwidthWeight 输入带宽权重,
+     * @param lambda 获取指标的lambda值
+     * @param criterion BandwidthSelectionCriterionType类型，确定求的指标
+     * @return 对应类型的指标值
+     */
     double criterionByLambdaBw(BandwidthWeight* bandwidth, double lambda, BandwidthSelectionCriterionType criterion);
 
 public:
