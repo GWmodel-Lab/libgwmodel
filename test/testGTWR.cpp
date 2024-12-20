@@ -156,6 +156,27 @@ TEST_CASE("GTWR: londonhp100")
         size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
         REQUIRE(bw == 70);
     }
+
+    SECTION("adaptive bandwidth: from 60 to optimize | lambda bandwidth optimization") {
+        CRSSTDistance distance(&sdist, &tdist, 0.05);
+        BandwidthWeight bandwidth(60,true, BandwidthWeight::Gaussian);
+        SpatialWeight spatial(&bandwidth, &distance);
+        algorithm.setSpatialWeight(spatial);
+        algorithm.setHasHatMatrix(true);
+        algorithm.setIsAutoselectLambdaBw(true);
+        algorithm.setBandwidthSelectionCriterion(GTWR::BandwidthSelectionCriterionType::CV);
+        REQUIRE_NOTHROW(algorithm.fit());
+        RegressionDiagnostic diagnostic = algorithm.diagnostic();
+        REQUIRE(algorithm.hasIntercept() == true);
+        size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
+        REQUIRE(bw == 46);
+        REQUIRE_THAT(algorithm.getLambda(), Catch::Matchers::WithinAbs(0.0905251641, 1e-6));
+        // REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2443.4941325699, 1e-8));
+        // REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2453.2056204802, 1e-8));
+        // REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.6827660954, 1e-8));
+        // REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.6553771009, 1e-8));
+    }
+
 #ifdef ENABLE_OPENMP
     SECTION("adaptive bandwidth | CV bandwidth optimization | lambda=0.05 | omp parallel ") {
         CRSSTDistance distance(&sdist, &tdist, 0.05);

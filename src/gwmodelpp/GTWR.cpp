@@ -33,6 +33,23 @@ mat GTWR::fit()
     uword nDp = mCoords.n_rows, nVars = mX.n_cols;
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
 
+    if(mIsAutoselectLambdaBw){
+        GWM_LOG_STAGE("lambda and bandwidth optimization")
+        BandwidthWeight *bw0 = mSpatialWeight.weight<BandwidthWeight>();
+        mStdistance = mSpatialWeight.distance<CRSSTDistance>();
+        // double lambda0 = 0.05;
+        // double first_bw= bw0->adaptive() ? nDp*0.618 : 0.0;
+        // bw0->setBandwidth(first_bw);
+        vec optim = vec(2, fill::zeros);
+        optim = lambdaBwAutoSelection(bw0, 1000, 1e-2);
+
+        mStdistance->setLambda(optim(0));
+        bw0->setBandwidth(optim(1));
+
+        mIsAutoselectBandwidth=false;
+        mIsAutoselectLambda=false;
+    }
+
     if (mIsAutoselectBandwidth)
     {
         GWM_LOG_STAGE("Bandwidth optimization")
@@ -615,6 +632,9 @@ double GTWR::criterionByLambdaBw(BandwidthWeight *bandwidth, double lambda, Band
     double value = 0.0;
     mStdistance->setLambda(lambda);
     mStdistance->makeParameter({mCoords, mCoords, vTimes, vTimes});
+    if(bandwidth->adaptive()){
+        bandwidth->setBandwidth(bandwidth->bandwidth()*nDp); //要优化的可变带宽此前被归一化了
+    }
     for (uword i = 0; i < nDp; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
@@ -699,7 +719,7 @@ double GTWR::criterion_function (const gsl_vector *target, void *params)
     // 获取参数指针
     GTWR* instance = p->instance;
     BandwidthWeight* bandwidth = p->bandwidth;
-    // double lambda = p->lambda;//其实好像没有用上
+    // double lambda = p->lambda;//没有用上
     BandwidthSelectionCriterionType criterionType=instance->mBandwidthSelectionCriterion;
 
     // 从 gsl_vector 更新
@@ -712,14 +732,18 @@ double GTWR::criterion_function (const gsl_vector *target, void *params)
     return instance->criterionByLambdaBw(bandwidth, lambda_value, criterionType);
 }
 
-void GTWR::lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, double min_eps)
+vec GTWR::lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, double min_eps)
 {
+    vec optim(2, fill::zeros);
     uword nDp = mCoords.n_rows;
     gsl_multimin_fminimizer *minimizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex2rand, 2);
     gsl_vector* lambda_bw = gsl_vector_alloc(2);
     gsl_vector* steps = gsl_vector_alloc(2);
     gsl_vector_set(lambda_bw, 0, this->mStdistance->lambda());
+    //固定带宽的话问题会很大，可变带宽最后乘了一个点的个数
+    // gsl_vector_set(lambda_bw, 1, bandwidth->adaptive() ? 0.618 : bandwidth->bandwidth());
     gsl_vector_set(lambda_bw, 1, bandwidth->adaptive() ? bandwidth->bandwidth() / double(nDp) : bandwidth->bandwidth());
+    // gsl_vector_set(lambda_bw, 1, bandwidth->bandwidth());
     gsl_vector_set_all(steps, min_eps);
 
     // 创建并初始化参数结构体
@@ -733,19 +757,6 @@ void GTWR::lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, do
     gsl_multimin_function minex_func = { criterion_function, 2, &params };
 
     int status = gsl_multimin_fminimizer_set(minimizer, &minex_func, lambda_bw, steps);
-    // size_t iter = 0;
-    // double size = DBL_MAX;
-
-    // do
-    // {
-    //     iter++;
-    //     status = gsl_multimin_fminimizer_iterate(minimizer);
-    //     if (status)
-    //         break;
-    //     size = gsl_multimin_fminimizer_size(minimizer);
-    //     status = gsl_multimin_test_size(size, min_eps); // 是否满足最小
-    //     // if (status == GSL_SUCCESS)//计算完成
-    // } while (status == GSL_CONTINUE && iter < max_iter);
 
     if (status == GSL_SUCCESS)
     {
@@ -758,37 +769,42 @@ void GTWR::lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, do
             if (status && params.instance->status() != Status::Success)
                 break;
             size = gsl_multimin_fminimizer_size(minimizer);
-            status = gsl_multimin_test_size(size, min_eps);
-            #ifdef _DEBUG
-            stringstream sDebug;
-            for (size_t m = 0; m < 2; m++)
-            {
-                sDebug << gsl_vector_get(minimizer->x, m) << ",";
-            }
-            sDebug << minimizer->fval << ",";
-            sDebug << size;
-            params.instance->debug(sDebug.str(), __FUNCTION__, __FILE__);
-            #endif
+            status = gsl_multimin_test_size(size, min_eps/1000);
+            // cout<<"lambda:"<< abs(gsl_vector_get(minimizer->x, 0))<<endl;
+            // cout<<"bandwidth:"<< abs(gsl_vector_get(minimizer->x, 1))<<endl;
+
+            // #ifdef _DEBUG
+            // stringstream sDebug;
+            // for (size_t m = 0; m < 2; m++)
+            // {
+            //     sDebug << gsl_vector_get(minimizer->x, m) << ",";
+            // }
+            // sDebug << minimizer->fval << ",";
+            // sDebug << size;
+            // params.instance->debug(sDebug.str(), __FUNCTION__, __FILE__);
+            // #endif
         } 
         while (status == GSL_CONTINUE && iter < max_iter);
-        #ifdef _DEBUG
-        stringstream sDebug;
-        for (size_t m = 0; m < 2; m++)
-        {
-            sDebug << gsl_vector_get(minimizer->x, m) << ",";
-        }
-        sDebug << minimizer->fval << ",";
-        sDebug << size;
-        params.instance->debug(sDebug.str(), __FUNCTION__, __FILE__);
-        #endif
-
-        cout<<"lambda:"<< abs(gsl_vector_get(minimizer->x, 0));
-        cout<<"bandwidth:"<< abs(gsl_vector_get(minimizer->x, 1));
+        // #ifdef _DEBUG
+        // stringstream sDebug;
+        // for (size_t m = 0; m < 2; m++)
+        // {
+        //     sDebug << gsl_vector_get(minimizer->x, m) << ",";
+        // }
+        // sDebug << minimizer->fval << ",";
+        // sDebug << size;
+        // params.instance->debug(sDebug.str(), __FUNCTION__, __FILE__);
+        // #endif
+        double optbw=bandwidth->adaptive() ? abs(gsl_vector_get(minimizer->x, 1)) * nDp : abs(gsl_vector_get(minimizer->x, 1));
+        cout<<"optimezed lambda:"<< abs(gsl_vector_get(minimizer->x, 0))<<endl;
+        cout<<"optimezed bandwidth:"<< optbw <<endl;
+        optim(0)=abs(gsl_vector_get(minimizer->x, 0));
+        optim(1)=optbw;
     }
 
     gsl_vector_free(lambda_bw);
     gsl_vector_free(steps);
     gsl_multimin_fminimizer_free(minimizer);
 
-    return;
+    return optim;
 }

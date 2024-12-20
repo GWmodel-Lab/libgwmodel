@@ -615,7 +615,7 @@ protected:
     };
 
     static double criterion_function (const gsl_vector *v, void *params);
-    void lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, double min_eps);
+    arma::vec lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, double min_eps);
     double criterionByLambdaBw(BandwidthWeight* bandwidth, double lambda, BandwidthSelectionCriterionType criterion);
 
 public:
@@ -633,6 +633,8 @@ public:
      */
     void setIsAutoselectLambda(bool isAutoSelect) { mIsAutoselectLambda = isAutoSelect; }
 
+    void setIsAutoselectLambdaBw(bool isAutoSelect) { mIsAutoselectLambdaBw = isAutoSelect; }
+
 protected:
 
     bool mHasHatMatrix = true;  //!< \~english Whether has hat-matrix. \~chinese 是否具有帽子矩阵。
@@ -641,6 +643,7 @@ protected:
 
     bool mIsAutoselectBandwidth = false;//!< \~english Whether need bandwidth autoselect. \~chinese 是否需要自动优选带宽。
     bool mIsAutoselectLambda = false;//!< \~english Whether need lambda autoselect. \~chinese 是否需要自动优选lambda。
+    bool mIsAutoselectLambdaBw = false;
 
     BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::AIC;//!< \~english Bandwidth Selection Criterion Type. \~chinese 默认的带宽优选方式。
     BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &GTWR::bandwidthSizeCriterionCVSerial;//!< \~english Bandwidth Selection Criterion Function. \~chinese 默认的带宽优选函数。
@@ -662,7 +665,6 @@ protected:
 
     CRSSTDistance* mStdistance;//use to change spatial temporal distance including lambda
 
-    // gsl_function F;
 };
 
 }
