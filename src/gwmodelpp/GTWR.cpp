@@ -41,7 +41,7 @@ mat GTWR::fit()
         // double first_bw= bw0->adaptive() ? nDp*0.618 : 0.0;
         // bw0->setBandwidth(first_bw);
         vec optim = vec(2, fill::zeros);
-        optim = lambdaBwAutoSelection(bw0, 1000, 1e-2);
+        optim = lambdaBwAutoSelection(bw0, 1000, 1e-3);
 
         mStdistance->setLambda(optim(0));
         bw0->setBandwidth(optim(1));
@@ -292,7 +292,11 @@ bool GTWR::isValid()
         {
             return false;
         }
-
+        double lambda=mStdistance->lambda();
+        if (lambda < 0 || lambda > 1)
+        {
+            return false;
+        }
         return true;
     }
     else return false;
@@ -632,8 +636,11 @@ double GTWR::criterionByLambdaBw(BandwidthWeight *bandwidth, double lambda, Band
     double value = 0.0;
     mStdistance->setLambda(lambda);
     mStdistance->makeParameter({mCoords, mCoords, vTimes, vTimes});
+    //要优化的可变带宽此前被归一化了
     if(bandwidth->adaptive()){
-        bandwidth->setBandwidth(bandwidth->bandwidth()*nDp); //要优化的可变带宽此前被归一化了
+        bandwidth->setBandwidth(bandwidth->bandwidth() * nDp);
+    }else{
+        bandwidth->setBandwidth(bandwidth->bandwidth() * mStdistance->maxDistance());
     }
     for (uword i = 0; i < nDp; i++)
     {
@@ -740,9 +747,10 @@ vec GTWR::lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, dou
     gsl_vector* lambda_bw = gsl_vector_alloc(2);
     gsl_vector* steps = gsl_vector_alloc(2);
     gsl_vector_set(lambda_bw, 0, this->mStdistance->lambda());
-    //固定带宽的话问题会很大，可变带宽最后乘了一个点的个数
+    //带宽近似映射到了0-1
     // gsl_vector_set(lambda_bw, 1, bandwidth->adaptive() ? 0.618 : bandwidth->bandwidth());
-    gsl_vector_set(lambda_bw, 1, bandwidth->adaptive() ? bandwidth->bandwidth() / double(nDp) : bandwidth->bandwidth());
+    double mdis=mStdistance->maxDistance();
+    gsl_vector_set(lambda_bw, 1, bandwidth->adaptive() ? bandwidth->bandwidth() / double(nDp) : bandwidth->bandwidth() / mdis);
     // gsl_vector_set(lambda_bw, 1, bandwidth->bandwidth());
     gsl_vector_set_all(steps, min_step);
 
@@ -794,7 +802,7 @@ vec GTWR::lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, dou
         // sDebug << size;
         // params.instance->debug(sDebug.str(), __FUNCTION__, __FILE__);
         // #endif
-        double optbw=bandwidth->adaptive() ? abs(gsl_vector_get(minimizer->x, 1)) * nDp : abs(gsl_vector_get(minimizer->x, 1));
+        double optbw=bandwidth->adaptive() ? abs(gsl_vector_get(minimizer->x, 1)) * nDp : abs(gsl_vector_get(minimizer->x, 1)) * mdis;
         cout<<"optimezed lambda:"<< abs(gsl_vector_get(minimizer->x, 0))<<endl;
         cout<<"optimezed bandwidth:"<< optbw <<endl;
         optim(0)=abs(gsl_vector_get(minimizer->x, 0));
