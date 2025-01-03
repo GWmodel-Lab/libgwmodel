@@ -1,16 +1,5 @@
-/**
- * @file GWSS.h
- * @author HPDell (hu_yigong@whu.edu.cn)
- * @brief This file define GWSS, which is used for Geographically Weighted Summary Statistics. 
- * @version 0.1
- * @date 2020-10-11
- * 
- * @copyright Copyright (c) 2020
- * 
- */
-
-#ifndef GWSS_H
-#define GWSS_H
+#ifndef GWAVERAGE_H
+#define GWAVERAGE_H
 
 #include "SpatialMonoscaleAlgorithm.h"
 #include "IMultivariableAnalysis.h"
@@ -29,17 +18,17 @@ namespace gwm
  * local medians, local interquartile ranges, local quantile imbalances and coordinates.
  * To get these matrices, call these functions:
  * 
- * - local mean <- GWSS::localMean()
- * - local standard deviation <- GWSS::localSDev()
- * - local variance <- GWSS::localVar()
- * - local skewness <- GWSS::localSkewness()
- * - local coefficients of variation <- GWSS::localCV()
- * - local covariances <- GWSS::localCov()
- * - local correlations (Pearson's) <- GWSS::localCorr()
- * - local correlations (Spearman's) <- GWSS::localSCorr()
- * - local medians <- GWSS::localMedian()
- * - local interquartile ranges <- GWSS::iqr()
- * - local quantile imbalances and coordinates <- GWSS::qi()
+ * - local mean <- GWAverage::localMean()
+ * - local standard deviation <- GWAverage::localSDev()
+ * - local variance <- GWAverage::localVar()
+ * - local skewness <- GWAverage::localSkewness()
+ * - local coefficients of variation <- GWAverage::localCV()
+ * - local covariances <- GWAverage::localCov()
+ * - local correlations (Pearson's) <- GWAverage::localCorr()
+ * - local correlations (Spearman's) <- GWAverage::localSCorr()
+ * - local medians <- GWAverage::localMedian()
+ * - local interquartile ranges <- GWAverage::iqr()
+ * - local quantile imbalances and coordinates <- GWAverage::qi()
  * 
  * \~chinese
  * @brief 地理加权汇总统计分析算法类。
@@ -49,19 +38,19 @@ namespace gwm
  * local medians, local interquartile ranges, local quantile imbalances and coordinates.
  * 使用下面这些函数获取上述值：
  * 
- * - local mean <- GWSS::localMean()
- * - local standard deviation <- GWSS::localSDev()
- * - local variance <- GWSS::localVar()
- * - local skewness <- GWSS::localSkewness()
- * - local coefficients of variation <- GWSS::localCV()
- * - local covariances <- GWSS::localCov()
- * - local correlations (Pearson's) <- GWSS::localCorr()
- * - local correlations (Spearman's) <- GWSS::localSCorr()
- * - local medians <- GWSS::localMedian()
- * - local interquartile ranges <- GWSS::iqr()
- * - local quantile imbalances and coordinates <- GWSS::qi()
+ * - local mean <- GWAverage::localMean()
+ * - local standard deviation <- GWAverage::localSDev()
+ * - local variance <- GWAverage::localVar()
+ * - local skewness <- GWAverage::localSkewness()
+ * - local coefficients of variation <- GWAverage::localCV()
+ * - local covariances <- GWAverage::localCov()
+ * - local correlations (Pearson's) <- GWAverage::localCorr()
+ * - local correlations (Spearman's) <- GWAverage::localSCorr()
+ * - local medians <- GWAverage::localMedian()
+ * - local interquartile ranges <- GWAverage::iqr()
+ * - local quantile imbalances and coordinates <- GWAverage::qi()
  */
-class GWSS : public SpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IParallelizable, public IParallelOpenmpEnabled, public IBandwidthSelectable
+class GWAverage : public SpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IParallelizable, public IParallelOpenmpEnabled, public IBandwidthSelectable
 {
 public:
 
@@ -102,12 +91,12 @@ public:
         return n(sort_index(res)) + 1.0;
     }
 
-    typedef void (GWSS::*SummaryCalculator)();  //!< \~english Calculator for summary statistics \~chinese 汇总统计计算函数
+    typedef void (GWAverage::*SummaryCalculator)();  //!< \~english Calculator for summary statistics \~chinese 汇总统计计算函数
 
     /**
-     * @brief \~english GWSS working mode. \~chinese GWSS 工作模式。
+     * @brief \~english GWAverage working mode. \~chinese GWAverage 工作模式。
      */
-    enum class GWSSMode {
+    enum class GWAverageMode {
         Average,        //!< \~english Average mode (for one variable) \~chinese 均值模式（针对单变量）
         Correlation     //!< \~english Correlation mode (for variable pairs) \~chinese 相关模式（针对双变量）
     };
@@ -118,26 +107,26 @@ protected:
 public:
     
     /**
-     * @brief \~english Construct a new GWSS object. \~chinese 构造一个新的 GWSS 对象。
+     * @brief \~english Construct a new GWAverage object. \~chinese 构造一个新的 GWAverage 对象。
      * 
      */
-    GWSS() {}
+    GWAverage() {}
     
     /**
-     * @brief \~english Construct a new GWSS object. \~chinese 构造一个新的 GWSS 对象。
+     * @brief \~english Construct a new GWAverage object. \~chinese 构造一个新的 GWAverage 对象。
      * 
      */
-    GWSS(const arma::mat x, const arma::mat coords, const SpatialWeight& spatialWeight)
+    GWAverage(const arma::mat x, const arma::mat coords, const SpatialWeight& spatialWeight)
         : SpatialMonoscaleAlgorithm(spatialWeight, coords)
     {
         mX = x;
     }
 
     /**
-     * @brief \~english Destroy the GWSS object. \~chinese 销毁 GWSS 对象。
+     * @brief \~english Destroy the GWAverage object. \~chinese 销毁 GWAverage 对象。
      * 
      */
-    ~GWSS() {}
+    ~GWAverage() {}
 
 public:
 
@@ -159,7 +148,7 @@ public:
      * \~chinese
      * @brief 带宽优选指标计算函数声明。
      */
-    typedef double (GWSS::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);
+    typedef double (GWAverage::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);
 
 
     /**
@@ -176,7 +165,7 @@ public:
      * @return false 如果不自动优选带宽。
      * 
      */
-    bool isAutoselectBandwidth() const { return mGWSSMode==GWSSMode::Correlation ? mIsAutoselectBandwidth : false; }
+    bool isAutoselectBandwidth() const { return mGWAverageMode==GWAverageMode::Correlation ? mIsAutoselectBandwidth : false; }
   
     /**
      * \~english
@@ -414,18 +403,18 @@ public:     // IMultivariableAnalysis
     /**
      * @brief \~english set variables \~chinese 设置变量x。
      * 
-     * @param x \~english variables for gwss \~chinese 进行GWSS的变量，如果只有一列，只能进行GWAverage。
+     * @param x \~english variables for GWAverage \~chinese 进行GWAverage的变量，如果只有一列，只能进行GWAverage。
      */
     void setVariables(const arma::mat& x) override { mX = x; }
 
 
     /**
-     * @brief \~english set GWSS working mode.
-     * \~chinese 设置GWSS的工作模式。
+     * @brief \~english set GWAverage working mode.
+     * \~chinese 设置GWAverage的工作模式。
      * 
-     * @param mode \~english GWSS working mode \~chinese GWSS的工作模式
+     * @param mode \~english GWAverage working mode \~chinese GWAverage的工作模式
      */
-    void setGWSSMode(GWSSMode mode);
+    void setGWAverageMode(GWAverageMode mode);
 
     void run() override;
 
@@ -443,7 +432,7 @@ public:     // IParallelizable
     /**
      * @brief Set the parallel type of this algorithm.
      * 
-     * Use gwmodel_set_gwss_openmp() to set parallel type of this algorithm to ParallelType::OpenMP in shared build.
+     * Use gwmodel_set_GWAverage_openmp() to set parallel type of this algorithm to ParallelType::OpenMP in shared build.
      * 
      * @param type Parallel type of this algorithm.
      */
@@ -454,7 +443,7 @@ public:     // IParallelOpenmpEnabled
     /**
      * @brief Set the thread numbers while paralleling.
      * 
-     * Use gwmodel_set_gwss_openmp() to set this property in shared build.
+     * Use gwmodel_set_GWAverage_openmp() to set this property in shared build.
      * 
      * @param threadNum Number of threads.
      */
@@ -497,7 +486,7 @@ private:
     bool mIsAutoselectBandwidth = false;//!< \~english Whether need bandwidth autoselect. \~chinese 是否需要自动优选带宽。
     bool mIsAutoselectLambda = false;//!< \~english Whether need lambda autoselect. \~chinese 是否需要自动优选lambda。
     BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::AIC;//!< \~english Bandwidth Selection Criterion Type. \~chinese 默认的带宽优选方式。
-    BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &GWSS::bandwidthSizeCriterionCVSerial;//!< \~english Bandwidth Selection Criterion Function. \~chinese 默认的带宽优选函数。
+    BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &GWAverage::bandwidthSizeCriterionCVSerial;//!< \~english Bandwidth Selection Criterion Function. \~chinese 默认的带宽优选函数。
     BandwidthCriterionList mBandwidthSelectionCriterionList;//!< \~english Bandwidth Selection Criterion List. \~chinese 默认的带宽优选参数列表。
     double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
 
@@ -514,9 +503,9 @@ private:
     arma::mat mCorrmat;       //!< \~english Local correlations (Pearson's) \~chinese 局部皮尔逊相关系数
     arma::mat mSCorrmat;      //!< \~english Local correlations (Spearman's) \~chinese 局部斯皮尔曼相关系数
 
-    GWSSMode mGWSSMode = GWSSMode::Average;       //!< \~english GWSS working mode \~chinese GWSS的工作模式
+    GWAverageMode mGWAverageMode = GWAverageMode::Average;       //!< \~english GWAverage working mode \~chinese GWAverage的工作模式
 
-    SummaryCalculator mSummaryFunction = &GWSS::GWAverageSerial;  //!< \~english Calculator for summary statistics \~chinese 计算函数
+    SummaryCalculator mSummaryFunction = &GWAverage::GWAverageSerial;  //!< \~english Calculator for summary statistics \~chinese 计算函数
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Parallel type \~chinese 并行方法
     int mOmpThreadNum = 8;                                  //!< \~english Numbers of threads to be created while paralleling \~chinese 多线程所使用的线程数
 };
@@ -524,4 +513,4 @@ private:
 }
 
 
-#endif  // GWSS_H
+#endif  // GWAVERAGE_H

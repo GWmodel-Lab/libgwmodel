@@ -1,4 +1,4 @@
-#include "GWSS.h"
+#include "GWAverage.h"
 #include <assert.h>
 #include <map>
 
@@ -10,7 +10,7 @@ using namespace std;
 using namespace arma;
 using namespace gwm;
 
-vec GWSS::del(vec x, uword rowcount){
+vec GWAverage::del(vec x, uword rowcount){
     vec res;
     if (rowcount == 0)
         res = x.rows(rowcount + 1, x.n_rows - 1);
@@ -21,7 +21,7 @@ vec GWSS::del(vec x, uword rowcount){
     return res;
 }
 
-vec GWSS::findq(const mat &x, const vec &w)
+vec GWAverage::findq(const mat &x, const vec &w)
 {
     uword lw = w.n_rows;
     uword lp = 3;
@@ -48,7 +48,7 @@ vec GWSS::findq(const mat &x, const vec &w)
     return q;
 }
 
-bool GWSS::isValid()
+bool GWAverage::isValid()
 {
     if (SpatialMonoscaleAlgorithm::isValid())
     {
@@ -60,17 +60,17 @@ bool GWSS::isValid()
     else return false;
 }
 
-void GWSS::run()
+void GWAverage::run()
 {
     GWM_LOG_STAGE("Initializing");
     uword nRp = mCoords.n_rows, nVar = mX.n_cols;
     createDistanceParameter();
     GWM_LOG_STOP_RETURN(mStatus, void());
 
-    //gwssFunc是true则为GWAverage
-    switch (mGWSSMode)
+    //GWAverageFunc是true则为GWAverage
+    switch (mGWAverageMode)
     {
-    case GWSSMode::Correlation:
+    case GWAverageMode::Correlation:
     {
         mLVar = mat(nRp, nVar, fill::zeros);
         uword nCol = mIsCorrWithFirstOnly ? (nVar - 1) : (nVar + 1) * nVar / 2 - nVar;
@@ -99,7 +99,7 @@ void GWSS::run()
     (this->*mSummaryFunction)();
 }
 
-void GWSS::GWAverageSerial()
+void GWAverage::GWAverageSerial()
 {
     mat rankX = mX;
     rankX.each_col([&](vec &x) { x = rank(x); });
@@ -131,7 +131,7 @@ void GWSS::GWAverageSerial()
     mLCV = mStandardDev / mLocalMean;
 }
 
-void GWSS::GWCorrelationSerial()
+void GWAverage::GWCorrelationSerial()
 {
     mat rankX = mX;
     rankX.each_col([&](vec &x) { x = rank(x); });
@@ -173,7 +173,7 @@ void GWSS::GWCorrelationSerial()
 }
 
 #ifdef ENABLE_OPENMP
-void GWSS::GWAverageOmp()
+void GWAverage::GWAverageOmp()
 {
     mat rankX = mX;
     rankX.each_col([&](vec &x) { x = rank(x); });
@@ -209,7 +209,7 @@ void GWSS::GWAverageOmp()
 #endif
 
 #ifdef ENABLE_OPENMP
-void GWSS::GWCorrelationOmp()
+void GWAverage::GWCorrelationOmp()
 {
     mat rankX = mX;
     rankX.each_col([&](vec &x) { x = rank(x); });
@@ -252,7 +252,7 @@ void GWSS::GWCorrelationOmp()
 }
 #endif
 
-void GWSS::calibration(const mat& locations, const mat& x)
+void GWAverage::calibration(const mat& locations, const mat& x)
 {
     // uword nRp = locations.n_rows, nVar = x.n_cols;
     // mat betas(nVar, nRp, fill::zeros);
@@ -278,7 +278,7 @@ void GWSS::calibration(const mat& locations, const mat& x)
     // return betas.t();
 }
 
-void GWSS::setParallelType(const ParallelType &type)
+void GWAverage::setParallelType(const ParallelType &type)
 {
     if (type & parallelAbility())
     {
@@ -287,57 +287,57 @@ void GWSS::setParallelType(const ParallelType &type)
     }
 }
 
-void GWSS::setGWSSMode(GWSSMode mode)
+void GWAverage::setGWAverageMode(GWAverageMode mode)
 {
-    mGWSSMode = mode;
+    mGWAverageMode = mode;
     updateCalculator();
 }
 
-void GWSS::updateCalculator()
+void GWAverage::updateCalculator()
 {
     switch (mParallelType)
     {
     case ParallelType::SerialOnly:
-        switch (mGWSSMode)
+        switch (mGWAverageMode)
         {
-        case GWSSMode::Average:
-            mSummaryFunction = &GWSS::GWAverageSerial;
+        case GWAverageMode::Average:
+            mSummaryFunction = &GWAverage::GWAverageSerial;
             break;
-        case GWSSMode::Correlation:
-            mSummaryFunction = &GWSS::GWCorrelationSerial;
+        case GWAverageMode::Correlation:
+            mSummaryFunction = &GWAverage::GWCorrelationSerial;
             break;
         default:
-            mSummaryFunction = &GWSS::GWAverageSerial;
+            mSummaryFunction = &GWAverage::GWAverageSerial;
             break;
         }
         break;
 #ifdef ENABLE_OPENMP
     case ParallelType::OpenMP:
-        switch (mGWSSMode)
+        switch (mGWAverageMode)
         {
-        case GWSSMode::Average:
-            mSummaryFunction = &GWSS::GWAverageOmp;
+        case GWAverageMode::Average:
+            mSummaryFunction = &GWAverage::GWAverageOmp;
             break;
-        case GWSSMode::Correlation:
-            mSummaryFunction = &GWSS::GWCorrelationOmp;
+        case GWAverageMode::Correlation:
+            mSummaryFunction = &GWAverage::GWCorrelationOmp;
             break;
         default:
-            mSummaryFunction = &GWSS::GWAverageOmp;
+            mSummaryFunction = &GWAverage::GWAverageOmp;
             break;
         }
         break;
 #endif
     default:
-        switch (mGWSSMode)
+        switch (mGWAverageMode)
         {
-        case GWSSMode::Average:
-            mSummaryFunction = &GWSS::GWAverageSerial;
+        case GWAverageMode::Average:
+            mSummaryFunction = &GWAverage::GWAverageSerial;
             break;
-        case GWSSMode::Correlation:
-            mSummaryFunction = &GWSS::GWCorrelationSerial;
+        case GWAverageMode::Correlation:
+            mSummaryFunction = &GWAverage::GWCorrelationSerial;
             break;
         default:
-            mSummaryFunction = &GWSS::GWAverageSerial;
+            mSummaryFunction = &GWAverage::GWAverageSerial;
             break;
         }
         break;
@@ -345,7 +345,7 @@ void GWSS::updateCalculator()
 }
 
 
-double GWSS::bandwidthSizeCriterionCVSerial(BandwidthWeight *bandwidthWeight)
+double GWAverage::bandwidthSizeCriterionCVSerial(BandwidthWeight *bandwidthWeight)
 {
     // int var = mBandwidthSelectionCurrentIndex;
     // uword nDp = mCoords.n_rows;
@@ -382,7 +382,7 @@ double GWSS::bandwidthSizeCriterionCVSerial(BandwidthWeight *bandwidthWeight)
     return DBL_MAX;
 }
 
-double GWSS::bandwidthSizeCriterionAICSerial(BandwidthWeight *bandwidthWeight)
+double GWAverage::bandwidthSizeCriterionAICSerial(BandwidthWeight *bandwidthWeight)
 {
     // int var = mBandwidthSelectionCurrentIndex;
     // uword nDp = mDataPoints.n_rows;

@@ -37,7 +37,8 @@
 #include "gwmodelpp/GWRRobust.h"
 #include "gwmodelpp/GWRScalable.h"
 #include "gwmodelpp/GWDR.h"
-#include "gwmodelpp/GWSS.h"
+#include "gwmodelpp/GWAverage.h"
+#include "gwmodelpp/GWCorrelation.h"
 #include "gwmodelpp/GWPCA.h"
 
 #endif  // GWMODEL_H
