@@ -113,6 +113,13 @@ public:
         return covwt(x1,x2,w)/sqrt(covwt(x1,x1,w)*covwt(x2,x2,w));
     }
 
+    static arma::vec rank(arma::vec x)
+    {
+        arma::vec n = arma::linspace(0.0, (double)x.n_rows - 1, x.n_rows);
+        arma::vec res = n(sort_index(x));
+        return n(sort_index(res)) + 1.0;
+    }
+
     static arma::vec del(arma::vec x, arma::uword rowcount);
 
     /**
@@ -129,24 +136,10 @@ public:
 
     typedef void (GWCorrelation::*SummaryCalculator)();  //!< \~english Calculator for GWCorrelation \~chinese 计算函数
 
-protected:
-    static arma::vec findq(const arma::mat& x, const arma::vec& w);
 
 public: //calculating functions
 
-    // /**
-    //  * @brief \~english Get whether calculate correlation between the first variable and others. \~chinese 获取是否仅为第一个变量计算与其他变量的相关系数
-    //  * 
-    //  * @return true \~english Yes \~chinese 是
-    //  * @return false \~english No \~chinese 否
-    //  */
     // bool isCorrWithFirstOnly() const { return mIsCorrWithFirstOnly; }
-
-    // /**
-    //  * @brief \~english Set whether calculate correlation between the first variable and others. \~chinese 设置是否仅为第一个变量计算与其他变量的相关系数 
-    //  * 
-    //  * @param corrWithFirstOnly \~english Whether calculate correlation between the first variable and others. \~chinese 是否仅为第一个变量计算与其他变量的相关系数
-    //  */
     // void setIsCorrWithFirstOnly(bool corrWithFirstOnly) { mIsCorrWithFirstOnly = corrWithFirstOnly; }
 
     /**
@@ -184,27 +177,8 @@ public: //calculating functions
      */
     const arma::mat& localVar() const { return mLVar; }
 
+    // const arma::mat& localMedian() const { return mLocalMedian; }
     
-    /**
-     * @brief \~english Get local median on each sample. \~chinese 获取每个样本的局部中位数。
-     * 
-     * @return \~english Local median on each sample \~chinese 每个样本的局部中位数
-     */
-    const arma::mat& localMedian() const { return mLocalMedian; }
-    
-    /**
-     * @brief \~english Get local interquartile ranges on each sample. \~chinese 获取每个样本的局部四分位距。
-     * 
-     * @return \~english Local interquartile ranges on each sample \~chinese 每个样本的局部四分位距
-     */
-    const arma::mat& iqr() const { return mIQR; }
-    
-    /**
-     * @brief \~english Get local quantile imbalances and coordinates on each sample. \~chinese 获取每个样本的局部分位数不平衡度。
-     * 
-     * @return \~english Local quantile imbalances and coordinates on each sample \~chinese 每个样本的局部分位数不平衡度
-     */
-    const arma::mat& qi() const { return mQI; }
 
         
     /**
@@ -258,6 +232,59 @@ public: //calculating functions
 public: //bandwidth selection
 
     typedef double (GWCorrelation::*BandwidthSizeCriterionFunction)(BandwidthWeight*);  //!< \~english Function to calculate the criterion for given bandwidth size. \~chinese 根据指定带宽大小计算对应指标值的函数。
+
+    /**
+     * \~english
+     * @brief Get the type of bandwidth initilization.
+     * 
+     * @return std::vector<BandwidthInitilizeType> The type of bandwidth initilization
+     * 
+     * \~chinese
+     * @brief 获取带宽初始化值类型。
+     * 
+     * @return std::vector<BandwidthInitilizeType> 带宽初始化值类型。
+     */
+    const std::vector<BandwidthInitilizeType>& bandwidthInitilize() const { return GWCorrelation::mBandwidthInitilize; }
+    
+    /**
+     * \~english
+     * @brief Set the bandwidth initilization type.
+     * 
+     * @param bandwidthInitilize The type of bandwidth initilization
+     * 
+     * \~chinese
+     * @brief 设置带宽初始化值类型。
+     * 
+     * @param bandwidthInitilize 带宽初始化值类型。
+     */
+    void setBandwidthInitilize(const std::vector<BandwidthInitilizeType> &bandwidthInitilize);
+
+    /**
+     * \~english
+     * @brief Get the bandwidth selection approach.
+     * 
+     * @return std::vector<BandwidthSelectionCriterionType> Bandwidth selection approach.
+     * 
+     * \~chinese
+     * @brief 获取带宽选择方法。
+     * 
+     * @return std::vector<BandwidthSelectionCriterionType> 带宽选择方法。
+     */
+    const std::vector<BandwidthSelectionCriterionType>& bandwidthSelectionApproach() const { return GWCorrelation::mBandwidthSelectionApproach; }
+    
+    /**
+     * \~english
+     * @brief Set the bandwidth selection approach.
+     * 
+     * @param bandwidthSelectionApproach Bandwidth selection approach.
+     * 
+     * \~chinese
+     * @brief 设置带宽选择方法。
+     * 
+     * @param bandwidthSelectionApproach 带宽选择方法。
+     */
+    void setBandwidthSelectionApproach(const std::vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach);
+
 
     /**
      * \~english
@@ -370,7 +397,7 @@ public:     // IParallelizable
     /**
      * @brief Set the parallel type of this algorithm.
      * 
-     * Use gwmodel_set_GWAverage_openmp() to set parallel type of this algorithm to ParallelType::OpenMP in shared build.
+     * Use setParallelType to set parallel type of this algorithm to ParallelType::OpenMP in shared build.
      * 
      * @param type Parallel type of this algorithm.
      */
@@ -390,7 +417,7 @@ public:     // IParallelOpenmpEnabled
     /**
      * @brief \~english Update calculator function according to parallel type and mode.
      */
-    void updateCalculator();
+    // void updateCalculator();
 
 private:
     /**
@@ -438,7 +465,6 @@ protected:
     }
 
 private:
-    bool mQuantile = false;             //!< \~english Indicator of whether calculate quantile statistics. \~chinese 是否使用基于排序的算法
     // bool mIsCorrWithFirstOnly = false;  //是否仅为第一个变量计算与其他变量的相关系数
 
     // bool mIsAutoselectBandwidth = false;//!< \~english Whether need bandwidth autoselect. \~chinese 是否需要自动优选带宽。
@@ -451,8 +477,8 @@ private:
     std::vector<BandwidthInitilizeType> mBandwidthInitilize;    //!< \~english Type of bandwidth initilization values. \~chinese 带宽初始值类型。
     std::vector<BandwidthSelectionCriterionType> mBandwidthSelectionApproach;   //!< \~english Type of bandwidth selection approach. \~chinese 带宽选择方法类型。
 
-    arma::mat mX;             //!< \~english Variable matrix \~chinese 变量矩阵
-    arma::mat mY;
+    arma::mat mX;             //!< \~english independant variable matrix \~chinese 自变量矩阵
+    arma::mat mY;             //!< \~english response variable matrix \~chinese 响应变量矩阵
     arma::mat mXi;
     arma::mat mYi;
 
@@ -461,9 +487,7 @@ private:
     arma::mat mLocalSkewness; //!< \~english Local skewness \~chinese 局部偏度
     arma::mat mLCV;           //!< \~english Local coefficients of variation \~chinese 局部变化系数
     arma::mat mLVar;          //!< \~english Local variance \~chinese 局部方差
-    arma::mat mLocalMedian;   //!< \~english Local medians \~chinese 局部中位数
-    arma::mat mIQR;           //!< \~english Local interquartile ranges \~chinese 局部分位距
-    arma::mat mQI;            //!< \~english Local quantile imbalances and coordinates \~chinese 局部分位数不平衡度
+    // arma::mat mLocalMedian;   //!< \~english Local medians \~chinese 局部中位数
     arma::mat mCovmat;        //!< \~english Local covariances \~chinese 局部协方差
     arma::mat mCorrmat;       //!< \~english Local correlations (Pearson's) \~chinese 局部皮尔逊相关系数
     arma::mat mSCorrmat;      //!< \~english Local correlations (Spearman's) \~chinese 局部斯皮尔曼相关系数
