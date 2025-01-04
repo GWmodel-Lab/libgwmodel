@@ -48,6 +48,13 @@ add_test(
     COMMAND $<TARGET_FILE:testGWRBasic> --success --skip-benchmarks
 )
 
+add_executable(testGWAverage testGWAverage.cpp)
+target_link_libraries(testGWAverage PRIVATE gwmodel londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_test(
+    NAME testGWAverage 
+    COMMAND $<TARGET_FILE:testGWAverage> --success
+)
+
 add_executable(testGWSS testGWSS.cpp)
 target_link_libraries(testGWSS PRIVATE gwmodel londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
