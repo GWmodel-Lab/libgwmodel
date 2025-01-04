@@ -1,5 +1,7 @@
 #include "GWCorrelation.h"
+#include "BandwidthSelector.h"
 #include <assert.h>
+#include "Logger.h"
 #include <map>
 
 #ifdef ENABLE_OPENMP
@@ -10,19 +12,96 @@ using namespace std;
 using namespace arma;
 using namespace gwm;
 
+vec GWCorrelation::del(vec x, uword rowcount){
+    vec res;
+    if (rowcount == 0)
+        res = x.rows(rowcount + 1, x.n_rows - 1);
+    else if (rowcount == x.n_rows - 1)
+        res = x.rows(0,x.n_rows-2);
+    else
+        res = join_cols(x.rows(0,rowcount - 1),x.rows(rowcount + 1, x.n_rows - 1));
+    return res;
+}
 
-// vec GWAverage::del(vec x, uword rowcount){
-//     vec res;
-//     if (rowcount == 0)
-//         res = x.rows(rowcount + 1, x.n_rows - 1);
-//     else if (rowcount == x.n_rows - 1)
-//         res = x.rows(0,x.n_rows-2);
-//     else
-//         res = join_cols(x.rows(0,rowcount - 1),x.rows(rowcount + 1, x.n_rows - 1));
-//     return res;
-// }
+vec GWCorrelation::findq(const mat &x, const vec &w)
+{
+    uword lw = w.n_rows;
+    uword lp = 3;
+    vec q = vec(lp,fill::zeros);
+    vec xo = sort(x);
+    vec wo = w(sort_index(x));
+    vec Cum = cumsum(wo);
+    uword cond = lw - 1;
+    for(uword j = 0; j < lp ; j++){
+        double k = 0.25 * (j + 1);
+        for(uword i = 0; i < lw; i++){
+            if(Cum(i) > k){
+                cond = i - 1;
+                break;
+            }
+        }
+        if(cond < 0)
+        {
+            cond = 0;
+        }
+        q.row(j) = xo[cond];
+        cond = lw - 1;
+    }
+    return q;
+}
 
-// void GWAverage::GWCorrelationSerial()
+void GWCorrelation::run()
+{
+    GWM_LOG_STAGE("Initializing");
+    uword nDp = mCoords.n_rows, nVar = mX.n_cols, nRsp=mY.n_cols;
+    createDistanceParameter(nVar);
+    GWM_LOG_STOP_RETURN(mStatus, void());
+
+    uword nCol = nVar * nRsp;
+    mLVar = mat(nDp, nVar, fill::zeros);
+    mLocalMean = mat(nDp, nVar, fill::zeros);
+    mCovmat = mat(nDp, nCol, fill::zeros);
+    mCorrmat = mat(nDp, nCol, fill::zeros);
+    mSCorrmat = mat(nDp, nCol, fill::zeros);
+    if (mQuantile)
+    {
+        mLocalMedian = mat(nDp, nVar, fill::zeros);
+        mIQR = mat(nDp, nVar, fill::zeros);
+        mQI = mat(nDp, nVar, fill::zeros);
+    }
+
+    GWM_LOG_STAGE("Initializing bandwidths");
+    for (uword i = 0; i < nCol; i++)
+    {
+        if(mBandwidthInitilize[i] == BandwidthInitilizeType::Null)
+        {
+            GWM_LOG_STAGE("Bandwidth optimization")
+            mBandwidthSizeCriterion = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
+            mBandwidthSelectionCurrentIndex = i;
+            mXi = mX.col(i/nRsp);
+            mYi = mY.col((i+nRsp)%nRsp);
+            mBandwidthSelectionCurrentIndex = i;
+            GWM_LOG_INFO(string(GWM_LOG_TAG_GWCORR_INITIAL_BW) + to_string(i));
+            BandwidthWeight* bw0 = bandwidth(i);
+            BandwidthSelector selector;
+            selector.setBandwidth(bw0);
+            selector.setLower(bw0->adaptive() ? 20 : 0.0);
+            selector.setUpper(bw0->adaptive() ? nDp : mSpatialWeights[i].distance()->maxDistance());
+            BandwidthWeight* bw = selector.optimize(this);
+            if(bw)
+            {
+                mSpatialWeights[i].setWeight(bw);
+            }
+            GWM_LOG_INFO(string(GWM_LOG_TAG_GWCORR_INITIAL_BW)  + to_string(i)  + "," + to_string(bw->bandwidth()));
+        }
+        GWM_LOG_STOP_RETURN(mStatus, void());
+    }
+
+    GWM_LOG_STAGE("Calculating");
+    (this->*mSummaryFunction)();
+}
+
+// void GWCorrelation::GWCorrelationSerial()
 // {
 //     mat rankX = mX;
 //     rankX.each_col([&](vec &x) { x = rank(x); });
@@ -64,7 +143,7 @@ using namespace gwm;
 // }
 
 // #ifdef ENABLE_OPENMP
-// void GWAverage::GWCorrelationOmp()
+// void GWCorrelation::GWCorrelationOmp()
 // {
 //     mat rankX = mX;
 //     rankX.each_col([&](vec &x) { x = rank(x); });
@@ -108,7 +187,7 @@ using namespace gwm;
 // #endif
 
 
-// double GWAverage::bandwidthSizeCriterionAICSerial(BandwidthWeight *bandwidthWeight)
+// double GWCorrelation::bandwidthSizeCriterionAICSerial(BandwidthWeight *bandwidthWeight)
 // {
     // int var = mBandwidthSelectionCurrentIndex;
     // uword nDp = mDataPoints.n_rows;
@@ -152,7 +231,7 @@ using namespace gwm;
 // }
 
 
-// double GWAverage::bandwidthSizeCriterionCVSerial(BandwidthWeight *bandwidthWeight)
+// double GWCorrelation::bandwidthSizeCriterionCVSerial(BandwidthWeight *bandwidthWeight)
 // {
     // int var = mBandwidthSelectionCurrentIndex;
     // uword nDp = mCoords.n_rows;
