@@ -233,6 +233,8 @@ public: //bandwidth selection
 
     typedef double (GWCorrelation::*BandwidthSizeCriterionFunction)(BandwidthWeight*);  //!< \~english Function to calculate the criterion for given bandwidth size. \~chinese 根据指定带宽大小计算对应指标值的函数。
 
+    bool isAutoselectBandwidth() { return mIsAutoselectBandwidth; }
+
     /**
      * \~english
      * @brief Get the type of bandwidth initilization.
@@ -432,6 +434,9 @@ private:
     void GWCorrelationOmp();
 #endif
 
+public:     // SpatialAlgorithm interface
+    bool isValid() override;
+
 public:     // IMultiresponseVariableAnalysis
     const arma::mat& independentVariables() const override { return mX; }
     
@@ -457,7 +462,7 @@ public:     // IMultiresponseVariableAnalysis
     void calibration(const arma::mat& locations, const arma::mat& x);
 
 protected:
-    std::vector<SpatialWeight> mSpatialWeights;   //!< Spatial weight configuration.
+    // std::vector<SpatialWeight> mSpatialWeights;   //!< Spatial weight configuration.
 
     BandwidthWeight* bandwidth(size_t i)
     {
@@ -467,7 +472,7 @@ protected:
 private:
     // bool mIsCorrWithFirstOnly = false;  //是否仅为第一个变量计算与其他变量的相关系数
 
-    // bool mIsAutoselectBandwidth = false;//!< \~english Whether need bandwidth autoselect. \~chinese 是否需要自动优选带宽。
+    bool mIsAutoselectBandwidth = false;//!< \~english Whether need bandwidth autoselect. \~chinese 是否需要自动优选带宽。
     SpatialWeight mInitSpatialWeight;   //!< \~english Spatial weighting sheme for initializing bandwidth. \~chinese 计算初始带宽值时所用的空间权重配置。
     BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::AIC;//!< \~english Bandwidth Selection Criterion Type. \~chinese 默认的带宽优选方式。
     BandwidthSizeCriterionFunction mBandwidthSizeCriterion = &GWCorrelation::bandwidthSizeCriterionCVSerial;//!< \~english Bandwidth Selection Criterion Function. \~chinese 默认的带宽优选函数。

@@ -15,7 +15,7 @@ using namespace gwm;
 
 unordered_map<GWCorrelation::BandwidthInitilizeType,string> GWCorrelation::BandwidthInitilizeTypeNameMapper = {
     make_pair(GWCorrelation::BandwidthInitilizeType::Null, ("Not initilized, not specified")),
-    make_pair(GWCorrelation::BandwidthInitilizeType::Initial, ("Initilized")),
+    make_pair(GWCorrelation::BandwidthInitilizeType::Initial, ("Initilized")),//need?
     make_pair(GWCorrelation::BandwidthInitilizeType::Specified, ("Specified"))
 };
 
@@ -35,6 +35,49 @@ vec GWCorrelation::del(vec x, uword rowcount){
     return res;
 }
 
+bool GWCorrelation::isValid()
+{
+    if (SpatialMultiscaleAlgorithm::isValid())
+    {
+        if (!(mX.n_cols > 0))
+            return false;
+
+        if (!(mY.n_cols > 0))
+            return false;
+    }
+
+    size_t nCol = mX.n_cols * mY.n_cols;
+
+    if (mSpatialWeights.size() != nCol)
+        return false;
+
+    if (mBandwidthInitilize.size() != nCol)
+        return false;
+
+    // if (mBandwidthSelectionApproach.size() != nCol || mBandwidthSelectionApproach.size() != 0)
+    //     return false;
+
+    for (size_t i = 0; i < nCol; i++)
+    {
+        BandwidthWeight* bw = mSpatialWeights[i].weight<BandwidthWeight>();
+        if (mBandwidthInitilize[i] == GWCorrelation::Specified || mBandwidthInitilize[i] == GWCorrelation::Initial)
+        {
+            if (bw->adaptive())
+            {
+                if (bw->bandwidth() < 1)
+                    return false;
+            }
+            else
+            {
+                if (bw->bandwidth() < 0.0)
+                    return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 void GWCorrelation::run()
 {
     GWM_LOG_STAGE("Initializing");
@@ -43,8 +86,8 @@ void GWCorrelation::run()
     createDistanceParameter(nCol);
     GWM_LOG_STOP_RETURN(mStatus, void());
 
-    mLVar = mat(nDp, nVar, fill::zeros);
-    mLocalMean = mat(nDp, nVar, fill::zeros);
+    mLVar = mat(nDp, nVar+nRsp, fill::zeros);//后续计算中要算Y的localmean
+    mLocalMean = mat(nDp, nVar+nRsp, fill::zeros);
     mCovmat = mat(nDp, nCol, fill::zeros);
     mCorrmat = mat(nDp, nCol, fill::zeros);
     mSCorrmat = mat(nDp, nCol, fill::zeros);
@@ -84,9 +127,10 @@ void GWCorrelation::GWCorrelationSerial()
     mat rankX = mX;
     rankX.each_col([&](vec &x) { x = rank(x); });
     mat rankY = mY;
-    rankY.each_col([&](vec y) { y = rank(y); });
+    rankY.each_col([&](vec &y) { y = rank(y); });
     uword nRp = mCoords.n_rows, nVar = mX.n_cols, nRsp=mY.n_cols;
     uword nCol = nVar * nRsp;
+    mat mXY = join_rows(mX,mY);
     for (uword col = 0; col < nCol; col++)
     {
         for (uword i = 0; i < nRp; i++)
@@ -95,8 +139,8 @@ void GWCorrelation::GWCorrelationSerial()
             vec w = mSpatialWeights[col].weightVector(i);
             double sumw = sum(w);
             vec Wi = w / sumw;
-            mLocalMean.row(i) = trans(Wi) * mX;
-            mat centerized = mX.each_row() - mLocalMean.row(i);
+            mLocalMean.row(i) = trans(Wi) * mXY;
+            mat centerized = mXY.each_row() - mLocalMean.row(i);
             mLVar.row(i) = Wi.t() * (centerized % centerized);
             uword coly = col / nVar;
             uword colx = (col + nVar) % nVar;
@@ -115,21 +159,25 @@ void GWCorrelation::GWCorrelationSerial()
 
 void GWCorrelation::setBandwidthSelectionApproach(const vector<BandwidthSelectionCriterionType> &bandwidthSelectionApproach)
 {
-    if (bandwidthSelectionApproach.size() == (mX.n_cols*mY.n_cols))
+    if (mIsAutoselectBandwidth)
     {
-        mBandwidthSelectionApproach = bandwidthSelectionApproach;
+        if (bandwidthSelectionApproach.size() == (mX.n_cols * mY.n_cols))
+        {
+            mBandwidthSelectionApproach = bandwidthSelectionApproach;
+        }
+        else
+        {
+            length_error e("bandwidthSelectionApproach size do not match input");
+            GWM_LOG_ERROR(e.what());
+            throw e;
+        }
     }
-    else
-    {
-        length_error e("bandwidthSelectionApproach size do not match input");
-        GWM_LOG_ERROR(e.what());
-        throw e;
-    }  
 }
 
 void GWCorrelation::setBandwidthInitilize(const vector<BandwidthInitilizeType> &bandwidthInitilize)
 {
-    if(bandwidthInitilize.size() == (mX.n_cols*mY.n_cols)){
+    uword nCol=mX.n_cols*mY.n_cols;
+    if(bandwidthInitilize.size() == nCol){
         mBandwidthInitilize = bandwidthInitilize;
     }
     else
@@ -137,7 +185,14 @@ void GWCorrelation::setBandwidthInitilize(const vector<BandwidthInitilizeType> &
         length_error e("BandwidthInitilize size do not match input");
         GWM_LOG_ERROR(e.what());
         throw e;
-    }   
+    }
+    for (uword i = 0; i < nCol; i++)
+    {
+        if (mBandwidthInitilize[i] != BandwidthInitilizeType::Specified)
+        {
+            mIsAutoselectBandwidth = true;
+        }
+    }
 }
 
 
@@ -170,9 +225,10 @@ void GWCorrelation::GWCorrelationOmp()
     mat rankX = mX;
     rankX.each_col([&](vec &x) { x = rank(x); });
     mat rankY = mY;
-    rankY.each_col([&](vec y) { y = rank(y); });
+    rankY.each_col([&](vec &y) { y = rank(y); });
     uword nRp = mCoords.n_rows, nVar = mX.n_cols, nRsp=mY.n_cols;
     uword nCol = nVar * nRsp;
+    mat mXY = join_rows(mX,mY);
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (uword col = 0; col < nCol; col++)
     {
@@ -182,8 +238,8 @@ void GWCorrelation::GWCorrelationOmp()
             vec w = mSpatialWeights[col].weightVector(i);
             double sumw = sum(w);
             vec Wi = w / sumw;
-            mLocalMean.row(i) = trans(Wi) * mX;
-            mat centerized = mX.each_row() - mLocalMean.row(i);
+            mLocalMean.row(i) = trans(Wi) * mXY;
+            mat centerized = mXY.each_row() - mLocalMean.row(i);
             mLVar.row(i) = Wi.t() * (centerized % centerized);
             uword coly = col / nVar;
             uword colx = (col + nVar) % nVar;
