@@ -174,6 +174,8 @@ public:     // IMultivariableAnalysis
     
     void calibration(const arma::mat& locations, const arma::mat& x);
 
+    void createCalibrationDistanceParameter(const arma::mat& locations);
+
 public:     // IParallelizable
     int parallelAbility() const override
     {

@@ -150,30 +150,61 @@ void GWAverage::GWAverageOmp()
 }
 #endif
 
+void GWAverage::createCalibrationDistanceParameter(const arma::mat& locations)
+{
+    if (mSpatialWeight.distance()->type() == Distance::DistanceType::CRSDistance || 
+        mSpatialWeight.distance()->type() == Distance::DistanceType::MinkwoskiDistance)
+    {
+        mSpatialWeight.distance()->makeParameter({ locations, mCoords });
+    }
+}
+
 void GWAverage::calibration(const mat& locations, const mat& x)
 {
-    // uword nRp = locations.n_rows, nVar = x.n_cols;
-    // mat betas(nVar, nRp, fill::zeros);
-    // for (uword i = 0; i < nRp; i++)
-    // {
-    //     GWM_LOG_STOP_BREAK(mStatus);
-    //     vec w = mSpatialWeight.weightVector(i);
-    //     mat xtw = trans(x.each_col() % w);
-    //     mat xtwx = xtw * x;
-    //     mat xtwy = xtw * y;
-    //     try
-    //     {
-    //         mat xtwx_inv = inv_sympd(xtwx);
-    //         betas.col(i) = xtwx_inv * xtwy;
-    //     }
-    //     catch (const exception& e)
-    //     {
-    //         GWM_LOG_ERROR(e.what());
-    //         throw e;
-    //     }
-    //     GWM_LOG_PROGRESS(i + 1, nRp);
-    // }
-    // return betas.t();
+    GWM_LOG_STAGE("Initializing calibration");
+    uword nRp = locations.n_rows, nVar = x.n_cols;
+    createCalibrationDistanceParameter(locations);
+    GWM_LOG_STOP_RETURN(mStatus, void());
+
+    mLocalMean = mat(nRp, nVar, fill::zeros);
+    mStandardDev = mat(nRp, nVar, fill::zeros);
+    mLocalSkewness = mat(nRp, nVar, fill::zeros);
+    mLCV = mat(nRp, nVar, fill::zeros);
+    mLVar = mat(nRp, nVar, fill::zeros);
+    if (mQuantile)
+    {
+        mLocalMedian = mat(nRp, nVar, fill::zeros);
+        mIQR = mat(nRp, nVar, fill::zeros);
+        mQI = mat(nRp, nVar, fill::zeros);
+    }
+    GWM_LOG_STAGE("Calibration calculating");
+    mat rankX = x;
+    rankX.each_col([&](vec &x) { x = rank(x); });
+    for (uword i = 0; i < nRp; i++)
+    {
+        GWM_LOG_STOP_BREAK(mStatus);
+        vec w = mSpatialWeight.weightVector(i);
+        double sumw = sum(w);
+        vec Wi = w / sumw;
+        mLocalMean.row(i) = trans(Wi) * x;
+        if (mQuantile)
+        {
+            mat quant = mat(3, nVar);
+            for (uword j = 0; j < nVar; j++)
+            {
+                quant.col(j) = findq(x.col(j), Wi);
+            }
+            mLocalMedian.row(i) = quant.row(1);
+            mIQR.row(i) = quant.row(2) - quant.row(0);
+            mQI.row(i) = (2 * quant.row(1) - quant.row(2) - quant.row(0)) / mIQR.row(i);
+        }
+        mat centerized = x.each_row() - mLocalMean.row(i);
+        mLVar.row(i) = Wi.t() * (centerized % centerized);
+        mStandardDev.row(i) = sqrt(mLVar.row(i));
+        mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
+        GWM_LOG_PROGRESS(i + 1, nRp);
+    }
+    mLCV = mStandardDev / mLocalMean;
 }
 
 void GWAverage::setParallelType(const ParallelType &type)
