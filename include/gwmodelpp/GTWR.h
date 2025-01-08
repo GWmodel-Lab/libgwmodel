@@ -86,7 +86,11 @@ public:
     }
 
     const double getAngle(){
-        return mStdistance->angle();
+        if (mStdistance != nullptr) {
+            return mStdistance->angle();
+        } else {
+            throw std::runtime_error("mStdistance is not initialized");
+        }
     }
 
 private:

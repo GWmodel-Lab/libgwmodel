@@ -80,6 +80,7 @@ TEST_CASE("GTWR: londonhp100")
         REQUIRE(algorithm.hasIntercept() == true);
         ////lambda=1
         REQUIRE_THAT(algorithm.getLambda(), Catch::Matchers::WithinAbs(1.0, 1e-12));
+        REQUIRE_THAT(algorithm.getAngle(), Catch::Matchers::WithinAbs(arma::datum::pi / 2, 1e-12));
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2436.6044573089, 1e-8));
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2448.2720652516, 1e-8));
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.7080106320292, 1e-8));
