@@ -46,6 +46,10 @@ TEST_CASE("LocalCollinearityGWR")
         algorithm.setHasHatMatrix(true);
 
         REQUIRE_NOTHROW(algorithm.fit());
+        
+        REQUIRE_THAT(algorithm.localCN().max(), Catch::Matchers::WithinAbs(60.433337574795, 1e-8));
+        REQUIRE_THAT(algorithm.localCN().min(), Catch::Matchers::WithinAbs(42.800049204336, 1e-8));
+        // REQUIRE_THAT(algorithm.localLambda().max(), Catch::Matchers::WithinAbs(0, 1e-8));
 
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2461.5654565, 1e-8));
@@ -96,6 +100,11 @@ TEST_CASE("LocalCollinearityGWR")
         algorithm.setCnThresh(20);
         REQUIRE_NOTHROW(algorithm.fit());
 
+        REQUIRE_THAT(algorithm.localCN().max(), Catch::Matchers::WithinAbs(60.433337574795, 1e-8));
+        REQUIRE_THAT(algorithm.localCN().min(), Catch::Matchers::WithinAbs(42.800049204336, 1e-8));
+        REQUIRE_THAT(algorithm.localLambda().max(), Catch::Matchers::WithinAbs(0.068751696228, 1e-8));
+        REQUIRE_THAT(algorithm.localLambda().min(), Catch::Matchers::WithinAbs(0.054336147377, 1e-8));
+
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2461.8623182524, 1e-8));
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2464.8971176381, 1e-8));
@@ -118,6 +127,9 @@ TEST_CASE("LocalCollinearityGWR")
         algorithm.setHasHatMatrix(true);
         algorithm.setLambda(0.1);
         REQUIRE_NOTHROW(algorithm.fit());
+
+        REQUIRE_THAT(algorithm.localCN().max(), Catch::Matchers::WithinAbs(60.433337574795, 1e-8));
+        REQUIRE_THAT(algorithm.localCN().min(), Catch::Matchers::WithinAbs(42.800049204336, 1e-8));
 
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2462.0038025123, 1e-8));
@@ -147,6 +159,9 @@ TEST_CASE("LocalCollinearityGWR")
 
         double bw = algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
         REQUIRE(bw == 67.0);
+
+        REQUIRE_THAT(algorithm.localCN().max(), Catch::Matchers::WithinAbs(50.634464389348, 1e-8));
+        REQUIRE_THAT(algorithm.localCN().min(), Catch::Matchers::WithinAbs(45.520575900277, 1e-8));
 
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2458.2472656218, 1e-8));

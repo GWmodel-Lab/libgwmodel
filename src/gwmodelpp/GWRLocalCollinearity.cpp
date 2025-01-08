@@ -16,8 +16,6 @@ RegressionDiagnostic GWRLocalCollinearity::CalcDiagnostic(const mat& x, const ve
     vec r = y - sum(betas % x, 1);
     double rss = sum(r % r);
     double n = (double)x.n_rows;
-    // double AIC = n * log(rss / n) + n * log(2 * datum::pi) + n + shat(0);//这个计算结果不知道为什么不对。
-    // double AICc = n * log(rss / n) + n * log(2 * datum::pi) + n * ((n + shat(0)) / (n - 2 - shat(0)));
     double edf = n - 2 * shat(0) + shat(1);
     double enp = 2 * shat(0) - shat(1);
     double s2 = rss / (n - enp);
@@ -73,7 +71,7 @@ mat GWRLocalCollinearity::fit()
     vec hatrow(nDp,fill::zeros);
     
     GWM_LOG_STAGE("Model fitting");
-    mBetas = (this->*mFitFunction)(mX, mY);
+    mBetas = (this->*mFitFunction)(mX, mY, mLocalCN, mLocalLambda);
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     GWM_LOG_STAGE("Model Diagnostic");
@@ -326,12 +324,12 @@ double GWRLocalCollinearity::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwi
 }
 #endif
 
-mat GWRLocalCollinearity::fitSerial(const mat& x, const vec& y)
+mat GWRLocalCollinearity::fitSerial(const mat& x, const vec& y, vec& localcn, vec& locallambda)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nDp, nVar, fill::zeros);
-    vec localcn(nDp, fill::zeros);
-    vec locallambda(nDp, fill::zeros);
+    localcn=vec(nDp, fill::zeros);
+    locallambda=vec(nDp, fill::zeros);
     vec hatrow(nDp, fill::zeros);
     vec shat = vec(2, fill::zeros);
     for(uword i=0;i<nDp ;i++)
@@ -423,12 +421,12 @@ mat GWRLocalCollinearity::predictSerial(const arma::mat &locations, const mat& x
 }
 
 #ifdef ENABLE_OPENMP
-mat GWRLocalCollinearity::fitOmp(const mat& x, const vec& y)
+mat GWRLocalCollinearity::fitOmp(const mat& x, const vec& y, vec& localcn, vec& locallambda)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nDp, nVar, fill::zeros);
-    vec localcn(nDp, fill::zeros);
-    vec locallambda(nDp, fill::zeros);
+    localcn=vec(nDp, fill::zeros);
+    locallambda=vec(nDp, fill::zeros);
     vec hatrow(nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     //int current = 0;
