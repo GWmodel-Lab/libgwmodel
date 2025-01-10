@@ -77,6 +77,22 @@ public:
         return std::string(GWM_LOG_TAG_LAMBDA_OPTIMIZATION) + std::to_string(lambda) + "," + std::to_string(criterion);
     }
 
+    const double getLambda() {
+        if (mStdistance != nullptr) {
+            return mStdistance->lambda();
+        } else {
+            throw std::runtime_error("mStdistance is not initialized");
+        }
+    }
+
+    const double getAngle(){
+        if (mStdistance != nullptr) {
+            return mStdistance->angle();
+        } else {
+            throw std::runtime_error("mStdistance is not initialized");
+        }
+    }
+
 private:
 
     /**
@@ -578,7 +594,7 @@ protected:
      * @param bandwidthWeight 传入带宽值，来获取权重，后续更方便改成多元优化.
      * @return double 返回优选以后的lambda值.
      */
-    double LambdaAutoSelection(BandwidthWeight* bandwidthWeight);
+    double lambdaAutoSelection(BandwidthWeight* bandwidthWeight);
 
     /**
      * \~english
@@ -594,7 +610,59 @@ protected:
      * @param rsquare 根据输入的lambda值和带宽获取的R方值.
      * @return Status 算法运行状态。
      */
-    Status RsquareByLambda(BandwidthWeight* bandwidthWeight,double lambda, double& rsquare);
+    Status r_squareByLambda(BandwidthWeight* bandwidthWeight,double lambda, double& rsquare);
+
+    struct Parameter {
+        GTWR* instance;     // GTWR实例
+        BandwidthWeight* bandwidth;    // 带宽
+        double lambda;  // lambda
+    };
+
+    /**
+     * \~english
+     * @brief criterion function for gsl_multimin_function and params.
+     * @param v gsl_vector target,     
+     * @param params the params.
+     * @return criterion.
+     * \~chinese
+     * @brief 构建gsl的gsl_multimin_function以及优化指标
+     * @param v gsl的优化向量（lambda, bw）
+     * @param params 传入的参数，从void*转换成Parameter*
+     * @return CV或AIC的指标值
+     */
+    static double criterion_function (const gsl_vector *v, void *params);
+
+    /**
+     * \~english
+     * @brief gsl lambda bandwidth auto-selection function.
+     * @param bandwidth BandwidthWeight,     
+     * @param max_iter max iter, internal set 1000.
+     * @param min_step min steps for optimize change, internal set 0.01.
+     * @return vector for (lambda, bw).
+     * \~chinese
+     * @brief 优化的主函数
+     * @param bandwidth BandwidthWeight类型，带宽     
+     * @param max_iter 最大迭代次数，设置为1000
+     * @param min_step 优化中的步长，设置为0.01（变化阈值为步长/1000）
+     * @return 优化结果，一个向量：(lambda, bw).
+     */
+    arma::vec lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, double min_step);
+
+    /**
+     * \~english
+     * @brief criterion function by Lambda and Bw.
+     * @param bandwidth bandwidth weight parameters,     
+     * @param lambda the lambda value.
+     * @param criterion criterion type, BandwidthSelectionCriterionType.
+     * @return criterion value.
+     * \~chinese
+     * @brief 利用带宽和lambda计算指标的函数
+     * @param bandwidthWeight 输入带宽权重,
+     * @param lambda 获取指标的lambda值
+     * @param criterion BandwidthSelectionCriterionType类型，确定求的指标
+     * @return 对应类型的指标值
+     */
+    double criterionByLambdaBw(BandwidthWeight* bandwidth, double lambda, BandwidthSelectionCriterionType criterion);
 
 public:
     /**
@@ -611,6 +679,8 @@ public:
      */
     void setIsAutoselectLambda(bool isAutoSelect) { mIsAutoselectLambda = isAutoSelect; }
 
+    void setIsAutoselectLambdaBw(bool isAutoSelect) { mIsAutoselectLambdaBw = isAutoSelect; }
+
 protected:
 
     bool mHasHatMatrix = true;  //!< \~english Whether has hat-matrix. \~chinese 是否具有帽子矩阵。
@@ -619,6 +689,7 @@ protected:
 
     bool mIsAutoselectBandwidth = false;//!< \~english Whether need bandwidth autoselect. \~chinese 是否需要自动优选带宽。
     bool mIsAutoselectLambda = false;//!< \~english Whether need lambda autoselect. \~chinese 是否需要自动优选lambda。
+    bool mIsAutoselectLambdaBw = false;
 
     BandwidthSelectionCriterionType mBandwidthSelectionCriterion = BandwidthSelectionCriterionType::AIC;//!< \~english Bandwidth Selection Criterion Type. \~chinese 默认的带宽优选方式。
     BandwidthSelectionCriterionCalculator mBandwidthSelectionCriterionFunction = &GTWR::bandwidthSizeCriterionCVSerial;//!< \~english Bandwidth Selection Criterion Function. \~chinese 默认的带宽优选函数。
@@ -640,7 +711,6 @@ protected:
 
     CRSSTDistance* mStdistance;//use to change spatial temporal distance including lambda
 
-    // gsl_function F;
 };
 
 }
