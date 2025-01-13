@@ -49,7 +49,7 @@ namespace gwm
  * - local interquartile ranges <- GWCorrelation::iqr()
  * - local quantile imbalances and coordinates <- GWCorrelation::qi()
  */
-class GWCorrelation : public SpatialMultiscaleAlgorithm, public IMultiresponseVariableAnalysis, public IParallelizable, public IParallelOpenmpEnabled, public IBandwidthSelectable
+class GWCorrelation : public SpatialMultiscaleAlgorithm, public IMultivariateAnalysis, public IParallelizable, public IParallelOpenmpEnabled, public IBandwidthSelectable
 {
 public:
 
@@ -437,25 +437,25 @@ private:
 public:     // SpatialAlgorithm interface
     bool isValid() override;
 
-public:     // IMultiresponseVariableAnalysis
-    const arma::mat& independentVariables() const override { return mX; }
+public:     // IMultivariateAnalysis
+    const arma::mat& variables2() const override { return mX; }
     
     /**
      * @brief \~english set variables \~chinese 设置变量x。
      * 
      * @param x \~english variables for GWAverage \~chinese 进行GWAverage的变量，如果只有一列，只能进行GWAverage。
      */
-    void setIndependentVariables(const arma::mat& x) override { mX = x; }
+    void setVariables2(const arma::mat& x) override { mX = x; }
 
 
-    const arma::mat& responseVariables() const override { return mY; }
+    const arma::mat& variables1() const override { return mY; }
     
     /**
      * @brief \~english set variables \~chinese 设置变量x。
      * 
      * @param x \~english variables for GWAverage \~chinese 进行GWAverage的变量，如果只有一列，只能进行GWAverage。
      */
-    void setResponseVariables(const arma::mat& y) override { mY = y; }
+    void setVariables1(const arma::mat& y) override { mY = y; }
 
     void run() override;
     

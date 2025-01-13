@@ -80,6 +80,7 @@ void GWAverage::run()
     }
     GWM_LOG_STAGE("Calculating");
     (this->*mSummaryFunction)();
+    GWM_LOG_STAGE("Finished");
 }
 
 void GWAverage::GWAverageSerial()

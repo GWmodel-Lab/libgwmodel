@@ -40,35 +40,35 @@ struct IMultivariableAnalysis
     virtual void run() = 0;
 };
 
-struct IMultiresponseVariableAnalysis
+struct IMultivariateAnalysis
 {
     /**
      * @brief Get response variables. 
      * 
      * @return arma::mat of variables.
      */
-    virtual const arma::mat& responseVariables() const = 0;
+    virtual const arma::mat& variables1() const = 0;
 
     /**
      * @brief Set variables.
      * 
      * @param y arma::mat of variables.
      */
-    virtual void setResponseVariables(const arma::mat& y) = 0;
+    virtual void setVariables1(const arma::mat& y) = 0;
 
     /**
      * @brief Get variables. 
      * 
      * @return arma::mat of variables.
      */
-    virtual const arma::mat& independentVariables() const = 0;
+    virtual const arma::mat& variables2() const = 0;
 
     /**
      * @brief Set variables.
      * 
      * @param x arma::mat of variables.
      */
-    virtual void setIndependentVariables(const arma::mat& x) = 0;
+    virtual void setVariables2(const arma::mat& x) = 0;
 
 
     /**

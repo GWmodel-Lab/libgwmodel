@@ -46,8 +46,8 @@ TEST_CASE("GWCorrelation: londonhp100")
 
         GWCorrelation algorithm;
         algorithm.setCoords(londonhp100_coord);
-        algorithm.setIndependentVariables(x);
-        algorithm.setResponseVariables(y);
+        algorithm.setVariables2(x);
+        algorithm.setVariables1(y);
         algorithm.setSpatialWeights(spatials);
         algorithm.setBandwidthInitilize(bandwidthInitialize);
         // algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
@@ -108,8 +108,8 @@ TEST_CASE("GWCorrelation: londonhp100")
 
         GWCorrelation algorithm;
         algorithm.setCoords(londonhp100_coord);
-        algorithm.setIndependentVariables(x);
-        algorithm.setResponseVariables(y);
+        algorithm.setVariables2(x);
+        algorithm.setVariables1(y);
         algorithm.setSpatialWeights(spatials);
         algorithm.setBandwidthInitilize(bandwidthInitialize);
         algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
@@ -153,8 +153,8 @@ TEST_CASE("GWCorrelation: londonhp100")
 
         GWCorrelation algorithm;
         algorithm.setCoords(londonhp100_coord);
-        algorithm.setIndependentVariables(x);
-        algorithm.setResponseVariables(y);
+        algorithm.setVariables1(y);
+        algorithm.setVariables2(x);
         algorithm.setSpatialWeights(spatials);
         algorithm.setBandwidthInitilize(bandwidthInitialize);
         algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
@@ -225,8 +225,8 @@ TEST_CASE("GWCorrelation: cancel")
         GWCorrelation algorithm;
         algorithm.setTelegram(std::move(telegram));
         algorithm.setCoords(londonhp100_coord);
-        algorithm.setIndependentVariables(x);
-        algorithm.setResponseVariables(y);
+        algorithm.setVariables2(x);
+        algorithm.setVariables1(y);
         algorithm.setSpatialWeights(spatials);
         algorithm.setBandwidthInitilize(bandwidthInitialize);
         algorithm.setBandwidthSelectionApproach(bandwidthSelectionApproach);
