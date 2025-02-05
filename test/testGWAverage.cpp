@@ -4,11 +4,12 @@
 #include <vector>
 #include <string>
 #include <armadillo>
-#include "gwmodelpp/GWSS.h"
+#include "gwmodelpp/GWAverage.h"
 #include "gwmodelpp/spatialweight/CRSDistance.h"
 #include "gwmodelpp/spatialweight/BandwidthWeight.h"
 #include "gwmodelpp/spatialweight/SpatialWeight.h"
 #include "londonhp100.h"
+#include "londonhp.h"
 #include "TerminateCheckTelegram.h"
 
 #ifdef ENABLE_OPENMP
@@ -19,7 +20,7 @@ using namespace std;
 using namespace arma;
 using namespace gwm;
 
-TEST_CASE("GWSS: londonhp100")
+TEST_CASE("GWAverage: londonhp100")
 {
     mat londonhp100_coord, londonhp100_data;
     vector<string> londonhp100_fields;
@@ -36,10 +37,9 @@ TEST_CASE("GWSS: londonhp100")
 
         mat x = londonhp100_data.cols(0, 3);
 
-        GWSS algorithm;
+        GWAverage algorithm;
         algorithm.setCoords(londonhp100_coord);
         algorithm.setVariables(x);
-        algorithm.setGWSSMode(GWSS::GWSSMode::Average);
         algorithm.setSpatialWeight(spatial);
         REQUIRE_NOTHROW(algorithm.run());
 
@@ -82,45 +82,7 @@ TEST_CASE("GWSS: londonhp100")
         REQUIRE(approx_equal(localcv_q, localcv_q0, "absdiff", 1e-8));
     }
 
-    SECTION("adaptive bandwidth | GWCorrelation | serial")
-    {
-        CRSDistance distance(false);
-        BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
-        SpatialWeight spatial(&bandwidth, &distance);
-
-        mat x = londonhp100_data.cols(0, 3);
-        // mat y=londonhp100_data.col(0);
-
-        GWSS algorithm;
-        algorithm.setCoords(londonhp100_coord);
-        algorithm.setVariables(x);
-        // algorithm.setVariables(y);        
-        algorithm.setSpatialWeight(spatial);
-        algorithm.setGWSSMode(GWSS::GWSSMode::Correlation);
-        REQUIRE_NOTHROW(algorithm.run());
-
-        vec p = {0.0, 0.25, 0.5, 0.75, 1.0};
-
-        mat localcorr_q0 = {
-            {0.748948486801849, -0.320600183598632, 0.203011140141453, -0.126882976445561, -0.0892568204410789, -0.948799446008617},
-            {0.762547101624896, -0.297490396583388, 0.246560726908457, -0.0855566960390598, -0.0108045673038358, -0.939669443787772},
-            {0.78483823103956, -0.254451851221453, 0.282830629241902, -0.0466716717586483, 0.0860667834905564, -0.930939912151655},
-            {0.809708575169509, -0.240880285636795, 0.324300091997221, 0.030563100930792, 0.14224438342357, -0.924880287887928},
-            {0.838005736892351, -0.201907496636598, 0.35265748682446, 0.106759558870671, 0.161751404622356, -0.906594939821811}};
-        mat localcorr_q = quantile(algorithm.localCorr(), p, 0);
-        REQUIRE(approx_equal(localcorr_q, localcorr_q0, "absdiff", 1e-8));
-
-        mat localscorr_q0 = {
-            {0.521222457142438, -0.386537315399977, 0.272098100316185, -0.132913057346789, -0.0706904961467669, -0.940629495956178},
-            {0.546058956484106, -0.367722715928213, 0.28224553968716, -0.100607936868221, 0.00362924865128611, -0.931506008150178},
-            {0.591076906824072, -0.333869710084257, 0.336014460751443, -0.0756778419096376, 0.0739387878352967, -0.928259365660612},
-            {0.642395389246104, -0.314342558536871, 0.358117991041394, -0.000170454849373912, 0.108476590000141, -0.915878602985333},
-            {0.685066744419873, -0.296544286394518, 0.380785226148097, 0.0690739762835091, 0.170298974146835, -0.895252623185884}};
-        mat localscorr_q = quantile(algorithm.localSCorr(), p, 0);
-        REQUIRE(approx_equal(localscorr_q, localscorr_q0, "absdiff", 1e-1));
-    }
-
-    SECTION("adaptive bandwidth | GWCorrelation(first col) | serial")
+    SECTION("adaptive bandwidth | GWAverage | calibration | serial")
     {
 
         CRSDistance distance(false);
@@ -128,25 +90,36 @@ TEST_CASE("GWSS: londonhp100")
         SpatialWeight spatial(&bandwidth, &distance);
 
         mat x = londonhp100_data.cols(0, 3);
+        mat locations = londonhp100_coord.rows(0,49);
 
-        GWSS algorithm;
+        GWAverage algorithm;
         algorithm.setCoords(londonhp100_coord);
-        algorithm.setVariables(x);
-        algorithm.setGWSSMode(GWSS::GWSSMode::Correlation);
         algorithm.setSpatialWeight(spatial);
-        algorithm.setIsCorrWithFirstOnly(true);
-        REQUIRE_NOTHROW(algorithm.run());
+        REQUIRE_NOTHROW(algorithm.calibration(locations, x));
 
-        vec p = {0.0, 0.25, 0.5, 0.75, 1.0};
+        // vec p = {0.0, 0.5, 1.0};
 
-        mat localcorr_q0 = {
-            {0.748948486801849, -0.320600183598632, 0.203011140141453},
-            {0.762547101624896, -0.297490396583388, 0.246560726908457},
-            {0.78483823103956, -0.254451851221453, 0.282830629241902},
-            {0.809708575169509, -0.240880285636795, 0.324300091997221},
-            {0.838005736892351, -0.201907496636598, 0.35265748682446}};
-        mat localcorr_q = quantile(algorithm.localCorr(), p, 0);
-        REQUIRE(approx_equal(localcorr_q, localcorr_q0, "absdiff", 1e-8));
+        // mat localmean_q0 = {
+        //     {163719.862916961, 76.7798124032325, 7.21724926005143, 42.9934294704426},
+        //     {171656.123264602, 77.4498277745430, 7.83847211370497, 44.4684218168923},
+        //     {178159.523929681, 78.1330047900227, 8.19568286692306, 46.6818015195459}};
+        // mat localmean_q = quantile(algorithm.localMean(), p, 0);
+        // localmean_q.print();
+        // REQUIRE(approx_equal(localmean_q, localmean_q0, "absdiff", 1e-6));
+
+        // mat localsdev_q0 = {
+        //     {76138.0546932983, 29.7372887770954, 2.21844086330195, 8.81825019566705},
+        //     {77116.4575192220, 30.3549665798213, 2.34940000365892, 9.55234528534620},
+        //     {78329.5185515576, 31.0371475770194, 2.48272333683410, 10.33289050254658}};
+        // mat localsdev_q = quantile(algorithm.localSDev(), p, 0);
+        // REQUIRE(approx_equal(localsdev_q, localsdev_q0, "absdiff", 1e-6));
+
+        // mat localcv_q0 = {
+        //     {0.437242859717688, 0.383755183129257, 0.271034835842149, 0.204563926621541},
+        //     {0.449541358593578, 0.393089483221880, 0.299811193591396, 0.214471653323718},
+        //     {0.467977489025189, 0.400985640582967, 0.343931475958593, 0.221623023843879}};
+        // mat localcv_q = quantile(algorithm.localCV(), p, 0);
+        // REQUIRE(approx_equal(localcv_q, localcv_q0, "absdiff", 1e-6));
     }
 
 #ifdef ENABLE_OPENMP
@@ -158,10 +131,9 @@ TEST_CASE("GWSS: londonhp100")
 
         mat x = londonhp100_data.cols(0, 3);
 
-        GWSS algorithm;
+        GWAverage algorithm;
         algorithm.setCoords(londonhp100_coord);
         algorithm.setVariables(x);
-        algorithm.setGWSSMode(GWSS::GWSSMode::Average);
         algorithm.setSpatialWeight(spatial);
         algorithm.setParallelType(ParallelType::OpenMP);
         algorithm.setOmpThreadNum(omp_get_num_threads());
@@ -207,48 +179,9 @@ TEST_CASE("GWSS: londonhp100")
     }
 #endif
 
-#ifdef ENABLE_OPENMP
-    SECTION("adaptive bandwidth | GWCorrelation | omp parallel")
-    {
-        CRSDistance distance(false);
-        BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
-        SpatialWeight spatial(&bandwidth, &distance);
-
-        mat x = londonhp100_data.cols(0, 3);
-
-        GWSS algorithm;
-        algorithm.setCoords(londonhp100_coord);
-        algorithm.setVariables(x);
-        algorithm.setSpatialWeight(spatial);
-        algorithm.setGWSSMode(GWSS::GWSSMode::Correlation);
-        algorithm.setParallelType(ParallelType::OpenMP);
-        algorithm.setOmpThreadNum(omp_get_num_threads());
-        REQUIRE_NOTHROW(algorithm.run());
-
-        vec p = {0.0, 0.25, 0.5, 0.75, 1.0};
-
-        mat localcorr_q0 = {
-            {0.748948486801849, -0.320600183598632, 0.203011140141453, -0.126882976445561, -0.0892568204410789, -0.948799446008617},
-            {0.762547101624896, -0.297490396583388, 0.246560726908457, -0.0855566960390598, -0.0108045673038358, -0.939669443787772},
-            {0.78483823103956, -0.254451851221453, 0.282830629241902, -0.0466716717586483, 0.0860667834905564, -0.930939912151655},
-            {0.809708575169509, -0.240880285636795, 0.324300091997221, 0.030563100930792, 0.14224438342357, -0.924880287887928},
-            {0.838005736892351, -0.201907496636598, 0.35265748682446, 0.106759558870671, 0.161751404622356, -0.906594939821811}};
-        mat localcorr_q = quantile(algorithm.localCorr(), p, 0);
-        REQUIRE(approx_equal(localcorr_q, localcorr_q0, "absdiff", 1e-8));
-
-        mat localscorr_q0 = {
-            {0.521222457142438, -0.386537315399977, 0.272098100316185, -0.132913057346789, -0.0706904961467669, -0.940629495956178},
-            {0.546058956484106, -0.367722715928213, 0.28224553968716, -0.100607936868221, 0.00362924865128611, -0.931506008150178},
-            {0.591076906824072, -0.333869710084257, 0.336014460751443, -0.0756778419096376, 0.0739387878352967, -0.928259365660612},
-            {0.642395389246104, -0.314342558536871, 0.358117991041394, -0.000170454849373912, 0.108476590000141, -0.915878602985333},
-            {0.685066744419873, -0.296544286394518, 0.380785226148097, 0.0690739762835091, 0.170298974146835, -0.895252623185884}};
-        mat localscorr_q = quantile(algorithm.localSCorr(), p, 0);
-        REQUIRE(approx_equal(localscorr_q, localscorr_q0, "absdiff", 1e-1));
-    }
-    #endif
 }
 
-TEST_CASE("GWSS: cancel")
+TEST_CASE("GWAverage: cancel")
 {
     mat londonhp100_coord, londonhp100_data;
     vector<string> londonhp100_fields;
@@ -278,28 +211,10 @@ TEST_CASE("GWSS: cancel")
         INFO("Settings: " << stage << ", " << progress);
 
         auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
-        GWSS algorithm;
+        GWAverage algorithm;
         algorithm.setTelegram(std::move(telegram));
         algorithm.setCoords(londonhp100_coord);
         algorithm.setVariables(x);
-        algorithm.setGWSSMode(GWSS::GWSSMode::Average);
-        algorithm.setSpatialWeight(spatial);
-        REQUIRE_NOTHROW(algorithm.run());
-        REQUIRE(algorithm.status() == Status::Terminated);
-    }
-
-    SECTION("average")
-    {
-        string stage = "GWCorrelation";
-        auto progress = GENERATE(0, 10);
-        INFO("Settings: " << stage << ", " << progress);
-
-        auto telegram = make_unique<TerminateCheckTelegram>(stage, progress);
-        GWSS algorithm;
-        algorithm.setTelegram(std::move(telegram));
-        algorithm.setCoords(londonhp100_coord);
-        algorithm.setVariables(x);
-        algorithm.setGWSSMode(GWSS::GWSSMode::Correlation);
         algorithm.setSpatialWeight(spatial);
         REQUIRE_NOTHROW(algorithm.run());
         REQUIRE(algorithm.status() == Status::Terminated);

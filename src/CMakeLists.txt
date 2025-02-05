@@ -71,7 +71,8 @@ set(SOURCES_CXX
     gwmodelpp/SpatialMultiscaleAlgorithm.cpp
     gwmodelpp/GWRBase.cpp
     gwmodelpp/GWRBasic.cpp
-    gwmodelpp/GWSS.cpp
+    gwmodelpp/GWAverage.cpp
+    gwmodelpp/GWCorrelation.cpp
     gwmodelpp/GWPCA.cpp
     gwmodelpp/GWDR.cpp
     gwmodelpp/GWRMultiscale.cpp
@@ -109,7 +110,8 @@ set(HEADERS_CXX
     ../include/gwmodelpp/SpatialMultiscaleAlgorithm.h
     ../include/gwmodelpp/GWRBase.h
     ../include/gwmodelpp/GWRBasic.h
-    ../include/gwmodelpp/GWSS.h
+    ../include/gwmodelpp/GWAverage.h
+    ../include/gwmodelpp/GWCorrelation.h
     ../include/gwmodelpp/GWPCA.h
     ../include/gwmodelpp/GWDR.h
     ../include/gwmodelpp/GWRMultiscale.h

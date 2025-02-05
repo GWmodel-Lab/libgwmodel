@@ -6,7 +6,7 @@
 #include <string>
 #include <armadillo>
 #include "gwmodelpp/GWRMultiscale.h"
-#include "gwmodelpp/GWSS.h"
+#include "gwmodelpp/GWAverage.h"
 
 #include "gwmodelpp/spatialweight/CRSDistance.h"
 #include "gwmodelpp/spatialweight/BandwidthWeight.h"
@@ -107,7 +107,7 @@ TEST_CASE("Logging")
         BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
         SpatialWeight spatial(&bandwidth, &distance);
 
-        GWSS algorithm;
+        GWAverage algorithm;
         algorithm.setTelegram(std::move(logger));
         algorithm.setCoords(londonhp100_coord);
         algorithm.setVariables(x);
