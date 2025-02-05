@@ -33,7 +33,7 @@ public:
     };
     
     typedef double (GWRLocalCollinearity::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);    //!< \~english Calculator to get criterion for bandwidth optimization \~chinese 带宽优选指标值计算函数
-    typedef arma::mat (GWRLocalCollinearity::*FitCalculator)(const arma::mat&, const arma::vec&);   //!< \~english Calculator to predict \~chinese 用于预测的函数
+    typedef arma::mat (GWRLocalCollinearity::*FitCalculator)(const arma::mat&, const arma::vec&, arma::vec&, arma::vec&);  //!< \~english Calculator to predict \~chinese 用于预测的函数
     typedef arma::mat (GWRLocalCollinearity::*PredictCalculator)(const arma::mat&, const arma::mat&, const arma::vec&);   //!< \~english Calculator to predict \~chinese 用于预测的函数
 
     /**
@@ -150,6 +150,16 @@ public:
         return mDiagnostic;
     }
 
+    arma::vec localCN() const
+    {
+        return mLocalCN;
+    }
+
+    arma::vec localLambda() const
+    {
+        return mLocalLambda;
+    }
+
     /**
      * @brief \~english Get whether bandwidth optimization is enabled. \~chinese 获取是否进行带宽优选。
      * 
@@ -231,7 +241,7 @@ private:
      * @param x \~english Independent variables \~chinese 自变量
      * @param y \~english Dependent variables \~chinese 因变量
      */
-    arma::mat fitSerial(const arma::mat& x, const arma::vec& y);
+    arma::mat fitSerial(const arma::mat& x, const arma::vec& y, arma::vec& localcn, arma::vec& locallambda);
 
     /**
      * @brief \~english Multithreading implementation of fitting function. \~chinese 拟合函数的多线程实现。
@@ -239,7 +249,7 @@ private:
      * @param x \~english Independent variables \~chinese 自变量
      * @param y \~english Dependent variables \~chinese 因变量
      */
-    arma::mat fitOmp(const arma::mat& x, const arma::vec& y);
+    arma::mat fitOmp(const arma::mat& x, const arma::vec& y, arma::vec& localcn, arma::vec& locallambda);
 
     /**
      * @brief \~english Non-parallel implementation of prediction function. \~chinese 预测函数的非并行实现。
@@ -276,18 +286,19 @@ protected:
     double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
 
 
-    /**
-     * @brief \~english Get the CV. \~chinese 返回cv的函数
-     * 
-     * @param bw \~english  \~chinese 
-     * @param kernel \~english  \~chinese 
-     * @param adaptive \~english  \~chinese 
-     * @param lambda \~english  \~chinese 
-     * @param lambdaAdjust \~english  \~chinese 
-     * @param cnThresh \~english  \~chinese 
-     * @return double \~english  \~chinese 
-     */
-    double LcrCV(double bw,arma::uword kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
+    // //这个函数并没有完成，计算local cv的话，直接放在了循环里面算，所以需求似乎也不大
+    // /**
+    //  * @brief \~english Get the CV. \~chinese 返回cv的函数
+    //  * 
+    //  * @param bw \~english  \~chinese 
+    //  * @param kernel \~english  \~chinese 
+    //  * @param adaptive \~english  \~chinese 
+    //  * @param lambda \~english  \~chinese 
+    //  * @param lambdaAdjust \~english  \~chinese 
+    //  * @param cnThresh \~english  \~chinese 
+    //  * @return double \~english  \~chinese 
+    //  */
+    // double LcrCV(double bw,arma::uword kernel, bool adaptive,double lambda,bool lambdaAdjust,double cnThresh);
     
     /**
      * @brief \~english Ridge linear regression. \~chinese 岭回归。
@@ -322,12 +333,14 @@ private:
 
     double mLambda = 0;
     bool mLambdaAdjust = false;
-    double mCnThresh = 30;
+    double mCnThresh = 30; //maximum value for condition number, commonly set between 20 and 30
     bool mHasHatMatrix = false;
     bool mIsAutoselectBandwidth = false;
     double mTrS = 0;
     double mTrStS = 0;
-    arma::vec mSHat;
+    // arma::vec mSHat;
+    arma::vec mLocalCN;
+    arma::vec mLocalLambda;
 
     FitCalculator mFitFunction = &GWRLocalCollinearity::fitSerial;
     PredictCalculator mPredictFunction = &GWRLocalCollinearity::predictSerial;
