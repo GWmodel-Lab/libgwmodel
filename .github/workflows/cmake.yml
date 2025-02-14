@@ -73,8 +73,8 @@ jobs:
         run: |
           $VCPKG_EXE="$env:VCPKG_INSTALLATION_ROOT/vcpkg.exe"
           $NUGET_EXE="$(.$VCPKG_EXE fetch nuget)"
-          $NUGET_EXE sources add -Source ${{ env.FEED_URL }} -Name github -UserName ${{ env.USERNAME }} -Password ${{ secrets.GITHUB_TOKEN }} -StorePasswordInClearText 
-          $NUGET_EXE setapikey ${{ secrets.GITHUB_TOKEN }} -Source "${{ env.FEED_URL }}"
+          & $NUGET_EXE sources add -Source ${{ env.FEED_URL }} -Name github -UserName ${{ env.USERNAME }} -Password ${{ secrets.GITHUB_TOKEN }} -StorePasswordInClearText 
+          & $NUGET_EXE setapikey ${{ secrets.GITHUB_TOKEN }} -Source "${{ env.FEED_URL }}"
       - name: Vcpkg Package Restore
         shell: pwsh
         run: |
