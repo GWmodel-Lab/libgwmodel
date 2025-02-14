@@ -58,11 +58,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Scrollback Vcpkg
-        shell: pwsh
+      - name: install Vcpkg
+        shell: bash
         run: |
           cd "$env:VCPKG_INSTALLATION_ROOT"
-          git switch 2023.12.12 --detach
+          git clone https://github.com/microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh
       - name: Setup NuGet Credentials
         shell: pwsh
         run: |
