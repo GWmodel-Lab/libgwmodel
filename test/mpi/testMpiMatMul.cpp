@@ -32,7 +32,7 @@ TEST_CASE("mat mul mpi")
     A = A_all.rows(from, to - 1);
     B = B_all.rows(from, to - 1);
     // printf("process %d begin mat mul\n", ip);
-    REQUIRE_NOTHROW(mat_mul_mpi(A, B, C, ip, np, size));
+    REQUIRE_NOTHROW(mat_mul_mpi(A, B, C, ip, np));
     // printf("process %d end mat mul\n", ip);
 
     if (ip == 0)
@@ -56,6 +56,91 @@ TEST_CASE("mat mul mpi")
     else
     {
         MPI_Send(C.memptr(), C.n_elem, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+    }
+}
+
+TEST_CASE("mat quad mpi")
+{
+    int ip, np;
+    MPI_Comm_size(MPI_COMM_WORLD, &np);
+    MPI_Comm_rank(MPI_COMM_WORLD, &ip);
+
+    uword n = 100;
+    uword size = n / np + (n % np == 0 ? 0 : 1);
+    uword from = ip * size, to = min(from + size, n);
+
+    // printf("range from %llu to %llu\n", from, to);
+
+    mat A_all, C_all;
+    A_all = mat(n, n, arma::fill::randn);
+    if (ip == 0)
+    {
+        C_all = A_all.t() * A_all;
+    }
+
+    mat A, C;
+    A = A_all.rows(from, to - 1);
+    // printf("process %d begin mat mul\n", ip);
+    REQUIRE_NOTHROW(mat_quad_mpi(A, C, ip, np));
+    // printf("process %d end mat mul\n", ip);
+
+    if (ip == 0)
+    {
+        mat C_gather(n, n);
+        C_gather.rows(from, to - 1) = C;
+        uvec received(np, fill::zeros);
+        received(0) = 1;
+        auto bufsize = size * n;
+        double *buf = new double[size * n];
+        while (!all(received == 1))
+        {
+            MPI_Status status;
+            MPI_Recv(buf, bufsize, MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+            received(status.MPI_SOURCE) = 1;
+            uword ifrom = status.MPI_SOURCE * size, ito = min(ifrom + size, n), irange = ito - ifrom; 
+            C_gather.rows(ifrom, ito - 1) = mat(buf, irange, n);
+        }
+        REQUIRE(approx_equal(C_gather, C_all, "absdiff", 1e-6));
+    }
+    else
+    {
+        MPI_Send(C.memptr(), C.n_elem, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+    }
+}
+
+TEST_CASE("mat trace mpi")
+{
+    int ip, np;
+    MPI_Comm_size(MPI_COMM_WORLD, &np);
+    MPI_Comm_rank(MPI_COMM_WORLD, &ip);
+
+    uword n = 100;
+    uword size = n / np + (n % np == 0 ? 0 : 1);
+    uword from = ip * size, to = min(from + size, n);
+
+    // printf("range from %llu to %llu\n", from, to);
+
+    mat A_all;
+    double trA_all;
+    A_all = mat(n, n, arma::fill::randn);
+    if (ip == 0)
+    {
+        trA_all = trace(A_all);
+    }
+
+    mat A;
+    double trA = 0.0;
+    A = A_all.rows(from, to - 1);
+    // printf("process %d begin mat mul\n", ip);
+    REQUIRE_NOTHROW(([&]()
+    {
+        trA = mat_trace_mpi(A, ip, np);
+    })());
+    // printf("process %d end mat mul\n", ip);
+
+    if (ip == 0)
+    {
+        REQUIRE_THAT(trA, Catch::Matchers::WithinAbs(trA_all, 1e-6));
     }
 }
 
