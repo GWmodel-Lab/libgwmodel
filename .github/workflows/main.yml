@@ -59,11 +59,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: install Vcpkg
-        shell: bash
+        shell: pwsh
         run: |
           cd "$env:VCPKG_INSTALLATION_ROOT"
           git clone https://github.com/microsoft/vcpkg.git
-          ./vcpkg/bootstrap-vcpkg.sh
+          ./vcpkg/bootstrap-vcpkg.bat
       - name: Setup NuGet Credentials
         shell: pwsh
         run: |
