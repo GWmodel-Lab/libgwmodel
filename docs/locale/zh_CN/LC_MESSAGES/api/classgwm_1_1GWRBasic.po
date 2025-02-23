@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: 2023-01-31 12:14+0000\n"
 "Last-Translator: Yigong Hu <huyg0180110559@outook.com>\n"
 "Language: zh_CN\n"
@@ -68,15 +68,21 @@ msgid ""
 "(:ref:`exhale_struct_structgwm_1_1IParallelCudaEnabled`)"
 msgstr ""
 
-#: ../../api/classgwm_1_1GWRBasic.rst:24
+#: ../../api/classgwm_1_1GWRBasic.rst:21
+msgid ""
+"``public gwm::IParallelMpiEnabled`` "
+"(:ref:`exhale_struct_structgwm_1_1IParallelMpiEnabled`)"
+msgstr ""
+
+#: ../../api/classgwm_1_1GWRBasic.rst:25
 msgid "Derived Type"
 msgstr "派生类"
 
-#: ../../api/classgwm_1_1GWRBasic.rst:26
+#: ../../api/classgwm_1_1GWRBasic.rst:27
 msgid "``public gwm::GWRRobust`` (:ref:`exhale_class_classgwm_1_1GWRRobust`)"
 msgstr ""
 
-#: ../../api/classgwm_1_1GWRBasic.rst:30
+#: ../../api/classgwm_1_1GWRBasic.rst:31
 msgid "Class Documentation"
 msgstr "类文档"
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -43,15 +43,12 @@ msgstr ""
 msgid "Class Documentation"
 msgstr "类文档"
 
-#: ../../api/classgwm_1_1SDRBandwidthOptimizer.rst
-msgid "Public Functions"
-msgstr "公有方法"
+#~ msgid "Public Functions"
+#~ msgstr "公有方法"
 
-#: ../../api/classgwm_1_1SDRBandwidthOptimizer.rst
-msgid "Public Static Functions"
-msgstr "公有静态方法"
+#~ msgid "Public Static Functions"
+#~ msgstr "公有静态方法"
 
-#: ../../api/classgwm_1_1SDRBandwidthOptimizer.rst
-msgid "Public Members"
-msgstr "公有成员"
+#~ msgid "Public Members"
+#~ msgstr "公有成员"
 

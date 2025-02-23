@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: 2023-01-31 16:14+0000\n"
 "Last-Translator: Yigong Hu <huyg0180110559@outook.com>\n"
 "Language: zh_CN\n"
@@ -45,19 +45,19 @@ msgid "Derived Types"
 msgstr "派生类"
 
 #: ../../api/classgwm_1_1SpatialMonoscaleAlgorithm.rst:21
-msgid "``public gwm::GWDA`` (:ref:`exhale_class_classgwm_1_1GWDA`)"
+msgid "``public gwm::GWAverage`` (:ref:`exhale_class_classgwm_1_1GWAverage`)"
 msgstr ""
 
 #: ../../api/classgwm_1_1SpatialMonoscaleAlgorithm.rst:22
-msgid "``public gwm::GWPCA`` (:ref:`exhale_class_classgwm_1_1GWPCA`)"
+msgid "``public gwm::GWDA`` (:ref:`exhale_class_classgwm_1_1GWDA`)"
 msgstr ""
 
 #: ../../api/classgwm_1_1SpatialMonoscaleAlgorithm.rst:23
-msgid "``public gwm::GWRBase`` (:ref:`exhale_class_classgwm_1_1GWRBase`)"
+msgid "``public gwm::GWPCA`` (:ref:`exhale_class_classgwm_1_1GWPCA`)"
 msgstr ""
 
 #: ../../api/classgwm_1_1SpatialMonoscaleAlgorithm.rst:24
-msgid "``public gwm::GWSS`` (:ref:`exhale_class_classgwm_1_1GWSS`)"
+msgid "``public gwm::GWRBase`` (:ref:`exhale_class_classgwm_1_1GWRBase`)"
 msgstr ""
 
 #: ../../api/classgwm_1_1SpatialMonoscaleAlgorithm.rst:28
@@ -79,4 +79,7 @@ msgstr "返回"
 #: ../../api/classgwm_1_1SpatialMonoscaleAlgorithm.rst
 msgid "Protected Attributes"
 msgstr "保护属性"
+
+#~ msgid "``public gwm::GWSS`` (:ref:`exhale_class_classgwm_1_1GWSS`)"
+#~ msgstr ""
 

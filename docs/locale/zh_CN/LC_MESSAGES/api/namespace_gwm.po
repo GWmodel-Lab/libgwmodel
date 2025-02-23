@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: 2023-01-31 15:56+0000\n"
 "Last-Translator: Yigong Hu <huyg0180110559@outook.com>\n"
 "Language: zh_CN\n"
@@ -47,222 +47,238 @@ msgid ":ref:`exhale_struct_structgwm_1_1GLMDiagnostic`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:28
-msgid ":ref:`exhale_struct_structgwm_1_1GWRGeneralizedDiagnostic`"
+msgid ":ref:`exhale_struct_structgwm_1_1GTDRBandwidthOptimizer_1_1Parameter`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:30
-msgid ":ref:`exhale_struct_structgwm_1_1GWRScalable_1_1LoocvParams`"
+msgid ":ref:`exhale_struct_structgwm_1_1GTWR_1_1Parameter`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:32
-msgid ":ref:`exhale_struct_structgwm_1_1IBandwidthSelectable`"
+msgid ":ref:`exhale_struct_structgwm_1_1GWRGeneralizedDiagnostic`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:34
-msgid ":ref:`exhale_struct_structgwm_1_1IMultivariableAnalysis`"
+msgid ":ref:`exhale_struct_structgwm_1_1GWRScalable_1_1LoocvParams`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:36
-msgid ":ref:`exhale_struct_structgwm_1_1IParallelCudaEnabled`"
+msgid ":ref:`exhale_struct_structgwm_1_1IBandwidthSelectable`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:38
-msgid ":ref:`exhale_struct_structgwm_1_1IParallelizable`"
+msgid ":ref:`exhale_struct_structgwm_1_1IMultivariableAnalysis`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:40
-msgid ":ref:`exhale_struct_structgwm_1_1IParallelOpenmpEnabled`"
+msgid ":ref:`exhale_struct_structgwm_1_1IMultivariateAnalysis`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:42
-msgid ":ref:`exhale_struct_structgwm_1_1IRegressionAnalysis`"
+msgid ":ref:`exhale_struct_structgwm_1_1IParallelCudaEnabled`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:44
-msgid ":ref:`exhale_struct_structgwm_1_1ITelegram`"
+msgid ":ref:`exhale_struct_structgwm_1_1IParallelizable`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:46
-msgid ":ref:`exhale_struct_structgwm_1_1IVarialbeSelectable`"
+msgid ":ref:`exhale_struct_structgwm_1_1IParallelMpiEnabled`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:48
-msgid ":ref:`exhale_struct_structgwm_1_1OneDimDistance_1_1Parameter`"
+msgid ":ref:`exhale_struct_structgwm_1_1IParallelOpenmpEnabled`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:50
-msgid ":ref:`exhale_struct_structgwm_1_1RegressionDiagnostic`"
+msgid ":ref:`exhale_struct_structgwm_1_1IRegressionAnalysis`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:52
-msgid ":ref:`exhale_struct_structgwm_1_1SDRBandwidthOptimizer_1_1Parameter`"
+msgid ":ref:`exhale_struct_structgwm_1_1ITelegram`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:54
-msgid ":ref:`exhale_class_classgwm_1_1Algorithm`"
+msgid ":ref:`exhale_struct_structgwm_1_1IVarialbeSelectable`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:56
-msgid ":ref:`exhale_class_classgwm_1_1BandwidthSelector`"
+msgid ":ref:`exhale_struct_structgwm_1_1OneDimDistance_1_1Parameter`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:58
-msgid ":ref:`exhale_class_classgwm_1_1BandwidthWeight`"
+msgid ":ref:`exhale_struct_structgwm_1_1RegressionDiagnostic`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:60
-msgid ":ref:`exhale_class_classgwm_1_1BinomialModel`"
+msgid ":ref:`exhale_class_classgwm_1_1Algorithm`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:62
-msgid ":ref:`exhale_class_classgwm_1_1CRSDistance`"
+msgid ":ref:`exhale_class_classgwm_1_1BandwidthSelector`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:64
-msgid ":ref:`exhale_class_classgwm_1_1CRSSTDistance`"
+msgid ":ref:`exhale_class_classgwm_1_1BandwidthWeight`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:66
-msgid ":ref:`exhale_class_classgwm_1_1Distance`"
+msgid ":ref:`exhale_class_classgwm_1_1BinomialModel`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:68
-msgid ":ref:`exhale_class_classgwm_1_1DMatDistance`"
+msgid ":ref:`exhale_class_classgwm_1_1CRSDistance`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:70
-msgid ":ref:`exhale_class_classgwm_1_1GeneralizedLinearModel`"
+msgid ":ref:`exhale_class_classgwm_1_1CRSSTDistance`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:72
-msgid ":ref:`exhale_class_classgwm_1_1GTWR`"
+msgid ":ref:`exhale_class_classgwm_1_1Distance`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:74
-msgid ":ref:`exhale_class_classgwm_1_1GWDA`"
+msgid ":ref:`exhale_class_classgwm_1_1DMatDistance`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:76
-msgid ":ref:`exhale_class_classgwm_1_1GWPCA`"
+msgid ":ref:`exhale_class_classgwm_1_1GeneralizedLinearModel`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:78
-msgid ":ref:`exhale_class_classgwm_1_1GWRBase`"
+msgid ":ref:`exhale_class_classgwm_1_1GTDR`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:80
-msgid ":ref:`exhale_class_classgwm_1_1GWRBasic`"
+msgid ":ref:`exhale_class_classgwm_1_1GTDRBandwidthOptimizer`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:82
-msgid ":ref:`exhale_class_classgwm_1_1GWRGeneralized`"
+msgid ":ref:`exhale_class_classgwm_1_1GTWR`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:84
-msgid ":ref:`exhale_class_classgwm_1_1GWRLocalCollinearity`"
+msgid ":ref:`exhale_class_classgwm_1_1GWAverage`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:86
-msgid ":ref:`exhale_class_classgwm_1_1GWRMultiscale`"
+msgid ":ref:`exhale_class_classgwm_1_1GWCorrelation`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:88
-msgid ":ref:`exhale_class_classgwm_1_1GWRRobust`"
+msgid ":ref:`exhale_class_classgwm_1_1GWDA`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:90
-msgid ":ref:`exhale_class_classgwm_1_1GWRScalable`"
+msgid ":ref:`exhale_class_classgwm_1_1GWPCA`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:92
-msgid ":ref:`exhale_class_classgwm_1_1GWSS`"
+msgid ":ref:`exhale_class_classgwm_1_1GWRBase`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:94
-msgid ":ref:`exhale_class_classgwm_1_1LinearModel`"
+msgid ":ref:`exhale_class_classgwm_1_1GWRBasic`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:96
-msgid ":ref:`exhale_class_classgwm_1_1Logger`"
+msgid ":ref:`exhale_class_classgwm_1_1GWRGeneralized`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:98
-msgid ":ref:`exhale_class_classgwm_1_1MinkwoskiDistance`"
+msgid ":ref:`exhale_class_classgwm_1_1GWRLocalCollinearity`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:100
-msgid ":ref:`exhale_class_classgwm_1_1OneDimDistance`"
+msgid ":ref:`exhale_class_classgwm_1_1GWRMultiscale`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:102
-msgid ":ref:`exhale_class_classgwm_1_1PoissonModel`"
+msgid ":ref:`exhale_class_classgwm_1_1GWRRobust`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:104
-msgid ":ref:`exhale_class_classgwm_1_1SDR`"
+msgid ":ref:`exhale_class_classgwm_1_1GWRScalable`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:106
-msgid ":ref:`exhale_class_classgwm_1_1SDRBandwidthOptimizer`"
+msgid ":ref:`exhale_class_classgwm_1_1LinearModel`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:108
-msgid ":ref:`exhale_class_classgwm_1_1SpatialAlgorithm`"
+msgid ":ref:`exhale_class_classgwm_1_1Logger`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:110
-msgid ":ref:`exhale_class_classgwm_1_1SpatialMonoscaleAlgorithm`"
+msgid ":ref:`exhale_class_classgwm_1_1MinkwoskiDistance`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:112
-msgid ":ref:`exhale_class_classgwm_1_1SpatialMultiscaleAlgorithm`"
+msgid ":ref:`exhale_class_classgwm_1_1OneDimDistance`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:114
-msgid ":ref:`exhale_class_classgwm_1_1SpatialWeight`"
+msgid ":ref:`exhale_class_classgwm_1_1PoissonModel`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:116
-msgid ":ref:`exhale_class_classgwm_1_1VariableForwardSelector`"
+msgid ":ref:`exhale_class_classgwm_1_1SpatialAlgorithm`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:118
-msgid ":ref:`exhale_class_classgwm_1_1Weight`"
+msgid ":ref:`exhale_class_classgwm_1_1SpatialMonoscaleAlgorithm`"
+msgstr ""
+
+#: ../../api/namespace_gwm.rst:120
+msgid ":ref:`exhale_class_classgwm_1_1SpatialMultiscaleAlgorithm`"
 msgstr ""
 
 #: ../../api/namespace_gwm.rst:122
+msgid ":ref:`exhale_class_classgwm_1_1SpatialWeight`"
+msgstr ""
+
+#: ../../api/namespace_gwm.rst:124
+msgid ":ref:`exhale_class_classgwm_1_1VariableForwardSelector`"
+msgstr ""
+
+#: ../../api/namespace_gwm.rst:126
+msgid ":ref:`exhale_class_classgwm_1_1Weight`"
+msgstr ""
+
+#: ../../api/namespace_gwm.rst:130
 msgid "Enums"
 msgstr "枚举"
 
-#: ../../api/namespace_gwm.rst:125
+#: ../../api/namespace_gwm.rst:133
 msgid ":ref:`exhale_enum_IParallelizable_8h_1a166813c41923ca9f51b81af038e7cb7a`"
 msgstr ""
 
-#: ../../api/namespace_gwm.rst:127
+#: ../../api/namespace_gwm.rst:135
 msgid ":ref:`exhale_enum_Status_8h_1a9b4ae87cab1052ee0eebebe5a1ae19d9`"
 msgstr ""
 
-#: ../../api/namespace_gwm.rst:131
+#: ../../api/namespace_gwm.rst:139
 msgid "Functions"
 msgstr ""
 
-#: ../../api/namespace_gwm.rst:134
+#: ../../api/namespace_gwm.rst:142
 msgid ":ref:`exhale_function_Logger_8h_1a4c6d814c9e79f32979fa8c78c2024ff9`"
 msgstr ""
 
-#: ../../api/namespace_gwm.rst:138
+#: ../../api/namespace_gwm.rst:146
 msgid "Typedefs"
 msgstr "类型别名"
 
-#: ../../api/namespace_gwm.rst:141
+#: ../../api/namespace_gwm.rst:149
 msgid ":ref:`exhale_typedef_IBandwidthSelectable_8h_1ae90108073e4144ac3fbed1a68bb44031`"
 msgstr ""
 
-#: ../../api/namespace_gwm.rst:143
+#: ../../api/namespace_gwm.rst:151
 msgid ":ref:`exhale_typedef_Distance_8h_1adde2a58509603bef6a9754d22a56959e`"
 msgstr ""
 
-#: ../../api/namespace_gwm.rst:145
+#: ../../api/namespace_gwm.rst:153
 msgid ":ref:`exhale_typedef_IVarialbeSelectable_8h_1a11df23b545f168e1d3deefab7ee99ba9`"
 msgstr ""
 
@@ -273,5 +289,17 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid ":ref:`exhale_class_classgwm_1_1GWDRBandwidthOptimizer`"
+#~ msgstr ""
+
+#~ msgid ":ref:`exhale_struct_structgwm_1_1SDRBandwidthOptimizer_1_1Parameter`"
+#~ msgstr ""
+
+#~ msgid ":ref:`exhale_class_classgwm_1_1GWSS`"
+#~ msgstr ""
+
+#~ msgid ":ref:`exhale_class_classgwm_1_1SDR`"
+#~ msgstr ""
+
+#~ msgid ":ref:`exhale_class_classgwm_1_1SDRBandwidthOptimizer`"
 #~ msgstr ""
 

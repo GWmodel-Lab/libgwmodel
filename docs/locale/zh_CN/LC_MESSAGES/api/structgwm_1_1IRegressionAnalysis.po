@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: 2023-01-31 16:08+0000\n"
 "Last-Translator: Yigong Hu <huyg0180110559@outook.com>\n"
 "Language: zh_CN\n"
@@ -35,17 +35,17 @@ msgid "Derived Types"
 msgstr "派生类"
 
 #: ../../api/structgwm_1_1IRegressionAnalysis.rst:15
-msgid "``public gwm::GWRBase`` (:ref:`exhale_class_classgwm_1_1GWRBase`)"
+msgid "``public gwm::GTDR`` (:ref:`exhale_class_classgwm_1_1GTDR`)"
 msgstr ""
 
 #: ../../api/structgwm_1_1IRegressionAnalysis.rst:16
-msgid ""
-"``public gwm::GWRMultiscale`` "
-"(:ref:`exhale_class_classgwm_1_1GWRMultiscale`)"
+msgid "``public gwm::GWRBase`` (:ref:`exhale_class_classgwm_1_1GWRBase`)"
 msgstr ""
 
 #: ../../api/structgwm_1_1IRegressionAnalysis.rst:17
-msgid "``public gwm::SDR`` (:ref:`exhale_class_classgwm_1_1SDR`)"
+msgid ""
+"``public gwm::GWRMultiscale`` "
+"(:ref:`exhale_class_classgwm_1_1GWRMultiscale`)"
 msgstr ""
 
 #: ../../api/structgwm_1_1IRegressionAnalysis.rst:21
@@ -65,5 +65,8 @@ msgid "Parameters"
 msgstr "参数"
 
 #~ msgid "``public gwm::GWDR`` (:ref:`exhale_class_classgwm_1_1GWDR`)"
+#~ msgstr ""
+
+#~ msgid "``public gwm::SDR`` (:ref:`exhale_class_classgwm_1_1SDR`)"
 #~ msgstr ""
 

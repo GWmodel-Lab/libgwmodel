@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: 2023-01-31 13:12+0000\n"
 "Last-Translator: Yigong Hu <huyg0180110559@outook.com>\n"
 "Language: zh_CN\n"
@@ -41,7 +41,7 @@ msgid "Includes"
 msgstr "包含"
 
 #: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:33
-msgid "``armadillo``"
+msgid "``armadillo_config.h`` (:ref:`file_include_armadillo_config.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:38
@@ -49,30 +49,44 @@ msgid "Included By"
 msgstr "被下列头文件包含"
 
 #: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:41
-msgid ":ref:`file_include_gwmodelpp_GWDA.h`"
+msgid ":ref:`file_include_gwmodelpp_GWAverage.h`"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:43
-msgid ":ref:`file_include_gwmodelpp_GWPCA.h`"
+msgid ":ref:`file_include_gwmodelpp_GWCorrelation.h`"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:45
-msgid ":ref:`file_include_gwmodelpp_GWSS.h`"
+msgid ":ref:`file_include_gwmodelpp_GWDA.h`"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:51
+#: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:47
+msgid ":ref:`file_include_gwmodelpp_GWPCA.h`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:53
 msgid "Namespaces"
 msgstr "命名空间"
 
-#: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:54
+#: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:56
 msgid ":ref:`namespace_gwm`"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:58
+#: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:60
 msgid "Classes"
 msgstr "类"
 
-#: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:61
+#: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:63
 msgid ":ref:`exhale_struct_structgwm_1_1IMultivariableAnalysis`"
 msgstr ""
+
+#: ../../api/file_include_gwmodelpp_IMultivariableAnalysis.h.rst:65
+msgid ":ref:`exhale_struct_structgwm_1_1IMultivariateAnalysis`"
+msgstr ""
+
+#~ msgid "``armadillo``"
+#~ msgstr ""
+
+#~ msgid ":ref:`file_include_gwmodelpp_GWSS.h`"
+#~ msgstr ""
 

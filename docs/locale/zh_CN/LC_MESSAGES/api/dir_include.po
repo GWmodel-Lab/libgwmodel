@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: 2023-01-31 12:30+0000\n"
 "Last-Translator: Yigong Hu <huyg0180110559@outook.com>\n"
 "Language: zh_CN\n"
@@ -43,6 +43,10 @@ msgid "Files"
 msgstr "文件"
 
 #: ../../api/dir_include.rst:20
+msgid ":ref:`file_include_armadillo_config.h`"
+msgstr ""
+
+#: ../../api/dir_include.rst:21
 msgid ":ref:`file_include_gwmodel.h`"
 msgstr ""
 

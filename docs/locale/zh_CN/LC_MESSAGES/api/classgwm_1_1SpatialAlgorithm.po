@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: 2023-01-31 16:14+0000\n"
 "Last-Translator: Yigong Hu <huyg0180110559@outook.com>\n"
 "Language: zh_CN\n"
@@ -43,7 +43,7 @@ msgid "Derived Types"
 msgstr "派生类"
 
 #: ../../api/classgwm_1_1SpatialAlgorithm.rst:21
-msgid "``public gwm::SDR`` (:ref:`exhale_class_classgwm_1_1SDR`)"
+msgid "``public gwm::GTDR`` (:ref:`exhale_class_classgwm_1_1GTDR`)"
 msgstr ""
 
 #: ../../api/classgwm_1_1SpatialAlgorithm.rst:22
@@ -79,5 +79,8 @@ msgid "Protected Attributes"
 msgstr "保护属性"
 
 #~ msgid "``public gwm::GWDR`` (:ref:`exhale_class_classgwm_1_1GWDR`)"
+#~ msgstr ""
+
+#~ msgid "``public gwm::SDR`` (:ref:`exhale_class_classgwm_1_1SDR`)"
 #~ msgstr ""
 

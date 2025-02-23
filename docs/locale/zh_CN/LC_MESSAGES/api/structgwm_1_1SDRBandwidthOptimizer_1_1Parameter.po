@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -41,7 +41,6 @@ msgstr ""
 msgid "Struct Documentation"
 msgstr ""
 
-#: ../../api/structgwm_1_1SDRBandwidthOptimizer_1_1Parameter.rst
-msgid "Public Members"
-msgstr ""
+#~ msgid "Public Members"
+#~ msgstr ""
 
