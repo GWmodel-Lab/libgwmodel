@@ -645,6 +645,8 @@ protected:
         return mSpatialWeights[i].weight<BandwidthWeight>();
     }
 
+    arma::mat fitInitial();
+
     /**
      * \~english
      * @brief The backfitting algorithm.

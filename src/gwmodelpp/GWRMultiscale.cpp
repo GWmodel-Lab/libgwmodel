@@ -101,48 +101,7 @@ mat GWRMultiscale::fit()
     // Calculate the initial beta0 from the above bandwidths
     // *****************************************************
     GWM_LOG_STAGE("Calculating initial betas");
-    GWRBasic gwr;
-    gwr.setCoords(mCoords);
-    gwr.setDependentVariable(mY);
-    gwr.setIndependentVariables(mX);
-    gwr.setSpatialWeight(mInitSpatialWeight);
-    gwr.setIsAutoselectBandwidth(true);
-    switch (mBandwidthSelectionApproach[0])
-    {
-    case GWRMultiscale::BandwidthSelectionCriterionType::CV:
-        gwr.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::CV);
-        break;
-    case GWRMultiscale::BandwidthSelectionCriterionType::AIC:
-        gwr.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
-    default:
-        break;
-    }
-    gwr.setParallelType(mParallelType);
-    switch (mParallelType)
-    {
-    case ParallelType::OpenMP:
-    case ParallelType::MPI_MP:
-        gwr.setOmpThreadNum(mOmpThreadNum);
-        break;
-    case ParallelType::CUDA:
-    case ParallelType::MPI_CUDA:
-        gwr.setGroupSize(mGroupLength);
-        gwr.setGPUId(mGpuId);
-        break;
-    default:
-        break;
-    }
-    if (mParallelType & ParallelType::MPI)
-    {
-        gwr.setWorkerId(mWorkerId);
-        gwr.setWorkerNum(mWorkerNum);
-    }
-    gwr.setStoreS(mHasHatMatrix);
-    gwr.setStoreC(mHasHatMatrix);
-    if (mGoldenLowerBounds.has_value()) gwr.setGoldenLowerBounds(mGoldenLowerBounds.value());
-    if (mGoldenUpperBounds.has_value()) gwr.setGoldenUpperBounds(mGoldenUpperBounds.value());
-    mat betas = gwr.fit();
-    mBetasSE = gwr.betasSE();
+    mat betas = fitInitial();
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     GWM_LOG_STAGE("Initializing");
@@ -290,6 +249,57 @@ mat GWRMultiscale::fit()
 #endif // ENABLE_CUDA
 
     return mBetas;
+}
+
+arma::mat gwm::GWRMultiscale::fitInitial()
+{
+    GWRBasic gwr;
+    gwr.setCoords(mCoords);
+    gwr.setDependentVariable(mY);
+    gwr.setIndependentVariables(mX);
+    gwr.setSpatialWeight(mInitSpatialWeight);
+    gwr.setIsAutoselectBandwidth(true);
+    switch (mBandwidthSelectionApproach[0])
+    {
+    case GWRMultiscale::BandwidthSelectionCriterionType::CV:
+        gwr.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::CV);
+        break;
+    case GWRMultiscale::BandwidthSelectionCriterionType::AIC:
+        gwr.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
+    default:
+        break;
+    }
+    gwr.setParallelType(mParallelType);
+    switch (mParallelType)
+    {
+    case ParallelType::OpenMP:
+    case ParallelType::MPI_MP:
+        gwr.setOmpThreadNum(mOmpThreadNum);
+        break;
+    case ParallelType::CUDA:
+    case ParallelType::MPI_CUDA:
+        gwr.setGroupSize(mGroupLength);
+        gwr.setGPUId(mGpuId);
+        break;
+    default:
+        break;
+    }
+    if (mParallelType & ParallelType::MPI)
+    {
+        gwr.setWorkerId(mWorkerId);
+        gwr.setWorkerNum(mWorkerNum);
+    }
+    gwr.setStoreS(mHasHatMatrix);
+    gwr.setStoreC(mHasHatMatrix);
+    if (mGoldenLowerBounds.has_value()) gwr.setGoldenLowerBounds(mGoldenLowerBounds.value());
+    if (mGoldenUpperBounds.has_value()) gwr.setGoldenUpperBounds(mGoldenUpperBounds.value());
+    mat betas = gwr.fit();
+    mBetasSE = gwr.betasSE();
+    if (mHasHatMatrix) {
+        mS0 = gwr.s();
+        mC = gwr.c();
+    }
+    return betas;
 }
 
 mat GWRMultiscale::backfitting(const mat& betas0)
