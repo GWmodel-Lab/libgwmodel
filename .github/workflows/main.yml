@@ -58,11 +58,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Scrollback Vcpkg
+      - name: Restore Vcpkg
         shell: pwsh
         run: |
           cd "$env:VCPKG_INSTALLATION_ROOT"
-          git switch 2023.12.12 --detach
+          git fetch
+          git switch 2025.02.14 --detach
       - name: Setup NuGet Credentials
         shell: pwsh
         run: |
