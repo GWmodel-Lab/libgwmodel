@@ -69,11 +69,11 @@ add_test(
     COMMAND $<TARGET_FILE:testGWPCA> --success
 )
 
-add_executable(testGWDR testGWDR.cpp)
-target_link_libraries(testGWDR PRIVATE gwmodel londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
+add_executable(testGTDR testGTDR.cpp)
+target_link_libraries(testGTDR PRIVATE gwmodel londonhp100 telegram ${ARMADILLO_LIBRARIES} Catch2::Catch2WithMain)
 add_test(
-    NAME testGWDR 
-    COMMAND $<TARGET_FILE:testGWDR> --success
+    NAME testGTDR 
+    COMMAND $<TARGET_FILE:testGTDR> --success
 )
 
 add_executable(testGWRMultiscale testGWRMultiscale.cpp)
