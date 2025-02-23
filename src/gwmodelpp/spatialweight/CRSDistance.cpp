@@ -149,7 +149,8 @@ double CRSDistance::minDistance()
     double minD = DBL_MAX;
     for (uword i = 0; i < mParameter->total; i++)
     {
-        double d = min(mCalculator(mParameter->focusPoints.row(i), mParameter->dataPoints));
+        vec ds = mCalculator(mParameter->focusPoints.row(i), mParameter->dataPoints);
+        double d = min(ds.elem(find(ds > 0.0)));
         minD = d < minD ? d : minD;
     }
     return minD;
