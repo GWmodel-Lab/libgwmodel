@@ -63,6 +63,8 @@ mat GWRBasic::fit()
 {
     GWM_LOG_STAGE("Initializing");
     uword nDp = mCoords.n_rows, nVars = mX.n_cols;
+    mWorkRange = make_pair(uword(0), nDp);
+
 #ifdef ENABLE_MPI
     // Sync x, y, coords with other processes
     if (mParallelType & ParallelType::MPI)
@@ -250,12 +252,11 @@ mat GWRBasic::fitCoreSerial(const mat &x, const vec &y, const SpatialWeight &sw)
     mBetasSE = mat(nVar, nDp, fill::zeros);
     mSHat = vec(2, fill::zeros);
     mQDiag = vec(nDp, fill::zeros);
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-    uword rangeSize = workRange.second - workRange.first;
+    uword rangeSize = mWorkRange.second - mWorkRange.first;
     mS = mat(isStoreS() ? rangeSize : 1, nDp, fill::zeros);
     mC = cube(nVar, nDp, isStoreC() ? rangeSize : 1, fill::zeros);
-    // cout << mWorkerId << " process work range: [" << workRange.first << "," << workRange.second << "]\n";
-    for (uword i = workRange.first; i < workRange.second; i++)
+    // cout << mWorkerId << " process work range: [" << mWorkRange.first << "," << mWorkRange.second << "]\n";
+    for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
         vec w = mSpatialWeight.weightVector(i);
@@ -274,8 +275,8 @@ mat GWRBasic::fitCoreSerial(const mat &x, const vec &y, const SpatialWeight &sw)
             vec p = - si.t();
             p(i) += 1.0;
             mQDiag += p % p;
-            mS.row(isStoreS() ? (i - workRange.first) : 0) = si;
-            mC.slice(isStoreC() ? (i - workRange.first) : 0) = ci;
+            mS.row(isStoreS() ? (i - mWorkRange.first) : 0) = si;
+            mC.slice(isStoreC() ? (i - mWorkRange.first) : 0) = ci;
         }
         catch (const exception& e)
         {
@@ -292,8 +293,7 @@ mat GWRBasic::fitCoreCVSerial(const mat& x, const vec& y, const SpatialWeight& s
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-    for (uword i = workRange.first; i < workRange.second; i++)
+    for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
         vec w = sw.weightVector(i);
@@ -320,8 +320,7 @@ mat GWRBasic::fitCoreSHatSerial(const mat& x, const vec& y, const SpatialWeight&
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     shat = vec(2, arma::fill::zeros);
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-    for (uword i = workRange.first; i < workRange.second; i++)
+    for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
         vec w = sw.weightVector(i);
@@ -460,8 +459,7 @@ mat GWRBasic::fitCoreOmp(const mat& x, const vec& y, const SpatialWeight& sw)
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     mBetasSE = mat(nVar, nDp, fill::zeros);
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-    uword rangeSize = workRange.second - workRange.first;
+    uword rangeSize = mWorkRange.second - mWorkRange.first;
     mS = mat(isStoreS() ? rangeSize : 1, nDp, fill::zeros);
     mC = cube(nVar, nDp, isStoreC() ? rangeSize : 1, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
@@ -469,7 +467,7 @@ mat GWRBasic::fitCoreOmp(const mat& x, const vec& y, const SpatialWeight& sw)
     bool success = true;
     std::exception except;
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (uword i = workRange.first; i < workRange.second; i++)
+    for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (success)
@@ -491,8 +489,8 @@ mat GWRBasic::fitCoreOmp(const mat& x, const vec& y, const SpatialWeight& sw)
                 vec p = - si.t();
                 p(i) += 1.0;
                 qDiag_all.col(thread) += p % p;
-                mS.row(isStoreS() ? (i - workRange.first) : 0) = si;
-                mC.slice(isStoreC() ? (i - workRange.first) : 0) = ci;
+                mS.row(isStoreS() ? (i - mWorkRange.first) : 0) = si;
+                mC.slice(isStoreC() ? (i - mWorkRange.first) : 0) = ci;
             }
             catch (const exception& e)
             {
@@ -518,9 +516,8 @@ arma::mat GWRBasic::fitCoreCVOmp(const arma::mat& x, const arma::vec& y, const S
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     bool flag = true;
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (uword i = workRange.first; i < workRange.second; i++)
+    for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
@@ -551,9 +548,8 @@ arma::mat GWRBasic::fitCoreSHatOmp(const arma::mat& x, const arma::vec& y, const
     mat betas(nVar, nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     int flag = true;
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (uword i = workRange.first; i < workRange.second; i++)
+    for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
@@ -597,8 +593,7 @@ mat GWRBasic::fitCoreCuda(const mat& x, const vec& y, const SpatialWeight& sw)
     mQDiag = vec(nDp, arma::fill::zeros);
     mS = mat(isStoreS() ? nDp : 1, nDp, arma::fill::zeros);
     mC = cube(nVar, nDp, isStoreC() ? nDp : 1, arma::fill::zeros);
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-    uword rangeSize = workRange.second - workRange.first;
+    uword rangeSize = mWorkRange.second - mWorkRange.first;
     size_t groups = rangeSize / mGroupLength + (rangeSize % mGroupLength == 0 ? 0 : 1);
     cumat u_xt(xt), u_y(y);
     cumat u_betas(nVar, nDp), u_betasSE(nVar, nDp);
@@ -616,7 +611,7 @@ mat GWRBasic::fitCoreCuda(const mat& x, const vec& y, const SpatialWeight& sw)
     for (size_t i = 0; i < groups; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
-        size_t begin = workRange.first + i * mGroupLength, length = (begin + mGroupLength > workRange.second) ? (workRange.second - begin) : mGroupLength;
+        size_t begin = mWorkRange.first + i * mGroupLength, length = (begin + mGroupLength > mWorkRange.second) ? (mWorkRange.second - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
             checkCudaErrors(sw.weightVector(e, u_dists.dmem(), u_weights.dmem()));
@@ -676,8 +671,7 @@ arma::mat GWRBasic::predictCuda(const mat& locations, const mat& x, const vec& y
 {
     uword nRp = locations.n_rows, nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nRp, fill::zeros);
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-    uword rangeSize = workRange.second - workRange.first;
+    uword rangeSize = mWorkRange.second - mWorkRange.first;
     size_t groups = rangeSize / mGroupLength + (rangeSize % mGroupLength == 0 ? 0 : 1);
     cumat u_xt(x.t()), u_y(y);
     custride u_xtwx(nVar, nVar, mGroupLength), u_xtwy(nVar, 1, mGroupLength), u_xtwxI(nVar, nVar, mGroupLength);
@@ -690,7 +684,7 @@ arma::mat GWRBasic::predictCuda(const mat& locations, const mat& x, const vec& y
     for (size_t i = 0; i < groups; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
-        size_t begin = workRange.first + i * mGroupLength, length = (begin + mGroupLength > workRange.second) ? (workRange.second - begin) : mGroupLength;
+        size_t begin = mWorkRange.first + i * mGroupLength, length = (begin + mGroupLength > mWorkRange.second) ? (mWorkRange.second - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
             checkCudaErrors(mSpatialWeight.weightVector(e, u_dists.dmem(), u_weights.dmem()));
@@ -731,13 +725,12 @@ arma::mat GWRBasic::fitCoreCVCuda(const arma::mat& x, const arma::vec& y, const 
     p_info = new int[mGroupLength];
     checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
     bool success = true;
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-    uword rangeSize = workRange.second - workRange.first;
+    uword rangeSize = mWorkRange.second - mWorkRange.first;
     size_t groups = rangeSize / mGroupLength + (rangeSize % mGroupLength == 0 ? 0 : 1);
     for (size_t i = 0; i < groups && success; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
-        size_t begin = workRange.first + i * mGroupLength, length = (begin + mGroupLength > workRange.second) ? (workRange.second - begin) : mGroupLength;
+        size_t begin = mWorkRange.first + i * mGroupLength, length = (begin + mGroupLength > mWorkRange.second) ? (mWorkRange.second - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
             checkCudaErrors(sw.weightVector(e, u_dists.dmem(), u_weights.dmem()));
@@ -782,13 +775,12 @@ arma::mat GWRBasic::fitCoreSHatCuda(const arma::mat& x, const arma::vec& y, cons
     p_info = new int[mGroupLength];
     checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
     bool success = true;
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-    uword rangeSize = workRange.second - workRange.first;
+    uword rangeSize = mWorkRange.second - mWorkRange.first;
     size_t groups = rangeSize / mGroupLength + (rangeSize % mGroupLength == 0 ? 0 : 1);
     for (size_t i = 0; i < groups && success; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
-        size_t begin = workRange.first + i * mGroupLength, length = (begin + mGroupLength > workRange.second) ? (workRange.second - begin) : mGroupLength;
+        size_t begin = mWorkRange.first + i * mGroupLength, length = (begin + mGroupLength > mWorkRange.second) ? (mWorkRange.second - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
             checkCudaErrors(sw.weightVector(e, u_dists.dmem(), u_weights.dmem()));
@@ -991,11 +983,10 @@ arma::mat gwm::GWRBasic::fitMpi()
     // }
     GWM_MPI_MASTER_END
     GWM_MPI_WORKER_BEGIN
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-    // printf("%d process work range: [%lld, %lld]\n", mWorkerId, workRange.first, workRange.second);
-    // cout << mWorkerId << " process work range: [" << workRange.first << "," << workRange.second << "]\n";
-    mat betas = mBetas.cols(workRange.first, workRange.second - 1);
-    mat betasSE = mBetasSE.cols(workRange.first, workRange.second - 1);
+    // printf("%d process work range: [%lld, %lld]\n", mWorkerId, mWorkRange.first, mWorkRange.second);
+    // cout << mWorkerId << " process work range: [" << mWorkRange.first << "," << mWorkRange.second << "]\n";
+    mat betas = mBetas.cols(mWorkRange.first, mWorkRange.second - 1);
+    mat betasSE = mBetasSE.cols(mWorkRange.first, mWorkRange.second - 1);
     MPI_Send(betas.memptr(), betas.n_elem, MPI_DOUBLE, 0, int(GWRBasicFitMpiTags::Betas), MPI_COMM_WORLD);
     MPI_Send(betasSE.memptr(), betasSE.n_elem, MPI_DOUBLE, 0, int(GWRBasicFitMpiTags::BetasSE), MPI_COMM_WORLD);
     MPI_Send(mSHat.memptr(), mSHat.n_elem, MPI_DOUBLE, 0, int(GWRBasicFitMpiTags::SHat), MPI_COMM_WORLD);

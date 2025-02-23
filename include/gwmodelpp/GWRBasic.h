@@ -763,7 +763,7 @@ protected:
     int mWorkerId = 0;
     int mWorkerNum = 1;
     arma::uword mWorkRangeSize = 0;
-    std::optional<std::pair<arma::uword, arma::uword>> mWorkRange;
+    std::pair<arma::uword, arma::uword> mWorkRange = std::make_pair(arma::uword(0), arma::uword(0));
 
     arma::mat mBetasSE;  //!< \~english Standard errors of coefficient estimates. \~chinese 回归系数估计值的标准差。
     arma::vec mSHat;  //!< \~english A vector of \f$tr(S)\f$ and \f$tr(SS^T)\f$. \~chinese 由 \f$tr(S)\f$ 和 \f$tr(SS^T)\f$ 组成的向量。
