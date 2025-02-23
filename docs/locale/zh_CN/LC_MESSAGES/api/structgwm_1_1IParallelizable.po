@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: 2023-01-31 16:08+0000\n"
 "Last-Translator: Yigong Hu <huyg0180110559@outook.com>\n"
 "Language: zh_CN\n"
@@ -35,44 +35,50 @@ msgid "Derived Types"
 msgstr "派生类"
 
 #: ../../api/structgwm_1_1IParallelizable.rst:15
-msgid "``public gwm::GTWR`` (:ref:`exhale_class_classgwm_1_1GTWR`)"
+msgid "``public gwm::GTDR`` (:ref:`exhale_class_classgwm_1_1GTDR`)"
 msgstr ""
 
 #: ../../api/structgwm_1_1IParallelizable.rst:16
-msgid "``public gwm::GWDA`` (:ref:`exhale_class_classgwm_1_1GWDA`)"
+msgid "``public gwm::GTWR`` (:ref:`exhale_class_classgwm_1_1GTWR`)"
 msgstr ""
 
 #: ../../api/structgwm_1_1IParallelizable.rst:17
-msgid "``public gwm::GWRBasic`` (:ref:`exhale_class_classgwm_1_1GWRBasic`)"
+msgid "``public gwm::GWAverage`` (:ref:`exhale_class_classgwm_1_1GWAverage`)"
 msgstr ""
 
 #: ../../api/structgwm_1_1IParallelizable.rst:18
+msgid ""
+"``public gwm::GWCorrelation`` "
+"(:ref:`exhale_class_classgwm_1_1GWCorrelation`)"
+msgstr ""
+
+#: ../../api/structgwm_1_1IParallelizable.rst:19
+msgid "``public gwm::GWDA`` (:ref:`exhale_class_classgwm_1_1GWDA`)"
+msgstr ""
+
+#: ../../api/structgwm_1_1IParallelizable.rst:20
+msgid "``public gwm::GWRBasic`` (:ref:`exhale_class_classgwm_1_1GWRBasic`)"
+msgstr ""
+
+#: ../../api/structgwm_1_1IParallelizable.rst:21
 msgid ""
 "``public gwm::GWRGeneralized`` "
 "(:ref:`exhale_class_classgwm_1_1GWRGeneralized`)"
 msgstr ""
 
-#: ../../api/structgwm_1_1IParallelizable.rst:19
+#: ../../api/structgwm_1_1IParallelizable.rst:22
 msgid ""
 "``public gwm::GWRLocalCollinearity`` "
 "(:ref:`exhale_class_classgwm_1_1GWRLocalCollinearity`)"
 msgstr ""
 
-#: ../../api/structgwm_1_1IParallelizable.rst:20
+#: ../../api/structgwm_1_1IParallelizable.rst:23
 msgid ""
 "``public gwm::GWRMultiscale`` "
 "(:ref:`exhale_class_classgwm_1_1GWRMultiscale`)"
 msgstr ""
 
-#: ../../api/structgwm_1_1IParallelizable.rst:21
-msgid "``public gwm::GWSS`` (:ref:`exhale_class_classgwm_1_1GWSS`)"
-msgstr ""
-
-#: ../../api/structgwm_1_1IParallelizable.rst:22
-msgid "``public gwm::SDR`` (:ref:`exhale_class_classgwm_1_1SDR`)"
-msgstr ""
-
-#: ../../api/structgwm_1_1IParallelizable.rst:26
+#: ../../api/structgwm_1_1IParallelizable.rst:27
 msgid "Struct Documentation"
 msgstr "结构体文档"
 
@@ -89,5 +95,11 @@ msgid "Parameters"
 msgstr "参数"
 
 #~ msgid "``public gwm::GWDR`` (:ref:`exhale_class_classgwm_1_1GWDR`)"
+#~ msgstr ""
+
+#~ msgid "``public gwm::GWSS`` (:ref:`exhale_class_classgwm_1_1GWSS`)"
+#~ msgstr ""
+
+#~ msgid "``public gwm::SDR`` (:ref:`exhale_class_classgwm_1_1SDR`)"
 #~ msgstr ""
 

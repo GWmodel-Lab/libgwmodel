@@ -6,19 +6,18 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: libgwmodel\n"
+"Project-Id-Version:  libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: 2024-02-07 12:24+0000\n"
 "Last-Translator: \n"
-"Language-Team: zh_CN <LL@li.org>\n"
 "Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.11.0\n"
-"X-Generator: Poedit 3.4.2\n"
 
 #: ../../api/file_include_gwmodelcuda_GWRBasicGpuTask.h.rst:5
 msgid "File GWRBasicGpuTask.h"
@@ -48,12 +47,12 @@ msgstr ""
 
 #: ../../api/file_include_gwmodelcuda_GWRBasicGpuTask.h.rst:35
 msgid ""
-"``IGWRBasicGpuTask.h`` (:ref:"
-"`file_include_gwmodelcuda_IGWRBasicGpuTask.h`)"
+"``IGWRBasicGpuTask.h`` "
+"(:ref:`file_include_gwmodelcuda_IGWRBasicGpuTask.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodelcuda_GWRBasicGpuTask.h.rst:37
-msgid "``armadillo``"
+msgid "``armadillo_config.h`` (:ref:`file_include_armadillo_config.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodelcuda_GWRBasicGpuTask.h.rst:39
@@ -71,3 +70,7 @@ msgstr "类"
 #: ../../api/file_include_gwmodelcuda_GWRBasicGpuTask.h.rst:52
 msgid ":ref:`exhale_class_classGWRBasicGpuTask`"
 msgstr ""
+
+#~ msgid "``armadillo``"
+#~ msgstr ""
+

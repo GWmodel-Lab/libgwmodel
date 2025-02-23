@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -106,14 +106,18 @@ msgid "Classes"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_GTWR.h.rst:71
+msgid ":ref:`exhale_struct_structgwm_1_1GTWR_1_1Parameter`"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_GTWR.h.rst:73
 msgid ":ref:`exhale_class_classgwm_1_1GTWR`"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_GTWR.h.rst:75
+#: ../../api/file_include_gwmodelpp_GTWR.h.rst:77
 msgid "Defines"
 msgstr ""
 
-#: ../../api/file_include_gwmodelpp_GTWR.h.rst:78
+#: ../../api/file_include_gwmodelpp_GTWR.h.rst:80
 msgid ":ref:`exhale_define_GTWR_8h_1a4ee22f0a6287445f494fa646d5f9cec5`"
 msgstr ""
 

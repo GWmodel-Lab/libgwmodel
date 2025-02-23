@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -69,27 +69,21 @@ msgstr ""
 msgid "Class Documentation"
 msgstr "类文档"
 
-#: ../../api/classgwm_1_1SDR.rst
-msgid "Public Types"
-msgstr "公有类型"
+#~ msgid "Public Types"
+#~ msgstr "公有类型"
 
-#: ../../api/classgwm_1_1SDR.rst
-msgid "Public Functions"
-msgstr "公有方法"
+#~ msgid "Public Functions"
+#~ msgstr "公有方法"
 
-#: ../../api/classgwm_1_1SDR.rst
-msgid "Returns"
-msgstr "返回"
+#~ msgid "Returns"
+#~ msgstr "返回"
 
-#: ../../api/classgwm_1_1SDR.rst
-msgid "Parameters"
-msgstr "参数"
+#~ msgid "Parameters"
+#~ msgstr "参数"
 
-#: ../../api/classgwm_1_1SDR.rst
-msgid "Public Static Functions"
-msgstr "公有静态方法"
+#~ msgid "Public Static Functions"
+#~ msgstr "公有静态方法"
 
-#: ../../api/classgwm_1_1SDR.rst
-msgid "Protected Functions"
-msgstr "保护方法"
+#~ msgid "Protected Functions"
+#~ msgstr "保护方法"
 

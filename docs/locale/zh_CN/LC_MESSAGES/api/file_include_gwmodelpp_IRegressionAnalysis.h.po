@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: 2023-01-31 13:12+0000\n"
 "Last-Translator: Yigong Hu <huyg0180110559@outook.com>\n"
 "Language: zh_CN\n"
@@ -47,7 +47,7 @@ msgid ""
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_IRegressionAnalysis.h.rst:35
-msgid "``armadillo``"
+msgid "``armadillo_config.h`` (:ref:`file_include_armadillo_config.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_IRegressionAnalysis.h.rst:37
@@ -59,15 +59,15 @@ msgid "Included By"
 msgstr "被下列头文件包含"
 
 #: ../../api/file_include_gwmodelpp_IRegressionAnalysis.h.rst:45
-msgid ":ref:`file_include_gwmodelpp_GWRBase.h`"
+msgid ":ref:`file_include_gwmodelpp_GTDR.h`"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_IRegressionAnalysis.h.rst:47
-msgid ":ref:`file_include_gwmodelpp_GWRMultiscale.h`"
+msgid ":ref:`file_include_gwmodelpp_GWRBase.h`"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_IRegressionAnalysis.h.rst:49
-msgid ":ref:`file_include_gwmodelpp_SDR.h`"
+msgid ":ref:`file_include_gwmodelpp_GWRMultiscale.h`"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_IRegressionAnalysis.h.rst:55
@@ -87,5 +87,11 @@ msgid ":ref:`exhale_struct_structgwm_1_1IRegressionAnalysis`"
 msgstr ""
 
 #~ msgid ":ref:`file_include_gwmodelpp_GWDR.h`"
+#~ msgstr ""
+
+#~ msgid "``armadillo``"
+#~ msgstr ""
+
+#~ msgid ":ref:`file_include_gwmodelpp_SDR.h`"
 #~ msgstr ""
 

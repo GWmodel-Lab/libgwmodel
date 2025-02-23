@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: 2023-01-31 12:16+0000\n"
 "Last-Translator: Yigong Hu <huyg0180110559@outook.com>\n"
 "Language: zh\n"
@@ -70,7 +70,13 @@ msgid ""
 "(:ref:`exhale_struct_structgwm_1_1IParallelCudaEnabled`)"
 msgstr ""
 
-#: ../../api/classgwm_1_1GWRMultiscale.rst:24
+#: ../../api/classgwm_1_1GWRMultiscale.rst:21
+msgid ""
+"``public gwm::IParallelMpiEnabled`` "
+"(:ref:`exhale_struct_structgwm_1_1IParallelMpiEnabled`)"
+msgstr ""
+
+#: ../../api/classgwm_1_1GWRMultiscale.rst:25
 msgid "Class Documentation"
 msgstr "类文档"
 

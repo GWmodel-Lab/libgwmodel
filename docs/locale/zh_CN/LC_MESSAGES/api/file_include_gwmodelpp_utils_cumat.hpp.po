@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgwmodel \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-02-07 12:00+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: zh_CN\n"
@@ -42,7 +42,7 @@ msgid "Includes"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_utils_cumat.hpp.rst:33
-msgid "``armadillo``"
+msgid "``armadillo_config.h`` (:ref:`file_include_armadillo_config.h`)"
 msgstr ""
 
 #: ../../api/file_include_gwmodelpp_utils_cumat.hpp.rst:35
@@ -116,4 +116,15 @@ msgstr ""
 #: ../../api/file_include_gwmodelpp_utils_cumat.hpp.rst:76
 msgid ":ref:`exhale_class_classcuview_3_01custride_01_4`"
 msgstr ""
+
+#: ../../api/file_include_gwmodelpp_utils_cumat.hpp.rst:80
+msgid "Functions"
+msgstr ""
+
+#: ../../api/file_include_gwmodelpp_utils_cumat.hpp.rst:83
+msgid ":ref:`exhale_function_cumat_8hpp_1a4019ce70f7c9b3b67411dbc5506ea302`"
+msgstr ""
+
+#~ msgid "``armadillo``"
+#~ msgstr ""
 

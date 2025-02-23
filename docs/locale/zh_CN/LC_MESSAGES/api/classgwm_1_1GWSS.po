@@ -5,20 +5,18 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: libgwmodel\n"
+"Project-Id-Version:  libgwmodel\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 20:46+0000\n"
+"POT-Creation-Date: 2025-02-23 13:45+0000\n"
 "PO-Revision-Date: 2023-01-31 12:19+0000\n"
-"Last-Translator: Yigong Hu <huyg0180110559@outook."
-"com>\n"
-"Language-Team: \n"
+"Last-Translator: Yigong Hu <huyg0180110559@outook.com>\n"
 "Language: zh_CN\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"Language-Team: \n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"Generated-By: Babel 2.8.0\n"
-"X-Generator: Poedit 3.2.2\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.11.0\n"
 
 #: ../../api/classgwm_1_1GWSS.rst:4
 msgid "Class GWSS"
@@ -38,52 +36,47 @@ msgstr "基类"
 
 #: ../../api/classgwm_1_1GWSS.rst:15
 msgid ""
-"``public gwm::SpatialMonoscaleAlgorithm`` (:ref:"
-"`exhale_class_classgwm_1_1SpatialMonoscaleAlgorithm`)"
+"``public gwm::SpatialMonoscaleAlgorithm`` "
+"(:ref:`exhale_class_classgwm_1_1SpatialMonoscaleAlgorithm`)"
 msgstr ""
 
 #: ../../api/classgwm_1_1GWSS.rst:16
 msgid ""
-"``public gwm::IMultivariableAnalysis`` (:ref:"
-"`exhale_struct_structgwm_1_1IMultivariableAnalysis`)"
+"``public gwm::IMultivariableAnalysis`` "
+"(:ref:`exhale_struct_structgwm_1_1IMultivariableAnalysis`)"
 msgstr ""
 
 #: ../../api/classgwm_1_1GWSS.rst:17
 msgid ""
-"``public gwm::IParallelizable`` (:ref:"
-"`exhale_struct_structgwm_1_1IParallelizable`)"
+"``public gwm::IParallelizable`` "
+"(:ref:`exhale_struct_structgwm_1_1IParallelizable`)"
 msgstr ""
 
 #: ../../api/classgwm_1_1GWSS.rst:18
 msgid ""
-"``public gwm::IParallelOpenmpEnabled`` (:ref:"
-"`exhale_struct_structgwm_1_1IParallelOpenmpEnabled`)"
+"``public gwm::IParallelOpenmpEnabled`` "
+"(:ref:`exhale_struct_structgwm_1_1IParallelOpenmpEnabled`)"
 msgstr ""
 
 #: ../../api/classgwm_1_1GWSS.rst:22
 msgid "Class Documentation"
 msgstr "类文档"
 
-#: ../../api/classgwm_1_1GWSS.rst
-msgid "Public Types"
-msgstr "公有类型"
+#~ msgid "Public Types"
+#~ msgstr "公有类型"
 
-#: ../../api/classgwm_1_1GWSS.rst
-msgid "Public Functions"
-msgstr "公有成员函数"
+#~ msgid "Public Functions"
+#~ msgstr "公有成员函数"
 
-#: ../../api/classgwm_1_1GWSS.rst
-msgid "Returns"
-msgstr "返回"
+#~ msgid "Returns"
+#~ msgstr "返回"
 
-#: ../../api/classgwm_1_1GWSS.rst
-msgid "Parameters"
-msgstr "参数"
+#~ msgid "Parameters"
+#~ msgstr "参数"
 
-#: ../../api/classgwm_1_1GWSS.rst
-msgid "Public Static Functions"
-msgstr "公有静态方法"
+#~ msgid "Public Static Functions"
+#~ msgstr "公有静态方法"
 
-#: ../../api/classgwm_1_1GWSS.rst
-msgid "Protected Static Functions"
-msgstr "保护静态方法"
+#~ msgid "Protected Static Functions"
+#~ msgstr "保护静态方法"
+
