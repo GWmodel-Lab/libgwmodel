@@ -67,8 +67,7 @@ jobs:
         shell: pwsh
         run: |
           cd "$env:VCPKG_INSTALLATION_ROOT"
-          git clone https://github.com/microsoft/vcpkg.git
-          ./vcpkg/bootstrap-vcpkg.bat
+          git switch 2025.02.14 --detach
       - name: Setup NuGet Credentials
         shell: pwsh
         run: |
