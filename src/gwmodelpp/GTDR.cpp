@@ -1,4 +1,4 @@
-#include "SDR.h"
+#include "GTDR.h"
 #include <assert.h>
 #include <exception>
 #include <gsl/gsl_vector.h>
@@ -14,7 +14,7 @@ using namespace std;
 using namespace arma;
 using namespace gwm;
 
-RegressionDiagnostic SDR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
+RegressionDiagnostic GTDR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
     vec r = y - sum(betas % x, 1);
     double rss = sum(r % r);
@@ -29,7 +29,7 @@ RegressionDiagnostic SDR::CalcDiagnostic(const mat& x, const vec& y, const mat& 
     return { rss, AIC, AICc, enp, edf, r2, r2_adj };
 }
 
-mat SDR::fit()
+mat GTDR::fit()
 {
     GWM_LOG_STAGE("Initialization");
     uword nDims = mCoords.n_cols, nDp = mCoords.n_rows, nVars = mX.n_cols;
@@ -84,14 +84,14 @@ mat SDR::fit()
             bws.push_back(iter.weight<BandwidthWeight>());
         }
         
-        GWM_LOG_INFO(SDRBandwidthOptimizer::infoBandwidthCriterion(bws));
-        SDRBandwidthOptimizer optimizer(bws);
+        GWM_LOG_INFO(GTDRBandwidthOptimizer::infoBandwidthCriterion(bws));
+        GTDRBandwidthOptimizer optimizer(bws);
         int resultCode = optimizer.optimize(this, mCoords.n_rows, mBandwidthOptimizeMaxIter, mBandwidthOptimizeEps, mBandwidthOptimizeStep);
         GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
         
         if (resultCode)
         {
-            throw runtime_error("[SDR::fit] Bandwidth optimization invoke failed.");
+            throw runtime_error("[GTDR::fit] Bandwidth optimization invoke failed.");
         }
         GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     }
@@ -127,7 +127,7 @@ mat SDR::fit()
     return mBetas;
 }
 
-mat SDR::predictSerial(const mat& locations, const mat& x, const vec& y)
+mat GTDR::predictSerial(const mat& locations, const mat& x, const vec& y)
 {
     uword nDp = locations.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
@@ -160,7 +160,7 @@ mat SDR::predictSerial(const mat& locations, const mat& x, const vec& y)
 }
 
 #ifdef ENABLE_OPENMP
-mat SDR::predictOmp(const mat& locations, const mat& x, const vec& y)
+mat GTDR::predictOmp(const mat& locations, const mat& x, const vec& y)
 {
     uword nDp = locations.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
@@ -204,7 +204,7 @@ mat SDR::predictOmp(const mat& locations, const mat& x, const vec& y)
 }
 #endif
 
-mat SDR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
+mat GTDR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
@@ -255,7 +255,7 @@ mat SDR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdi
 }
 
 #ifdef ENABLE_OPENMP
-mat SDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
+mat GTDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
@@ -319,7 +319,7 @@ mat SDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag,
 }
 #endif
 
-double SDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidths)
+double GTDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidths)
 {
     uword nDp = mCoords.n_rows, nDim = mCoords.n_cols;
     double cv = 0.0;
@@ -357,7 +357,7 @@ double SDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidth
     }
     if (mStatus == Status::Success && success && isfinite(cv))
     {
-        GWM_LOG_INFO(SDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, cv));
+        GWM_LOG_INFO(GTDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, cv));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -366,7 +366,7 @@ double SDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidth
 }
 
 #ifdef ENABLE_OPENMP
-double SDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
+double GTDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
 {
     uword nDp = mCoords.n_rows, nDim = mCoords.n_cols;
     vec cv_all(mOmpThreadNum, arma::fill::zeros);
@@ -408,7 +408,7 @@ double SDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
     double cv = sum(cv_all);
     if (mStatus == Status::Success && success && isfinite(cv))
     {
-        GWM_LOG_INFO(SDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, cv));
+        GWM_LOG_INFO(GTDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, cv));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -417,7 +417,7 @@ double SDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
 }
 #endif
 
-double SDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwidths)
+double GTDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwidths)
 {
     uword nDp = mCoords.n_rows, nDim = mCoords.n_cols, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
@@ -454,10 +454,10 @@ double SDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwidt
         }
     }
     if (!flag) return DBL_MAX;
-    double value = SDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
+    double value = GTDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
     if (mStatus == Status::Success && isfinite(value))
     {
-        GWM_LOG_INFO(SDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, value));
+        GWM_LOG_INFO(GTDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, value));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = value;
         return value;
@@ -466,7 +466,7 @@ double SDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwidt
 }
 
 #ifdef ENABLE_OPENMP
-double SDR::bandwidthCriterionAICOmp(const vector<BandwidthWeight*>& bandwidths)
+double GTDR::bandwidthCriterionAICOmp(const vector<BandwidthWeight*>& bandwidths)
 {
     uword nDp = mCoords.n_rows, nDim = mCoords.n_cols, nVar = mX.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
@@ -508,10 +508,10 @@ double SDR::bandwidthCriterionAICOmp(const vector<BandwidthWeight*>& bandwidths)
     }
     if (!success) return DBL_MAX;
     double trS = sum(trS_all);
-    double value = SDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
+    double value = GTDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
     if (mStatus == Status::Success && isfinite(value))
     {
-        GWM_LOG_INFO(SDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, value));
+        GWM_LOG_INFO(GTDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, value));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = value;
         return value;
@@ -520,7 +520,7 @@ double SDR::bandwidthCriterionAICOmp(const vector<BandwidthWeight*>& bandwidths)
 }
 #endif
 
-double SDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
+double GTDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
 {
     mat x = mX.cols(VariableForwardSelector::index2uvec(indepVars, mHasIntercept));
     vec y = mY;
@@ -593,7 +593,7 @@ double SDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
     GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressTotal);
     if (mStatus == Status::Success && success)
     {
-        double value = success ? SDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
+        double value = success ? GTDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
         GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value));
         return isfinite(value) ? value : DBL_MAX;
     }
@@ -601,7 +601,7 @@ double SDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
 }
 
 #ifdef ENABLE_OPENMP
-double SDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
+double GTDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
 {
     mat x = mX.cols(VariableForwardSelector::index2uvec(indepVars, mHasIntercept));
     vec y = mY;
@@ -679,7 +679,7 @@ double SDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
     GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressTotal);
     if (mStatus == Status::Success && success)
     {
-        double value = success ? SDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
+        double value = success ? GTDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
         GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value));
         return isfinite(value) ? value : DBL_MAX;
     }
@@ -687,7 +687,7 @@ double SDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
 }
 #endif
 
-void SDR::setBandwidthCriterionType(const BandwidthCriterionType& type)
+void GTDR::setBandwidthCriterionType(const BandwidthCriterionType& type)
 {
     mBandwidthCriterionType = type;
     unordered_map<BandwidthCriterionType, BandwidthCriterionCalculator> mapper;
@@ -695,60 +695,60 @@ void SDR::setBandwidthCriterionType(const BandwidthCriterionType& type)
     {
     case ParallelType::SerialOnly:
         mapper = {
-            make_pair(BandwidthCriterionType::AIC, &SDR::bandwidthCriterionAICSerial),
-            make_pair(BandwidthCriterionType::CV, &SDR::bandwidthCriterionCVSerial)
+            make_pair(BandwidthCriterionType::AIC, &GTDR::bandwidthCriterionAICSerial),
+            make_pair(BandwidthCriterionType::CV, &GTDR::bandwidthCriterionCVSerial)
         };
-        mBandwidthCriterionFunction = &SDR::bandwidthCriterionAICSerial;
+        mBandwidthCriterionFunction = &GTDR::bandwidthCriterionAICSerial;
         break;
 #ifdef ENABLE_OPENMP
     case ParallelType::OpenMP:
         mapper = {
-            make_pair(BandwidthCriterionType::AIC, &SDR::bandwidthCriterionAICOmp),
-            make_pair(BandwidthCriterionType::CV, &SDR::bandwidthCriterionCVOmp)
+            make_pair(BandwidthCriterionType::AIC, &GTDR::bandwidthCriterionAICOmp),
+            make_pair(BandwidthCriterionType::CV, &GTDR::bandwidthCriterionCVOmp)
         };
-        mBandwidthCriterionFunction = &SDR::bandwidthCriterionAICOmp;
+        mBandwidthCriterionFunction = &GTDR::bandwidthCriterionAICOmp;
         break;
 #endif
     default:
         mapper = {
-            make_pair(BandwidthCriterionType::AIC, &SDR::bandwidthCriterionAICSerial),
-            make_pair(BandwidthCriterionType::CV, &SDR::bandwidthCriterionCVSerial)
+            make_pair(BandwidthCriterionType::AIC, &GTDR::bandwidthCriterionAICSerial),
+            make_pair(BandwidthCriterionType::CV, &GTDR::bandwidthCriterionCVSerial)
         };
-        mBandwidthCriterionFunction = &SDR::bandwidthCriterionAICSerial;
+        mBandwidthCriterionFunction = &GTDR::bandwidthCriterionAICSerial;
         break;
     }
     mBandwidthCriterionFunction = mapper[mBandwidthCriterionType];
 }
 
-void SDR::setParallelType(const ParallelType& type)
+void GTDR::setParallelType(const ParallelType& type)
 {
     if (type & parallelAbility())
     {
         mParallelType = type;
         switch (type) {
         case ParallelType::SerialOnly:
-            mPredictFunction = &SDR::predictSerial;
-            mFitFunction = &SDR::fitSerial;
-            mIndepVarCriterionFunction = &SDR::indepVarCriterionSerial;
+            mPredictFunction = &GTDR::predictSerial;
+            mFitFunction = &GTDR::fitSerial;
+            mIndepVarCriterionFunction = &GTDR::indepVarCriterionSerial;
             break;
 #ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
-            mPredictFunction = &SDR::predictOmp;
-            mFitFunction = &SDR::fitOmp;
-            mIndepVarCriterionFunction= &SDR::indepVarCriterionOmp;
+            mPredictFunction = &GTDR::predictOmp;
+            mFitFunction = &GTDR::fitOmp;
+            mIndepVarCriterionFunction= &GTDR::indepVarCriterionOmp;
             break;
 #endif
         default:
-            mPredictFunction = &SDR::predictSerial;
-            mFitFunction = &SDR::fitSerial;
-            mIndepVarCriterionFunction = &SDR::indepVarCriterionSerial;
+            mPredictFunction = &GTDR::predictSerial;
+            mFitFunction = &GTDR::fitSerial;
+            mIndepVarCriterionFunction = &GTDR::indepVarCriterionSerial;
             break;
         }
     }
     setBandwidthCriterionType(mBandwidthCriterionType);
 }
 
-bool SDR::isValid()
+bool GTDR::isValid()
 {
     if (SpatialAlgorithm::isValid())
     {
@@ -762,10 +762,10 @@ bool SDR::isValid()
     else return false;
 }
 
-double SDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, void* params)
+double GTDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, void* params)
 {
     Parameter* p = static_cast<Parameter*>(params);
-    SDR* instance = p->instance;
+    GTDR* instance = p->instance;
     const vector<BandwidthWeight*>& bandwidths = *(p->bandwidths);
     double nFeature = double(p->featureCount);
     for (size_t m = 0; m < bandwidths.size(); m++)
@@ -776,7 +776,7 @@ double SDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, void* pa
     return instance->bandwidthCriterion(bandwidths);
 }
 
-const int SDRBandwidthOptimizer::optimize(SDR* instance, uword featureCount, size_t maxIter, double eps, double step)
+const int GTDRBandwidthOptimizer::optimize(GTDR* instance, uword featureCount, size_t maxIter, double eps, double step)
 {
     size_t nDim = mBandwidths.size();
     gsl_multimin_fminimizer* minimizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex2rand, nDim);
