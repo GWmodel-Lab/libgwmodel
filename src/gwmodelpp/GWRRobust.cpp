@@ -31,6 +31,7 @@ mat GWRRobust::fit()
 {
     GWM_LOG_STAGE("Initializing");
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
+    mWorkRange = make_pair(uword(0), nDp);
     createDistanceParameter();
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
