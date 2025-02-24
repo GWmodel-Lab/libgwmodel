@@ -645,6 +645,8 @@ protected:
         return mSpatialWeights[i].weight<BandwidthWeight>();
     }
 
+    arma::mat fitInitial();
+
     /**
      * \~english
      * @brief The backfitting algorithm.
@@ -817,7 +819,7 @@ private:
 #ifdef ENABLE_MPI
     arma::uword mWorkRangeSize = 0;
 #endif // ENABLE_MPI
-    std::optional<std::pair<arma::uword, arma::uword>> mWorkRange;
+    std::pair<arma::uword, arma::uword> mWorkRange = std::make_pair(arma::uword(0), arma::uword(0));
 
 public:
     static int treeChildCount;  //!< \~english  \~chinese

@@ -80,6 +80,8 @@ RegressionDiagnostic GWRMultiscale::CalcDiagnostic(const mat &x, const vec &y, c
 mat GWRMultiscale::fit()
 {
     uword nDp = mX.n_rows, nVar = mX.n_cols;
+    mWorkRange = make_pair(uword(0), nDp);
+
     // ********************************
     // Centering and scaling predictors
     // ********************************
@@ -99,53 +101,14 @@ mat GWRMultiscale::fit()
     // Calculate the initial beta0 from the above bandwidths
     // *****************************************************
     GWM_LOG_STAGE("Calculating initial betas");
-    GWRBasic gwr;
-    gwr.setCoords(mCoords);
-    gwr.setDependentVariable(mY);
-    gwr.setIndependentVariables(mX);
-    gwr.setSpatialWeight(mInitSpatialWeight);
-    gwr.setIsAutoselectBandwidth(true);
-    switch (mBandwidthSelectionApproach[0])
-    {
-    case GWRMultiscale::BandwidthSelectionCriterionType::CV:
-        gwr.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::CV);
-        break;
-    case GWRMultiscale::BandwidthSelectionCriterionType::AIC:
-        gwr.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
-    default:
-        break;
-    }
-    gwr.setParallelType(mParallelType);
-    switch (mParallelType)
-    {
-    case ParallelType::OpenMP:
-    case ParallelType::MPI_MP:
-        gwr.setOmpThreadNum(mOmpThreadNum);
-        break;
-    case ParallelType::CUDA:
-    case ParallelType::MPI_CUDA:
-        gwr.setGroupSize(mGroupLength);
-        gwr.setGPUId(mGpuId);
-    default:
-        break;
-    }
-    if (mParallelType & ParallelType::MPI)
-    {
-        gwr.setWorkerId(mWorkerId);
-        gwr.setWorkerNum(mWorkerNum);
-    }
-    gwr.setStoreS(mHasHatMatrix);
-    gwr.setStoreC(mHasHatMatrix);
-    if (mGoldenLowerBounds.has_value()) gwr.setGoldenLowerBounds(mGoldenLowerBounds.value());
-    if (mGoldenUpperBounds.has_value()) gwr.setGoldenUpperBounds(mGoldenUpperBounds.value());
-    mat betas = gwr.fit();
-    mBetasSE = gwr.betasSE();
+    mat betas = fitInitial();
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     GWM_LOG_STAGE("Initializing");
     createDistanceParameter(nVar);
     mMaxDistances.resize(nVar);
     mMinDistances.resize(nVar);
+    
 #ifdef ENABLE_MPI
     if (mParallelType & ParallelType::MPI)
     {
@@ -187,6 +150,11 @@ mat GWRMultiscale::fit()
         }
     }
 #endif // ENABLE_CUDA
+    for (size_t i = 0; i < nVar; i++)
+    {
+        mMinDistances[i] = mSpatialWeights[i].distance()->minDistance();
+        mMaxDistances[i] = mSpatialWeights[i].distance()->maxDistance();
+    }
     GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
 
     // ***********************
@@ -204,8 +172,6 @@ mat GWRMultiscale::fit()
             mXi = mX.col(i);
             BandwidthWeight* bw0 = bandwidth(i);
             bool adaptive = bw0->adaptive();
-            mMaxDistances[i] = mSpatialWeights[i].distance()->maxDistance();
-            mMinDistances[i] = mSpatialWeights[i].distance()->minDistance();
 
             GWM_LOG_INFO(string(GWM_LOG_TAG_MGWR_INITIAL_BW) + to_string(i));
             BandwidthSelector selector;
@@ -226,20 +192,16 @@ mat GWRMultiscale::fit()
         GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
     }
 
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-
     GWM_LOG_STAGE("Initializing diagnostic matrices");
     mat idm = eye(nVar, nVar);
     if (mHasHatMatrix)
     {
-        mS0 = gwr.s();
         mSArray = cube(mS0.n_rows, mS0.n_cols, nVar, fill::zeros);
-        mC = gwr.c();
         for (uword i = 0; i < nVar; ++i)
         {
-            for (uword j = workRange.first; j < workRange.second ; ++j)
+            for (uword j = mWorkRange.first; j < mWorkRange.second ; ++j)
             {
-                uword e = j - workRange.first;
+                uword e = j - mWorkRange.first;
                 mSArray.slice(i).row(e) = mX(j, i) * (idm.row(i) * mC.slice(e));
             }
         }
@@ -258,7 +220,7 @@ mat GWRMultiscale::fit()
         if (mParallelType & ParallelType::MPI)
         {
             vec shati(2);
-            shati(0) = trace(mS0.cols(workRange.first, workRange.second - 1));
+            shati(0) = trace(mS0.cols(mWorkRange.first, mWorkRange.second - 1));
             shati(1) = trace(mS0 * mS0.t());
             MPI_Reduce(shati.memptr(), shat.memptr(), 2, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
             MPI_Bcast(shat.memptr(), 2, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -288,6 +250,57 @@ mat GWRMultiscale::fit()
 #endif // ENABLE_CUDA
 
     return mBetas;
+}
+
+arma::mat gwm::GWRMultiscale::fitInitial()
+{
+    GWRBasic gwr;
+    gwr.setCoords(mCoords);
+    gwr.setDependentVariable(mY);
+    gwr.setIndependentVariables(mX);
+    gwr.setSpatialWeight(mInitSpatialWeight);
+    gwr.setIsAutoselectBandwidth(true);
+    switch (mBandwidthSelectionApproach[0])
+    {
+    case GWRMultiscale::BandwidthSelectionCriterionType::CV:
+        gwr.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::CV);
+        break;
+    case GWRMultiscale::BandwidthSelectionCriterionType::AIC:
+        gwr.setBandwidthSelectionCriterion(GWRBasic::BandwidthSelectionCriterionType::AIC);
+    default:
+        break;
+    }
+    gwr.setParallelType(mParallelType);
+    switch (mParallelType)
+    {
+    case ParallelType::OpenMP:
+    case ParallelType::MPI_MP:
+        gwr.setOmpThreadNum(mOmpThreadNum);
+        break;
+    case ParallelType::CUDA:
+    case ParallelType::MPI_CUDA:
+        gwr.setGroupSize(mGroupLength);
+        gwr.setGPUId(mGpuId);
+        break;
+    default:
+        break;
+    }
+    if (mParallelType & ParallelType::MPI)
+    {
+        gwr.setWorkerId(mWorkerId);
+        gwr.setWorkerNum(mWorkerNum);
+    }
+    gwr.setStoreS(mHasHatMatrix);
+    gwr.setStoreC(mHasHatMatrix);
+    if (mGoldenLowerBounds.has_value()) gwr.setGoldenLowerBounds(mGoldenLowerBounds.value());
+    if (mGoldenUpperBounds.has_value()) gwr.setGoldenUpperBounds(mGoldenUpperBounds.value());
+    mat betas = gwr.fit();
+    mBetasSE = gwr.betasSE();
+    if (mHasHatMatrix) {
+        mS0 = gwr.s();
+        mC = gwr.c();
+    }
+    return betas;
 }
 
 mat GWRMultiscale::backfitting(const mat& betas0)
@@ -324,9 +337,8 @@ mat GWRMultiscale::backfitting(const mat& betas0)
                 bool adaptive = bwi0->adaptive();
                 BandwidthSelector selector;
                 selector.setBandwidth(bwi0);
-                double maxDist = mMaxDistances[i], minDist = mMinDistances[i];
-                selector.setLower(mGoldenLowerBounds.value_or(adaptive ? mAdaptiveLower : minDist));
-                selector.setUpper(mGoldenUpperBounds.value_or(adaptive ? mCoords.n_rows : maxDist));
+                selector.setLower(mGoldenLowerBounds.value_or(adaptive ? mAdaptiveLower : mMinDistances[i]));
+                selector.setUpper(mGoldenUpperBounds.value_or(adaptive ? mCoords.n_rows : mMaxDistances[i]));
                 BandwidthWeight* bwi = selector.optimize(this);
                 double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
                 vector<string> vbs_args {
@@ -492,13 +504,12 @@ vec GWRMultiscale::fitVarCoreSerial(const vec &x, const vec &y, const SpatialWei
     mat betas(1, nDp, fill::zeros);
     bool success = true;
     std::exception except;
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
     if (mHasHatMatrix)
     {
         mat ci, si;
-        uword rangeSize = workRange.second - workRange.first;
+        uword rangeSize = mWorkRange.second - mWorkRange.first;
         S = mat(rangeSize, nDp, fill::zeros);
-        for (uword i = workRange.first; i < workRange.second; i++)
+        for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
         {
             GWM_LOG_STOP_BREAK(mStatus);
             vec w = sw.weightVector(i);
@@ -511,7 +522,7 @@ vec GWRMultiscale::fitVarCoreSerial(const vec &x, const vec &y, const SpatialWei
                 betas.col(i) = xtwx_inv * xtwy;
                 ci = xtwx_inv * xtw;
                 si = x(i) * ci;
-                S.row(i - workRange.first) = si;
+                S.row(i - mWorkRange.first) = si;
             }
             catch (const exception& e)
             {
@@ -524,7 +535,7 @@ vec GWRMultiscale::fitVarCoreSerial(const vec &x, const vec &y, const SpatialWei
     }
     else
     {
-        for (uword i = workRange.first; i < workRange.second; i++)
+        for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
         {
             GWM_LOG_STOP_BREAK(mStatus);
             vec w = sw.weightVector(i);
@@ -556,8 +567,7 @@ vec GWRMultiscale::fitVarCoreCVSerial(const vec &x, const vec &y, const SpatialW
 {
     uword nDp = x.n_rows;
     vec beta(nDp, fill::zeros);
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-    for (uword i = workRange.first; i < workRange.second; i++)
+    for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
         vec w = sw.weightVector(i);
@@ -584,8 +594,7 @@ vec GWRMultiscale::fitVarCoreSHatSerial(const vec &x, const vec &y, const Spatia
     uword nDp = x.n_rows;
     vec betas(nDp, fill::zeros);
     shat = vec(2, fill::zeros);
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-    for (uword i = workRange.first; i < workRange.second; i++)
+    for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
         vec w = sw.weightVector(i);
@@ -618,13 +627,12 @@ vec GWRMultiscale::fitVarCoreOmp(const vec &x, const vec &y, const SpatialWeight
     mat betas(1, nDp, fill::zeros);
     bool success = true;
     std::exception except;
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
     if (mHasHatMatrix)
     {
-        uword rangeSize = workRange.second - workRange.first;
+        uword rangeSize = mWorkRange.second - mWorkRange.first;
         S = mat(rangeSize, nDp, fill::zeros);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (uword i = workRange.first; i < workRange.second; i++)
+        for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
         {
             GWM_LOG_STOP_CONTINUE(mStatus);
             vec w = sw.weightVector(i);
@@ -637,7 +645,7 @@ vec GWRMultiscale::fitVarCoreOmp(const vec &x, const vec &y, const SpatialWeight
                 betas.col(i) = xtwx_inv * xtwy;
                 mat ci = xtwx_inv * xtw;
                 mat si = x(i) * ci;
-                S.row(i - workRange.first) = si;
+                S.row(i - mWorkRange.first) = si;
             }
             catch (const exception& e)
             {
@@ -651,7 +659,7 @@ vec GWRMultiscale::fitVarCoreOmp(const vec &x, const vec &y, const SpatialWeight
     else
     {
 #pragma omp parallel for num_threads(mOmpThreadNum)
-        for (uword i = workRange.first; i < workRange.second; i++)
+        for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
         {
             GWM_LOG_STOP_CONTINUE(mStatus);
             vec w = sw.weightVector(i);
@@ -684,9 +692,8 @@ vec GWRMultiscale::fitVarCoreCVOmp(const vec &x, const vec &y, const SpatialWeig
     uword nDp = mCoords.n_rows;
     vec beta(nDp, fill::zeros);
     bool flag = true;
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (uword i = workRange.first; i < workRange.second; i++)
+    for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
@@ -717,9 +724,8 @@ vec GWRMultiscale::fitVarCoreSHatOmp(const vec &x, const vec &y, const SpatialWe
     vec betas(nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (uword i = workRange.first; i < workRange.second; i++)
+    for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         if (flag)
@@ -764,8 +770,7 @@ vec GWRMultiscale::fitVarCoreCuda(const vec &x, const vec &y, const SpatialWeigh
     int *d_info, *p_info;
     p_info = new int[mGroupLength];
     checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-    uword rangeSize = workRange.second - workRange.first;
+    uword rangeSize = mWorkRange.second - mWorkRange.first;
     size_t groups = rangeSize / mGroupLength + (rangeSize % mGroupLength == 0 ? 0 : 1);
     S = mat(mHasHatMatrix ? rangeSize : 1, nDp, fill::zeros);
     if (mHasHatMatrix)
@@ -774,7 +779,7 @@ vec GWRMultiscale::fitVarCoreCuda(const vec &x, const vec &y, const SpatialWeigh
         for (size_t i = 0; i < groups; i++)
         {
             GWM_LOG_STOP_BREAK(mStatus);
-            size_t begin = workRange.first + i * mGroupLength, length = (begin + mGroupLength > workRange.second) ? (workRange.second - begin) : mGroupLength;
+            size_t begin = mWorkRange.first + i * mGroupLength, length = (begin + mGroupLength > mWorkRange.second) ? (mWorkRange.second - begin) : mGroupLength;
             for (size_t j = 0, e = begin + j; j < length; j++, e++)
             {
                 checkCudaErrors(sw.weightVector(e, u_dists.dmem(), u_weights.dmem()));
@@ -806,7 +811,7 @@ vec GWRMultiscale::fitVarCoreCuda(const vec &x, const vec &y, const SpatialWeigh
         for (size_t i = 0; i < groups; i++)
         {
             GWM_LOG_STOP_BREAK(mStatus);
-            size_t begin = workRange.first + i * mGroupLength, length = (begin + mGroupLength > workRange.second) ? (workRange.second - begin) : mGroupLength;
+            size_t begin = mWorkRange.first + i * mGroupLength, length = (begin + mGroupLength > mWorkRange.second) ? (mWorkRange.second - begin) : mGroupLength;
             for (size_t j = 0, e = begin + j; j < length; j++, e++)
             {
                 checkCudaErrors(sw.weightVector(e, u_dists.dmem(), u_weights.dmem()));
@@ -846,13 +851,12 @@ vec GWRMultiscale::fitVarCoreCVCuda(const vec &x, const vec &y, const SpatialWei
     p_info = new int[mGroupLength];
     checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
     bool success = true;
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-    uword rangeSize = workRange.second - workRange.first;
+    uword rangeSize = mWorkRange.second - mWorkRange.first;
     size_t groups = rangeSize / mGroupLength + (rangeSize % mGroupLength == 0 ? 0 : 1);
     for (size_t i = 0; i < groups && success; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
-        size_t begin = workRange.first + i * mGroupLength, length = (begin + mGroupLength > workRange.second) ? (workRange.second - begin) : mGroupLength;
+        size_t begin = mWorkRange.first + i * mGroupLength, length = (begin + mGroupLength > mWorkRange.second) ? (mWorkRange.second - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
             checkCudaErrors(sw.weightVector(e, u_dists.dmem(), u_weights.dmem()));
@@ -899,13 +903,12 @@ vec GWRMultiscale::fitVarCoreSHatCuda(const vec &x, const vec &y, const SpatialW
     p_info = new int[mGroupLength];
     checkCudaErrors(cudaMalloc(&d_info, sizeof(int) * mGroupLength));
     bool success = true;
-    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
-    uword rangeSize = workRange.second - workRange.first;
+    uword rangeSize = mWorkRange.second - mWorkRange.first;
     size_t groups = rangeSize / mGroupLength + (rangeSize % mGroupLength == 0 ? 0 : 1);
     for (size_t i = 0; i < groups && success; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
-        size_t begin = workRange.first + i * mGroupLength, length = (begin + mGroupLength > workRange.second) ? (workRange.second - begin) : mGroupLength;
+        size_t begin = mWorkRange.first + i * mGroupLength, length = (begin + mGroupLength > mWorkRange.second) ? (mWorkRange.second - begin) : mGroupLength;
         for (size_t j = 0, e = begin + j; j < length; j++, e++)
         {
             checkCudaErrors(sw.weightVector(e, u_dists.dmem(), u_weights.dmem()));
