@@ -347,8 +347,6 @@ private:
     ParallelType mParallelType = ParallelType::SerialOnly;
 
     int mOmpThreadNum = 8;
-    arma::uword mGpuId = 0;
-    arma::uword mGroupSize = 64;
 };
 
 inline int GWRLocalCollinearity::parallelAbility() const
