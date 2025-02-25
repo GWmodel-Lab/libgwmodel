@@ -1,4 +1,4 @@
-#include "GWDR.h"
+#include "GTDR.h"
 #include <assert.h>
 #include <exception>
 #include <gsl/gsl_vector.h>
@@ -14,7 +14,7 @@ using namespace std;
 using namespace arma;
 using namespace gwm;
 
-RegressionDiagnostic GWDR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
+RegressionDiagnostic GTDR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
     vec r = y - sum(betas % x, 1);
     double rss = sum(r % r);
@@ -29,7 +29,7 @@ RegressionDiagnostic GWDR::CalcDiagnostic(const mat& x, const vec& y, const mat&
     return { rss, AIC, AICc, enp, edf, r2, r2_adj };
 }
 
-mat GWDR::fit()
+mat GTDR::fit()
 {
     GWM_LOG_STAGE("Initialization");
     uword nDims = mCoords.n_cols, nDp = mCoords.n_rows, nVars = mX.n_cols;
@@ -84,14 +84,14 @@ mat GWDR::fit()
             bws.push_back(iter.weight<BandwidthWeight>());
         }
         
-        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bws));
-        GWDRBandwidthOptimizer optimizer(bws);
+        GWM_LOG_INFO(GTDRBandwidthOptimizer::infoBandwidthCriterion(bws));
+        GTDRBandwidthOptimizer optimizer(bws);
         int resultCode = optimizer.optimize(this, mCoords.n_rows, mBandwidthOptimizeMaxIter, mBandwidthOptimizeEps, mBandwidthOptimizeStep);
         GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
         
         if (resultCode)
         {
-            throw runtime_error("[GWDR::fit] Bandwidth optimization invoke failed.");
+            throw runtime_error("[GTDR::fit] Bandwidth optimization invoke failed.");
         }
         GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     }
@@ -127,7 +127,7 @@ mat GWDR::fit()
     return mBetas;
 }
 
-mat GWDR::predictSerial(const mat& locations, const mat& x, const vec& y)
+mat GTDR::predictSerial(const mat& locations, const mat& x, const vec& y)
 {
     uword nDp = locations.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
@@ -160,7 +160,7 @@ mat GWDR::predictSerial(const mat& locations, const mat& x, const vec& y)
 }
 
 #ifdef ENABLE_OPENMP
-mat GWDR::predictOmp(const mat& locations, const mat& x, const vec& y)
+mat GTDR::predictOmp(const mat& locations, const mat& x, const vec& y)
 {
     uword nDp = locations.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
@@ -204,7 +204,7 @@ mat GWDR::predictOmp(const mat& locations, const mat& x, const vec& y)
 }
 #endif
 
-mat GWDR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
+mat GTDR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
@@ -255,7 +255,7 @@ mat GWDR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qd
 }
 
 #ifdef ENABLE_OPENMP
-mat GWDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
+mat GTDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag, mat& S)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
@@ -319,7 +319,7 @@ mat GWDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag
 }
 #endif
 
-double GWDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidths)
+double GTDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidths)
 {
     uword nDp = mCoords.n_rows, nDim = mCoords.n_cols;
     double cv = 0.0;
@@ -357,7 +357,7 @@ double GWDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidt
     }
     if (mStatus == Status::Success && success && isfinite(cv))
     {
-        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, cv));
+        GWM_LOG_INFO(GTDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, cv));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -366,7 +366,7 @@ double GWDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidt
 }
 
 #ifdef ENABLE_OPENMP
-double GWDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
+double GTDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
 {
     uword nDp = mCoords.n_rows, nDim = mCoords.n_cols;
     vec cv_all(mOmpThreadNum, arma::fill::zeros);
@@ -408,7 +408,7 @@ double GWDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
     double cv = sum(cv_all);
     if (mStatus == Status::Success && success && isfinite(cv))
     {
-        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, cv));
+        GWM_LOG_INFO(GTDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, cv));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = cv;
         return cv;
@@ -417,7 +417,7 @@ double GWDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
 }
 #endif
 
-double GWDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwidths)
+double GTDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwidths)
 {
     uword nDp = mCoords.n_rows, nDim = mCoords.n_cols, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
@@ -454,10 +454,10 @@ double GWDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwid
         }
     }
     if (!flag) return DBL_MAX;
-    double value = GWDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
+    double value = GTDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
     if (mStatus == Status::Success && isfinite(value))
     {
-        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, value));
+        GWM_LOG_INFO(GTDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, value));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = value;
         return value;
@@ -466,7 +466,7 @@ double GWDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwid
 }
 
 #ifdef ENABLE_OPENMP
-double GWDR::bandwidthCriterionAICOmp(const vector<BandwidthWeight*>& bandwidths)
+double GTDR::bandwidthCriterionAICOmp(const vector<BandwidthWeight*>& bandwidths)
 {
     uword nDp = mCoords.n_rows, nDim = mCoords.n_cols, nVar = mX.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
@@ -508,10 +508,10 @@ double GWDR::bandwidthCriterionAICOmp(const vector<BandwidthWeight*>& bandwidths
     }
     if (!success) return DBL_MAX;
     double trS = sum(trS_all);
-    double value = GWDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
+    double value = GTDR::AICc(mX, mY, betas.t(), { trS, 0.0 });
     if (mStatus == Status::Success && isfinite(value))
     {
-        GWM_LOG_INFO(GWDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, value));
+        GWM_LOG_INFO(GTDRBandwidthOptimizer::infoBandwidthCriterion(bandwidths, value));
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value - mBandwidthOptimizeEps)));
         mBandwidthLastCriterion = value;
         return value;
@@ -520,7 +520,7 @@ double GWDR::bandwidthCriterionAICOmp(const vector<BandwidthWeight*>& bandwidths
 }
 #endif
 
-double GWDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
+double GTDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
 {
     mat x = mX.cols(VariableForwardSelector::index2uvec(indepVars, mHasIntercept));
     vec y = mY;
@@ -593,7 +593,7 @@ double GWDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
     GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressTotal);
     if (mStatus == Status::Success && success)
     {
-        double value = success ? GWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
+        double value = success ? GTDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
         GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value));
         return isfinite(value) ? value : DBL_MAX;
     }
@@ -601,7 +601,7 @@ double GWDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
 }
 
 #ifdef ENABLE_OPENMP
-double GWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
+double GTDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
 {
     mat x = mX.cols(VariableForwardSelector::index2uvec(indepVars, mHasIntercept));
     vec y = mY;
@@ -679,7 +679,7 @@ double GWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
     GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressTotal);
     if (mStatus == Status::Success && success)
     {
-        double value = success ? GWDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
+        double value = success ? GTDR::AICc(x, y, betas.t(), { trS, 0.0 }) : DBL_MAX;
         GWM_LOG_INFO(IVarialbeSelectable::infoVariableCriterion(indepVars, value));
         return isfinite(value) ? value : DBL_MAX;
     }
@@ -687,7 +687,7 @@ double GWDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
 }
 #endif
 
-void GWDR::setBandwidthCriterionType(const BandwidthCriterionType& type)
+void GTDR::setBandwidthCriterionType(const BandwidthCriterionType& type)
 {
     mBandwidthCriterionType = type;
     unordered_map<BandwidthCriterionType, BandwidthCriterionCalculator> mapper;
@@ -695,60 +695,60 @@ void GWDR::setBandwidthCriterionType(const BandwidthCriterionType& type)
     {
     case ParallelType::SerialOnly:
         mapper = {
-            make_pair(BandwidthCriterionType::AIC, &GWDR::bandwidthCriterionAICSerial),
-            make_pair(BandwidthCriterionType::CV, &GWDR::bandwidthCriterionCVSerial)
+            make_pair(BandwidthCriterionType::AIC, &GTDR::bandwidthCriterionAICSerial),
+            make_pair(BandwidthCriterionType::CV, &GTDR::bandwidthCriterionCVSerial)
         };
-        mBandwidthCriterionFunction = &GWDR::bandwidthCriterionAICSerial;
+        mBandwidthCriterionFunction = &GTDR::bandwidthCriterionAICSerial;
         break;
 #ifdef ENABLE_OPENMP
     case ParallelType::OpenMP:
         mapper = {
-            make_pair(BandwidthCriterionType::AIC, &GWDR::bandwidthCriterionAICOmp),
-            make_pair(BandwidthCriterionType::CV, &GWDR::bandwidthCriterionCVOmp)
+            make_pair(BandwidthCriterionType::AIC, &GTDR::bandwidthCriterionAICOmp),
+            make_pair(BandwidthCriterionType::CV, &GTDR::bandwidthCriterionCVOmp)
         };
-        mBandwidthCriterionFunction = &GWDR::bandwidthCriterionAICOmp;
+        mBandwidthCriterionFunction = &GTDR::bandwidthCriterionAICOmp;
         break;
 #endif
     default:
         mapper = {
-            make_pair(BandwidthCriterionType::AIC, &GWDR::bandwidthCriterionAICSerial),
-            make_pair(BandwidthCriterionType::CV, &GWDR::bandwidthCriterionCVSerial)
+            make_pair(BandwidthCriterionType::AIC, &GTDR::bandwidthCriterionAICSerial),
+            make_pair(BandwidthCriterionType::CV, &GTDR::bandwidthCriterionCVSerial)
         };
-        mBandwidthCriterionFunction = &GWDR::bandwidthCriterionAICSerial;
+        mBandwidthCriterionFunction = &GTDR::bandwidthCriterionAICSerial;
         break;
     }
     mBandwidthCriterionFunction = mapper[mBandwidthCriterionType];
 }
 
-void GWDR::setParallelType(const ParallelType& type)
+void GTDR::setParallelType(const ParallelType& type)
 {
     if (type & parallelAbility())
     {
         mParallelType = type;
         switch (type) {
         case ParallelType::SerialOnly:
-            mPredictFunction = &GWDR::predictSerial;
-            mFitFunction = &GWDR::fitSerial;
-            mIndepVarCriterionFunction = &GWDR::indepVarCriterionSerial;
+            mPredictFunction = &GTDR::predictSerial;
+            mFitFunction = &GTDR::fitSerial;
+            mIndepVarCriterionFunction = &GTDR::indepVarCriterionSerial;
             break;
 #ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
-            mPredictFunction = &GWDR::predictOmp;
-            mFitFunction = &GWDR::fitOmp;
-            mIndepVarCriterionFunction= &GWDR::indepVarCriterionOmp;
+            mPredictFunction = &GTDR::predictOmp;
+            mFitFunction = &GTDR::fitOmp;
+            mIndepVarCriterionFunction= &GTDR::indepVarCriterionOmp;
             break;
 #endif
         default:
-            mPredictFunction = &GWDR::predictSerial;
-            mFitFunction = &GWDR::fitSerial;
-            mIndepVarCriterionFunction = &GWDR::indepVarCriterionSerial;
+            mPredictFunction = &GTDR::predictSerial;
+            mFitFunction = &GTDR::fitSerial;
+            mIndepVarCriterionFunction = &GTDR::indepVarCriterionSerial;
             break;
         }
     }
     setBandwidthCriterionType(mBandwidthCriterionType);
 }
 
-bool GWDR::isValid()
+bool GTDR::isValid()
 {
     if (SpatialAlgorithm::isValid())
     {
@@ -762,10 +762,10 @@ bool GWDR::isValid()
     else return false;
 }
 
-double GWDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, void* params)
+double GTDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, void* params)
 {
     Parameter* p = static_cast<Parameter*>(params);
-    GWDR* instance = p->instance;
+    GTDR* instance = p->instance;
     const vector<BandwidthWeight*>& bandwidths = *(p->bandwidths);
     double nFeature = double(p->featureCount);
     for (size_t m = 0; m < bandwidths.size(); m++)
@@ -776,7 +776,7 @@ double GWDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, void* p
     return instance->bandwidthCriterion(bandwidths);
 }
 
-const int GWDRBandwidthOptimizer::optimize(GWDR* instance, uword featureCount, size_t maxIter, double eps, double step)
+const int GTDRBandwidthOptimizer::optimize(GTDR* instance, uword featureCount, size_t maxIter, double eps, double step)
 {
     size_t nDim = mBandwidths.size();
     gsl_multimin_fminimizer* minimizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex2rand, nDim);
