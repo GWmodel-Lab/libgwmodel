@@ -1,3 +1,4 @@
+#include <gsl/gsl_cdf.h>
 #include "GWRBasic.h"
 #include "BandwidthSelector.h"
 #include "VariableForwardSelector.h"
@@ -160,6 +161,12 @@ mat GWRBasic::fit()
 
     GWM_LOG_STAGE("Model fitting");
     mBetas = (this->*mFitFunction)();
+
+    if (mIsDoFTest)
+    {
+        GWM_LOG_STAGE("F Test");
+        (this->*mFTestFunction)();
+    }
     
 #ifdef ENABLE_CUDA
     if (mParallelType & ParallelType::CUDA)
@@ -416,6 +423,174 @@ double gwm::GWRBasic::indepVarsSelectionCriterion(const vector<size_t>& indepVar
     }
 }
 
+void gwm::GWRBasic::fTestBase()
+{
+    double v1 = mSHat(0), v2 = mSHat(1);
+    double nDp = double(mCoords.n_rows), nVar = double(mX.n_cols);
+    double RSSg = RSS(mX, mY, mBetas);
+    vec betaOls = (mX.t() * mX).i() * (mX.t() * mY);
+    vec residualOls = mY - mX * betaOls;
+    double RSSo = sum(residualOls % residualOls);
+    double DFo = nDp - nVar;
+    double delta1 = nDp - 2.0 * v1 + v2;
+    double sigma21 = RSSg / delta1;
+    double lDelta1 = sum(mQDiag), lDelta2 = (this->*mCalcTrQtQFunction)();
+    //=========
+    // F1 Test
+    //=========
+    mF1Test.s = (RSSg/lDelta1)/(RSSo/DFo);
+    mF1Test.df1 = lDelta1 * lDelta1 / lDelta2;
+    mF1Test.df2 = DFo;
+    mF1Test.p = gsl_cdf_fdist_P(mF1Test.s, mF1Test.df1, mF1Test.df2);
+    //=========
+    // F2 Test
+    //=========
+    mF2Test.s = ((RSSo-RSSg)/(DFo-lDelta1))/(RSSo/DFo);
+    mF2Test.df1 = (DFo-lDelta1) * (DFo-lDelta1) / (DFo - 2 * lDelta1 + lDelta2);
+    mF2Test.df2 = DFo;
+    mF2Test.p = gsl_cdf_fdist_Q(mF2Test.s, mF2Test.df1, mF2Test.df2);
+    //=========
+    // F3 Test
+    //=========
+    mF3Test.resize(mX.n_cols);
+    vec vk2(nVar, arma::fill::zeros);
+    for (int i = 0; i < nVar; i++)
+    {
+        vec betasi = mBetas.col(i);
+        vec betasJndp = vec(nDp, fill::ones) * (sum(betasi) * 1.0 / nDp);
+        vk2(i) = (1.0 / nDp) * det(trans(betasi - betasJndp) * betasi);
+    }
+
+    for (uword i = 0; i < mX.n_cols; i++)
+    {
+        vec diagB = (this->*mCalcDiagBFunction)(i);
+        double g1 = diagB(0), g2 = diagB(1);
+        double numdf = g1 * g1 / g2;
+        FTestResult f3i;
+        f3i.s = (vk2(i) / g1) / sigma21;
+        f3i.df1 = numdf;
+        f3i.df2 = mF1Test.df1;
+        f3i.p = gsl_cdf_fdist_Q(f3i.s, numdf, mF1Test.df1);
+        mF3Test[i] = f3i;
+    }
+    //=========
+    // F4 Test
+    //=========
+    mF4Test.s = RSSg / RSSo;
+    mF4Test.df1 = delta1;
+    mF4Test.df2 = DFo;
+    mF4Test.p = gsl_cdf_fdist_P(mF4Test.s, mF4Test.df1, mF4Test.df2);
+}
+
+double GWRBasic::calcTrQtQBase()
+{
+    double trQtQ = 0.0;
+    uword nDp = mCoords.n_rows;
+    if (isStoreS())
+    {
+        mat EmS = eye(nDp, nDp) - mS;
+        mat Q = trans(EmS) * EmS;
+        trQtQ = sum(diagvec(trans(Q) * Q));
+    }
+    else
+    {
+        trQtQ = (this->*mCalcTrQtQCoreFunction)();
+    }
+    return trQtQ;
+}
+
+double GWRBasic::calcTrQtQCoreSerial()
+{
+    double trQtQ = 0.0;
+    uword nDp = mCoords.n_rows, nVar = mCoords.n_cols;
+    mat wspan(1, nVar, fill::ones);
+    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
+    for (uword i = workRange.first; i < workRange.second; i++)
+    {
+        vec wi = mSpatialWeight.weightVector(i);
+        mat xtwi = trans(mX % (wi * wspan));
+        try
+        {
+            mat xtwxR = inv_sympd(xtwi * mX);
+            mat ci = xtwxR * xtwi;
+            mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
+            vec pi = -trans(si);
+            pi(i) += 1.0;
+            double qi = sum(pi % pi);
+            trQtQ += qi * qi;
+            for (arma::uword j = i + 1; j < nDp; j++)
+            {
+                vec wj = mSpatialWeight.weightVector(j);
+                mat xtwj = trans(mX % (wj * wspan));
+                try {
+                    mat sj = mX.row(j) * inv_sympd(xtwj * mX) * xtwj;
+                    vec pj = -trans(sj);
+                    pj(j) += 1.0;
+                    double qj = sum(pi % pj);
+                    trQtQ += qj * qj * 2.0;
+                }
+                catch (const std::exception& e)
+                {
+                    return DBL_MAX;
+                }
+            }
+        }
+        catch(const std::exception& e)
+        {
+            return DBL_MAX;
+        }
+        
+    }
+    return trQtQ;
+}
+
+arma::vec GWRBasic::calcDiagBBase(arma::uword i)
+{
+    arma::uword nDp = mX.n_rows;
+    vec c(nDp, fill::zeros);
+    for (arma::uword j = 0; j < nDp; j++)
+    {
+        vec w = mSpatialWeight.weightVector(j);
+        mat xtw = trans(mX.each_col() % w);
+        try
+        {
+            mat C = trans(xtw) * inv_sympd(xtw * mX);
+            c += C.col(i);
+        }
+        catch (const std::exception& e)
+        {
+            return { DBL_MAX, DBL_MAX };
+        }
+    }
+    vec diagB = (this->*mCalcDiagBCoreFunction)(i, c);
+    diagB = 1.0 / nDp * diagB;
+    return { sum(diagB), sum(diagB % diagB) };
+}
+
+vec GWRBasic::calcDiagBCoreSerial(uword i, const vec& c)
+{
+    arma::uword nDp = mX.n_rows;
+    vec diagB(nDp, fill::zeros);
+    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
+    for (arma::uword k = workRange.first; k < workRange.second; k++)
+    {
+        vec w = mSpatialWeight.weightVector(k);
+        mat xtw = (mX.each_col() % w).t();
+        try
+        {
+            mat C = xtw.t() * inv_sympd(xtw * mX);
+            vec b = C.col(i);
+            diagB += (b % b - (1.0 / nDp) * (b % c));
+        }
+        catch (const std::exception& e)
+        {
+            diagB.fill(DBL_MAX);
+            return diagB;
+        }
+    }
+    return diagB;
+}
+
 #ifdef ENABLE_OPENMP
 mat GWRBasic::predictOmp(const mat& locations, const mat& x, const vec& y)
 {
@@ -577,6 +752,87 @@ arma::mat GWRBasic::fitCoreSHatOmp(const arma::mat& x, const arma::vec& y, const
     }
     shat = sum(shat_all, 1);
     return betas.t();
+}
+
+double GWRBasic::calcTrQtQCoreOmp()
+{
+    double trQtQ = 0.0;
+    uword nDp = mCoords.n_rows, nVar = mCoords.n_cols;
+    mat wspan(1, nVar, fill::ones);
+    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
+    int flag = true;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (uword i = workRange.first; i < workRange.second; i++)
+    {
+        if (flag) {
+            vec wi = mSpatialWeight.weightVector(i);
+            mat xtwi = trans(mX % (wi * wspan));
+            try
+            {
+                mat xtwxR = inv_sympd(xtwi * mX);
+                mat ci = xtwxR * xtwi;
+                mat si = mX.row(i) * inv(xtwi * mX) * xtwi;
+                vec pi = -trans(si);
+                pi(i) += 1.0;
+                double qi = sum(pi % pi);
+                trQtQ += qi * qi;
+                for (arma::uword j = i + 1; j < nDp; j++)
+                {
+                    vec wj = mSpatialWeight.weightVector(j);
+                    mat xtwj = trans(mX % (wj * wspan));
+                    try {
+                        mat sj = mX.row(j) * inv_sympd(xtwj * mX) * xtwj;
+                        vec pj = -trans(sj);
+                        pj(j) += 1.0;
+                        double qj = sum(pi % pj);
+                        trQtQ += qj * qj * 2.0;
+                    }
+                    catch (const std::exception& e)
+                    {
+                        flag = false;
+                    }
+                }
+            }
+            catch(const std::exception& e)
+            {
+                flag = false;
+            }
+        }
+    }
+    return flag ? trQtQ : DBL_MAX;
+}
+
+vec GWRBasic::calcDiagBCoreOmp(uword i, const vec& c)
+{
+    arma::uword nDp = mX.n_rows;
+    mat diagB_all(nDp, mOmpThreadNum, fill::zeros);
+    std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
+    int flag = true;
+#pragma omp parallel for num_threads(mOmpThreadNum)
+    for (arma::uword k = workRange.first; k < workRange.second; k++)
+    {
+        if (flag) {
+            int thread = omp_get_thread_num();
+            vec w = mSpatialWeight.weightVector(k);
+            mat xtw = trans(mX.each_col() % w);
+            try
+            {
+                mat C = trans(xtw) * inv_sympd(xtw * mX);
+                vec b = C.col(i);
+                diagB_all.col(thread) += (b % b - (1.0 / nDp) * (b % c));
+            }
+            catch (const std::exception& e)
+            {
+                flag = false;
+            }
+        }
+    }
+    if (!flag)
+    {
+        diagB_all.fill(DBL_MAX);
+    }
+    vec diagB = sum(diagB_all, 1);
+    return diagB;
 }
 #endif
 
@@ -1011,26 +1267,51 @@ arma::mat gwm::GWRBasic::fitMpi()
     return mBetas;
 }
 
-// double GWRBasic::indepVarsSelectionCriterion(const mat& x, const vec& y, vec& shat)
-// {
-//     try
-//     {
-//         mat S;
-//         mat betas = (this->*mFitCoreSHatFunction)(x, y, mSpatialWeight, shat, S);
-//         GWM_LOG_PROGRESS(++mIndepVarSelectionProgressCurrent, mIndepVarSelectionProgressTotal);
-//         if (mStatus == Status::Success)
-//         {
-//             double rss = GWRBase::RSS(x, y, betas);
-//             return rss;
-//         }
-//         else return DBL_MAX;
-//     }
-//     catch(const std::exception& e)
-//     {
-//         return DBL_MAX;
-//     }
-    
-// }
+double GWRBasic::calcTrQtQMpi()
+{
+    double trQtQ = 0.0;
+    uword nDp = mCoords.n_rows;
+    if (isStoreS())
+    {
+        std::pair<uword, uword> workRange = mWorkRange.value_or(make_pair(0, nDp));
+        mat EmS = eye(nDp, nDp).eval().rows(workRange.first, workRange.second - 1) - mS;
+        mat Q, QtQ;
+        mat_quad_mpi(EmS, Q, mWorkerId, mWorkerNum);
+        mat_quad_mpi(Q, QtQ, mWorkerId, mWorkerNum);
+        trQtQ = mat_trace_mpi(QtQ, mWorkerId, mWorkerNum);
+    }
+    else
+    {
+        double trQtQi = (this->*mCalcTrQtQCoreFunction)();
+        MPI_Allreduce(&trQtQi, &trQtQ, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    }
+    return trQtQ;
+}
+
+vec GWRBasic::calcDiagBMpi(uword i)
+{
+    arma::uword nDp = mX.n_rows;
+    vec c(nDp, fill::zeros);
+    for (arma::uword j = 0; j < nDp; j++)
+    {
+        vec w = mSpatialWeight.weightVector(j);
+        mat xtw = trans(mX.each_col() % w);
+        try
+        {
+            mat C = trans(xtw) * inv_sympd(xtw * mX);
+            c += C.col(i);
+        }
+        catch (const std::exception& e)
+        {
+            return { DBL_MAX, DBL_MAX };
+        }
+    }
+    vec diagBi = (this->*mCalcDiagBCoreFunction)(i, c);
+    vec diagB(nDp, arma::fill::zeros);
+    MPI_Allreduce(diagBi.memptr(), diagB.memptr(), int(nDp), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    diagB = 1.0 / double(nDp) * diagB;
+    return { sum(diagB), sum(diagB % diagB) };
+}
 #endif // ENABLE_MPI
 
 void GWRBasic::setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion)
@@ -1078,6 +1359,8 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitCoreFunction = &GWRBasic::fitCoreSerial;
             mFitCoreCVFunction = &GWRBasic::fitCoreCVSerial;
             mFitCoreSHatFunction = &GWRBasic::fitCoreSHatSerial;
+            mCalcTrQtQCoreFunction = &GWRBasic::calcTrQtQCoreSerial;
+            mCalcDiagBCoreFunction = &GWRBasic::calcDiagBCoreSerial;
             break;
 #ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
@@ -1086,6 +1369,8 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitCoreFunction = &GWRBasic::fitCoreOmp;
             mFitCoreCVFunction = &GWRBasic::fitCoreCVOmp;
             mFitCoreSHatFunction = &GWRBasic::fitCoreSHatOmp;
+            mCalcTrQtQCoreFunction = &GWRBasic::calcTrQtQCoreOmp;
+            mCalcDiagBCoreFunction = &GWRBasic::calcDiagBCoreOmp;
             break;
 #endif // ENABLE_OPENMP
 #ifdef ENABLE_CUDA
@@ -1095,6 +1380,8 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitCoreFunction = &GWRBasic::fitCoreCuda;
             mFitCoreCVFunction = &GWRBasic::fitCoreCVCuda;
             mFitCoreSHatFunction = &GWRBasic::fitCoreSHatCuda;
+            mCalcTrQtQCoreFunction = &GWRBasic::calcTrQtQCoreSerial;
+            mCalcDiagBCoreFunction = &GWRBasic::calcDiagBCoreSerial;
             break;
 #endif // ENABLE_CUDA
         default:
@@ -1102,6 +1389,8 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitCoreFunction = &GWRBasic::fitCoreSerial;
             mFitCoreCVFunction = &GWRBasic::fitCoreCVSerial;
             mFitCoreSHatFunction = &GWRBasic::fitCoreSHatSerial;
+            mCalcTrQtQCoreFunction = &GWRBasic::calcTrQtQCoreSerial;
+            mCalcDiagBCoreFunction = &GWRBasic::calcDiagBCoreSerial;
             break;
         }
 #ifdef ENABLE_MPI
@@ -1109,11 +1398,17 @@ void GWRBasic::setParallelType(const ParallelType& type)
         {
             mFitFunction = &GWRBasic::fitMpi;
             mIndepVarsSelectionCriterionFunction = &GWRBasic::indepVarsSelectionCriterionMpi;
+            mFTestFunction = &GWRBasic::fTestBase;
+            mCalcTrQtQFunction = &GWRBasic::calcTrQtQMpi;
+            mCalcDiagBFunction = &GWRBasic::calcDiagBMpi;
         }
         else
         {
             mFitFunction = &GWRBasic::fitBase;
             mIndepVarsSelectionCriterionFunction = &GWRBasic::indepVarsSelectionCriterion;
+            mFTestFunction = &GWRBasic::fTestBase;
+            mCalcTrQtQFunction = &GWRBasic::calcTrQtQBase;
+            mCalcDiagBFunction = &GWRBasic::calcDiagBBase;
         }
 #endif
         setBandwidthSelectionCriterion(mBandwidthSelectionCriterion);

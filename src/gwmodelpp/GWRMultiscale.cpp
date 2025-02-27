@@ -957,7 +957,7 @@ vec GWRMultiscale::fitVarMpi(const size_t var)
     if (mHasHatMatrix)
     {
         mat SArrayi = mSArray.slice(var) - mS0;
-        mat_mul_mpi(S, SArrayi, mSArray.slice(var), mWorkerId, mWorkerNum, mWorkRangeSize);
+        mat_mul_mpi(S, SArrayi, mSArray.slice(var), mWorkerId, mWorkerNum);
         mSArray.slice(var) += S;
         mS0 = mSArray.slice(var) - SArrayi;
     }

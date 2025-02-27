@@ -21,6 +21,11 @@ using namespace std;
 using namespace arma;
 using namespace gwm;
 
+array<double, 4> convFTestArray(GWRBasic::FTestResult f)
+{
+    return { f.s, f.df1, f.df2, f.p };
+}
+
 TEST_CASE("BasicGWR: LondonHP")
 {
     int iProcess, nProcess;
@@ -300,6 +305,79 @@ TEST_CASE("BasicGWR: LondonHP")
             REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2445.49629974057, 1e-8));
             REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.706143867720706, 1e-8));
             REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.678982114793865, 1e-8));
+        }
+    }
+
+    SECTION("F test | adaptive bandwidth | no bandwidth optimization | no variable optimization") {
+        auto parallel = GENERATE_REF(values(parallel_list));
+        INFO("Parallel:" << ParallelTypeDict.at(parallel));
+
+        CRSDistance distance(false);
+        BandwidthWeight bandwidth(36, true, BandwidthWeight::Gaussian);
+        SpatialWeight spatial(&bandwidth, &distance);
+
+        GWRBasic algorithm;
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
+        algorithm.setSpatialWeight(spatial);
+        algorithm.setParallelType(parallel);
+        algorithm.setWorkerId(iProcess);
+        algorithm.setWorkerNum(nProcess);
+#ifdef ENABLE_OPENMP
+        if (parallel == ParallelType::OpenMP)
+        {
+            algorithm.setOmpThreadNum(omp_get_num_threads());
+        }
+#endif // ENABLE_OPENMP
+#ifdef ENABLE_CUDA
+        if (parallel == ParallelType::CUDA)
+        {
+            algorithm.setGPUId(0);
+            algorithm.setGroupSize(64);
+        }
+#endif // ENABLE_CUDA
+        algorithm.setIsDoFtest(true);
+        REQUIRE_NOTHROW(algorithm.fit());
+        if (iProcess == 0)
+        {
+            auto results = algorithm.fTestResults();
+            auto f1 = convFTestArray(get<0>(results));
+            auto f2 = convFTestArray(get<1>(results));
+            vector<array<double, 4>> f3;
+            for (auto &&i : get<2>(results))
+            {
+                f3.push_back(convFTestArray(i));
+            }
+            auto f4 = convFTestArray(get<3>(results));
+            REQUIRE_THAT(f1[0], Catch::Matchers::WithinAbs(0.9342, 1e-3));
+            REQUIRE_THAT(f1[1], Catch::Matchers::WithinAbs(93.3300, 1e-3));
+            REQUIRE_THAT(f1[2], Catch::Matchers::WithinAbs(96.0000, 1e-3));
+            REQUIRE_THAT(f1[3], Catch::Matchers::WithinAbs(0.3710, 1e-3));
+            REQUIRE_THAT(f2[0], Catch::Matchers::WithinAbs(1.9762, 1e-3));
+            REQUIRE_THAT(f2[1], Catch::Matchers::WithinAbs(13.1571, 1e-3));
+            REQUIRE_THAT(f2[2], Catch::Matchers::WithinAbs(96.0000, 1e-3));
+            REQUIRE_THAT(f2[3], Catch::Matchers::WithinAbs(0.0303, 1e-3));
+            REQUIRE_THAT(f4[0], Catch::Matchers::WithinAbs(0.8752, 1e-3));
+            REQUIRE_THAT(f4[1], Catch::Matchers::WithinAbs(89.9377, 1e-3));
+            REQUIRE_THAT(f4[2], Catch::Matchers::WithinAbs(96.0000, 1e-3));
+            REQUIRE_THAT(f4[3], Catch::Matchers::WithinAbs(0.2619, 1e-3));
+            REQUIRE_THAT(f3[0][0], Catch::Matchers::WithinAbs(0.4655, 1e-3));
+            REQUIRE_THAT(f3[0][1], Catch::Matchers::WithinAbs(27.1298, 1e-3));
+            REQUIRE_THAT(f3[0][2], Catch::Matchers::WithinAbs(93.3300, 1e-3));
+            REQUIRE_THAT(f3[0][3], Catch::Matchers::WithinAbs(0.9872, 1e-3));
+            REQUIRE_THAT(f3[1][0], Catch::Matchers::WithinAbs(0.5022, 1e-3));
+            REQUIRE_THAT(f3[1][1], Catch::Matchers::WithinAbs(18.3315, 1e-3));
+            REQUIRE_THAT(f3[1][2], Catch::Matchers::WithinAbs(93.3300, 1e-3));
+            REQUIRE_THAT(f3[1][3], Catch::Matchers::WithinAbs(0.9526, 1e-3));
+            REQUIRE_THAT(f3[2][0], Catch::Matchers::WithinAbs(0.6415, 1e-3));
+            REQUIRE_THAT(f3[2][1], Catch::Matchers::WithinAbs(29.6827, 1e-3));
+            REQUIRE_THAT(f3[2][2], Catch::Matchers::WithinAbs(93.3300, 1e-3));
+            REQUIRE_THAT(f3[2][3], Catch::Matchers::WithinAbs(0.9151, 1e-3));
+            REQUIRE_THAT(f3[3][0], Catch::Matchers::WithinAbs(0.3019, 1e-3));
+            REQUIRE_THAT(f3[3][1], Catch::Matchers::WithinAbs(24.7164, 1e-3));
+            REQUIRE_THAT(f3[3][2], Catch::Matchers::WithinAbs(93.3300, 1e-3));
+            REQUIRE_THAT(f3[3][3], Catch::Matchers::WithinAbs(0.9994, 1e-3));
         }
     }
 
