@@ -2,34 +2,19 @@
 
 using namespace gwm;
 
-
-SpatialWeight::~SpatialWeight()
-{
-    if (mWeight) delete mWeight;
-    if (mDistance) delete mDistance;
-    mWeight = nullptr;
-    mDistance = nullptr;
-}
-
 SpatialWeight &SpatialWeight::operator=(SpatialWeight &&spatialWeight)
 {
     if (this == &spatialWeight) return *this;
-    if (mWeight) delete mWeight;
-    if (mDistance) delete mDistance;
-    mWeight = spatialWeight.mWeight;
-    mDistance = spatialWeight.mDistance;
-    spatialWeight.mWeight = nullptr;
-    spatialWeight.mDistance = nullptr;
+    mWeight = std::move(spatialWeight.mWeight);
+    mDistance = std::move(spatialWeight.mDistance);
     return *this;
 }
 
 SpatialWeight &SpatialWeight::operator=(const SpatialWeight &spatialWeight)
 {
     if (this == &spatialWeight) return *this;
-    if (mWeight) delete mWeight;
-    if (mDistance) delete mDistance;
-    mWeight = spatialWeight.mWeight->clone();
-    mDistance = spatialWeight.mDistance->clone();
+    mWeight = std::move(spatialWeight.mWeight->clone());
+    mDistance = std::move(spatialWeight.mDistance->clone());
     return *this;
 }
 

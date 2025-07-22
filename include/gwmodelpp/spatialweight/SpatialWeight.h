@@ -69,11 +69,46 @@ public:
      * @param weight 指向权重配置的指针。
      * @param distance 指向距离配置的指针。
      */
-    SpatialWeight(const Weight* weight, const Distance* distance)
-    {
-        mWeight = weight->clone();
-        mDistance = distance->clone();
-    }
+    SpatialWeight(const Weight* weight, const Distance* distance):
+        mWeight(weight->clone()),
+        mDistance(distance->clone())
+    {}
+
+    /**
+     * \~english
+     * @brief Construct a new CGwmSpatialWeight object.
+     * 
+     * @param weight Pointer to a weight configuration.
+     * @param distance Pointer to distance configuration.
+     * 
+     * \~chinese
+     * @brief 构造一个新的 CGwmSpatialWeight 对象。
+     * 
+     * @param weight 指向权重配置的指针。
+     * @param distance 指向距离配置的指针。
+     */
+    SpatialWeight(const std::unique_ptr<Weight>& weight, const std::unique_ptr<Distance>& distance):
+        mWeight(weight->clone()),
+        mDistance(distance->clone())
+    {}
+
+    /**
+     * \~english
+     * @brief Construct a new CGwmSpatialWeight object.
+     * 
+     * @param weight Pointer to a weight configuration.
+     * @param distance Pointer to distance configuration.
+     * 
+     * \~chinese
+     * @brief 构造一个新的 CGwmSpatialWeight 对象。
+     * 
+     * @param weight 指向权重配置的指针。
+     * @param distance 指向距离配置的指针。
+     */
+    SpatialWeight(std::unique_ptr<Weight>&& weight, std::unique_ptr<Distance>&& distance):
+        mWeight(std::move(weight)),
+        mDistance(std::move(distance))
+    {}
 
     /**
      * @brief Construct a new CGwmSpatialWeight object.
@@ -87,11 +122,10 @@ public:
      * @param weight 指向权重配置的引用。
      * @param distance 指向距离配置的引用。
      */
-    SpatialWeight(const Weight& weight, const Distance& distance)
-    {
-        mWeight = weight.clone();
-        mDistance = distance.clone();
-    }
+    SpatialWeight(const Weight& weight, const Distance& distance):
+        mWeight(weight.clone()),
+        mDistance(distance.clone())
+    {}
 
     /**
      * \~english
@@ -104,11 +138,10 @@ public:
      * 
      * @param spatialWeight 被复制对象的引用。
      */
-    SpatialWeight(const SpatialWeight& spatialWeight)
-    {
-        mWeight = spatialWeight.mWeight->clone();
-        mDistance = spatialWeight.mDistance->clone();
-    }
+    SpatialWeight(const SpatialWeight& spatialWeight):
+        mWeight(spatialWeight.mWeight->clone()),
+        mDistance(spatialWeight.mDistance->clone())
+    {}
 
     /**
      * @brief Move construct a new CGwmSpatialWeight object.
@@ -120,14 +153,10 @@ public:
      * 
      * @param other 被移动对象的引用。
      */
-    SpatialWeight(SpatialWeight&& other)
-    {
-        mWeight = other.mWeight;
-        mDistance = other.mDistance;
-        
-        other.mWeight = nullptr;
-        other.mDistance = nullptr;
-    }
+    SpatialWeight(SpatialWeight&& other):
+        mWeight(std::move(other.mWeight)),
+        mDistance(std::move(other.mDistance))
+    {}
 
     /**
      * \~english
@@ -136,7 +165,7 @@ public:
      * \~chinese
      * @brief 销毁 CGwmSpatialWeight 对象。
      */
-    virtual ~SpatialWeight();
+    virtual ~SpatialWeight() {};
 
     /**
      * \~english
@@ -149,7 +178,7 @@ public:
      * 
      * @return 指针 CGwmSpatialWeight::mWeight 。
      */
-    Weight *weight() const
+    const std::unique_ptr<Weight>& weight() const
     {
         return mWeight;
     }
@@ -167,12 +196,11 @@ public:
      * @param weight 指向 CGwmWeight 实例的指针。
      * 获取该指针的控制权，并在类对象析构时释放该指针所指向的对象。
      */
-    void setWeight(Weight *weight)
+    void setWeight(const Weight *weight)
     {
-        if (weight && weight != mWeight)
+        if (weight && weight != mWeight.get())
         {
-            if (mWeight) delete mWeight;
-            mWeight = weight->clone();
+            mWeight = std::move(weight->clone());
         }
     }
 
@@ -189,10 +217,9 @@ public:
      * @param weight 指向 CGwmWeight 实例的指针。
      * 指针所指向的对象会被克隆。
      */
-    void setWeight(Weight& weight)
+    void setWeight(const Weight& weight)
     {
-        if (mWeight) delete mWeight;
-        mWeight = weight.clone();
+        mWeight = std::move(weight.clone());
     }
 
     /**
@@ -210,8 +237,12 @@ public:
      */
     void setWeight(Weight&& weight)
     {
-        if (mWeight) delete mWeight;
-        mWeight = weight.clone();
+        mWeight = std::move(weight.clone());
+    }
+
+    void setWeight(std::unique_ptr<Weight>&& weight)
+    {
+        mWeight = std::move(weight);
     }
 
     /**
@@ -228,7 +259,7 @@ public:
      * @return 转换后的 CGwmSpatialWeight::mWeight 指针。
      */
     template<typename T>
-    T* weight() const { return nullptr; }
+    T& weight() const { return nullptr; }
 
     /**
      * \~english
@@ -241,7 +272,7 @@ public:
      * 
      * @return CGwmSpatialWeight::mDistance 指针。
      */
-    Distance *distance() const
+    const std::unique_ptr<Distance>& distance() const
     {
         return mDistance;
     }
@@ -259,32 +290,12 @@ public:
      * @param distance Pointer to CGwmDistance instance. 
      * Con获取该指针的控制权，并在类对象析构时释放该指针所指向的对象。
      */
-    void setDistance(Distance *distance)
+    void setDistance(const Distance *distance)
     {
-        if (distance && distance != mDistance)
+        if (distance && distance != mDistance.get())
         {
-            if (mDistance) delete mDistance;
-            mDistance = distance->clone();
+            mDistance = std::move(distance->clone());
         }
-    }
-
-    /**
-     * \~english
-     * @brief Set the pointer to CGwmSpatialWeight::mDistance object.
-     * 
-     * @param distance Reference to CGwmDistance instance.
-     * This object will be cloned.
-     * 
-     * \~chinese
-     * @brief 设置 CGwmSpatialWeight::mDistance 指针所指向的对象。
-     * 
-     * @param distance 指向 CGwmDistance 实例的指针。
-     * 指针所指向的对象会被克隆。
-     */
-    void setDistance(Distance& distance)
-    {
-        if (mDistance) delete mDistance;
-        mDistance = distance.clone();
     }
 
     /**
@@ -302,8 +313,35 @@ public:
      */
     void setDistance(Distance&& distance)
     {
-        if (mDistance) delete mDistance;
-        mDistance = distance.clone();
+        mDistance = std::move(distance.clone());
+    }
+
+    /**
+     * \~english
+     * @brief Set the pointer to CGwmSpatialWeight::mDistance object.
+     * 
+     * @param distance Reference to CGwmDistance instance.
+     * This object will be cloned.
+     * 
+     * \~chinese
+     * @brief 设置 CGwmSpatialWeight::mDistance 指针所指向的对象。
+     * 
+     * @param distance 指向 CGwmDistance 实例的指针。
+     * 指针所指向的对象会被克隆。
+     */
+    void setDistance(Distance&& distance)
+    {
+        mDistance = std::move(distance.clone());
+    }
+
+    void setDistance(const std::unique_ptr<Distance>& distance)
+    {
+        mDistance = std::move(distance->clone());
+    }
+
+    void setDistance(std::unique_ptr<Distance>&& distance)
+    {
+        mDistance = std::move(distance);
     }
 
     /**
@@ -320,7 +358,7 @@ public:
      * @return 转换后的 CGwmSpatialWeight::mDistance 指针。
      */
     template<typename T>
-    T* distance() const { return nullptr; }
+    T& distance() const { return nullptr; }
 
 public:
 
@@ -439,8 +477,8 @@ public:
     virtual bool isValid();
 
 private:
-    Weight* mWeight = nullptr;      //!< Pointer to weight configuration.
-    Distance* mDistance = nullptr;  //!< Pointer to distance configuration.
+    std::unique_ptr<Weight> mWeight = nullptr;      //!< Pointer to weight configuration.
+    std::unique_ptr<Distance> mDistance = nullptr;  //!< Pointer to distance configuration.
 };
 
 /**
@@ -455,9 +493,9 @@ private:
  * @return 转换后的 CGwmSpatialWeight::mWeight 指针。
  */
 template<>
-inline BandwidthWeight* SpatialWeight::weight<BandwidthWeight>() const
+inline BandwidthWeight& SpatialWeight::weight<BandwidthWeight>() const
 {
-    return static_cast<BandwidthWeight*>(mWeight);
+    return static_cast<BandwidthWeight&>(*mWeight.get());
 }
 
 /**
@@ -472,9 +510,9 @@ inline BandwidthWeight* SpatialWeight::weight<BandwidthWeight>() const
  * @return 转换后的 CGwmSpatialWeight::mDistance 指针。
  */
 template<>
-inline CRSDistance* SpatialWeight::distance<CRSDistance>() const
+inline CRSDistance& SpatialWeight::distance<CRSDistance>() const
 {
-    return static_cast<CRSDistance*>(mDistance);
+    return static_cast<CRSDistance&>(*mDistance.get());
 }
 
 /**
@@ -489,9 +527,9 @@ inline CRSDistance* SpatialWeight::distance<CRSDistance>() const
  * @return 转换后的 CGwmSpatialWeight::mDistance 指针。
  */
 template<>
-inline CRSSTDistance* SpatialWeight::distance<CRSSTDistance>() const
+inline CRSSTDistance& SpatialWeight::distance<CRSSTDistance>() const
 {
-    return static_cast<CRSSTDistance*>(mDistance);
+    return static_cast<CRSSTDistance&>(*mDistance.get());
 }
 
 /**
@@ -506,9 +544,9 @@ inline CRSSTDistance* SpatialWeight::distance<CRSSTDistance>() const
  * @return 转换后的 CGwmSpatialWeight::mDistance 指针。
  */
 template<>
-inline MinkwoskiDistance* SpatialWeight::distance<MinkwoskiDistance>() const
+inline MinkwoskiDistance& SpatialWeight::distance<MinkwoskiDistance>() const
 {
-    return static_cast<MinkwoskiDistance*>(mDistance);
+    return static_cast<MinkwoskiDistance&>(*mDistance.get());
 }
 
 /**
@@ -523,9 +561,9 @@ inline MinkwoskiDistance* SpatialWeight::distance<MinkwoskiDistance>() const
  * @return 转换后的 CGwmSpatialWeight::mDistance 指针。
  */
 template<>
-inline DMatDistance* SpatialWeight::distance<DMatDistance>() const
+inline DMatDistance& SpatialWeight::distance<DMatDistance>() const
 {
-    return static_cast<DMatDistance*>(mDistance);
+    return static_cast<DMatDistance&>(*mDistance.get());
 }
 
 /**
@@ -540,9 +578,9 @@ inline DMatDistance* SpatialWeight::distance<DMatDistance>() const
  * @return 转换后的 CGwmSpatialWeight::mDistance 指针。
  */
 template<>
-inline OneDimDistance* SpatialWeight::distance<OneDimDistance>() const
+inline OneDimDistance& SpatialWeight::distance<OneDimDistance>() const
 {
-    return static_cast<OneDimDistance*>(mDistance);
+    return static_cast<OneDimDistance&>(*mDistance.get());
 }
 
 }

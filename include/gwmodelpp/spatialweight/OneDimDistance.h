@@ -70,9 +70,9 @@ public:
      */
     OneDimDistance(const OneDimDistance& distance);
 
-    virtual Distance * clone() const override
+    virtual std::unique_ptr<Distance> clone() const override
     {
-        return new OneDimDistance(*this);
+        return std::make_unique<OneDimDistance>(*this);
     }
 
     DistanceType type() override { return DistanceType::OneDimDistance; }

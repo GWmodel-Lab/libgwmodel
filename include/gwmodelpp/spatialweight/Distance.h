@@ -74,7 +74,7 @@ public:
      * 
      * @return Distance* \~english Newly created pointer \~chinese 重新创建的对象指针
      */
-    virtual Distance* clone() const = 0;
+    virtual std::unique_ptr<Distance> clone() const = 0;
 
     /**
      * @brief \~english Return the type of this object. \~chinese 返回该对象的类型。

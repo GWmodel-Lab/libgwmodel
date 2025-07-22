@@ -52,7 +52,7 @@ public:
      * 
      * @return \~english Newly created pointer \~chinese 新创建的指针
      */
-    virtual Weight* clone() const = 0;
+    virtual std::unique_ptr<Weight> clone() const = 0;
 
 public:
 

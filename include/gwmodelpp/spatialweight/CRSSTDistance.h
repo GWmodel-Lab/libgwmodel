@@ -75,9 +75,9 @@ public:
      */
     CRSSTDistance(const CRSSTDistance& distance);
 
-    Distance * clone() const override
+    std::unique_ptr<Distance> clone() const override
     {
-        return new CRSSTDistance(*this);
+        return std::make_unique<CRSSTDistance>(*this);
     }
 
     DistanceType type() override { return DistanceType::CRSSTDistance; }

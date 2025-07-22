@@ -172,9 +172,9 @@ public:
         mKernel = bandwidthWeight->kernel();
     }
 
-    virtual Weight * clone() const override
+    virtual std::unique_ptr<Weight> clone() const override
     {
-        return new BandwidthWeight(*this);
+        return std::make_unique<BandwidthWeight>(*this);
     }
 
 public:

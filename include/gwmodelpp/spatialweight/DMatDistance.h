@@ -44,9 +44,9 @@ public:
      */
     DMatDistance(const DMatDistance& distance);
 
-    virtual Distance * clone() const override
+    virtual std::unique_ptr<Distance> clone() const override
     {
-        return new DMatDistance(*this);
+        return std::make_unique<DMatDistance>(*this);
     }
 
     DistanceType type() override { return DistanceType::DMatDistance; }
