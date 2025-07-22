@@ -47,7 +47,7 @@ public:
     /**
      * @brief \~english Types of distance. \~chinese 距离度量类型。
      */
-    enum DistanceType
+    enum class DistanceType
     {
         CRSDistance,        //!< \~english Distance according to coordinate reference system \~chinese 坐标系距离
         MinkwoskiDistance,  //!< \~english Minkwoski distance \~chinese Minkwoski 距离

@@ -106,9 +106,9 @@ TEST_CASE("GWCorrelation: londonhp100")
         REQUIRE_NOTHROW(algorithm.run());
 
         const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
-        REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(68, 1e-3));
-        REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(26, 1e-3));
-        REQUIRE_THAT(spatialWeights[2].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 1e-3));
+        REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(68, 1e-3));
+        REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(26, 1e-3));
+        REQUIRE_THAT(spatialWeights[2].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(98, 1e-3));
 
         vec p = {0.0, 0.25, 0.5, 0.75, 1.0};
         mat localcorr_q0 = {
@@ -153,9 +153,9 @@ TEST_CASE("GWCorrelation: londonhp100")
         REQUIRE_NOTHROW(algorithm.run());
 
         const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
-        REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(68, 1e-3));
-        REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(26, 1e-3));
-        REQUIRE_THAT(spatialWeights[2].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 1e-3));
+        REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(68, 1e-3));
+        REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(26, 1e-3));
+        REQUIRE_THAT(spatialWeights[2].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(98, 1e-3));
 
         vec p = {0.0, 0.25, 0.5, 0.75, 1.0};
 

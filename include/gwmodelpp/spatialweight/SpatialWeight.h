@@ -200,7 +200,7 @@ public:
     {
         if (weight && weight != mWeight.get())
         {
-            mWeight = std::move(weight->clone());
+            mWeight = weight->clone();
         }
     }
 
@@ -219,7 +219,7 @@ public:
      */
     void setWeight(const Weight& weight)
     {
-        mWeight = std::move(weight.clone());
+        mWeight = weight.clone();
     }
 
     /**
@@ -237,7 +237,7 @@ public:
      */
     void setWeight(Weight&& weight)
     {
-        mWeight = std::move(weight.clone());
+        mWeight = weight.clone();
     }
 
     void setWeight(std::unique_ptr<Weight>&& weight)
@@ -294,7 +294,7 @@ public:
     {
         if (distance && distance != mDistance.get())
         {
-            mDistance = std::move(distance->clone());
+            mDistance = distance->clone();
         }
     }
 
@@ -311,9 +311,9 @@ public:
      * @param distance 指向 CGwmDistance 实例的指针。
      * 指针所指向的对象会被克隆。
      */
-    void setDistance(Distance&& distance)
+    void setDistance(const Distance& distance)
     {
-        mDistance = std::move(distance.clone());
+        mDistance = distance.clone();
     }
 
     /**
@@ -331,12 +331,12 @@ public:
      */
     void setDistance(Distance&& distance)
     {
-        mDistance = std::move(distance.clone());
+        mDistance = distance.clone();
     }
 
     void setDistance(const std::unique_ptr<Distance>& distance)
     {
-        mDistance = std::move(distance->clone());
+        mDistance = distance->clone();
     }
 
     void setDistance(std::unique_ptr<Distance>&& distance)

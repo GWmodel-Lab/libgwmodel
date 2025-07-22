@@ -170,16 +170,16 @@ mat GWRMultiscale::fit()
             mBandwidthSizeCriterion = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
             mBandwidthSelectionCurrentIndex = i;
             mXi = mX.col(i);
-            BandwidthWeight* bw0 = bandwidth(i);
-            bool adaptive = bw0->adaptive();
+            const BandwidthWeight& bw0 = bandwidth(i);
+            bool adaptive = bw0.adaptive();
 
             GWM_LOG_INFO(string(GWM_LOG_TAG_MGWR_INITIAL_BW) + to_string(i));
-            BandwidthSelector selector;
-            selector.setBandwidth(bw0);
+            BandwidthSelector selector(bw0);
             selector.setLower(mGoldenLowerBounds.value_or(adaptive ? mAdaptiveLower : mMinDistances[i]));
             selector.setUpper(mGoldenUpperBounds.value_or(adaptive ? mCoords.n_rows : mMaxDistances[i]));
-            BandwidthWeight* bw = selector.optimize(this);
-            if (bw)
+            mStatus = selector.optimize(this);
+            const BandwidthWeight& bw = selector.result();
+            if (mStatus == Status::Success)
             {
                 mSpatialWeights[i].setWeight(bw);
 #ifdef ENABLE_CUDA
@@ -187,7 +187,7 @@ mat GWRMultiscale::fit()
                     mSpatialWeights[i].prepareCuda(mGpuId);
 #endif // ENABLE_CUDA
             }
-            GWM_LOG_INFO(string(GWM_LOG_TAG_MGWR_INITIAL_BW)  + to_string(i)  + "," + to_string(bw->bandwidth()));
+            GWM_LOG_INFO(string(GWM_LOG_TAG_MGWR_INITIAL_BW)  + to_string(i)  + "," + to_string(bw.bandwidth()));
         }
         GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVar, arma::fill::zeros));
     }
@@ -333,14 +333,14 @@ mat GWRMultiscale::backfitting(const mat& betas0)
                 GWM_LOG_MGWR_BACKFITTING("#variable-bandwidth-selection " + to_string(i));
                 mBandwidthSizeCriterion = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
                 mBandwidthSelectionCurrentIndex = i;
-                BandwidthWeight* bwi0 = bandwidth(i);
-                bool adaptive = bwi0->adaptive();
-                BandwidthSelector selector;
-                selector.setBandwidth(bwi0);
+                const BandwidthWeight& bwi0 = bandwidth(i);
+                bool adaptive = bwi0.adaptive();
+                BandwidthSelector selector(bwi0);
                 selector.setLower(mGoldenLowerBounds.value_or(adaptive ? mAdaptiveLower : mMinDistances[i]));
                 selector.setUpper(mGoldenUpperBounds.value_or(adaptive ? mCoords.n_rows : mMaxDistances[i]));
-                BandwidthWeight* bwi = selector.optimize(this);
-                double bwi0s = bwi0->bandwidth(), bwi1s = bwi->bandwidth();
+                mStatus = selector.optimize(this);
+                const BandwidthWeight& bwi = selector.result();
+                double bwi0s = bwi0.bandwidth(), bwi1s = bwi.bandwidth();
                 vector<string> vbs_args {
                     to_string(i),
                     to_string(bwi0s),
@@ -409,9 +409,9 @@ arma::vec gwm::GWRMultiscale::fitVarBase(const size_t var)
     return beta;
 }
 
-double gwm::GWRMultiscale::bandwidthSizeCriterionVarCVBase(BandwidthWeight* bandwidthWeight)
+double gwm::GWRMultiscale::bandwidthSizeCriterionVarCVBase(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
-    SpatialWeight sw(bandwidthWeight, mSpatialWeights[mBandwidthSelectionCurrentIndex].distance());
+    SpatialWeight sw(bandwidthWeight->clone(), mSpatialWeights[mBandwidthSelectionCurrentIndex].distance());
     try
     {
         vec betas = (this->*mFitVarCoreCV)(mXi, mYi, sw);
@@ -419,7 +419,7 @@ double gwm::GWRMultiscale::bandwidthSizeCriterionVarCVBase(BandwidthWeight* band
         double cv = sum(res % res);
         if (mStatus == Status::Success && isfinite(cv))
         {
-            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
+            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight.get(), cv));
             GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
             mBandwidthLastCriterion = cv;
             return cv;
@@ -432,9 +432,9 @@ double gwm::GWRMultiscale::bandwidthSizeCriterionVarCVBase(BandwidthWeight* band
     }
 }
 
-double gwm::GWRMultiscale::bandwidthSizeCriterionVarAICBase(BandwidthWeight* bandwidthWeight)
+double gwm::GWRMultiscale::bandwidthSizeCriterionVarAICBase(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
-    SpatialWeight sw(bandwidthWeight, mSpatialWeights[mBandwidthSelectionCurrentIndex].distance());
+    SpatialWeight sw(bandwidthWeight->clone(), mSpatialWeights[mBandwidthSelectionCurrentIndex].distance());
     try
     {
         vec shat;
@@ -442,7 +442,7 @@ double gwm::GWRMultiscale::bandwidthSizeCriterionVarAICBase(BandwidthWeight* ban
         double value = GWRBase::AICc(mXi, mYi, betas, shat);
         if (mStatus == Status::Success && isfinite(value))
         {
-            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value));
+            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight.get(), value));
             GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
             mBandwidthLastCriterion = value;
             return value;
@@ -479,17 +479,17 @@ bool GWRMultiscale::isValid()
 
     for (size_t i = 0; i < nVar; i++)
     {
-        BandwidthWeight* bw = mSpatialWeights[i].weight<BandwidthWeight>();
+        const BandwidthWeight& bw = mSpatialWeights[i].weight<BandwidthWeight>();
         if (mBandwidthInitilize[i] == GWRMultiscale::Specified || mBandwidthInitilize[i] == GWRMultiscale::Initial)
         {
-            if (bw->adaptive())
+            if (bw.adaptive())
             {
-                if (bw->bandwidth() <= 1)
+                if (bw.bandwidth() <= 1)
                     return false;
             }
             else
             {
-                if (bw->bandwidth() < 0.0)
+                if (bw.bandwidth() < 0.0)
                     return false;
             }
         }
@@ -964,7 +964,7 @@ vec GWRMultiscale::fitVarMpi(const size_t var)
     return beta;
 }
 
-double GWRMultiscale::bandwidthSizeCriterionVarCVMpi(BandwidthWeight* bandwidthWeight)
+double GWRMultiscale::bandwidthSizeCriterionVarCVMpi(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     SpatialWeight sw(bandwidthWeight, mSpatialWeights[mBandwidthSelectionCurrentIndex].distance());
     int status = 1;
@@ -1004,7 +1004,7 @@ double GWRMultiscale::bandwidthSizeCriterionVarCVMpi(BandwidthWeight* bandwidthW
     else return DBL_MAX;
 }
 
-double GWRMultiscale::bandwidthSizeCriterionVarAICMpi(BandwidthWeight* bandwidthWeight)
+double GWRMultiscale::bandwidthSizeCriterionVarAICMpi(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     SpatialWeight sw(bandwidthWeight, mSpatialWeights[mBandwidthSelectionCurrentIndex].distance());
     int status = 1;

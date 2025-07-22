@@ -107,7 +107,7 @@ public:
         CV      //!< CV
     };
 
-    typedef double (GWRGeneralized::*BandwidthSelectCriterionFunction)(BandwidthWeight *);  //!< \~english Calculator to get criterion for bandwidth optimization \~chinese 带宽优选指标值计算函数
+    typedef double (GWRGeneralized::*BandwidthSelectCriterionFunction)(const std::unique_ptr<BandwidthWeight>&);  //!< \~english Calculator to get criterion for bandwidth optimization \~chinese 带宽优选指标值计算函数
     typedef arma::mat (GWRGeneralized::*GGWRfitFunction)(const arma::mat& x, const arma::vec& y);   //!< \~english Calculator for fitting \~chinese 拟合函数
     typedef arma::vec (GWRGeneralized::*CalWtFunction)(const arma::mat &x, const arma::vec &y, arma::mat w);    //!< \~english Calculator for weighting \~chinese 加权函数
 
@@ -126,7 +126,7 @@ public:
     ~GWRGeneralized(){};
 
 public: // IBandwidthSizeSelectable interface
-    Status getCriterion(BandwidthWeight *bandwidthWeight, double& criterion) override
+    Status getCriterion(const std::unique_ptr<BandwidthWeight>& bandwidthWeight, double& criterion) override
     {
         criterion = (this->*mBandwidthSelectCriterionFunction)(bandwidthWeight);
         return mStatus;
@@ -273,7 +273,7 @@ private:
      * @param bandwidths \~english Given bandwidths \~chinese 给定带宽值
      * @return double \~english Criterion value \~chinese 指标值
      */
-    double bandwidthSizeGGWRCriterionCVSerial(BandwidthWeight *bandwidthWeight);
+    double bandwidthSizeGGWRCriterionCVSerial(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
 
     /**
      * @brief \~english Serial implementation of calculator to get AIC criterion for given bandwidths. \~chinese 获取给定带宽值对应的AIC值的串行实现。
@@ -281,7 +281,7 @@ private:
      * @param bandwidths \~english Given bandwidths \~chinese 给定带宽值
      * @return double \~english Criterion value \~chinese 指标值
      */
-    double bandwidthSizeGGWRCriterionAICSerial(BandwidthWeight *bandwidthWeight);
+    double bandwidthSizeGGWRCriterionAICSerial(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
 
 #ifdef ENABLE_OPENMP
     /**
@@ -290,7 +290,7 @@ private:
      * @param bandwidths \~english Given bandwidths \~chinese 给定带宽值
      * @return double \~english Criterion value \~chinese 指标值
      */
-    double bandwidthSizeGGWRCriterionCVOmp(BandwidthWeight *bandwidthWeight);
+    double bandwidthSizeGGWRCriterionCVOmp(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
 
     /**
      * @brief \~english Multithreading implementation of calculator to get AIC criterion for given bandwidths. \~chinese 获取给定带宽值对应的AIC值的多线程实现。
@@ -298,7 +298,7 @@ private:
      * @param bandwidths \~english Given bandwidths \~chinese 给定带宽值
      * @return double \~english Criterion value \~chinese 指标值
      */
-    double bandwidthSizeGGWRCriterionAICOmp(BandwidthWeight *bandwidthWeight);
+    double bandwidthSizeGGWRCriterionAICOmp(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
 #endif
 
 public:
@@ -365,7 +365,6 @@ public:
 
     void setBandwidthSelectionCriterionType(const BandwidthSelectionCriterionType &bandwidthSelectionCriterionType);
     BandwidthCriterionList bandwidthSelectorCriterions() const;
-    BandwidthCriterionList mBandwidthSelectionCriterionList;
     BandwidthSelectionCriterionType bandwidthSelectionCriterionType() const;
 
     /**
@@ -473,7 +472,7 @@ protected:
     bool mIsAutoselectBandwidth = false;    //!< \~english Whether bandwidth optimization is enabled \~chinese 是否进行带宽优选
     BandwidthSelectionCriterionType mBandwidthSelectionCriterionType = BandwidthSelectionCriterionType::AIC;    //!< \~english Type of criterion for bandwidth optimization \~chinese 带宽优选指标类型
     BandwidthSelectCriterionFunction mBandwidthSelectCriterionFunction = &GWRGeneralized::bandwidthSizeGGWRCriterionCVSerial;   //!< \~english Calculator to get criterion for given bandwidth value \~chinese 用于根据给定带宽值计算指标值的函数
-    BandwidthSelector mBandwidthSizeSelector;   //!< \~english Bandwidth size selector \~chinese 带宽选择器
+    BandwidthCriterionList mBandwidthSelectionCriterionList;
     double mBandwidthLastCriterion = DBL_MAX;   //!< \~english Last criterion for bandwidth selection. \~chinese 上一次带宽优选的有效指标值。
 
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Type of parallelization \~chinese 并行方法类型
@@ -527,7 +526,7 @@ inline void GWRGeneralized::setMaxiter(size_t maxiter)
 
 inline BandwidthCriterionList GWRGeneralized::bandwidthSelectorCriterions() const
 {
-    return mBandwidthSizeSelector.bandwidthCriterion();
+    return mBandwidthSelectionCriterionList;
 }
 
 inline bool GWRGeneralized::hasHatMatrix() const

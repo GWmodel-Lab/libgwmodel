@@ -178,7 +178,7 @@ public:
     }
 
 public:
-    virtual arma::vec weight(arma::vec dist) override;
+    virtual arma::vec weight(arma::vec dist) const override;
 
 #ifdef ENABLE_CUDA
     virtual cudaError_t weight(double* d_dists, double* d_weights, size_t elems) override;

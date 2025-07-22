@@ -231,7 +231,7 @@ public: //calculating functions
 
 public: //bandwidth selection
 
-    typedef double (GWCorrelation::*BandwidthSizeCriterionFunction)(BandwidthWeight*);  //!< \~english Function to calculate the criterion for given bandwidth size. \~chinese 根据指定带宽大小计算对应指标值的函数。
+    typedef double (GWCorrelation::*BandwidthSizeCriterionFunction)(const std::unique_ptr<BandwidthWeight>&);  //!< \~english Function to calculate the criterion for given bandwidth size. \~chinese 根据指定带宽大小计算对应指标值的函数。
 
     bool isAutoselectBandwidth() { return mIsAutoselectBandwidth; }
 
@@ -294,7 +294,7 @@ public: //bandwidth selection
      * \~chinese
      * @brief 带宽优选指标计算函数声明。
      */
-    typedef double (GWCorrelation::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);
+    typedef double (GWCorrelation::*BandwidthSelectionCriterionCalculator)(const std::unique_ptr<BandwidthWeight>&);
 
     // bool isAutoselectBandwidth() const { return mIsAutoselectBandwidth; }
     // void setIsAutoselectBandwidth(bool isAutoSelect) { mIsAutoselectBandwidth = isAutoSelect; }
@@ -354,7 +354,7 @@ private:
      * @param bandwidthWeight 指定的带宽。
      * @return double 带宽优选的指标值。
      */
-    double bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionCVSerial(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
         
     /**
      * \~english
@@ -369,16 +369,16 @@ private:
      * @param weigbandwidthWeightht 指定的带宽。
      * @return double 带宽优选的指标值。
      */
-    double bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionAICSerial(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
 
 #ifdef ENABLE_OPENMP
-    double bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionCVOmp(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
 
-    double bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionAICOmp(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
 #endif
 
 public:     // Implement IBandwidthSelectable
-    Status getCriterion(BandwidthWeight* weight, double& criterion) override
+    Status getCriterion(const std::unique_ptr<BandwidthWeight>& weight, double& criterion) override
     {
         criterion = (this->*mBandwidthSizeCriterion)(weight);
         return mStatus;
@@ -464,7 +464,7 @@ public:     // IMultivariateAnalysis
 protected:
     // std::vector<SpatialWeight> mSpatialWeights;   //!< Spatial weight configuration.
 
-    BandwidthWeight* bandwidth(size_t i)
+    BandwidthWeight& bandwidth(size_t i)
     {
         return mSpatialWeights[i].weight<BandwidthWeight>();
     }

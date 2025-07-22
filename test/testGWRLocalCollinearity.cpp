@@ -78,7 +78,7 @@ TEST_CASE("LocalCollinearityGWR")
 
         REQUIRE_NOTHROW(algorithm.fit());
 
-        size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
+        size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>().bandwidth();
         REQUIRE(bw == 67);
     }
 
@@ -157,7 +157,7 @@ TEST_CASE("LocalCollinearityGWR")
         algorithm.setOmpThreadNum(omp_get_num_threads());
         REQUIRE_NOTHROW(algorithm.fit());
 
-        double bw = algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
+        double bw = algorithm.spatialWeight().weight<BandwidthWeight>().bandwidth();
         REQUIRE(bw == 67.0);
 
         REQUIRE_THAT(algorithm.localCN().max(), Catch::Matchers::WithinAbs(50.634464389348, 1e-8));

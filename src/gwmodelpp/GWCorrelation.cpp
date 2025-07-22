@@ -59,17 +59,17 @@ bool GWCorrelation::isValid()
 
     for (size_t i = 0; i < nCol; i++)
     {
-        BandwidthWeight* bw = mSpatialWeights[i].weight<BandwidthWeight>();
+        const BandwidthWeight& bw = mSpatialWeights[i].weight<BandwidthWeight>();
         if (mBandwidthInitilize[i] == GWCorrelation::Specified || mBandwidthInitilize[i] == GWCorrelation::Initial)
         {
-            if (bw->adaptive())
+            if (bw.adaptive())
             {
-                if (bw->bandwidth() < 1)
+                if (bw.bandwidth() < 1)
                     return false;
             }
             else
             {
-                if (bw->bandwidth() < 0.0)
+                if (bw.bandwidth() < 0.0)
                     return false;
             }
         }
@@ -103,13 +103,12 @@ void GWCorrelation::run()
             mXi = mX.col(i/nRsp);
             mYi = mY.col(i%nRsp);
             GWM_LOG_INFO(string(GWM_LOG_TAG_GWCORR_INITIAL_BW) + to_string(i));
-            BandwidthWeight* bw0 = bandwidth(i);
-            BandwidthSelector selector;
-            selector.setBandwidth(bw0);
-            selector.setLower(bw0->adaptive() ? 20 : 0.0);
-            selector.setUpper(bw0->adaptive() ? nDp : mSpatialWeights[i].distance()->maxDistance());
-            BandwidthWeight* bw = selector.optimize(this);
-            if(bw)
+            const BandwidthWeight& bw0 = bandwidth(i);
+            BandwidthSelector selector(bw0);
+            selector.setLower(bw0.adaptive() ? 20 : 0.0);
+            selector.setUpper(bw0.adaptive() ? nDp : mSpatialWeights[i].distance()->maxDistance());
+            const BandwidthWeight& bw = selector.result();
+            if(selector.optimize(this) == Status::Success)
             {
                 mSpatialWeights[i].setWeight(bw);
                 GWM_LOG_INFO(string(GWM_LOG_TAG_GWCORR_INITIAL_BW) + to_string(i) + "," + to_string(bw->bandwidth()));
@@ -262,7 +261,7 @@ void GWCorrelation::GWCorrelationOmp()
 }
 #endif
 
-double GWCorrelation::bandwidthSizeCriterionAICSerial(BandwidthWeight *bandwidthWeight)
+double GWCorrelation::bandwidthSizeCriterionAICSerial(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
     uword nDp = mCoords.n_rows;
@@ -302,7 +301,7 @@ double GWCorrelation::bandwidthSizeCriterionAICSerial(BandwidthWeight *bandwidth
 }
 
 
-double GWCorrelation::bandwidthSizeCriterionCVSerial(BandwidthWeight *bandwidthWeight)
+double GWCorrelation::bandwidthSizeCriterionCVSerial(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
     uword nDp = mCoords.n_rows;
@@ -340,7 +339,7 @@ double GWCorrelation::bandwidthSizeCriterionCVSerial(BandwidthWeight *bandwidthW
 }
 
 #ifdef ENABLE_OPENMP
-double GWCorrelation::bandwidthSizeCriterionAICOmp(BandwidthWeight *bandwidthWeight)
+double GWCorrelation::bandwidthSizeCriterionAICOmp(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
     uword nDp = mCoords.n_rows;
@@ -397,7 +396,7 @@ double GWCorrelation::bandwidthSizeCriterionAICOmp(BandwidthWeight *bandwidthWei
 #endif
 
 #ifdef ENABLE_OPENMP
-double GWCorrelation::bandwidthSizeCriterionCVOmp(BandwidthWeight *bandwidthWeight)
+double GWCorrelation::bandwidthSizeCriterionCVOmp(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
     uword nDp = mCoords.n_rows;

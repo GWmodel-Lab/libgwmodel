@@ -13,8 +13,8 @@ SpatialWeight &SpatialWeight::operator=(SpatialWeight &&spatialWeight)
 SpatialWeight &SpatialWeight::operator=(const SpatialWeight &spatialWeight)
 {
     if (this == &spatialWeight) return *this;
-    mWeight = std::move(spatialWeight.mWeight->clone());
-    mDistance = std::move(spatialWeight.mDistance->clone());
+    mWeight = spatialWeight.mWeight->clone();
+    mDistance = spatialWeight.mDistance->clone();
     return *this;
 }
 

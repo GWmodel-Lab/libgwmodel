@@ -142,8 +142,8 @@ RegressionDiagnostic GWRScalable::CalcDiagnostic(const mat& x, const vec& y, con
 
 void GWRScalable::findDataPointNeighbours()
 {
-    BandwidthWeight* bandwidth = mDpSpatialWeight.weight<BandwidthWeight>();
-    uword nDp = mCoords.n_rows, nBw = uword(bandwidth->bandwidth()) < nDp ? uword(bandwidth->bandwidth()) : nDp;
+    BandwidthWeight& bandwidth = mDpSpatialWeight.weight<BandwidthWeight>();
+    uword nDp = mCoords.n_rows, nBw = uword(bandwidth.bandwidth()) < nDp ? uword(bandwidth.bandwidth()) : nDp;
     if (mParameterOptimizeCriterion == BandwidthSelectionCriterionType::CV)
     {
         nBw -= 1;
@@ -172,10 +172,10 @@ void GWRScalable::findDataPointNeighbours()
 
 mat GWRScalable::findNeighbours(const mat& points, umat &nnIndex)
 {
-    BandwidthWeight* bandwidth = mSpatialWeight.weight<BandwidthWeight>();
+    BandwidthWeight& bandwidth = mSpatialWeight.weight<BandwidthWeight>();
     uword nDp = mCoords.n_rows;
     uword nRp = points.n_rows;
-    uword nBw = uword(bandwidth->bandwidth()) < nDp ? uword(bandwidth->bandwidth()) : nDp;
+    uword nBw = uword(bandwidth.bandwidth()) < nDp ? uword(bandwidth.bandwidth()) : nDp;
     umat index(nBw, nRp, fill::zeros);
     mat dists(nBw, nRp, fill::zeros);
     for (uword i = 0; i < nRp; i++)
@@ -302,15 +302,15 @@ mat GWRScalable::predict(const mat& locations)
     createDistanceParameter();
     mDpSpatialWeight = mSpatialWeight;
     findDataPointNeighbours();
-    BandwidthWeight* bandwidth = mSpatialWeight.weight<BandwidthWeight>();
-    arma::uword nDp = mX.n_rows, nRp = locations.n_rows, nVar = mX.n_rows, nBw = (uword)bandwidth->bandwidth();
+    BandwidthWeight& bandwidth = mSpatialWeight.weight<BandwidthWeight>();
+    arma::uword nDp = mX.n_rows, nRp = locations.n_rows, nVar = mX.n_rows, nBw = (uword)bandwidth.bandwidth();
     if (nBw >= nDp) 
     {
         nBw = nDp - 1;
-        bandwidth->setBandwidth((double)nBw);
+        bandwidth.setBandwidth((double)nBw);
     }
     double band0 = 0.0;
-    switch (bandwidth->kernel())
+    switch (bandwidth.kernel())
     {
     case BandwidthWeight::KernelFunctionType::Gaussian:
         band0 = median(mDpNNDists.col(min<uword>(50, nBw) - 1)) / sqrt(3);
@@ -348,15 +348,15 @@ mat GWRScalable::predictSerial(const mat& locations, const arma::mat &x, const a
     {
         mSpatialWeight.distance()->makeParameter({ locations, mCoords });
     }
-    BandwidthWeight* bandwidth = mSpatialWeight.weight<BandwidthWeight>();
+    BandwidthWeight& bandwidth = mSpatialWeight.weight<BandwidthWeight>();
     //uword nDp = mCoords.n_rows;
     uword nRp = locations.n_rows, nVar = mX.n_cols;
-    uword nBw = (uword)bandwidth->bandwidth();
+    uword nBw = (uword)bandwidth.bandwidth();
     double band0 = 0.0;
     mat G0;
     umat rpNNIndex;
     mat rpNNDists = findNeighbours(locations, rpNNIndex);
-    switch (bandwidth->kernel())
+    switch (bandwidth.kernel())
     {
     case BandwidthWeight::KernelFunctionType::Gaussian:
         band0 = median(rpNNDists.col(min<uword>(50, nBw) - 1)) / sqrt(3);
@@ -466,15 +466,15 @@ mat GWRScalable::fit()
     createDistanceParameter();
     mDpSpatialWeight = mSpatialWeight;
     findDataPointNeighbours();
-    BandwidthWeight* bandwidth = mSpatialWeight.weight<BandwidthWeight>();
-    arma::uword nDp = mX.n_rows, nVar = mX.n_cols, nBw = (uword)bandwidth->bandwidth();
+    BandwidthWeight& bandwidth = mSpatialWeight.weight<BandwidthWeight>();
+    arma::uword nDp = mX.n_rows, nVar = mX.n_cols, nBw = (uword)bandwidth.bandwidth();
     if (nBw >= nDp) 
     {
         nBw = nDp - 1;
-        bandwidth->setBandwidth((double)nBw);
+        bandwidth.setBandwidth((double)nBw);
     }
     double band0 = 0.0;
-    switch (bandwidth->kernel())
+    switch (bandwidth.kernel())
     {
     case BandwidthWeight::KernelFunctionType::Gaussian:
         band0 = median(mDpNNDists.col(min<uword>(50, nBw) - 1)) / sqrt(3);
@@ -519,13 +519,13 @@ mat GWRScalable::fit()
 
 arma::mat GWRScalable::fitSerial(const arma::mat &x, const arma::vec &y)
 {
-    BandwidthWeight* bandwidth = mSpatialWeight.weight<BandwidthWeight>();
-    uword bw = (uword)bandwidth->bandwidth();
+    BandwidthWeight& bandwidth = mSpatialWeight.weight<BandwidthWeight>();
+    uword bw = (uword)bandwidth.bandwidth();
     uword n = x.n_rows, k = x.n_cols, poly1 = mPolynomial + 1;
     if (bw >= n)
     {
         bw = bw - 1;
-        bandwidth->setBandwidth((double)bw);
+        bandwidth.setBandwidth((double)bw);
     }
     double b = mScale, a = mPenalty;
     mat XtX = x.t() * x, XtY = x.t() * y;
@@ -534,7 +534,7 @@ arma::mat GWRScalable::fitSerial(const arma::mat &x, const arma::vec &y)
     double band0 = 0.0;
     umat dpNNIndex;
     mat dpNNDists = findNeighbours(mCoords, dpNNIndex);
-    switch (bandwidth->kernel())
+    switch (bandwidth.kernel())
     {
     case BandwidthWeight::KernelFunctionType::Gaussian:
         band0 = median(dpNNDists.col(min<uword>(50, bw) - 1)) / sqrt(3);
@@ -666,11 +666,11 @@ bool GWRScalable::isValid()
 {
     if (GWRBase::isValid())
     {
-        BandwidthWeight* bw = mSpatialWeight.weight<BandwidthWeight>();
-        if (!(bw->kernel() == BandwidthWeight::Gaussian || bw->kernel() == BandwidthWeight::Exponential))
+        BandwidthWeight& bw = mSpatialWeight.weight<BandwidthWeight>();
+        if (!(bw.kernel() == BandwidthWeight::Gaussian || bw.kernel() == BandwidthWeight::Exponential))
             return false;
 
-        if (!(bw->bandwidth()>0))
+        if (!(bw.bandwidth()>0))
         {
             return false;
         }
