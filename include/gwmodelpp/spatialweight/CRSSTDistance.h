@@ -82,7 +82,7 @@ public:
     explicit CRSSTDistance(const Distance& spatialDistance, const OneDimDistance& temporalDistance, double lambda, double angle):
         CRSSTDistance(spatialDistance, temporalDistance, lambda)
     {
-        mAngle = angle,
+        mAngle = atan(tan(angle)),
         mCalculator = (abs(mAngle - arma::datum::pi / 2.0) < 1e-15) ? &OrthogonalSTDistance : &ObliqueSTDistance;
     }
     
@@ -97,7 +97,7 @@ public:
     explicit CRSSTDistance(Distance&& spatialDistance, OneDimDistance&& temporalDistance, double lambda, double angle):
         CRSSTDistance(spatialDistance, temporalDistance, lambda)
     {
-        mAngle = angle,
+        mAngle = atan(tan(angle)),
         mCalculator = (abs(mAngle - arma::datum::pi / 2.0) < 1e-15) ? &OrthogonalSTDistance : &ObliqueSTDistance;
     }
 
@@ -112,7 +112,7 @@ public:
     explicit CRSSTDistance(const std::unique_ptr<Distance>& spatialDistance, const std::unique_ptr<OneDimDistance>& temporalDistance, double lambda, double angle):
         CRSSTDistance(spatialDistance, temporalDistance, lambda)
     {
-        mAngle = angle,
+        mAngle = atan(tan(angle)),
         mCalculator = (abs(mAngle - arma::datum::pi / 2.0) < 1e-15) ? &OrthogonalSTDistance : &ObliqueSTDistance;
     }
 
@@ -127,7 +127,7 @@ public:
     explicit CRSSTDistance(std::unique_ptr<Distance>&& spatialDistance, std::unique_ptr<OneDimDistance>&& temporalDistance, double lambda, double angle):
         CRSSTDistance(std::move(spatialDistance), std::move(temporalDistance), lambda)
     {
-        mAngle = angle,
+        mAngle = atan(tan(angle)),
         mCalculator = (abs(mAngle - arma::datum::pi / 2.0) < 1e-15) ? &OrthogonalSTDistance : &ObliqueSTDistance;
     }
 
