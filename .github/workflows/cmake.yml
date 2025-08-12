@@ -51,7 +51,7 @@ jobs:
           cmake --build build/CMakeFind
 
   windows-test:
-    runs-on: windows-2019
+    runs-on: windows-latest
     env: 
       USERNAME: GWmodel-Lab
       FEED_URL: https://nuget.pkg.github.com/GWmodel-Lab/index.json
