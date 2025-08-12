@@ -6,6 +6,7 @@
 #include "gwmodelpp/spatialweight/cuda/ISpatialCudaEnabled.h"
 #endif // ENABLE_CUDA
 
+#include <memory>
 #include <unordered_map>
 #include <string>
 #include "armadillo_config.h"
