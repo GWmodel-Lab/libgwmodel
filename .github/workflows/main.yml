@@ -43,7 +43,7 @@ jobs:
           ctest --test-dir build --output-on-failure
 
   windows-test:
-    runs-on: windows-2019
+    runs-on: windows-latest
     strategy:
       matrix:
         openmp: [TRUE, FALSE]
