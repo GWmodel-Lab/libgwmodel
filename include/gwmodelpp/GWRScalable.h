@@ -147,6 +147,20 @@ public:
     void setHasHatMatrix(const bool has) { mHasHatMatrix = has; }
 
     /**
+     * @brief \~english Get standard errors of coefficient estimates. \~chinese 获取回归系数估计值的标准差。
+     * 
+     * @return arma::mat \~english Standard errors of coefficient estimates. \~chinese 回归系数估计值的标准差。
+     */
+    const arma::mat& betasSE() const { return mBetasSE; }
+
+    /**
+     * @brief \~english Get a vector of \f$tr(S)\f$ and \f$tr(SS^T)\f$. \~chinese 获取一个由 \f$tr(S)\f$ 和 \f$tr(SS^T)\f$ 组成的向量。
+     * 
+     * @return arma::vec \~english A vector of \f$tr(S)\f$ and \f$tr(SS^T)\f$. \~chinese 由 \f$tr(S)\f$ 和 \f$tr(SS^T)\f$ 组成的向量。
+     */
+    const arma::vec& sHat() const { return mShat; }
+
+    /**
      * @brief \~english Get the type of calculator for parameter optimization criterion. \~chinese 获取计算优化参数指标值的类型。
      * 
      * @return BandwidthSelectionCriterionType \~english Type of calculator for parameter optimization criterion \~chinese 计算优化参数指标值的函数
