@@ -16,6 +16,7 @@ using namespace gwm;
 
 RegressionDiagnostic GTDR::CalcDiagnostic(const mat& x, const vec& y, const mat& betas, const vec& shat)
 {
+    // this line is a test line.
     vec r = y - sum(betas % x, 1);
     double rss = sum(r % r);
     double n = (double)x.n_rows;
