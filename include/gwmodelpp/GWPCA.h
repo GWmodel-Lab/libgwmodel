@@ -19,7 +19,7 @@ namespace gwm
 class GWPCA: public SpatialMonoscaleAlgorithm, public IMultivariableAnalysis
 {
 private:
-    typedef arma::mat (GWPCA::*Solver)(const arma::mat&, arma::cube&, arma::mat&);  //!< \~english Calculator to solve \~chinese 模型求解函数
+    typedef arma::mat (GWPCA::*Solver)(const arma::mat&, arma::cube&, arma::cube&, arma::mat&);  //!< \~english Calculator to solve \~chinese 模型求解函数
 
 public: // Constructors and Deconstructors
 
@@ -86,7 +86,7 @@ public: // Constructors and Deconstructors
     /**
      * @brief \~english Get the Scores matrix. \~chinese 获取得分矩阵。
      * 
-     * @return arma::mat \~english Scores matrix \~chinese 得分矩阵
+     * @return arma::mat \~english Scores matrix \~chinese 得分矩阵1
      */
     const arma::cube& scores() { return mScores; }
 
@@ -105,12 +105,13 @@ private:
      * 
      * @param x \~english Symmetric data matrix \~chinese 对称数据矩阵
      * @param loadings [out] \~english Out reference to loadings matrix \~chinese 载荷矩阵
+     * @param scores [out] \~english Out reference to scores matrix \~chinese 得分矩阵
      * @param sdev [out] \~english Out reference to standard deviation matrix \~chinese 标准差
      * @return arma::mat \~english Principle values matrix \~chinese 主成分值矩阵
      */
-    arma::mat pca(const arma::mat& x, arma::cube& loadings, arma::mat& sdev)
+    arma::mat pca(const arma::mat& x, arma::cube& loadings, arma::cube& scores, arma::mat& sdev)
     {
-        return (this->*mSolver)(x, loadings, sdev);
+        return (this->*mSolver)(x, loadings, scores, sdev);
     }
 
     /**
@@ -118,20 +119,22 @@ private:
      * 
      * @param x \~english Symmetric data matrix \~chinese 对称数据矩阵
      * @param loadings [out] \~english Out reference to loadings matrix \~chinese 载荷矩阵
+     * @param scores [out] \~english Out reference to scores matrix \~chinese 得分矩阵
      * @param sdev [out] \~english Out reference to standard deviation matrix \~chinese 标准差
      * @return arma::mat \~english Principle values matrix \~chinese 主成分值矩阵
      */
-    arma::mat solveSerial(const arma::mat& x, arma::cube& loadings, arma::mat& sdev);
+    arma::mat solveSerial(const arma::mat& x, arma::cube& loadings, arma::cube& scores, arma::mat& sdev);
 
     /**
      * @brief \~english Function to carry out weighted PCA. \~chinese 执行加权PCA的函数。
      * 
      * @param x \~english Symmetric data matrix \~chinese 对称数据矩阵
      * @param w \~english Weight vector \~chinese 权重向量
-     * @param V [out] \~english Right orthogonal matrix \~chinese 右边的正交矩阵
-     * @param d [out] \~english Rectangular diagonal matri \~chinese 矩形对角阵
+     * @param U [out] \~english Left orthogonal matrix (scores) \~chinese 左正交矩阵（得分）
+     * @param V [out] \~english Right orthogonal matrix (loadings) \~chinese 右正交矩阵（载荷）
+     * @param d [out] \~english Rectangular diagonal matrix \~chinese 矩形对角阵
      */
-    void wpca(const arma::mat& x, const arma::vec& w, arma::mat& V, arma::vec & d);
+    void wpca(const arma::mat& x, const arma::vec& w, arma::mat& U, arma::mat& V, arma::vec & d);
 
 private:    // Algorithm Parameters
     int mK = 2;  //!< \~english Number of components to be kept \~chinese 要保留的主成分数量

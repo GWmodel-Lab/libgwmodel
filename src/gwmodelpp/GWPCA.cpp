@@ -10,30 +10,32 @@ void GWPCA::run()
     GWM_LOG_STOP_RETURN(mStatus, void());
 
     GWM_LOG_STAGE("Solving");
-    mLocalPV = pca(mX, mLoadings, mSDev);
+    mLocalPV = pca(mX, mLoadings, mScores, mSDev);
     GWM_LOG_STOP_RETURN(mStatus, void());
     
     mWinner = index_max(mLoadings.slice(0), 1);
 }
 
-mat GWPCA::solveSerial(const mat& x, cube& loadings, mat& sdev)
+mat GWPCA::solveSerial(const mat& x, cube& loadings, cube& scores, mat& sdev)
 {
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat d_all(nVar, nDp, arma::fill::zeros);
     vec w0;
     loadings = cube(nDp, nVar, mK, arma::fill::zeros);
+    scores = cube(nDp, nDp, mK, arma::fill::zeros);
     for (uword i = 0; i < nDp; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
         vec w = mSpatialWeight.weightVector(i);
-        mat V;
+        mat U, V;
         vec d;
-        wpca(x, w, V, d);
+        wpca(x, w, U, V, d);
         w0 = w;
         d_all.col(i) = d;
         for (int j = 0; j < mK; j++)
         {
             loadings.slice(j).row(i) = arma::trans(V.col(j));
+            scores.slice(j).col(i) = U.col(j);
         }
         GWM_LOG_PROGRESS(i + 1, nDp);
     }
@@ -44,9 +46,9 @@ mat GWPCA::solveSerial(const mat& x, cube& loadings, mat& sdev)
     return pv;
 }
 
-void GWPCA::wpca(const mat& x, const vec& w, mat& V, vec & d)
+void GWPCA::wpca(const mat& x, const vec& w, mat& U, mat& V, vec & d)
 {
-    mat xw = x.each_col() % w, U;
+    mat xw = x.each_col() % w;
     mat centerized = (x.each_row() - sum(xw) / sum(w)).each_col() % sqrt(w);
     svd(U, d, V, centerized);
 }
