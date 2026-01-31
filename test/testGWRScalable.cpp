@@ -122,6 +122,22 @@ TEST_CASE("ScableGWR:  autoselection with CV")
 
     REQUIRE(algorithm.hasIntercept() == true);
     
+    // Test sHat() and betasSE() getters
+    vec shat = algorithm.sHat();
+    mat betasSE = algorithm.betasSE();
+    double cv = algorithm.cv();
+    
+    std::cout << "\n=== ScalableGWR Intermediate Results ===" << std::endl;
+    std::cout << "CV (Cross-Validation) value: " << cv << std::endl;
+    std::cout << "sHat values: tr(S)=" << shat(0) << ", tr(S'S)=" << shat(1) << std::endl;
+    std::cout << "betasSE shape: " << betasSE.n_rows << " x " << betasSE.n_cols << std::endl;
+    std::cout << "betasSE first row: " << betasSE.row(0) << std::endl;
+    std::cout << "betasSE values (全部):\n" << betasSE << std::endl;
+    
+    REQUIRE(shat.n_rows == 2);
+    REQUIRE(betasSE.n_rows > 0);
+    REQUIRE(betasSE.n_cols > 0);
+    
 }
 
 TEST_CASE("Scalable GWR: cancel")
