@@ -12,7 +12,7 @@ void GWPCA::run()
     GWM_LOG_STAGE("Solving");
     mLocalPV = pca(mX, mLoadings, mScores, mSDev);
     GWM_LOG_STOP_RETURN(mStatus, void());
-    
+
     mWinner = index_max(mLoadings.slice(0), 1);
 }
 
@@ -20,28 +20,49 @@ mat GWPCA::solveSerial(const mat& x, cube& loadings, cube& scores, mat& sdev)
 {
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat d_all(nVar, nDp, arma::fill::zeros);
-    vec w0;
+
     loadings = cube(nDp, nVar, mK, arma::fill::zeros);
-    scores = cube(nDp, nDp, mK, arma::fill::zeros);
+    scores  = cube(nDp, mK, nDp, arma::fill::zeros);
+
     for (uword i = 0; i < nDp; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
+
         vec w = mSpatialWeight.weightVector(i);
+        uvec positive = find(w > 0);
+        vec newWt = w.elem(positive);
+        mat newX = x.rows(positive);
+        if (newWt.n_rows <= 5)
+        {
+            break;
+        }
+
         mat U, V;
         vec d;
-        wpca(x, w, U, V, d);
-        w0 = w;
+        wpca(newX, newWt, U, V, d);
+
+        mLatestWt = newWt;
         d_all.col(i) = d;
+
         for (int j = 0; j < mK; j++)
         {
             loadings.slice(j).row(i) = arma::trans(V.col(j));
-            scores.slice(j).col(i) = U.col(j);
         }
+
+        mat scorei(nDp, mK, arma::fill::zeros);
+        for (int j = 0; j < mK; j++)
+        {
+            mat score = newX.each_row() % arma::trans(V.col(j));
+            scorei.col(j) = sum(score, 1);
+        }
+        scores.slice(i) = scorei;
+
         GWM_LOG_PROGRESS(i + 1, nDp);
     }
+
     d_all = trans(d_all);
-    mat variance = (d_all / sqrt(sum(w0))) % (d_all / sqrt(sum(w0)));
-    sdev = sqrt(variance);
+    mat variance = (d_all / pow(sum(mLatestWt), 0.5)) % (d_all / pow(sum(mLatestWt), 0.5));
+    sdev = arma::sqrt(variance);
     mat pv = variance.cols(0, mK - 1).each_col() % (1.0 / sum(variance, 1)) * 100.0;
     return pv;
 }
