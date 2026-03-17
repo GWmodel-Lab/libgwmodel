@@ -6,14 +6,12 @@ using namespace arma;
 int main()
 {
     mat coords(100, 2, fill::randu);
-    mat x = join_rows(vec(100, fill::ones), mat(100, 2, fill::randu));
-    mat betas = mat(100, 3, fill::randu);
-    vec eps(100, fill::randu);
-    vec y = sum(x % betas, 1) + eps;
+    mat x = mat(100, 3, fill::randu);
     BandwidthWeight bw(36.0, true, BandwidthWeight::Gaussian);
     CRSDistance dist(false);
     SpatialWeight sw(&bw, &dist);
-    GWRBasic algorithm(x, y, coords, sw);
-    algorithm.fit();
+    GWPCA algorithm(x, coords, sw);
+    algorithm.setKeepComponents(2);
+    algorithm.run();
     return 0;
 }
