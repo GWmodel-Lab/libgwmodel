@@ -143,8 +143,10 @@ void GWCorrelation::GWCorrelationSerial()
             mLocalMean.row(i) = trans(Wi) * mXY;
             mat centerized = mXY.each_row() - mLocalMean.row(i);
             mLVar.row(i) = Wi.t() * (centerized % centerized);
-            uword coly = col / nVar;
-            uword colx = (col + nVar) % nVar;
+            //uword coly = col / nVar;
+            //uword colx = (col + nVar) % nVar;
+            uword colx = col / nRsp;
+            uword coly = col % nRsp;
             //correlation
             double covjk = covwt(mY.col(coly), mX.col(colx), Wi);
             double sumW2 = sum(Wi % Wi);
@@ -242,8 +244,10 @@ void GWCorrelation::GWCorrelationOmp()
             mLocalMean.row(i) = trans(Wi) * mXY;
             mat centerized = mXY.each_row() - mLocalMean.row(i);
             mLVar.row(i) = Wi.t() * (centerized % centerized);
-            uword coly = col / nVar;
-            uword colx = (col + nVar) % nVar;
+            //uword coly = col / nVar;
+            //uword colx = (col + nVar) % nVar;
+            uword colx = col / nRsp;
+            uword coly = col % nRsp;
             double covjk = covwt(mY.col(coly), mX.col(colx), Wi);
             double sumW2 = sum(Wi % Wi);
             double covjj = mLVar(i, colx) / (1.0 - sumW2);
