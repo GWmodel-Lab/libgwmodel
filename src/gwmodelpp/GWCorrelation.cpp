@@ -129,10 +129,10 @@ void GWCorrelation::GWCorrelationSerial()
     rankX.each_col([&](vec &x) { x = rank(x); });
     mat rankY = mY;
     rankY.each_col([&](vec &y) { y = rank(y); });
-    uword nRp = mCoords.n_rows, nVar = mX.n_cols, nRsp=mY.n_cols;
-    uword nCol = nVar * nRsp;
+    uword nRp = mCoords.n_rows, nVarX = mX.n_cols, nVarY=mY.n_cols;
+    uword nVar = nVarX * nVarY;
     mat mXY = join_rows(mX,mY);
-    for (uword col = 0; col < nCol; col++)
+    for (uword col = 0; col < nVar; col++)
     {
         for (uword i = 0; i < nRp; i++)
         {
@@ -143,15 +143,13 @@ void GWCorrelation::GWCorrelationSerial()
             mLocalMean.row(i) = trans(Wi) * mXY;
             mat centerized = mXY.each_row() - mLocalMean.row(i);
             mLVar.row(i) = Wi.t() * (centerized % centerized);
-            //uword coly = col / nVar;
-            //uword colx = (col + nVar) % nVar;
-            uword colx = col / nRsp;
-            uword coly = col % nRsp;
+            uword coly = col / nVarY;
+            uword colx = (col + nVarY) % nVarY;
             //correlation
             double covjk = covwt(mY.col(coly), mX.col(colx), Wi);
             double sumW2 = sum(Wi % Wi);
             double covjj = mLVar(i, colx) / (1.0 - sumW2);
-            double covkk = mLVar(i, coly+nVar) / (1.0 - sumW2);
+            double covkk = mLVar(i, coly+nVarX) / (1.0 - sumW2);
             mCovmat(i, col) = covjk;
             mCorrmat(i, col) = covjk / sqrt(covjj * covkk);
             mSCorrmat(i, col) = corwt(rankY.col(coly), rankX.col(colx), Wi);
@@ -229,11 +227,11 @@ void GWCorrelation::GWCorrelationOmp()
     rankX.each_col([&](vec &x) { x = rank(x); });
     mat rankY = mY;
     rankY.each_col([&](vec &y) { y = rank(y); });
-    uword nRp = mCoords.n_rows, nVar = mX.n_cols, nRsp=mY.n_cols;
-    uword nCol = nVar * nRsp;
+    uword nRp = mCoords.n_rows, nVarX = mX.n_cols, nVarY=mY.n_cols; 
+    uword nVar = nVarX * nVarY; 
     mat mXY = join_rows(mX,mY);
 #pragma omp parallel for num_threads(mOmpThreadNum)
-    for (uword col = 0; col < nCol; col++)
+    for (uword col = 0; col < nVar; col++)
     {
         for (uword i = 0; i < nRp; i++)
         {
@@ -244,14 +242,12 @@ void GWCorrelation::GWCorrelationOmp()
             mLocalMean.row(i) = trans(Wi) * mXY;
             mat centerized = mXY.each_row() - mLocalMean.row(i);
             mLVar.row(i) = Wi.t() * (centerized % centerized);
-            //uword coly = col / nVar;
-            //uword colx = (col + nVar) % nVar;
-            uword colx = col / nRsp;
-            uword coly = col % nRsp;
+            uword coly = col / nVarY;
+            uword colx = (col + nVarY) % nVarY;
             double covjk = covwt(mY.col(coly), mX.col(colx), Wi);
             double sumW2 = sum(Wi % Wi);
             double covjj = mLVar(i, colx) / (1.0 - sumW2);
-            double covkk = mLVar(i, coly+nVar) / (1.0 - sumW2);
+            double covkk = mLVar(i, coly+nVarX) / (1.0 - sumW2);
             mCovmat(i, col) = covjk;
             mCorrmat(i, col) = covjk / sqrt(covjj * covkk);
             mSCorrmat(i, col) = corwt(rankY.col(coly), rankX.col(colx), Wi);
