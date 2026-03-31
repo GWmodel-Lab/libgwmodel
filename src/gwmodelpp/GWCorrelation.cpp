@@ -101,7 +101,7 @@ void GWCorrelation::run()
             mBandwidthSizeCriterion = bandwidthSizeCriterionVar(mBandwidthSelectionApproach[i]);
             mBandwidthSelectionCurrentIndex = i;
             mXi = mX.col(i/nRsp);
-            mYi = mY.col((i+nRsp)%nRsp);
+            mYi = mY.col(i%nRsp);
             GWM_LOG_INFO(string(GWM_LOG_TAG_GWCORR_INITIAL_BW) + to_string(i));
             BandwidthWeight* bw0 = bandwidth(i);
             BandwidthSelector selector;
@@ -112,8 +112,13 @@ void GWCorrelation::run()
             if(bw)
             {
                 mSpatialWeights[i].setWeight(bw);
+                GWM_LOG_INFO(string(GWM_LOG_TAG_GWCORR_INITIAL_BW) + to_string(i) + "," + to_string(bw->bandwidth()));
             }
-            GWM_LOG_INFO(string(GWM_LOG_TAG_GWCORR_INITIAL_BW)  + to_string(i)  + "," + to_string(bw->bandwidth()));
+            else
+            {
+                GWM_LOG_INFO(string(GWM_LOG_TAG_GWCORR_INITIAL_BW) + to_string(i) + ",optimize-failed");
+            }
+            //GWM_LOG_INFO(string(GWM_LOG_TAG_GWCORR_INITIAL_BW)  + to_string(i)  + "," + to_string(bw->bandwidth()));
         }
         GWM_LOG_STOP_RETURN(mStatus, void());
     }
@@ -143,8 +148,8 @@ void GWCorrelation::GWCorrelationSerial()
             mLocalMean.row(i) = trans(Wi) * mXY;
             mat centerized = mXY.each_row() - mLocalMean.row(i);
             mLVar.row(i) = Wi.t() * (centerized % centerized);
-            uword coly = col / nVarY;
-            uword colx = (col + nVarY) % nVarY;
+            uword colx = col / nVarY;
+            uword coly = col % nVarY;
             //correlation
             double covjk = covwt(mY.col(coly), mX.col(colx), Wi);
             double sumW2 = sum(Wi % Wi);
@@ -242,8 +247,8 @@ void GWCorrelation::GWCorrelationOmp()
             mLocalMean.row(i) = trans(Wi) * mXY;
             mat centerized = mXY.each_row() - mLocalMean.row(i);
             mLVar.row(i) = Wi.t() * (centerized % centerized);
-            uword coly = col / nVarY;
-            uword colx = (col + nVarY) % nVarY;
+            uword colx = col / nVarY;
+            uword coly = col % nVarY;
             double covjk = covwt(mY.col(coly), mX.col(colx), Wi);
             double sumW2 = sum(Wi % Wi);
             double covjj = mLVar(i, colx) / (1.0 - sumW2);
@@ -284,7 +289,7 @@ double GWCorrelation::bandwidthSizeCriterionAICSerial(BandwidthWeight *bandwidth
             return DBL_MAX;
         }
     }
-    double value = GWRBase::AICc(mX, mY, betas.t(), shat);
+    double value = GWRBase::AICc(mXi, mYi, betas.t(), shat);
     if (mStatus == Status::Success && isfinite(value))
     {
         GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
@@ -374,7 +379,7 @@ double GWCorrelation::bandwidthSizeCriterionAICOmp(BandwidthWeight *bandwidthWei
     if (mStatus == Status::Success && flag)
     {
         vec shat = sum(shat_all, 1);
-        double value = GWRBase::AICc(mX, mY, betas.t(), shat);
+        double value = GWRBase::AICc(mXi, mYi, betas.t(), shat);
         if (isfinite(value))
         {
             GWM_LOG_PROGRESS_PERCENT(exp(-abs(mBandwidthLastCriterion - value)));
