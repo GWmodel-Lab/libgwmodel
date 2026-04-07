@@ -40,5 +40,6 @@
 #include "gwmodelpp/GWAverage.h"
 #include "gwmodelpp/GWCorrelation.h"
 #include "gwmodelpp/GWPCA.h"
+#include "gwmodelpp/GTWR.h" 
 
 #endif  // GWMODEL_H

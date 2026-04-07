@@ -443,7 +443,7 @@ public:     // IMultivariateAnalysis
     /**
      * @brief \~english set variables \~chinese 设置变量x。
      * 
-     * @param x \~english variables for GWAverage \~chinese 进行GWAverage的变量，如果只有一列，只能进行GWAverage。
+     * @param x \~english variables for GWAverage \~chinese 进行GWCorrelation的变量。
      */
     void setVariables2(const arma::mat& x) override { mX = x; }
 
@@ -451,9 +451,9 @@ public:     // IMultivariateAnalysis
     const arma::mat& variables1() const override { return mY; }
     
     /**
-     * @brief \~english set variables \~chinese 设置变量x。
+     * @brief \~english set variables \~chinese 设置变量y。
      * 
-     * @param x \~english variables for GWAverage \~chinese 进行GWAverage的变量，如果只有一列，只能进行GWAverage。
+     * @param y \~english variables for GWAverage \~chinese 进行GWCorrelation的变量。
      */
     void setVariables1(const arma::mat& y) override { mY = y; }
 
