@@ -404,6 +404,34 @@ public:
     bool hasRegressionData() const;
     void setHasRegressionData(bool value);
 
+    /*
+    * @brief \~english Get the beta estimates. \~chinese 获取回归系数估计值。
+    *
+    * @return arma::mat \~english Beta estimates \~chinese 回归系数估计值
+    */
+    arma::mat betas() { return mBetas; }
+
+    /*
+     * @brief \~english Get standard errors of the beta estimates. \~chinese 获取回归系数估计值的标准差。
+     *
+     * @return arma::mat \~english Standard errors of beta estimates \~chinese 回归系数估计值的标准差
+     */
+    arma::mat betasSE() { return mBetasSE; }
+
+    /**
+     * @brief \~english Get a vector of trace of \f$S\f$ and \f$S'S\f$. \~chinese 获取一个包含 \f$S\f$ 和 \f$S'S\f$ 矩阵迹的向量。
+     *
+     * @return arma::vec \~english A vector of trace of \f$S\f$ and \f$S'S\f$ \~chinese 一个包含 \f$S\f$ 和 \f$S'S\f$ 矩阵迹的向量
+     */
+    arma::vec sHat() { return mShat; }
+
+    /**
+     * @brief \~english Get the hat matrix \f$S\f$. \~chinese 获取帽子矩阵 \f$S\f$。
+     *
+     * @return arma::mat \~english The hat matrix \f$S\f$ \~chinese 帽子矩阵 \f$S\f$
+     */
+    arma::vec s() {return mS;}
+
 private:
 
     /**
