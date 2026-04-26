@@ -111,7 +111,7 @@ void GWCorrelation::run()
             if(selector.optimize(this) == Status::Success)
             {
                 mSpatialWeights[i].setWeight(bw);
-                GWM_LOG_INFO(string(GWM_LOG_TAG_GWCORR_INITIAL_BW) + to_string(i) + "," + to_string(bw->bandwidth()));
+                GWM_LOG_INFO(string(GWM_LOG_TAG_GWCORR_INITIAL_BW) + to_string(i) + "," + to_string(bw.bandwidth()));
             }
             else
             {
