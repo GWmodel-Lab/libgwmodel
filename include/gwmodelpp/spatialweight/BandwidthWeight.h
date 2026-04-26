@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <optional>
 #include "Weight.h"
 
 #ifdef ENABLE_CUDA
@@ -49,12 +50,13 @@ public:
         Exponential,    //!< \~english Exponential kernel BandwidthWeight::ExponentialKernelFunction() \~chinese Exponential 核函数 BandwidthWeight::ExponentialKernelFunction()
         Bisquare,       //!< \~english Bisquare kernel BandwidthWeight::BisquareKernelFunction() \~chinese Bisquare 核函数 BandwidthWeight::BisquareKernelFunction()
         Tricube,        //!< \~english Tricube kernel BandwidthWeight::TricubeKernelFunction() \~chinese Tricube 核函数 BandwidthWeight::TricubeKernelFunction()
-        Boxcar          //!< \~english Boxcar kernel BandwidthWeight::BoxcarKernelFunction() \~chinese Boxcar 核函数 BandwidthWeight::BoxcarKernelFunction()
+        Boxcar,         //!< \~english Boxcar kernel BandwidthWeight::BoxcarKernelFunction() \~chinese Boxcar 核函数 BandwidthWeight::BoxcarKernelFunction()
+        LocalPeriodical //!< \~english LocalPeriodical kernel BandwidthWeight::LocalPeriodicalKernelFunction() \~chinese LocalPeriodical 核函数 BandwidthWeight::LocalPeriodicalKernelFunction()
     };
     static std::unordered_map<KernelFunctionType, std::string> KernelFunctionTypeNameMapper;
     static std::unordered_map<bool, std::string> BandwidthTypeNameMapper;
 
-    typedef arma::vec (*KernelFunction)(arma::vec, double); //!< \~english Kernel functions \~chinese 核函数
+    typedef arma::vec (*KernelFunction)(arma::vec, double, const arma::vec&); //!< \~english Kernel functions \~chinese 核函数
 
     static KernelFunction Kernel[];
 
@@ -65,7 +67,7 @@ public:
      * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
      * @return \~english Weight value \~chinese 权重值
      */
-    static arma::vec GaussianKernelFunction(arma::vec dist, double bw)
+    static arma::vec GaussianKernelFunction(arma::vec dist, double bw, const arma::vec& params)
     {
         return exp((dist % dist) / ((-2.0) * (bw * bw)));
     }
@@ -77,7 +79,7 @@ public:
      * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
      * @return \~english Weight value \~chinese 权重值
      */
-    static arma::vec ExponentialKernelFunction(arma::vec dist, double bw)
+    static arma::vec ExponentialKernelFunction(arma::vec dist, double bw, const arma::vec& params)
     {
         return exp(-dist / bw);
     }
@@ -89,7 +91,7 @@ public:
      * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
      * @return \~english Weight value \~chinese 权重值
      */
-    static arma::vec BisquareKernelFunction(arma::vec dist, double bw)
+    static arma::vec BisquareKernelFunction(arma::vec dist, double bw, const arma::vec& params)
     {
         arma::vec d2_d_b2 = 1.0 - (dist % dist) / (bw * bw);
         return (dist < bw) % (d2_d_b2 % d2_d_b2);
@@ -102,7 +104,7 @@ public:
      * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
      * @return \~english Weight value \~chinese 权重值
      */
-    static arma::vec TricubeKernelFunction(arma::vec dist, double bw)
+    static arma::vec TricubeKernelFunction(arma::vec dist, double bw, const arma::vec& params)
     {
         arma::vec d3_d_b3 = 1.0 - (dist % dist % dist) / (bw * bw * bw);
         return (dist < bw) % (d3_d_b3 % d3_d_b3 % d3_d_b3);
@@ -115,9 +117,18 @@ public:
      * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
      * @return \~english Weight value \~chinese 权重值
      */
-    static arma::vec BoxcarKernelFunction(arma::vec dist, double bw)
+    static arma::vec BoxcarKernelFunction(arma::vec dist, double bw, const arma::vec& params)
     {
         return (dist < bw) % arma::vec(arma::size(dist), arma::fill::ones);
+    }
+
+    static arma::vec LocalPeriodicalKernelFunction(const arma::vec& dist, const double bw, const arma::vec& param)
+    {
+        const double p = param.at(0);
+        arma::vec wgau = exp(-(dist % dist) / (2 * bw * bw));
+        arma::vec dsin = sin(abs(dist) * M_PI / 12);
+        arma::vec wsin = exp(-(2 * (dsin % dsin * p * p) / (bw * bw)));
+        return wgau % wsin;
     }
 
 public:
@@ -134,11 +145,15 @@ public:
      * @param adaptive \~english Whether use an adaptive bandwidth \~chinese 是否是可变带宽
      * @param kernel \~english Type of kernel function \~chinese 核函数类型
      */
-    BandwidthWeight(double size, bool adaptive, KernelFunctionType kernel)
+    BandwidthWeight(double size, bool adaptive, KernelFunctionType kernel, std::optional<std::reference_wrapper<arma::vec>> kernelParams = std::nullopt)
     {
         mBandwidth = size;
         mAdaptive = adaptive;
         mKernel = kernel;
+        if (kernelParams.has_value())
+        {
+            mKernelParams = kernelParams.value().get();
+        }
     }
 
     /**
@@ -258,6 +273,7 @@ private:
     double mBandwidth;          //!< \~english Bandwidth size \~chinese 带宽大小
     bool mAdaptive;             //!< \~english Whether it is adaptive bandwidth \~chinese 是否使可变带宽
     KernelFunctionType mKernel; //!< \~english Type of kernel function \~chinese 核函数类型
+    arma::vec mKernelParams;
 };
 
 }

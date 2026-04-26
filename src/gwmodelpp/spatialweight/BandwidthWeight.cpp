@@ -15,7 +15,8 @@ unordered_map<BandwidthWeight::KernelFunctionType, string> BandwidthWeight::Kern
     std::make_pair(BandwidthWeight::KernelFunctionType::Tricube, "Tricube"),
     std::make_pair(BandwidthWeight::KernelFunctionType::Bisquare, "Bisquare"),
     std::make_pair(BandwidthWeight::KernelFunctionType::Gaussian, "Gaussian"),
-    std::make_pair(BandwidthWeight::KernelFunctionType::Exponential, "Exponential")
+    std::make_pair(BandwidthWeight::KernelFunctionType::Exponential, "Exponential"),
+    std::make_pair(BandwidthWeight::KernelFunctionType::LocalPeriodical, "LocalPeriodical")
 };
 
 unordered_map<bool, string> BandwidthWeight::BandwidthTypeNameMapper = {
@@ -29,7 +30,8 @@ BandwidthWeight::KernelFunction BandwidthWeight::Kernel[] =
     &BandwidthWeight::ExponentialKernelFunction,
     &BandwidthWeight::BisquareKernelFunction,
     &BandwidthWeight::TricubeKernelFunction,
-    &BandwidthWeight::BoxcarKernelFunction
+    &BandwidthWeight::BoxcarKernelFunction,
+    &BandwidthWeight::LocalPeriodicalKernelFunction,
 };
 
 vec BandwidthWeight::weight(vec dist) const
@@ -51,11 +53,11 @@ vec BandwidthWeight::weight(vec dist) const
         {
             fixbw = dn * max(dist);
         }
-        w = (*kerf)(dist, fixbw);
+        w = (*kerf)(dist, fixbw, mKernelParams);
     }
     else
     {
-        w = (*kerf)(dist, mBandwidth);
+        w = (*kerf)(dist, mBandwidth, mKernelParams);
     }
     return w;
 }
