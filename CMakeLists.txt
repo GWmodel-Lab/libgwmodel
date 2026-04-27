@@ -41,6 +41,7 @@ else(ARMADILLO_FOUND)
     message(FATAL_ERROR "Armadillo Not Found!")
 endif(ARMADILLO_FOUND)
 
+add_definitions(-DM_PI=3.14159265358979323846 -DM_PI_2=1.57079632679489661923 -DDOUBLE_EPS=1e-8)
 if(MSVC)
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif(MSVC)
