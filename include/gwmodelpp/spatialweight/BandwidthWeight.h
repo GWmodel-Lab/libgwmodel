@@ -145,14 +145,14 @@ public:
      * @param adaptive \~english Whether use an adaptive bandwidth \~chinese 是否是可变带宽
      * @param kernel \~english Type of kernel function \~chinese 核函数类型
      */
-    BandwidthWeight(double size, bool adaptive, KernelFunctionType kernel, std::optional<std::reference_wrapper<arma::vec>> kernelParams = std::nullopt)
+    BandwidthWeight(double size, bool adaptive, KernelFunctionType kernel, std::optional<arma::vec> kernelParams = std::nullopt)
     {
         mBandwidth = size;
         mAdaptive = adaptive;
         mKernel = kernel;
         if (kernelParams.has_value())
         {
-            mKernelParams = kernelParams.value().get();
+            mKernelParams = kernelParams.value();
         }
     }
 
