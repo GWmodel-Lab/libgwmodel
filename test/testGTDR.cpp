@@ -43,31 +43,57 @@ TEST_CASE("GTDR: basic flow")
     }
 
     uword nDim = londonhp100_coord.n_cols;
-    vector<SpatialWeight> spatials;
-    for (size_t i = 0; i < nDim; i++)
-    {
-        OneDimDistance distance;
-        BandwidthWeight bandwidth(36, true, BandwidthWeight::Bisquare);
-        spatials.push_back(SpatialWeight(&bandwidth, &distance));
-    }
 
     vec y = londonhp100_data.col(0);
     mat x = join_rows(ones(londonhp100_data.n_rows), londonhp100_data.cols(1, 3));
 
-    GTDR algorithm;
-    algorithm.setCoords(londonhp100_coord);
-    algorithm.setDependentVariable(y);
-    algorithm.setIndependentVariables(x);
-    algorithm.setSpatialWeights(spatials);
-    algorithm.setHasHatMatrix(true);
-    REQUIRE_NOTHROW(algorithm.fit());
+    SECTION("serial") {
+        vector<SpatialWeight> spatials;
+        for (size_t i = 0; i < nDim; i++)
+        {
+            OneDimDistance distance;
+            BandwidthWeight bandwidth(36, true, BandwidthWeight::Bisquare);
+            spatials.push_back(SpatialWeight(&bandwidth, &distance));
+        }
 
-    RegressionDiagnostic diagnostic = algorithm.diagnostic();
-    REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2580.754861403243, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.898063766825, 1e-6));
-    REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.722050880566, 1e-6));
+        GTDR algorithm;
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
+        algorithm.setSpatialWeights(spatials);
+        algorithm.setHasHatMatrix(true);
+        REQUIRE_NOTHROW(algorithm.fit());
+    
+        RegressionDiagnostic diagnostic = algorithm.diagnostic();
+        REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2580.754861403243, 1e-6));
+        REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.898063766825, 1e-6));
+        REQUIRE_THAT(diagnostic.RSquareAdjust, Catch::Matchers::WithinAbs(0.722050880566, 1e-6));
+    
+        REQUIRE(algorithm.hasIntercept() == true);
+    }
 
-    REQUIRE(algorithm.hasIntercept() == true);
+    SECTION("local periodical kerenl") {
+        vector<SpatialWeight> spatials;
+        
+        OneDimDistance distance_u;
+        BandwidthWeight bandwidth_u(36, true, BandwidthWeight::Bisquare);
+        spatials.push_back(SpatialWeight(&bandwidth_u, &distance_u));
+
+        OneDimDistance distance_v;
+        vec kernel_param_v { 1.0 };
+        BandwidthWeight bandwidth_v(36, true, BandwidthWeight::LocalPeriodical, kernel_param_v);
+        spatials.push_back(SpatialWeight(&bandwidth_v, &distance_v));
+
+
+        GTDR algorithm;
+        algorithm.setCoords(londonhp100_coord);
+        algorithm.setDependentVariable(y);
+        algorithm.setIndependentVariables(x);
+        algorithm.setSpatialWeights(spatials);
+        algorithm.setHasHatMatrix(true);
+        REQUIRE_NOTHROW(algorithm.fit());
+    }
+
 }
 
 // TEST_CASE("GTDR: basic flow with bandwidth optimization (CV)")

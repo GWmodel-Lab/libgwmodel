@@ -166,6 +166,7 @@ public:
         mBandwidth = bandwidthWeight.mBandwidth;
         mAdaptive = bandwidthWeight.mAdaptive;
         mKernel = bandwidthWeight.mKernel;
+        mKernelParams = bandwidthWeight.mKernelParams;
 #ifdef ENABLE_CUDA
         mUseCuda = bandwidthWeight.mUseCuda;
         if (mUseCuda)
@@ -185,6 +186,7 @@ public:
         mBandwidth = bandwidthWeight->bandwidth();
         mAdaptive = bandwidthWeight->adaptive();
         mKernel = bandwidthWeight->kernel();
+        mKernelParams = bandwidthWeight->kernelParams();
     }
 
     virtual std::unique_ptr<Weight> clone() const override
@@ -258,6 +260,16 @@ public:
     void setKernel(const KernelFunctionType &kernel)
     {
         mKernel = kernel;
+    }
+
+    arma::vec kernelParams() const
+    {
+        return mKernelParams;
+    }
+
+    void setKernelParams(const arma::vec& kernelParams)
+    {
+        mKernelParams = kernelParams;
     }
 
 #ifdef ENABLE_CUDA
