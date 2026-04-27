@@ -31,7 +31,7 @@ BandwidthWeight::KernelFunction BandwidthWeight::Kernel[] =
     &BandwidthWeight::BisquareKernelFunction,
     &BandwidthWeight::TricubeKernelFunction,
     &BandwidthWeight::BoxcarKernelFunction,
-    &BandwidthWeight::LocalPeriodicalKernelFunction,
+    &BandwidthWeight::LocalPeriodicalKernelFunction
 };
 
 vec BandwidthWeight::weight(vec dist) const

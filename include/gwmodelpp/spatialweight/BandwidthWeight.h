@@ -56,7 +56,7 @@ public:
     static std::unordered_map<KernelFunctionType, std::string> KernelFunctionTypeNameMapper;
     static std::unordered_map<bool, std::string> BandwidthTypeNameMapper;
 
-    typedef arma::vec (*KernelFunction)(arma::vec, double, const arma::vec&); //!< \~english Kernel functions \~chinese 核函数
+    typedef arma::vec (*KernelFunction)(const arma::vec&, double, const arma::vec&); //!< \~english Kernel functions \~chinese 核函数
 
     static KernelFunction Kernel[];
 
@@ -67,7 +67,7 @@ public:
      * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
      * @return \~english Weight value \~chinese 权重值
      */
-    static arma::vec GaussianKernelFunction(arma::vec dist, double bw, const arma::vec& params)
+    static arma::vec GaussianKernelFunction(const arma::vec& dist, double bw, const arma::vec& params)
     {
         return exp((dist % dist) / ((-2.0) * (bw * bw)));
     }
@@ -79,7 +79,7 @@ public:
      * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
      * @return \~english Weight value \~chinese 权重值
      */
-    static arma::vec ExponentialKernelFunction(arma::vec dist, double bw, const arma::vec& params)
+    static arma::vec ExponentialKernelFunction(const arma::vec& dist, double bw, const arma::vec& params)
     {
         return exp(-dist / bw);
     }
@@ -91,7 +91,7 @@ public:
      * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
      * @return \~english Weight value \~chinese 权重值
      */
-    static arma::vec BisquareKernelFunction(arma::vec dist, double bw, const arma::vec& params)
+    static arma::vec BisquareKernelFunction(const arma::vec& dist, double bw, const arma::vec& params)
     {
         arma::vec d2_d_b2 = 1.0 - (dist % dist) / (bw * bw);
         return (dist < bw) % (d2_d_b2 % d2_d_b2);
@@ -104,7 +104,7 @@ public:
      * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
      * @return \~english Weight value \~chinese 权重值
      */
-    static arma::vec TricubeKernelFunction(arma::vec dist, double bw, const arma::vec& params)
+    static arma::vec TricubeKernelFunction(const arma::vec& dist, double bw, const arma::vec& params)
     {
         arma::vec d3_d_b3 = 1.0 - (dist % dist % dist) / (bw * bw * bw);
         return (dist < bw) % (d3_d_b3 % d3_d_b3 % d3_d_b3);
@@ -117,7 +117,7 @@ public:
      * @param bw \~english Bandwidth size (its unit is equal to that of distance vector) \~chinese 带宽大小（和距离向量的单位相同）
      * @return \~english Weight value \~chinese 权重值
      */
-    static arma::vec BoxcarKernelFunction(arma::vec dist, double bw, const arma::vec& params)
+    static arma::vec BoxcarKernelFunction(const arma::vec& dist, double bw, const arma::vec& params)
     {
         return (dist < bw) % arma::vec(arma::size(dist), arma::fill::ones);
     }
@@ -126,7 +126,7 @@ public:
     {
         const double p = param.at(0);
         arma::vec wgau = exp(-(dist % dist) / (2 * bw * bw));
-        arma::vec dsin = sin(abs(dist) * M_PI / 12);
+        arma::vec dsin = sin(arma::abs(dist) * M_PI / 12);
         arma::vec wsin = exp(-(2 * (dsin % dsin * p * p) / (bw * bw)));
         return wgau % wsin;
     }
