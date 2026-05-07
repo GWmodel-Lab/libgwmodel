@@ -517,7 +517,9 @@ private:
 
     arma::mat fitCoreCVSerial(const arma::mat& x, const arma::vec& y, const SpatialWeight& sw);
 
-#ifdef ENABLE_OPENMP
+// #ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
+// #if defined(ENABLE_OPENMP) || defined(ENABLE_OpenMP)
 
     /**
      * \~english 
@@ -684,16 +686,20 @@ public:     // Implement IParallelizable
     int parallelAbility() const override
     {
         return ParallelType::SerialOnly
-#ifdef ENABLE_OPENMP
+// #ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
+// #if defined(ENABLE_OPENMP) || defined(ENABLE_OpenMP)
             | ParallelType::OpenMP
-#endif // ENABLE_OPENMP
+#endif // ENABLE_OPENMP || ENABLE_OpenMP
 #ifdef ENABLE_CUDA
             | ParallelType::CUDA
 #endif // ENABLE_CUDA
 #ifdef ENABLE_MPI
-#ifdef ENABLE_OPENMP
+// #ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
+// #if defined(ENABLE_OPENMP) || defined(ENABLE_OpenMP)
             | ParallelType::OpenMP
-#endif // ENABLE_OPENMP
+#endif // ENABLE_OPENMP || ENABLE_OpenMP
 #ifdef ENABLE_CUDA
             | ParallelType::CUDA
 #endif // ENABLE_CUDA

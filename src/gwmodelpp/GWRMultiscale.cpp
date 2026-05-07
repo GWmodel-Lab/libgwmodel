@@ -1,5 +1,7 @@
 #include "GWRMultiscale.h"
-#ifdef ENABLE_OPENMP
+// #ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
+// #if defined(ENABLE_OPENMP) || defined(ENABLE_OpenMP)
 #include <omp.h>
 #endif
 #include <exception>
@@ -620,7 +622,9 @@ vec GWRMultiscale::fitVarCoreSHatSerial(const vec &x, const vec &y, const Spatia
 }
 
 
-#ifdef ENABLE_OPENMP
+// #ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
+// #if defined(ENABLE_OPENMP) || defined(ENABLE_OpenMP)
 vec GWRMultiscale::fitVarCoreOmp(const vec &x, const vec &y, const SpatialWeight& sw, mat &S)
 {
     uword nDp = mCoords.n_rows;
@@ -724,6 +728,7 @@ vec GWRMultiscale::fitVarCoreSHatOmp(const vec &x, const vec &y, const SpatialWe
     vec betas(nDp, fill::zeros);
     mat shat_all(2, mOmpThreadNum, fill::zeros);
     bool flag = true;
+    bool printed_omp_threads = false;
 #pragma omp parallel for num_threads(mOmpThreadNum)
     for (uword i = mWorkRange.first; i < mWorkRange.second; i++)
     {
@@ -731,6 +736,20 @@ vec GWRMultiscale::fitVarCoreSHatOmp(const vec &x, const vec &y, const SpatialWe
         if (flag)
         {
             int thread = omp_get_thread_num();
+            if (!printed_omp_threads)
+            {
+#pragma omp critical
+                {
+                    if (!printed_omp_threads)
+                    {
+                        GWM_LOG_INFO(string("[GWRMultiscale::fitVarCoreSHatOmp] actual omp threads = ")
+                            + to_string(omp_get_num_threads())
+                            + ", configured mOmpThreadNum = "
+                            + to_string(mOmpThreadNum));
+                        printed_omp_threads = true;
+                    }
+                }
+            }
             vec w = sw.weightVector(i);
             mat xtw = trans(x % w);
             mat xtwx = xtw * x;
@@ -1075,7 +1094,9 @@ void GWRMultiscale::setParallelType(const ParallelType &type)
     {
         mParallelType = type;
         switch (type) {
-#ifdef ENABLE_OPENMP
+// #ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
+// #if defined(ENABLE_OPENMP) || defined(ENABLE_OpenMP)
         case ParallelType::OpenMP:
             mFitVarCore = &GWRMultiscale::fitVarCoreOmp;
             mFitVarCoreCV = &GWRMultiscale::fitVarCoreCVOmp;

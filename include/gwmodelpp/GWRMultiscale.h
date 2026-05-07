@@ -601,7 +601,9 @@ public:     // IParallelalbe interface
     int parallelAbility() const override 
     {
         return ParallelType::SerialOnly
-#ifdef ENABLE_OPENMP
+// #ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
+// #if defined(ENABLE_OPENMP) || defined(ENABLE_OpenMP)
             | ParallelType::OpenMP
 #endif
 #ifdef ENABLE_CUDA
@@ -721,7 +723,9 @@ protected:
 
     arma::vec fitVarCoreSHatSerial(const arma::vec& x, const arma::vec& y, const SpatialWeight& sw, arma::vec& shat);
 
-#ifdef ENABLE_OPENMP
+// #ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
+// #if defined(ENABLE_OPENMP) || defined(ENABLE_OpenMP)
     arma::vec fitVarCoreOmp(const arma::vec& x, const arma::vec& y, const SpatialWeight& sw, arma::mat& S);
 
     arma::vec fitVarCoreCVOmp(const arma::vec& x, const arma::vec& y, const SpatialWeight& sw);

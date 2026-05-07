@@ -3,7 +3,9 @@
 #include "VariableForwardSelector.h"
 #include "Logger.h"
 
-#ifdef ENABLE_OPENMP
+// #ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
+// #if defined(ENABLE_OPENMP) || defined(ENABLE_OpenMP)
 #include <omp.h>
 #endif
 
@@ -416,7 +418,9 @@ double gwm::GWRBasic::indepVarsSelectionCriterion(const vector<size_t>& indepVar
     }
 }
 
-#ifdef ENABLE_OPENMP
+// #ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
+// #if defined(ENABLE_OPENMP) || defined(ENABLE_OpenMP)
 mat GWRBasic::predictOmp(const mat& locations, const mat& x, const vec& y)
 {
     uword nRp = locations.n_rows, nVar = x.n_cols;
@@ -1079,7 +1083,9 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitCoreCVFunction = &GWRBasic::fitCoreCVSerial;
             mFitCoreSHatFunction = &GWRBasic::fitCoreSHatSerial;
             break;
-#ifdef ENABLE_OPENMP
+// #ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
+// #if defined(ENABLE_OPENMP) || defined(ENABLE_OpenMP)
         case ParallelType::OpenMP:
         case ParallelType::MPI_MP:
             mPredictFunction = &GWRBasic::predictOmp;
@@ -1087,7 +1093,7 @@ void GWRBasic::setParallelType(const ParallelType& type)
             mFitCoreCVFunction = &GWRBasic::fitCoreCVOmp;
             mFitCoreSHatFunction = &GWRBasic::fitCoreSHatOmp;
             break;
-#endif // ENABLE_OPENMP
+#endif // ENABLE_OPENMP || ENABLE_OpenMP
 #ifdef ENABLE_CUDA
         case ParallelType::CUDA:
         case ParallelType::MPI_CUDA:
