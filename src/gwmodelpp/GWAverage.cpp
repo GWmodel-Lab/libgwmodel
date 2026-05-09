@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <map>
 
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
 
@@ -115,7 +115,7 @@ void GWAverage::GWAverageSerial()
     mLCV = mStandardDev / mLocalMean;
 }
 
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
 void GWAverage::GWAverageOmp()
 {
     mat rankX = mX;
@@ -224,7 +224,7 @@ void GWAverage::updateCalculator()
     case ParallelType::SerialOnly:
         mSummaryFunction = &GWAverage::GWAverageSerial;
         break;
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
     case ParallelType::OpenMP:
         mSummaryFunction = &GWAverage::GWAverageOmp;
         break;

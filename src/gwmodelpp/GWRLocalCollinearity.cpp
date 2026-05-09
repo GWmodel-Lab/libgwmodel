@@ -3,7 +3,7 @@
 #include "VariableForwardSelector.h"
 #include <assert.h>
 
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
 
@@ -118,7 +118,7 @@ void GWRLocalCollinearity::setBandwidthSelectionCriterion(const BandwidthSelecti
             make_pair(BandwidthSelectionCriterionType::CV, &GWRLocalCollinearity::bandwidthSizeCriterionCVSerial),
         };
         break;
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
     case ParallelType::OpenMP:
         mapper = {
             make_pair(BandwidthSelectionCriterionType::CV, &GWRLocalCollinearity::bandwidthSizeCriterionCVOmp)
@@ -177,7 +177,7 @@ void GWRLocalCollinearity::setParallelType(const ParallelType& type)
             mFitFunction = &GWRLocalCollinearity::fitSerial;
             mPredictFunction = &GWRLocalCollinearity::predictSerial;
             break;
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
         case ParallelType::OpenMP:
             mFitFunction = &GWRLocalCollinearity::fitOmp;
             mPredictFunction = &GWRLocalCollinearity::predictOmp;
@@ -258,7 +258,7 @@ double GWRLocalCollinearity::bandwidthSizeCriterionCVSerial(BandwidthWeight* ban
 
 }
 
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
 double GWRLocalCollinearity::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight)
 {
     //行数
@@ -420,7 +420,7 @@ mat GWRLocalCollinearity::predictSerial(const arma::mat &locations, const mat& x
     return betas;
 }
 
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
 mat GWRLocalCollinearity::fitOmp(const mat& x, const vec& y, vec& localcn, vec& locallambda)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;

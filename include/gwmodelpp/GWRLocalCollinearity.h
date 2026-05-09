@@ -261,7 +261,7 @@ private:
      */
     arma::mat predictSerial(const arma::mat& locations, const arma::mat& x, const arma::vec& y);
 
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
     /**
      * @brief \~english Multithreading implementation of prediction function. \~chinese 预测函数的多线程实现。
      * 
@@ -319,7 +319,7 @@ private:
      */
     double bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight);
 
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
     /**
      * @brief \~english Multithreading implementation of calculator to get CV criterion for given bandwidths. \~chinese 获取给定带宽值对应的CV值的多线程实现。
      * 

@@ -73,7 +73,7 @@ public: // Implement IRegressionAnalysis
 private:
     arma::mat fitSerial(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qDiag, arma::mat& S);
        
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
     //arma::mat predictOmp(const arma::mat& locations, const arma::mat& x, const arma::vec& y);
     arma::mat fitOmp(const arma::mat& x, const arma::vec& y, arma::mat& betasSE, arma::vec& shat, arma::vec& qDiag, arma::mat& S);
 #endif

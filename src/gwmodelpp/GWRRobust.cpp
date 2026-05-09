@@ -4,7 +4,7 @@
 #include <assert.h>
 #include "Logger.h"
 
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
 #include <omp.h>
 #endif
 
@@ -167,7 +167,7 @@ mat GWRRobust::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, ve
     return betas.t();
 }
 
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
 mat GWRRobust::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag, mat& S)
 {
     uword nDp = mCoords.n_rows, nVar = x.n_cols;
@@ -323,7 +323,7 @@ void GWRRobust::setParallelType(const ParallelType &type)
         case ParallelType::SerialOnly:
             mfitFunction = &GWRRobust::fitSerial;
             break;
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
         case ParallelType::OpenMP:
             mfitFunction = &GWRRobust::fitOmp;
             break;
