@@ -103,8 +103,8 @@ TEST_CASE("GTDR: basic flow")
 //     REQUIRE_NOTHROW(algorithm.fit());
 
 //     const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
-//     REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(80, 1e-12));
-//     // REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(2550816, 1e-12));
+//     REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(80, 1e-12));
+//     // REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(2550816, 1e-12));
 // }
 
 TEST_CASE("GTDR: basic flow with bandwidth optimization (AIC)")
@@ -139,8 +139,8 @@ TEST_CASE("GTDR: basic flow with bandwidth optimization (AIC)")
     REQUIRE_NOTHROW(algorithm.fit());
 
     const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(80, 1e-12));
-    REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(189, 1e-12));
+    REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(80, 1e-12));
+    REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(189, 1e-12));
 }
 
 TEST_CASE("GTDR: basic flow with independent variable selection")
@@ -244,8 +244,8 @@ TEST_CASE("GTDR: basic flow (multithread)")
     REQUIRE_THAT(selectedVariables, Catch::Matchers::Equals(vector<size_t>({1, 3})));
 
     const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
-    REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(81, 1e-12));
-    REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(142, 1e-12));
+    REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(81, 1e-12));
+    REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(142, 1e-12));
 
     RegressionDiagnostic diagnostic = algorithm.diagnostic();
     REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2443.390268119515, 1e-6));
@@ -289,8 +289,8 @@ TEST_CASE("GTDR: basic flow (multithread)")
 //     REQUIRE_NOTHROW(algorithm.fit());
 
 //     const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
-//     REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(80, 1e-12));
-//     // REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(2550816, 1e-12));
+//     REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(80, 1e-12));
+//     // REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(2550816, 1e-12));
 // }
 // #endif
 

@@ -50,7 +50,7 @@ public:
     typedef arma::mat (GTWR::*PredictCalculator)(const arma::mat&, const arma::mat&, const arma::vec&);//!< \~english Predict function declaration. \~chinese 预测函数声明。
     typedef arma::mat (GTWR::*FitCalculator)(const arma::mat&, const arma::vec&, arma::mat&, arma::vec&, arma::vec&, arma::mat&);//!< \~english Fit function declaration. \~chinese 拟合函数声明。
 
-    typedef double (GTWR::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);//!< \~english Declaration of criterion calculator for bandwidth selection. \~chinese 带宽优选指标计算函数声明。
+    typedef double (GTWR::*BandwidthSelectionCriterionCalculator)(const std::unique_ptr<BandwidthWeight>&);//!< \~english Declaration of criterion calculator for bandwidth selection. \~chinese 带宽优选指标计算函数声明。
     typedef double (GTWR::*IndepVarsSelectCriterionCalculator)(const std::vector<std::size_t>&);//!< \~english Declaration of criterion calculator for variable selection. \~chinese 变量优选指标计算函数声明。
 
     /**
@@ -78,19 +78,11 @@ public:
     }
 
     const double getLambda() {
-        if (mStdistance != nullptr) {
-            return mStdistance->lambda();
-        } else {
-            throw std::runtime_error("mStdistance is not initialized");
-        }
+        return stDistance().lambda();
     }
 
     const double getAngle(){
-        if (mStdistance != nullptr) {
-            return mStdistance->angle();
-        } else {
-            throw std::runtime_error("mStdistance is not initialized");
-        }
+        return stDistance().angle();
     }
 
 private:
@@ -447,7 +439,7 @@ private:
 #endif
 
 public:     // Implement IBandwidthSelectable
-    Status getCriterion(BandwidthWeight* weight, double& criterion) override
+    Status getCriterion(const std::unique_ptr<BandwidthWeight>& weight, double& criterion) override
     {
         criterion = (this->*mBandwidthSelectionCriterionFunction)(weight);
         return mStatus;
@@ -468,7 +460,7 @@ private:
      * @param bandwidthWeight 指定的带宽。
      * @return double 带宽优选的指标值。
      */
-    double bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionCVSerial(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
         
     /**
      * \~english
@@ -483,7 +475,7 @@ private:
      * @param weigbandwidthWeightht 指定的带宽。
      * @return double 带宽优选的指标值。
      */
-    double bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionAICSerial(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
 
 #ifdef ENABLE_OPENMP
     /**
@@ -499,7 +491,7 @@ private:
      * @param bandwidthWeight 指定的带宽。
      * @return double 带宽优选的指标值。
      */
-    double bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionCVOmp(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
     
     /**
      * \~english
@@ -514,7 +506,7 @@ private:
      * @param bandwidthWeight 指定的带宽。
      * @return double 带宽优选的指标值。
      */
-    double bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionAICOmp(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
 #endif
 
 
@@ -594,7 +586,7 @@ protected:
      * @param bandwidthWeight 传入带宽值，来获取权重，后续更方便改成多元优化.
      * @return double 返回优选以后的lambda值.
      */
-    double lambdaAutoSelection(BandwidthWeight* bandwidthWeight);
+    double lambdaAutoSelection(const BandwidthWeight& bandwidthWeight);
 
     /**
      * \~english
@@ -610,11 +602,11 @@ protected:
      * @param rsquare 根据输入的lambda值和带宽获取的R方值.
      * @return Status 算法运行状态。
      */
-    Status r_squareByLambda(BandwidthWeight* bandwidthWeight,double lambda, double& rsquare);
+    Status r_squareByLambda(const BandwidthWeight& bandwidthWeight,double lambda, double& rsquare);
 
     struct Parameter {
         GTWR* instance;     // GTWR实例
-        BandwidthWeight* bandwidth;    // 带宽
+        BandwidthWeight& bandwidth;    // 带宽
         double lambda;  // lambda
     };
 
@@ -646,7 +638,7 @@ protected:
      * @param min_step 优化中的步长，设置为0.01（变化阈值为步长/1000）
      * @return 优化结果，一个向量：(lambda, bw).
      */
-    arma::vec lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, double min_step);
+    arma::vec lambdaBwAutoSelection(BandwidthWeight& bandwidth, size_t max_iter, double min_step);
 
     /**
      * \~english
@@ -662,7 +654,7 @@ protected:
      * @param criterion BandwidthSelectionCriterionType类型，确定求的指标
      * @return 对应类型的指标值
      */
-    double criterionByLambdaBw(BandwidthWeight* bandwidth, double lambda, BandwidthSelectionCriterionType criterion);
+    double criterionByLambdaBw(const BandwidthWeight& bandwidth, double lambda, BandwidthSelectionCriterionType criterion);
 
 public:
     /**
@@ -680,6 +672,9 @@ public:
     void setIsAutoselectLambda(bool isAutoSelect) { mIsAutoselectLambda = isAutoSelect; }
 
     void setIsAutoselectLambdaBw(bool isAutoSelect) { mIsAutoselectLambdaBw = isAutoSelect; }
+
+protected:
+    CRSSTDistance& stDistance() const { return mSpatialWeight.distance<CRSSTDistance>(); }
 
 protected:
 
@@ -708,8 +703,6 @@ protected:
     arma::mat mS;       //!< \~english The hat-matrix \f$S\f$. \~chinese 帽子矩阵 \f$S\f$。
 
     arma::vec vTimes;   //!< \~english vectors for timestamp input. \~chinese 输入时间的向量。
-
-    CRSSTDistance* mStdistance;//use to change spatial temporal distance including lambda
 
 };
 

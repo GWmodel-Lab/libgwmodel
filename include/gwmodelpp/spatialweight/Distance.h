@@ -47,7 +47,7 @@ public:
     /**
      * @brief \~english Types of distance. \~chinese 距离度量类型。
      */
-    enum DistanceType
+    enum class DistanceType
     {
         CRSDistance,        //!< \~english Distance according to coordinate reference system \~chinese 坐标系距离
         MinkwoskiDistance,  //!< \~english Minkwoski distance \~chinese Minkwoski 距离
@@ -74,7 +74,7 @@ public:
      * 
      * @return Distance* \~english Newly created pointer \~chinese 重新创建的对象指针
      */
-    virtual Distance* clone() const = 0;
+    virtual std::unique_ptr<Distance> clone() const = 0;
 
     /**
      * @brief \~english Return the type of this object. \~chinese 返回该对象的类型。

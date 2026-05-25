@@ -35,16 +35,24 @@ mat GTWR::fit()
 
     if(mIsAutoselectLambdaBw){
         GWM_LOG_STAGE("Lambda and bandwidth optimization")
-        BandwidthWeight *bw0 = mSpatialWeight.weight<BandwidthWeight>();
-        mStdistance = mSpatialWeight.distance<CRSSTDistance>();
+        BandwidthWeight& bw0 = mSpatialWeight.weight<BandwidthWeight>();
+        //要优化的可变带宽此前被归一化了
+        if (bw0.adaptive())
+        {
+            bw0.setBandwidth(bw0.bandwidth() * nDp);
+        }
+        else
+        {
+            bw0.setBandwidth(bw0.bandwidth() * stDistance().maxDistance());
+        }
         // double lambda0 = 0.05;
         // double first_bw= bw0->adaptive() ? nDp*0.618 : 0.0;
         // bw0->setBandwidth(first_bw);
         vec optim = vec(2, fill::zeros);
         optim = lambdaBwAutoSelection(bw0, 1000, 1e-3);
 
-        mStdistance->setLambda(optim(0));
-        bw0->setBandwidth(optim(1));
+        stDistance().setLambda(optim(0));
+        bw0.setBandwidth(optim(1));
         //不能再进行后面的优化
         mIsAutoselectBandwidth=false;
         mIsAutoselectLambda=false;
@@ -53,16 +61,15 @@ mat GTWR::fit()
     if (mIsAutoselectBandwidth)
     {
         GWM_LOG_STAGE("Bandwidth optimization")
-        BandwidthWeight *bw0 = mSpatialWeight.weight<BandwidthWeight>();
-        double lower = bw0->adaptive() ? 20 : 0.0;
-        double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
+        BandwidthWeight& bw0 = mSpatialWeight.weight<BandwidthWeight>();
+        double lower = bw0.adaptive() ? 20 : 0.0;
+        double upper = bw0.adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
 
         GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0));
         BandwidthSelector selector(bw0, lower, upper);
-        BandwidthWeight *bw = selector.optimize(this);
-        if (bw)
+        if (selector.optimize(this) == Status::Success)
         {
-            mSpatialWeight.setWeight(bw);
+            mSpatialWeight.setWeight(selector.result());
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
         }
         GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
@@ -71,12 +78,11 @@ mat GTWR::fit()
     if (mIsAutoselectLambda)
     {
         GWM_LOG_STAGE("Lambda optimization")
-        BandwidthWeight *bw = mSpatialWeight.weight<BandwidthWeight>();
-        mStdistance = mSpatialWeight.distance<CRSSTDistance>();
+        BandwidthWeight& bw = mSpatialWeight.weight<BandwidthWeight>();
 
         GWM_LOG_INFO(infoLambdaCriterion());
         double lambda = lambdaAutoSelection(bw);
-        mStdistance->setLambda(lambda);
+        stDistance().setLambda(lambda);
         GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
     }
 
@@ -119,7 +125,6 @@ void GTWR::createPredictionDistanceParameter(const arma::mat& locations)
     {
         mSpatialWeight.distance()->makeParameter({ mCoords, mCoords, vTimes, vTimes });
     }
-    mStdistance = mSpatialWeight.distance<CRSSTDistance>();
 }
 
 void GTWR::createDistanceParameter()
@@ -128,7 +133,6 @@ void GTWR::createDistanceParameter()
     {
         mSpatialWeight.distance()->makeParameter({ mCoords, mCoords, vTimes, vTimes });
     }
-    mStdistance = mSpatialWeight.distance<CRSSTDistance>();
 }
 
 
@@ -198,7 +202,7 @@ mat GTWR::fitSerial(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qD
     return betas.t();
 }
 
-double GTWR::bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight)
+double GTWR::bandwidthSizeCriterionCVSerial(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     uword nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
@@ -234,7 +238,7 @@ double GTWR::bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight)
     else return DBL_MAX;
 }
 
-double GTWR::bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeight)
+double GTWR::bandwidthSizeCriterionAICSerial(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
@@ -287,12 +291,12 @@ bool GTWR::isValid()
 {
     if (GWRBase::isValid())
     {
-        double bw = mSpatialWeight.weight<BandwidthWeight>()->bandwidth();
+        double bw = mSpatialWeight.weight<BandwidthWeight>().bandwidth();
         if (!(bw > 0))
         {
             return false;
         }
-        double lambda=mStdistance->lambda();
+        double lambda = stDistance().lambda();
         if (lambda < 0 || lambda > 1)
         {
             return false;
@@ -395,7 +399,7 @@ mat GTWR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qDiag
 }
 
 
-double GTWR::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight)
+double GTWR::bandwidthSizeCriterionCVOmp(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     uword nDp = mCoords.n_rows;
     vec shat(2, fill::zeros);
@@ -441,7 +445,7 @@ double GTWR::bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight)
     else return DBL_MAX;
 }
 
-double GTWR::bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight)
+double GTWR::bandwidthSizeCriterionAICOmp(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
@@ -516,20 +520,20 @@ void GTWR::setParallelType(const ParallelType& type)
     }
 }
 
-Status GTWR::r_squareByLambda(BandwidthWeight* bandwidthWeight, double lambda, double& rsquare)
+Status GTWR::r_squareByLambda(const BandwidthWeight& bandwidthWeight, double lambda, double& rsquare)
 {
     // (void)(params);
     double r2;
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
-    mStdistance->setLambda(lambda);
-    mStdistance->makeParameter({ mCoords, mCoords, vTimes, vTimes });
+    stDistance().setLambda(lambda);
+    stDistance().makeParameter({ mCoords, mCoords, vTimes, vTimes });
     for (uword i = 0; i < nDp; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
-        mat d = mStdistance->distance(i);
+        mat d = stDistance().distance(i);
         // vec w = mSpatialWeight.weightVector(i);
-        vec w = bandwidthWeight->weight(d);
+        vec w = bandwidthWeight.weight(d);
         mat xtw = trans(mX.each_col() % w);
         mat xtwx = xtw * mX;
         mat xtwy = xtw * mY;
@@ -560,7 +564,7 @@ Status GTWR::r_squareByLambda(BandwidthWeight* bandwidthWeight, double lambda, d
     return mStatus;
 }
 
-double GTWR::lambdaAutoSelection(BandwidthWeight* bw)
+double GTWR::lambdaAutoSelection(const BandwidthWeight& bw)
 {
     // int status;
     // int iter = 0, max_iter = 1000;
@@ -628,25 +632,19 @@ double GTWR::lambdaAutoSelection(BandwidthWeight* bw)
     else return 0.0;
 }
 
-double GTWR::criterionByLambdaBw(BandwidthWeight *bandwidth, double lambda, BandwidthSelectionCriterionType criterion)
+double GTWR::criterionByLambdaBw(const BandwidthWeight& bandwidth, double lambda, BandwidthSelectionCriterionType criterion)
 {
     uword nDp = mCoords.n_rows, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
     vec shat(2, fill::zeros);
     double value = 0.0;
-    mStdistance->setLambda(lambda);
-    mStdistance->makeParameter({mCoords, mCoords, vTimes, vTimes});
-    //要优化的可变带宽此前被归一化了
-    if(bandwidth->adaptive()){
-        bandwidth->setBandwidth(bandwidth->bandwidth() * nDp);
-    }else{
-        bandwidth->setBandwidth(bandwidth->bandwidth() * mStdistance->maxDistance());
-    }
+    stDistance().setLambda(lambda);
+    stDistance().makeParameter({mCoords, mCoords, vTimes, vTimes});
     for (uword i = 0; i < nDp; i++)
     {
         GWM_LOG_STOP_BREAK(mStatus);
         vec d = mSpatialWeight.distance()->distance(i);
-        vec w = bandwidth->weight(d);
+        vec w = bandwidth.weight(d);
         if (criterion == BandwidthSelectionCriterionType::CV)
         {
             w(i) = 0.0;
@@ -725,7 +723,7 @@ double GTWR::criterion_function (const gsl_vector *target, void *params)
 
     // 获取参数指针
     GTWR* instance = p->instance;
-    BandwidthWeight* bandwidth = p->bandwidth;
+    BandwidthWeight& bandwidth = p->bandwidth;
     // double lambda = p->lambda;
     BandwidthSelectionCriterionType criterionType=instance->mBandwidthSelectionCriterion;
 
@@ -735,30 +733,26 @@ double GTWR::criterion_function (const gsl_vector *target, void *params)
 
     //问题：如果优化的时候reset lambda，设置的值不在0-1范围里，怎么办
     // instance->mStdistance->setLambda(lambda_value);//这里和后面计算的里面重复了
-    bandwidth->setBandwidth(bandwidth_value);
+    bandwidth.setBandwidth(bandwidth_value);
     return instance->criterionByLambdaBw(bandwidth, lambda_value, criterionType);
 }
 
-vec GTWR::lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, double min_step)
+vec GTWR::lambdaBwAutoSelection(BandwidthWeight& bandwidth, size_t max_iter, double min_step)
 {
     vec optim(2, fill::zeros);
     uword nDp = mCoords.n_rows;
     gsl_multimin_fminimizer *minimizer = gsl_multimin_fminimizer_alloc(gsl_multimin_fminimizer_nmsimplex2rand, 2);
     gsl_vector* lambda_bw = gsl_vector_alloc(2);
     gsl_vector* steps = gsl_vector_alloc(2);
-    gsl_vector_set(lambda_bw, 0, this->mStdistance->lambda());
+    gsl_vector_set(lambda_bw, 0, stDistance().lambda());
     //带宽近似映射到了0-1
     // gsl_vector_set(lambda_bw, 1, bandwidth->adaptive() ? 0.618 : bandwidth->bandwidth());
-    double mdis=mStdistance->maxDistance();
-    gsl_vector_set(lambda_bw, 1, bandwidth->adaptive() ? bandwidth->bandwidth() / double(nDp) : bandwidth->bandwidth() / mdis);
+    double mdis = stDistance().maxDistance();
+    gsl_vector_set(lambda_bw, 1, bandwidth.adaptive() ? bandwidth.bandwidth() / double(nDp) : bandwidth.bandwidth() / mdis);
     // gsl_vector_set(lambda_bw, 1, bandwidth->bandwidth());
     gsl_vector_set_all(steps, min_step);
 
-    GTWR::Parameter params;
-    params.instance = this;  // GTWR类的实例是当前对象
-    params.bandwidth = bandwidth;
-    params.lambda = this->mStdistance->lambda();
-    
+    GTWR::Parameter params { this, bandwidth, stDistance().lambda() };    
 
     // gsl_multimin_function minex_func;
     gsl_multimin_function minex_func = { criterion_function, 2, &params };
@@ -802,7 +796,7 @@ vec GTWR::lambdaBwAutoSelection(BandwidthWeight* bandwidth, size_t max_iter, dou
         // sDebug << size;
         // params.instance->debug(sDebug.str(), __FUNCTION__, __FILE__);
         // #endif
-        double optbw=bandwidth->adaptive() ? abs(gsl_vector_get(minimizer->x, 1)) * nDp : abs(gsl_vector_get(minimizer->x, 1)) * mdis;
+        double optbw = bandwidth.adaptive() ? abs(gsl_vector_get(minimizer->x, 1)) * nDp : abs(gsl_vector_get(minimizer->x, 1)) * mdis;
         cout<<"optimezed lambda:"<< abs(gsl_vector_get(minimizer->x, 0))<<endl;
         cout<<"optimezed bandwidth:"<< optbw <<endl;
         optim(0)=abs(gsl_vector_get(minimizer->x, 0));

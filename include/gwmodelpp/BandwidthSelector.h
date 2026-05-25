@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <utility>
+#include "Status.h"
 #include "IBandwidthSelectable.h"
 #include "spatialweight/BandwidthWeight.h"
 
@@ -21,7 +22,7 @@ public:
     /**
      * @brief \~english Construct a new Bandwidth Selector object. \~chinese 构造一个新的 BandwidthSelector 对象。
      */
-    BandwidthSelector() {}
+    BandwidthSelector(const BandwidthWeight& bandwidth): mBandwidth(bandwidth), mOptimisedBandwidth(bandwidth) {}
 
     /**
      * @brief \~english Construct a new Bandwidth Selector object. \~chinese 构造一个新的 BandwidthSelector 对象。
@@ -30,7 +31,7 @@ public:
      * @param lower \~english Lower bound \~chinese 下限
      * @param upper \~english Upper bound \~chinese 上限
      */
-    BandwidthSelector(BandwidthWeight* bandwidth, double lower, double upper) : mBandwidth(bandwidth) , mLower(lower) , mUpper(upper) {}
+    BandwidthSelector(const BandwidthWeight& bandwidth, double lower, double upper) : mBandwidth(bandwidth), mOptimisedBandwidth(bandwidth), mLower(lower) , mUpper(upper) {}
 
     /**
      * @brief \~english Destroy the Bandwidth Selector object. \~chinese 销毁 BandwidthSelector 对象。
@@ -40,18 +41,19 @@ public:
 public:
 
     /**
-     * @brief \~english Get the bandwidth. \~chinese 获取带宽。
+     * @brief \~english Get the bandwidth. \~chinese 获取优化后的带宽。
      * 
      * @return BandwidthWeight* \~english Bandwidth \~chinese 带宽
      */
-    BandwidthWeight *bandwidth() const { return mBandwidth; }
+    // const BandwidthWeight *bandwidth() const { return mBandwidth; }
+    const BandwidthWeight& result() const { return mOptimisedBandwidth; }
 
     /**
      * @brief \~english Set the bandwidth. \~chinese 设置带宽。
      * 
      * @param bandwidth \~english Bandwidth \~chinese 带宽
      */
-    void setBandwidth(BandwidthWeight *bandwidth) { mBandwidth = bandwidth; }
+    // void setBandwidth(BandwidthWeight *bandwidth) { mBandwidth = bandwidth; }
 
     /**
      * @brief \~english Get the lower bound. \~chinese 获取下限。
@@ -96,10 +98,11 @@ public:
      * @param instance \~english A pointer to a instance of type inherited from gwm::IBandwidthSelectable \~chinese 指向派生自 gwm::IBandwidthSelectable 类型对象的指针
      * @return std::vector<std::size_t> \~english Optimized bandwdith \~chinese 优选后的带宽
      */
-    BandwidthWeight* optimize(IBandwidthSelectable* instance);
+    Status optimize(IBandwidthSelectable* instance);
 
 private:
-    BandwidthWeight* mBandwidth;    //!< \~english Bandwidth \~chinese 带宽
+    const BandwidthWeight& mBandwidth;    //!< \~english Bandwidth \~chinese 带宽
+    BandwidthWeight mOptimisedBandwidth;
     double mLower;  //!< \~english Lower bound \~chinese 下限
     double mUpper;  //!< \~english Upper bound \~chinese 上限
     std::unordered_map<double, double> mBandwidthCriterion; //!< \~english List of criterion values for each bandwidth \~chinese 带宽优选过程中每种带宽对应的指标值列表

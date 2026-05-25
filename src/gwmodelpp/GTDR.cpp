@@ -70,16 +70,16 @@ mat GTDR::fit()
         GWM_LOG_STAGE("Bandwidth selection");
         for (auto&& sw : mSpatialWeights)
         {
-            BandwidthWeight* bw = sw.weight<BandwidthWeight>();
+            BandwidthWeight& bw = sw.weight<BandwidthWeight>();
             // Set Initial value
-            double lower = bw->adaptive() ? nVars + 1 : sw.distance()->minDistance();
-            double upper = bw->adaptive() ? nDp : sw.distance()->maxDistance();
-            if (bw->bandwidth() <= lower || bw->bandwidth() >= upper)
+            double lower = bw.adaptive() ? nVars + 1 : sw.distance()->minDistance();
+            double upper = bw.adaptive() ? nDp : sw.distance()->maxDistance();
+            if (bw.bandwidth() <= lower || bw.bandwidth() >= upper)
             {
-                bw->setBandwidth(upper * 0.618);
+                bw.setBandwidth(upper * 0.618);
             }
         }
-        vector<BandwidthWeight*> bws;
+        vector<reference_wrapper<BandwidthWeight>> bws;
         for (auto&& iter : mSpatialWeights)
         {
             bws.push_back(iter.weight<BandwidthWeight>());
@@ -320,7 +320,7 @@ mat GTDR::fitOmp(const mat& x, const vec& y, mat& betasSE, vec& shat, vec& qdiag
 }
 #endif
 
-double GTDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidths)
+double GTDR::bandwidthCriterionCVSerial(const vector<reference_wrapper<BandwidthWeight>>& bandwidths)
 {
     uword nDp = mCoords.n_rows, nDim = mCoords.n_cols;
     double cv = 0.0;
@@ -334,7 +334,7 @@ double GTDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidt
             for (size_t m = 0; m < nDim; m++)
             {
                 vec d_m = mSpatialWeights[m].distance()->distance(i);
-                vec w_m = bandwidths[m]->weight(d_m);
+                vec w_m = bandwidths[m].get().weight(d_m);
                 w = w % w_m;
             }
             w(i) = 0.0;
@@ -367,7 +367,7 @@ double GTDR::bandwidthCriterionCVSerial(const vector<BandwidthWeight*>& bandwidt
 }
 
 #ifdef ENABLE_OPENMP
-double GTDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
+double GTDR::bandwidthCriterionCVOmp(const vector<reference_wrapper<BandwidthWeight>>& bandwidths)
 {
     uword nDp = mCoords.n_rows, nDim = mCoords.n_cols;
     vec cv_all(mOmpThreadNum, arma::fill::zeros);
@@ -383,7 +383,7 @@ double GTDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
             for (size_t m = 0; m < nDim; m++)
             {
                 vec d_m = mSpatialWeights[m].distance()->distance(i);
-                vec w_m = bandwidths[m]->weight(d_m);
+                vec w_m = bandwidths[m].get().weight(d_m);
                 w = w % w_m;
             }
             w(i) = 0.0;
@@ -418,7 +418,7 @@ double GTDR::bandwidthCriterionCVOmp(const vector<BandwidthWeight*>& bandwidths)
 }
 #endif
 
-double GTDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwidths)
+double GTDR::bandwidthCriterionAICSerial(const vector<reference_wrapper<BandwidthWeight>>& bandwidths)
 {
     uword nDp = mCoords.n_rows, nDim = mCoords.n_cols, nVar = mX.n_cols;
     mat betas(nVar, nDp, fill::zeros);
@@ -433,7 +433,7 @@ double GTDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwid
             for (size_t m = 0; m < nDim; m++)
             {
                 vec d_m = mSpatialWeights[m].distance()->distance(i);
-                vec w_m = bandwidths[m]->weight(d_m);
+                vec w_m = bandwidths[m].get().weight(d_m);
                 w = w % w_m;
             }
             mat xtw = (mX.each_col() % w).t();
@@ -467,7 +467,7 @@ double GTDR::bandwidthCriterionAICSerial(const vector<BandwidthWeight*>& bandwid
 }
 
 #ifdef ENABLE_OPENMP
-double GTDR::bandwidthCriterionAICOmp(const vector<BandwidthWeight*>& bandwidths)
+double GTDR::bandwidthCriterionAICOmp(const vector<reference_wrapper<BandwidthWeight>>& bandwidths)
 {
     uword nDp = mCoords.n_rows, nDim = mCoords.n_cols, nVar = mX.n_cols;
     mat betas(nVar, nDp, arma::fill::zeros);
@@ -485,7 +485,7 @@ double GTDR::bandwidthCriterionAICOmp(const vector<BandwidthWeight*>& bandwidths
             for (size_t m = 0; m < nDim; m++)
             {
                 vec d_m = mSpatialWeights[m].distance()->distance(i);
-                vec w_m = bandwidths[m]->weight(d_m);
+                vec w_m = bandwidths[m].get().weight(d_m);
                 w = w % w_m;
             }
             mat xtw = (mX.each_col() % w).t();
@@ -534,7 +534,7 @@ double GTDR::indepVarCriterionSerial(const vector<size_t>& indepVars)
     {
         for (auto &&sw : mSpatialWeights)
         {
-            if (sw.weight<BandwidthWeight>()->bandwidth() == 0.0) isGlobal = true;
+            if (sw.weight<BandwidthWeight>().bandwidth() == 0.0) isGlobal = true;
         }
     }
     if (isGlobal)
@@ -615,7 +615,7 @@ double GTDR::indepVarCriterionOmp(const vector<size_t>& indepVars)
     {
         for (auto &&sw : mSpatialWeights)
         {
-            if (sw.weight<BandwidthWeight>()->bandwidth() == 0.0) isGlobal = true;
+            if (sw.weight<BandwidthWeight>().bandwidth() == 0.0) isGlobal = true;
         }
     }
     if (isGlobal)
@@ -767,12 +767,12 @@ double GTDRBandwidthOptimizer::criterion_function(const gsl_vector* bws, void* p
 {
     Parameter* p = static_cast<Parameter*>(params);
     GTDR* instance = p->instance;
-    const vector<BandwidthWeight*>& bandwidths = *(p->bandwidths);
+    const vector<reference_wrapper<BandwidthWeight>>& bandwidths = p->bandwidths;
     double nFeature = double(p->featureCount);
     for (size_t m = 0; m < bandwidths.size(); m++)
     {
         double pbw = abs(gsl_vector_get(bws, m));
-        bandwidths[m]->setBandwidth(pbw * nFeature);
+        bandwidths[m].get().setBandwidth(pbw * nFeature);
     }
     return instance->bandwidthCriterion(bandwidths);
 }
@@ -785,11 +785,11 @@ const int GTDRBandwidthOptimizer::optimize(GTDR* instance, uword featureCount, s
     gsl_vector* steps = gsl_vector_alloc(nDim);
     for (size_t m = 0; m < nDim; m++)
     {
-        double target_value = mBandwidths[m]->adaptive() ? mBandwidths[m]->bandwidth() / double(featureCount) : mBandwidths[m]->bandwidth();
+        double target_value = mBandwidths[m].get().adaptive() ? mBandwidths[m].get().bandwidth() / double(featureCount) : mBandwidths[m].get().bandwidth();
         gsl_vector_set(targets, m, target_value);
         gsl_vector_set(steps, m, step);
     }
-    Parameter params = { instance, &mBandwidths, featureCount };
+    Parameter params = { instance, mBandwidths, featureCount };
     gsl_multimin_function function = { criterion_function, nDim, &params };
     int status = gsl_multimin_fminimizer_set(minimizer, &function, targets, steps);
     if (status == GSL_SUCCESS)
@@ -830,7 +830,7 @@ const int GTDRBandwidthOptimizer::optimize(GTDR* instance, uword featureCount, s
         {
             double pbw = abs(gsl_vector_get(minimizer->x, m));
             // pbw = (pbw > 1.0 ? 1.0 : pbw);
-            mBandwidths[m]->setBandwidth(round(pbw * featureCount));
+            mBandwidths[m].get().setBandwidth(round(pbw * featureCount));
         }
     }
     gsl_multimin_fminimizer_free(minimizer);

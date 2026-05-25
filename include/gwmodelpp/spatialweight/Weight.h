@@ -6,6 +6,7 @@
 #include "gwmodelpp/spatialweight/cuda/ISpatialCudaEnabled.h"
 #endif // ENABLE_CUDA
 
+#include <memory>
 #include <unordered_map>
 #include <string>
 #include "armadillo_config.h"
@@ -52,7 +53,7 @@ public:
      * 
      * @return \~english Newly created pointer \~chinese 新创建的指针
      */
-    virtual Weight* clone() const = 0;
+    virtual std::unique_ptr<Weight> clone() const = 0;
 
 public:
 
@@ -62,7 +63,7 @@ public:
      * @param dist \~english According distance vector \~chinese 距离向量
      * @return \~english Weight vector \~chinese 权重向量
      */
-    virtual arma::vec weight(arma::vec dist) = 0;
+    virtual arma::vec weight(arma::vec dist) const = 0;
 
 #ifdef ENABLE_CUDA
     bool useCuda() { return mUseCuda; }

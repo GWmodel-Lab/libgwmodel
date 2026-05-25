@@ -123,7 +123,7 @@ TEST_CASE("RobustGWR: adaptive bandwidth autoselection of with CV")
     
     REQUIRE_NOTHROW(algorithm.fit());
 
-    size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
+    size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>().bandwidth();
     REQUIRE(bw == 67);
 
     /* RegressionDiagnostic diagnostic = algorithm.diagnostic();
@@ -232,7 +232,7 @@ TEST_CASE("RobustGWR: multithread basic flow")
     vector<size_t> selectedVariables = algorithm.selectedVariables();
     REQUIRE_THAT(selectedVariables, Catch::Matchers::Equals(vector<size_t>({1, 3})));
 
-    double bw = algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
+    double bw = algorithm.spatialWeight().weight<BandwidthWeight>().bandwidth();
     REQUIRE(bw == 31.0);
 
     /* RegressionDiagnostic diagnostic = algorithm.diagnostic();

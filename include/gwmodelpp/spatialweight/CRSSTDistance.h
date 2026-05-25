@@ -19,7 +19,7 @@ public:
      * @brief \~english parameters used in calculating. 
      * \~chinese 距离计算的输入参数类型：空间距离，时间距离，计算序号，λ，余弦值的角度（默认为π/2）
      */
-    typedef arma::vec (*CalculatorType)(Distance*, gwm::OneDimDistance*, arma::uword, double, double);
+    typedef arma::vec (*CalculatorType)(const std::unique_ptr<Distance>&, const std::unique_ptr<OneDimDistance>&, arma::uword, double, double);
 
     /**
      * @brief \~english Calculate temporal and spatial distance, Orthogonal Distance 
@@ -37,7 +37,7 @@ public:
      * \~chinese 参数取默认值。
      * @return arma::vec \~english Distance vector \~chinese 计算得到的距离向量
      */
-    static arma::vec OrthogonalSTDistance(Distance* spatial, gwm::OneDimDistance* temporal, arma::uword focus, double lambda, double angle);
+    static arma::vec OrthogonalSTDistance(const std::unique_ptr<Distance>& spatial, const std::unique_ptr<OneDimDistance>& temporal, arma::uword focus, double lambda, double angle);
 
     /**
      * @brief \~english Calculate temporal and spatial distance with angle, Oblique Distance 
@@ -55,29 +55,103 @@ public:
      * \~chinese 默认值是π/2，给函数提供angle值，计算斜交时空距离
      * @return arma::vec \~english Distance vector \~chinese 计算得到的距离向量
      */
-    static arma::vec ObliqueSTDistance(Distance* spatial, gwm::OneDimDistance* temporal, arma::uword focus, double lambda, double angle);
+    static arma::vec ObliqueSTDistance(const std::unique_ptr<Distance>& spatial, const std::unique_ptr<OneDimDistance>& temporal, arma::uword focus, double lambda, double angle);
 
 public:
 
     /**
      * @brief Construct.
      */
-    CRSSTDistance();
+    CRSSTDistance() : 
+        mSpatialDistance(nullptr),
+        mTemporalDistance(nullptr),
+        mLambda(0.0),
+        mAngle(arma::datum::pi / 2.0)
+    {
+        mCalculator = &OrthogonalSTDistance;
+    };
+    
+    explicit CRSSTDistance(const Distance& spatialDistance, const OneDimDistance& temporalDistance, double lambda):
+        mSpatialDistance(spatialDistance.clone()),
+        mTemporalDistance(static_cast<OneDimDistance*>(temporalDistance.clone().release())),
+        mLambda(lambda),
+        mAngle(arma::datum::pi / 2.0),
+        mCalculator(&OrthogonalSTDistance)
+    {}
 
-    explicit CRSSTDistance(Distance* spatialDistance, gwm::OneDimDistance* temporalDistance, double lambda);
+    explicit CRSSTDistance(const Distance& spatialDistance, const OneDimDistance& temporalDistance, double lambda, double angle):
+        CRSSTDistance(spatialDistance, temporalDistance, lambda)
+    {
+        mAngle = atan(tan(angle)),
+        mCalculator = (abs(mAngle - arma::datum::pi / 2.0) < 1e-15) ? &OrthogonalSTDistance : &ObliqueSTDistance;
+    }
+    
+    explicit CRSSTDistance(Distance&& spatialDistance, OneDimDistance&& temporalDistance, double lambda):
+        mSpatialDistance(spatialDistance.clone()),
+        mTemporalDistance(static_cast<OneDimDistance*>(temporalDistance.clone().release())),
+        mLambda(lambda),
+        mAngle(arma::datum::pi / 2.0),
+        mCalculator(&OrthogonalSTDistance)
+    {}
 
-    explicit CRSSTDistance(Distance* spatialDistance, gwm::OneDimDistance* temporalDistance, double lambda, double angle);
+    explicit CRSSTDistance(Distance&& spatialDistance, OneDimDistance&& temporalDistance, double lambda, double angle):
+        CRSSTDistance(spatialDistance, temporalDistance, lambda)
+    {
+        mAngle = atan(tan(angle)),
+        mCalculator = (abs(mAngle - arma::datum::pi / 2.0) < 1e-15) ? &OrthogonalSTDistance : &ObliqueSTDistance;
+    }
+
+    explicit CRSSTDistance(const std::unique_ptr<Distance>& spatialDistance, const std::unique_ptr<OneDimDistance>& temporalDistance, double lambda):
+        mSpatialDistance(spatialDistance->clone()),
+        mTemporalDistance(static_cast<OneDimDistance*>(temporalDistance->clone().release())),
+        mLambda(lambda),
+        mAngle(arma::datum::pi / 2.0),
+        mCalculator(&OrthogonalSTDistance)
+    {}
+
+    explicit CRSSTDistance(const std::unique_ptr<Distance>& spatialDistance, const std::unique_ptr<OneDimDistance>& temporalDistance, double lambda, double angle):
+        CRSSTDistance(spatialDistance, temporalDistance, lambda)
+    {
+        mAngle = atan(tan(angle)),
+        mCalculator = (abs(mAngle - arma::datum::pi / 2.0) < 1e-15) ? &OrthogonalSTDistance : &ObliqueSTDistance;
+    }
+
+    explicit CRSSTDistance(std::unique_ptr<Distance>&& spatialDistance, std::unique_ptr<OneDimDistance>&& temporalDistance, double lambda):
+        mSpatialDistance(std::move(spatialDistance)),
+        mTemporalDistance(std::move(temporalDistance)),
+        mLambda(lambda),
+        mAngle(arma::datum::pi / 2.0),
+        mCalculator(&OrthogonalSTDistance)
+    {}
+
+    explicit CRSSTDistance(std::unique_ptr<Distance>&& spatialDistance, std::unique_ptr<OneDimDistance>&& temporalDistance, double lambda, double angle):
+        CRSSTDistance(std::move(spatialDistance), std::move(temporalDistance), lambda)
+    {
+        mAngle = atan(tan(angle)),
+        mCalculator = (abs(mAngle - arma::datum::pi / 2.0) < 1e-15) ? &OrthogonalSTDistance : &ObliqueSTDistance;
+    }
 
     /**
      * @brief Copy construct.
      * 
      * @param distance Refernce to object for copying.
      */
-    CRSSTDistance(const CRSSTDistance& distance);
-
-    Distance * clone() const override
+    CRSSTDistance(const CRSSTDistance& distance):
+        mSpatialDistance(distance.mSpatialDistance->clone()),
+        mTemporalDistance(static_cast<OneDimDistance*>(distance.mTemporalDistance->clone().release())),
+        mAngle(distance.mAngle),
+        mCalculator(distance.mCalculator)
     {
-        return new CRSSTDistance(*this);
+        if (distance.mLambda >= 0 && distance.mLambda <= 1)
+        {
+            mLambda = distance.mLambda;
+        }
+        else throw std::runtime_error("The lambda must be in [0,1].");
+    }
+
+    std::unique_ptr<Distance> clone() const override
+    {
+        return std::make_unique<CRSSTDistance>(*this);
     }
 
     DistanceType type() override { return DistanceType::CRSSTDistance; }
@@ -113,9 +187,9 @@ public:
 
     //const gwm::CRSDistance* spatialDistance() const { return mSpatialDistance; }
 
-    const Distance* spatialDistance() const { return mSpatialDistance; }
+    const std::unique_ptr<Distance>& spatialDistance() const { return mSpatialDistance; }
 
-    const gwm::OneDimDistance* temporalDistance() const { return mTemporalDistance; }
+    const std::unique_ptr<OneDimDistance>& temporalDistance() const { return mTemporalDistance; }
 
     // unused code to set lambda
     const double lambda(){ return mLambda; }
@@ -134,8 +208,8 @@ public:
     }
 
 protected:
-    Distance* mSpatialDistance = nullptr;  //!< \~english Pointer to instance for spatial distance \~chinese 指向空间距离的指针
-    gwm::OneDimDistance* mTemporalDistance = nullptr;  //!< \~english Pointer to instance for temporal distance \~chinese 指向时间距离的指针
+    std::unique_ptr<Distance> mSpatialDistance = nullptr;  //!< \~english Pointer to instance for spatial distance \~chinese 指向空间距离的指针
+    std::unique_ptr<OneDimDistance> mTemporalDistance = nullptr;  //!< \~english Pointer to instance for temporal distance \~chinese 指向时间距离的指针
 
     double mLambda = 0.0;  //!< \~english Weight of temporal distance \~chinese 时间距离的权重
     double mAngle = arma::datum::pi / 2;  //!< \~english Angle of spatial distance and temporal distance \~chinese 斜交时空距离的角度

@@ -81,7 +81,7 @@ TEST_CASE("GGWR: adaptive bandwidth autoselection of with AIC")
     
     REQUIRE_NOTHROW(algorithm.fit());
 
-    size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
+    size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>().bandwidth();
     REQUIRE(bw == 21);
 
     GWRGeneralizedDiagnostic diagnostic = algorithm.getDiagnostic();
@@ -119,7 +119,7 @@ TEST_CASE("GGWR: adaptive bandwidth autoselection and with binomial")
     
     REQUIRE_NOTHROW(algorithm.fit());
 
-    size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
+    size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>().bandwidth();
     REQUIRE(bw == 275);
     
     REQUIRE_NOTHROW(algorithm.fit());
@@ -162,7 +162,7 @@ TEST_CASE("GGWR: multithread basic flow")
     algorithm.setFamily(GWRGeneralized::Family::Poisson);
     REQUIRE_NOTHROW(algorithm.fit());
 
-    double bw = algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
+    double bw = algorithm.spatialWeight().weight<BandwidthWeight>().bandwidth();
     REQUIRE(bw == 27.0);
 
     GWRGeneralizedDiagnostic diagnostic = algorithm.getDiagnostic();
