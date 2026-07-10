@@ -3,6 +3,7 @@
 
 #include "SpatialMonoscaleAlgorithm.h"
 #include "IMultivariableAnalysis.h"
+#include "IBandwidthSelectable.h"
 #include "IParallelizable.h"
 
 namespace gwm
@@ -41,7 +42,7 @@ namespace gwm
  * - local interquartile ranges <- GWAverage::iqr()
  * - local quantile imbalances and coordinates <- GWAverage::qi()
  */
-class GWAverage : public SpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IParallelizable, public IParallelOpenmpEnabled
+class GWAverage : public SpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IParallelizable, public IParallelOpenmpEnabled, public IBandwidthSelectable
 {
 public:
 
@@ -99,6 +100,21 @@ public:
      * @param quantile \~english Whether use quantile algorithms \~chinese 是否使用基于排序的算法
      */
     void setQuantile(bool quantile) { mQuantile = quantile; }
+
+    /**
+     * @brief \~english Get whether bandwidth autoselect is enabled. \~chinese 获取是否启用带宽自动选择。
+     * 
+     * @return true \~english if autoselect bandwidth is enabled \~chinese 启用带宽自动选择
+     * @return false \~english if autoselect bandwidth is disabled \~chinese 不启用带宽自动选择
+     */
+    bool isAutoselectBandwidth() const { return mIsAutoselectBandwidth; }
+
+    /**
+     * @brief \~english Set whether bandwidth autoselect is enabled. \~chinese 设置是否启用带宽自动选择。
+     * 
+     * @param isAutoselect \~english whether autoselect bandwidth is enabled \~chinese 是否启用带宽自动选择
+     */
+    void setAutoselectBandwidth(bool isAutoselect) { mIsAutoselectBandwidth = isAutoselect; }
 
     /**
      * @brief \~english Get local mean on each sample. \~chinese 获取每个样本的局部均值。
@@ -171,6 +187,8 @@ public:     // IMultivariableAnalysis
     void setVariables(const arma::mat& x) override { mX = x; }
 
     void run() override;
+    // Implement IBandwidthSelectable
+    Status getCriterion(BandwidthWeight* weight, double& criterion) override;
     
     void calibration(const arma::mat& locations, const arma::mat& x);
 
@@ -180,7 +198,7 @@ public:     // IParallelizable
     int parallelAbility() const override
     {
         return ParallelType::SerialOnly
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
             | ParallelType::OpenMP
 #endif        
             ;
@@ -218,7 +236,7 @@ private:
      */
     void GWAverageSerial();
 
-#ifdef ENABLE_OPENMP
+#ifdef ENABLE_OpenMP
     /**
      * @brief \~english GWAverage algorithm implemented with OpenMP. \~chinese GWAverage算法的多线程实现。
      */
@@ -238,7 +256,8 @@ private:
     arma::mat mLocalMedian;   //!< \~english Local medians \~chinese 局部中位数
     arma::mat mIQR;           //!< \~english Local interquartile ranges \~chinese 局部分位距
     arma::mat mQI;            //!< \~english Local quantile imbalances and coordinates \~chinese 局部分位数不平衡度
-
+    bool mIsAutoselectBandwidth = false; //!< \~english Whether bandwidth autoselect is enabled \~chinese 是否启用带宽自动选择
+    BandwidthCriterionList mBandwidthSelectionCriterionList; //!< \~english List of bandwidth selection criteria \~chinese 带宽选择标准列表
     SummaryCalculator mSummaryFunction = &GWAverage::GWAverageSerial;  //!< \~english Calculator for summary statistics \~chinese 计算函数
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Parallel type \~chinese 并行方法
     int mOmpThreadNum = 8;                                  //!< \~english Numbers of threads to be created while paralleling \~chinese 多线程所使用的线程数
