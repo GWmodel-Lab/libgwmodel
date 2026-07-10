@@ -198,7 +198,7 @@ public:     // IParallelizable
     int parallelAbility() const override
     {
         return ParallelType::SerialOnly
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
             | ParallelType::OpenMP
 #endif        
             ;
@@ -236,7 +236,7 @@ private:
      */
     void GWAverageSerial();
 
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
     /**
      * @brief \~english GWAverage algorithm implemented with OpenMP. \~chinese GWAverage算法的多线程实现。
      */
