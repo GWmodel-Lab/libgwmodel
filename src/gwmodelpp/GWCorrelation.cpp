@@ -5,7 +5,7 @@
 #include "Logger.h"
 #include <map>
 
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
 
@@ -211,7 +211,7 @@ void GWCorrelation::setParallelType(const ParallelType& type)
         case ParallelType::SerialOnly:
             mSummaryFunction = &GWCorrelation::GWCorrelationSerial;
             break;
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
         case ParallelType::OpenMP:
             mSummaryFunction = &GWCorrelation::GWCorrelationOmp;
             break;
@@ -225,7 +225,7 @@ void GWCorrelation::setParallelType(const ParallelType& type)
 }
 
 
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 void GWCorrelation::GWCorrelationOmp()
 {
     mat rankX = mX;
@@ -339,7 +339,7 @@ double GWCorrelation::bandwidthSizeCriterionCVSerial(BandwidthWeight *bandwidthW
     return DBL_MAX;
 }
 
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 double GWCorrelation::bandwidthSizeCriterionAICOmp(BandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;
@@ -396,7 +396,7 @@ double GWCorrelation::bandwidthSizeCriterionAICOmp(BandwidthWeight *bandwidthWei
 }
 #endif
 
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 double GWCorrelation::bandwidthSizeCriterionCVOmp(BandwidthWeight *bandwidthWeight)
 {
     int var = mBandwidthSelectionCurrentIndex;

@@ -6,7 +6,7 @@
 #include "Logger.h"
 #include <limits>
 
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
 
@@ -188,7 +188,7 @@ void GWAverage::GWAverageSerial()
     }
 }
 
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
 void GWAverage::GWAverageOmp()
 {
     mat rankX = mX;
@@ -375,7 +375,7 @@ void GWAverage::updateCalculator()
     case ParallelType::SerialOnly:
         mSummaryFunction = &GWAverage::GWAverageSerial;
         break;
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
     case ParallelType::OpenMP:
         mSummaryFunction = &GWAverage::GWAverageOmp;
         break;

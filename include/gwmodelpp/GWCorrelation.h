@@ -314,7 +314,7 @@ public: //bandwidth selection
      */
     BandwidthSizeCriterionFunction bandwidthSizeCriterionVar(BandwidthSelectionCriterionType type)
     {
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
         if (mParallelType & ParallelType::OpenMP)
         {
             switch (type)
@@ -327,7 +327,7 @@ public: //bandwidth selection
                 return &GWCorrelation::bandwidthSizeCriterionAICOmp;
             }
         }
-#endif // ENABLE_OpenMP
+#endif // ENABLE_OPENMP
         switch (type)
         {
         case BandwidthSelectionCriterionType::CV:
@@ -371,7 +371,7 @@ private:
      */
     double bandwidthSizeCriterionAICSerial(BandwidthWeight* bandwidthWeight);
 
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
     double bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight);
 
     double bandwidthSizeCriterionAICOmp(BandwidthWeight* bandwidthWeight);
@@ -389,7 +389,7 @@ public:     // IParallelizable
     int parallelAbility() const override
     {
         return ParallelType::SerialOnly
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
             | ParallelType::OpenMP
 #endif        
             ;
@@ -427,7 +427,7 @@ private:
      */
     void GWCorrelationSerial();
 
-#ifdef ENABLE_OpenMP
+#ifdef ENABLE_OPENMP
     /**
      * @brief \~english GWCorrelation algorithm implemented with OpenMP. \~chinese GWCorrelation算法的多线程实现。
      */
