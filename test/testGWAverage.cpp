@@ -42,6 +42,10 @@ TEST_CASE("GWAverage: londonhp100")
         algorithm.setVariables(x);
         algorithm.setSpatialWeight(spatial);
         REQUIRE_NOTHROW(algorithm.run());
+        REQUIRE(arma::all(arma::vectorise(arma::is_finite(algorithm.localMean()))));
+        REQUIRE(arma::all(arma::vectorise(arma::is_finite(algorithm.localSDev()))));
+        REQUIRE(arma::all(arma::vectorise(arma::is_finite(algorithm.localSkewness()))));
+        REQUIRE(arma::all(arma::vectorise(arma::is_finite(algorithm.localCV()))));
 
         vec p = {0.0, 0.25, 0.5, 0.75, 1.0};
 
@@ -138,6 +142,10 @@ TEST_CASE("GWAverage: londonhp100")
         algorithm.setParallelType(ParallelType::OpenMP);
         algorithm.setOmpThreadNum(omp_get_num_threads());
         REQUIRE_NOTHROW(algorithm.run());
+        REQUIRE(arma::all(arma::vectorise(arma::is_finite(algorithm.localMean()))));
+        REQUIRE(arma::all(arma::vectorise(arma::is_finite(algorithm.localSDev()))));
+        REQUIRE(arma::all(arma::vectorise(arma::is_finite(algorithm.localSkewness()))));
+        REQUIRE(arma::all(arma::vectorise(arma::is_finite(algorithm.localCV()))));
 
         vec p = {0.0, 0.25, 0.5, 0.75, 1.0};
 

@@ -1,6 +1,10 @@
 #include "GWAverage.h"
 #include <assert.h>
+#include <algorithm>
 #include <map>
+#include "BandwidthSelector.h"
+#include "Logger.h"
+#include <limits>
 
 #ifdef ENABLE_OPENMP
 #include <omp.h>
@@ -23,6 +27,11 @@ vec GWAverage::del(vec x, uword rowcount){
 
 vec GWAverage::findq(const mat &x, const vec &w)
 {
+    if (x.n_rows != w.n_rows || x.n_rows == 0 || !std::all_of(w.begin(), w.end(), [](double v) { return std::isfinite(v); }))
+    {
+        return vec(3, fill::zeros);
+    }
+
     uword lw = w.n_rows;
     uword lp = 3;
     vec q = vec(lp,fill::zeros);
@@ -67,6 +76,29 @@ void GWAverage::run()
     createDistanceParameter();
     GWM_LOG_STOP_RETURN(mStatus, void());
 
+    if (mIsAutoselectBandwidth)
+    {
+        GWM_LOG_STAGE("Bandwidth selection");
+        BandwidthWeight* bw0 = mSpatialWeight.weight<BandwidthWeight>();
+        double lower = bw0->adaptive() ? 2.0 : mSpatialWeight.distance()->minDistance();
+        double upper = bw0->adaptive() ? (double)nRp : mSpatialWeight.distance()->maxDistance();
+
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0));
+        BandwidthSelector selector(bw0, lower, upper);
+        BandwidthWeight* bw = selector.optimize(this);
+        if (bw)
+        {
+            mSpatialWeight.setWeight(bw);
+#ifdef ENABLE_CUDA
+            if (mParallelType & ParallelType::CUDA)
+            {
+                mSpatialWeight.prepareCuda(mGpuId);
+            }
+#endif // ENABLE_CUDA
+            mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
+        }
+    }
+
     mLocalMean = mat(nRp, nVar, fill::zeros);
     mStandardDev = mat(nRp, nVar, fill::zeros);
     mLocalSkewness = mat(nRp, nVar, fill::zeros);
@@ -92,8 +124,16 @@ void GWAverage::GWAverageSerial()
     {
         GWM_LOG_STOP_BREAK(mStatus);
         vec w = mSpatialWeight.weightVector(i);
+        if (w.n_rows != nRp || !std::all_of(w.begin(), w.end(), [](double v) { return std::isfinite(v); }))
+        {
+            w = vec(nRp, fill::zeros);
+        }
         double sumw = sum(w);
-        vec Wi = w / sumw;
+        vec Wi = arma::zeros<vec>(nRp);
+        if (isfinite(sumw) && sumw != 0.0)
+        {
+            Wi = w / sumw;
+        }
         mLocalMean.row(i) = trans(Wi) * mX;
         if (mQuantile)
         {
@@ -104,15 +144,48 @@ void GWAverage::GWAverageSerial()
             }
             mLocalMedian.row(i) = quant.row(1);
             mIQR.row(i) = quant.row(2) - quant.row(0);
-            mQI.row(i) = (2 * quant.row(1) - quant.row(2) - quant.row(0)) / mIQR.row(i);
+            rowvec qi = (2 * quant.row(1) - quant.row(2) - quant.row(0));
+            for (uword j = 0; j < nVar; j++)
+            {
+                double denom = mIQR(i, j);
+                mQI(i, j) = (isfinite(denom) && denom != 0.0) ? qi(j) / denom : 0.0;
+            }
         }
         mat centerized = mX.each_row() - mLocalMean.row(i);
         mLVar.row(i) = Wi.t() * (centerized % centerized);
         mStandardDev.row(i) = sqrt(mLVar.row(i));
-        mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
+        rowvec denom = mLVar.row(i) % mStandardDev.row(i);
+        rowvec numerator = trans(Wi) * (centerized % centerized % centerized);
+        mLocalSkewness.row(i).zeros();
+        for (uword j = 0; j < nVar; j++)
+        {
+            if (isfinite(denom(j)) && denom(j) != 0.0)
+            {
+                mLocalSkewness(i, j) = numerator(j) / denom(j);
+            }
+            else
+            {
+                mLocalSkewness(i, j) = 0.0;
+            }
+        }
         GWM_LOG_PROGRESS(i + 1, nRp);
     }
-    mLCV = mStandardDev / mLocalMean;
+    mLCV.zeros();
+    for (uword i = 0; i < nRp; i++)
+    {
+        for (uword j = 0; j < nVar; j++)
+        {
+            double meanVal = mLocalMean(i, j);
+            if (isfinite(meanVal) && meanVal != 0.0)
+            {
+                mLCV(i, j) = mStandardDev(i, j) / meanVal;
+            }
+            else
+            {
+                mLCV(i, j) = 0.0;
+            }
+        }
+    }
 }
 
 #ifdef ENABLE_OPENMP
@@ -127,8 +200,16 @@ void GWAverage::GWAverageOmp()
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
         vec w = mSpatialWeight.weightVector(i);
+        if (w.n_rows != nRp || !std::all_of(w.begin(), w.end(), [](double v) { return std::isfinite(v); }))
+        {
+            w = vec(nRp, fill::zeros);
+        }
         double sumw = sum(w);
-        vec Wi = w / sumw;
+        vec Wi = arma::zeros<vec>(nRp);
+        if (isfinite(sumw) && sumw != 0.0)
+        {
+            Wi = w / sumw;
+        }
         mLocalMean.row(i) = trans(Wi) * mX;
         if (mQuantile)
         {
@@ -139,15 +220,48 @@ void GWAverage::GWAverageOmp()
             }
             mLocalMedian.row(i) = quant.row(1);
             mIQR.row(i) = quant.row(2) - quant.row(0);
-            mQI.row(i) = (2 * quant.row(1) - quant.row(2) - quant.row(0)) / mIQR.row(i);
+            rowvec qi = (2 * quant.row(1) - quant.row(2) - quant.row(0));
+            for (uword j = 0; j < nVar; j++)
+            {
+                double denom = mIQR(i, j);
+                mQI(i, j) = (isfinite(denom) && denom != 0.0) ? qi(j) / denom : 0.0;
+            }
         }
         mat centerized = mX.each_row() - mLocalMean.row(i);
         mLVar.row(i) = Wi.t() * (centerized % centerized);
         mStandardDev.row(i) = sqrt(mLVar.row(i));
-        mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
+        rowvec denom = mLVar.row(i) % mStandardDev.row(i);
+        rowvec numerator = trans(Wi) * (centerized % centerized % centerized);
+        mLocalSkewness.row(i).zeros();
+        for (uword j = 0; j < nVar; j++)
+        {
+            if (isfinite(denom(j)) && denom(j) != 0.0)
+            {
+                mLocalSkewness(i, j) = numerator(j) / denom(j);
+            }
+            else
+            {
+                mLocalSkewness(i, j) = 0.0;
+            }
+        }
         GWM_LOG_PROGRESS(i + 1, nRp);
     }
-    mLCV = mStandardDev / mLocalMean;
+    mLCV.zeros();
+    for (uword i = 0; i < nRp; i++)
+    {
+        for (uword j = 0; j < nVar; j++)
+        {
+            double meanVal = mLocalMean(i, j);
+            if (isfinite(meanVal) && meanVal != 0.0)
+            {
+                mLCV(i, j) = mStandardDev(i, j) / meanVal;
+            }
+            else
+            {
+                mLCV(i, j) = 0.0;
+            }
+        }
+    }
 }
 #endif
 
@@ -186,7 +300,11 @@ void GWAverage::calibration(const mat& locations, const mat& x)
         GWM_LOG_STOP_BREAK(mStatus);
         vec w = mSpatialWeight.weightVector(i);
         double sumw = sum(w);
-        vec Wi = w / sumw;
+        vec Wi = arma::zeros<vec>(w.n_rows);
+        if (isfinite(sumw) && sumw != 0.0)
+        {
+            Wi = w / sumw;
+        }
         mLocalMean.row(i) = trans(Wi) * x;
         if (mQuantile)
         {
@@ -197,15 +315,48 @@ void GWAverage::calibration(const mat& locations, const mat& x)
             }
             mLocalMedian.row(i) = quant.row(1);
             mIQR.row(i) = quant.row(2) - quant.row(0);
-            mQI.row(i) = (2 * quant.row(1) - quant.row(2) - quant.row(0)) / mIQR.row(i);
+            rowvec qi = (2 * quant.row(1) - quant.row(2) - quant.row(0));
+            for (uword j = 0; j < nVar; j++)
+            {
+                double denom = mIQR(i, j);
+                mQI(i, j) = (isfinite(denom) && denom != 0.0) ? qi(j) / denom : 0.0;
+            }
         }
         mat centerized = x.each_row() - mLocalMean.row(i);
         mLVar.row(i) = Wi.t() * (centerized % centerized);
         mStandardDev.row(i) = sqrt(mLVar.row(i));
-        mLocalSkewness.row(i) = (Wi.t() * (centerized % centerized % centerized)) / (mLVar.row(i) % mStandardDev.row(i));
+        rowvec denom = mLVar.row(i) % mStandardDev.row(i);
+        rowvec numerator = trans(Wi) * (centerized % centerized % centerized);
+        mLocalSkewness.row(i).zeros();
+        for (uword j = 0; j < nVar; j++)
+        {
+            if (isfinite(denom(j)) && denom(j) != 0.0)
+            {
+                mLocalSkewness(i, j) = numerator(j) / denom(j);
+            }
+            else
+            {
+                mLocalSkewness(i, j) = 0.0;
+            }
+        }
         GWM_LOG_PROGRESS(i + 1, nRp);
     }
-    mLCV = mStandardDev / mLocalMean;
+    mLCV.zeros();
+    for (uword i = 0; i < nRp; i++)
+    {
+        for (uword j = 0; j < nVar; j++)
+        {
+            double meanVal = mLocalMean(i, j);
+            if (isfinite(meanVal) && meanVal != 0.0)
+            {
+                mLCV(i, j) = mStandardDev(i, j) / meanVal;
+            }
+            else
+            {
+                mLCV(i, j) = 0.0;
+            }
+        }
+    }
 }
 
 void GWAverage::setParallelType(const ParallelType &type)
@@ -233,4 +384,80 @@ void GWAverage::updateCalculator()
         mSummaryFunction = &GWAverage::GWAverageSerial;
         break;
     }
+}
+
+Status GWAverage::getCriterion(BandwidthWeight* weight, double& criterion)
+{
+    BandwidthWeight* currentBw = mSpatialWeight.weight<BandwidthWeight>();
+    if (!currentBw || !weight)
+    {
+        criterion = DBL_MAX;
+        return Status::Success;
+    }
+
+    BandwidthWeight* backup = static_cast<BandwidthWeight*>(currentBw->clone());
+    mSpatialWeight.setWeight(weight);
+
+    uword n = mCoords.n_rows;
+    uword p = mX.n_cols;
+    if (n < 2 || p == 0)
+    {
+        criterion = DBL_MAX;
+        mSpatialWeight.setWeight(backup);
+        delete backup;
+        return Status::Success;
+    }
+
+    double totalF = 0.0;
+    bool valid = false;
+
+    for (uword j = 0; j < p; j++)
+    {
+        mat weightedVals(n, n, fill::zeros);
+        for (uword i = 0; i < n; i++)
+        {
+            vec w = mSpatialWeight.weightVector(i);
+            if (w.n_rows != n)
+                continue;
+            weightedVals.col(i) = w % mX.col(j);
+        }
+
+        double yMean = accu(weightedVals) / double(n * n);
+        mat centered = weightedVals - yMean;
+        double SST = accu(centered % centered);
+        if (!isfinite(SST) || SST < 0.0)
+            continue;
+
+        rowvec groupMeans = mean(weightedVals, 0);
+        double SSE = 0.0;
+        for (uword i = 0; i < n; i++)
+        {
+            vec diff = weightedVals.col(i) - groupMeans(i);
+            SSE += accu(diff % diff);
+        }
+
+        double SSB = 0.0;
+        for (uword i = 0; i < n; i++)
+        {
+            double meanDiff = groupMeans(i) - yMean;
+            SSB += double(n) * meanDiff * meanDiff;
+        }
+        double MSB = SSB / double(n - 1);
+        double MSW = SSE / double(n * n - n);
+        if (!isfinite(MSB) || !isfinite(MSW) || MSW == 0.0)
+            continue;
+
+        double F = MSB / MSW;
+        if (!isfinite(F))
+            continue;
+
+        totalF += F;
+        valid = true;
+    }
+
+    criterion = valid ? -totalF : DBL_MAX;
+
+    mSpatialWeight.setWeight(backup);
+    delete backup;
+    return Status::Success;
 }
