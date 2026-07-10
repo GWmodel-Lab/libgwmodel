@@ -29,7 +29,7 @@ bool GWRBasicGpuTask::fit(bool hasIntercept)
         
         if (mIsOptimizeBandwidth)
         {
-            mOptimizedBandwidth = algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
+            mOptimizedBandwidth = algorithm.spatialWeight().weight<BandwidthWeight>().bandwidth();
         }
 
         if (mIsOptimizeVariables)

@@ -34,14 +34,15 @@ mat GWRGeneralized::fit()
         GWM_LOG_STAGE("Bandwidth selection");
         // emit message(string("Automatically selecting bandwidth ..."));
         // emit tick(0, 0);
-        BandwidthWeight *bw0 = mSpatialWeight.weight<BandwidthWeight>();
-        double lower = bw0->adaptive() ? 20 : 0.0;
-        double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
+        const BandwidthWeight& bw0 = mSpatialWeight.weight<BandwidthWeight>();
+        double lower = bw0.adaptive() ? 20 : 0.0;
+        double upper = bw0.adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
         
         GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0));
         BandwidthSelector selector(bw0, lower, upper);
-        BandwidthWeight *bw = selector.optimize(this);
-        if (bw)
+        mStatus = selector.optimize(this);
+        const BandwidthWeight& bw = selector.result();
+        if (mStatus == Status::Success)  // Check if the optimization was successful
         {
             mSpatialWeight.setWeight(bw);
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
@@ -565,7 +566,7 @@ mat GWRGeneralized::fitBinomialSerial(const mat &x, const vec &y)
     return betas;
 }
 
-double GWRGeneralized::bandwidthSizeGGWRCriterionCVSerial(BandwidthWeight *bandwidthWeight)
+double GWRGeneralized::bandwidthSizeGGWRCriterionCVSerial(const std::unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     uword n = mCoords.n_rows;
     vec cv = vec(n);
@@ -612,7 +613,7 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionCVSerial(BandwidthWeight *bandw
 }
 
 #ifdef ENABLE_OPENMP
-double GWRGeneralized::bandwidthSizeGGWRCriterionCVOmp(BandwidthWeight *bandwidthWeight)
+double GWRGeneralized::bandwidthSizeGGWRCriterionCVOmp(const std::unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     uword n = mCoords.n_rows;
     vec cv = vec(n);
@@ -668,7 +669,7 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionCVOmp(BandwidthWeight *bandwidt
 }
 #endif
 
-double GWRGeneralized::bandwidthSizeGGWRCriterionAICSerial(BandwidthWeight *bandwidthWeight)
+double GWRGeneralized::bandwidthSizeGGWRCriterionAICSerial(const std::unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     uword n = mCoords.n_rows;
     vec cv = vec(n);
@@ -709,7 +710,7 @@ double GWRGeneralized::bandwidthSizeGGWRCriterionAICSerial(BandwidthWeight *band
 }
 
 #ifdef ENABLE_OPENMP
-double GWRGeneralized::bandwidthSizeGGWRCriterionAICOmp(BandwidthWeight *bandwidthWeight)
+double GWRGeneralized::bandwidthSizeGGWRCriterionAICOmp(const std::unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     uword n = mCoords.n_rows;
     vec cv = vec(n);

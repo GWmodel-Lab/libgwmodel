@@ -137,16 +137,15 @@ mat GWRBasic::fit()
     if (mIsAutoselectBandwidth)
     {
         GWM_LOG_STAGE("Bandwidth selection");
-        BandwidthWeight* bw0 = mSpatialWeight.weight<BandwidthWeight>();
-        double lower = mGoldenLowerBounds.value_or(bw0->adaptive() ? 20 : 0.0);
-        double upper = mGoldenUpperBounds.value_or(bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance());
+        const BandwidthWeight& bw0 = mSpatialWeight.weight<BandwidthWeight>();
+        double lower = mGoldenLowerBounds.value_or(bw0.adaptive() ? 20 : 0.0);
+        double upper = mGoldenUpperBounds.value_or(bw0.adaptive() ? nDp : mSpatialWeight.distance()->maxDistance());
 
         GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0));
-        BandwidthSelector selector(bw0, lower, upper);
-        BandwidthWeight* bw = selector.optimize(this);
-        if (bw)
+        BandwidthSelector selector { bw0, lower, upper };
+        if (selector.optimize(this) == Status::Success)
         {
-            mSpatialWeight.setWeight(bw);
+            mSpatialWeight.setWeight(selector.result());
 #ifdef ENABLE_CUDA
             if (mParallelType & ParallelType::CUDA)
             {
@@ -345,9 +344,9 @@ mat GWRBasic::fitCoreSHatSerial(const mat& x, const vec& y, const SpatialWeight&
     return betas.t();
 }
 
-double GWRBasic::bandwidthSizeCriterionCV(BandwidthWeight* bandwidthWeight)
+double GWRBasic::bandwidthSizeCriterionCV(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
-    SpatialWeight sw(bandwidthWeight, mSpatialWeight.distance());
+    SpatialWeight sw(bandwidthWeight->clone(), mSpatialWeight.distance());
     try
     {
         mat betas = (this->*mFitCoreCVFunction)(mX, mY, sw);
@@ -355,7 +354,7 @@ double GWRBasic::bandwidthSizeCriterionCV(BandwidthWeight* bandwidthWeight)
         double cv = sum(res % res);
         if (mStatus == Status::Success && isfinite(cv))
         {
-            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, cv));
+            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight.get(), cv));
             GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - cv)));
             mBandwidthLastCriterion = cv;
             return cv;
@@ -369,9 +368,9 @@ double GWRBasic::bandwidthSizeCriterionCV(BandwidthWeight* bandwidthWeight)
     
 }
 
-double GWRBasic::bandwidthSizeCriterionAIC(BandwidthWeight* bandwidthWeight)
+double GWRBasic::bandwidthSizeCriterionAIC(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
-    SpatialWeight sw(bandwidthWeight, mSpatialWeight.distance());
+    SpatialWeight sw(bandwidthWeight->clone(), mSpatialWeight.distance());
     try
     {
         vec shat;
@@ -379,7 +378,7 @@ double GWRBasic::bandwidthSizeCriterionAIC(BandwidthWeight* bandwidthWeight)
         double value = GWRBase::AICc(mX, mY, betas, shat);
         if (mStatus == Status::Success && isfinite(value))
         {
-            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight, value));
+            GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bandwidthWeight.get(), value));
             GWM_LOG_PROGRESS_PERCENT(exp(- abs(mBandwidthLastCriterion - value)));
             mBandwidthLastCriterion = value;
             return value;
@@ -396,7 +395,7 @@ double gwm::GWRBasic::indepVarsSelectionCriterion(const vector<size_t>& indepVar
 {
     mat x = mX.cols(VariableForwardSelector::index2uvec(indepVars, mHasIntercept));
     SpatialWeight sw = mSpatialWeight;
-    sw.weight<BandwidthWeight>()->setBandwidth(DBL_MAX);
+    sw.weight<BandwidthWeight>().setBandwidth(DBL_MAX);
     try
     {
         vec shat;
@@ -861,7 +860,7 @@ GWM_MPI_WORKER_END
     return aic;
 }
 
-double GWRBasic::bandwidthSizeCriterionCVMpi(BandwidthWeight* bandwidthWeight)
+double GWRBasic::bandwidthSizeCriterionCVMpi(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     uword nDp = mX.n_rows, nVar = mX.n_cols;
     SpatialWeight sw(bandwidthWeight, mSpatialWeight.distance());
@@ -888,7 +887,7 @@ GWM_MPI_WORKER_END
     return cv;
 }
 
-double GWRBasic::bandwidthSizeCriterionAICMpi(BandwidthWeight* bandwidthWeight)
+double GWRBasic::bandwidthSizeCriterionAICMpi(const unique_ptr<BandwidthWeight>& bandwidthWeight)
 {
     SpatialWeight sw(bandwidthWeight, mSpatialWeight.distance());
     double aic;
@@ -1124,7 +1123,7 @@ bool GWRBasic::isValid()
 {
     if (GWRBase::isValid())
     {
-        double bw = mSpatialWeight.weight<BandwidthWeight>()->bandwidth();
+        double bw = mSpatialWeight.weight<BandwidthWeight>().bandwidth();
         if (!(bw > 0))
         {
             return false;

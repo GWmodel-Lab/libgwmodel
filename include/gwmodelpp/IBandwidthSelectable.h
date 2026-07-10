@@ -27,9 +27,9 @@ struct IBandwidthSelectable
      * @param weight \~english Bandwidth weight \~chinese 带宽设置
      * @return std::string \~english Information string \~chinese 信息字符串
      */
-    static std::string infoBandwidthCriterion(const BandwidthWeight* weight)
+    static std::string infoBandwidthCriterion(const BandwidthWeight& weight)
     {
-        return std::string(GWM_LOG_TAG_BANDWIDTH_CIRTERION) + (weight->adaptive() ? "adaptive" : "fixed") + ",criterion";
+        return std::string(GWM_LOG_TAG_BANDWIDTH_CIRTERION) + (weight.adaptive() ? "adaptive" : "fixed") + ",criterion";
     }
 
     /**
@@ -40,12 +40,12 @@ struct IBandwidthSelectable
      * @param value \~english Criterion value \~chinese 指标值
      * @return std::string \~english Information string \~chinese 信息字符串
      */
-    static std::string infoBandwidthCriterion(const BandwidthWeight* weight, const double value)
+    static std::string infoBandwidthCriterion(const BandwidthWeight& weight, const double value)
     {
-        if (weight->adaptive())
-            return std::string(GWM_LOG_TAG_BANDWIDTH_CIRTERION) + std::to_string(int(weight->bandwidth())) + "," + std::to_string(value);
+        if (weight.adaptive())
+            return std::string(GWM_LOG_TAG_BANDWIDTH_CIRTERION) + std::to_string(int(weight.bandwidth())) + "," + std::to_string(value);
         else 
-            return std::string(GWM_LOG_TAG_BANDWIDTH_CIRTERION) + std::to_string(weight->bandwidth()) + "," + std::to_string(value);
+            return std::string(GWM_LOG_TAG_BANDWIDTH_CIRTERION) + std::to_string(weight.bandwidth()) + "," + std::to_string(value);
     }
 
     /**
@@ -63,7 +63,7 @@ struct IBandwidthSelectable
      * @param criterion [出参] 带宽优选的指标值。
      * @param Status 算法运行状态。
      */
-    virtual Status getCriterion(BandwidthWeight* weight, double& criterion) = 0;
+    virtual Status getCriterion(const std::unique_ptr<BandwidthWeight>& weight, double& criterion) = 0;
 };
 
 typedef std::vector<std::pair<double, double> >  BandwidthCriterionList; //!< \~english A list of bandwidth criterions for all attempt bandwidth values. \~chinese 所有尝试的带宽对应的指标值列表

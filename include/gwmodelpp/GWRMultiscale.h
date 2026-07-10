@@ -88,7 +88,7 @@ public:
 
     static std::unordered_map<BackFittingCriterionType,std::string> BackFittingCriterionTypeNameMapper; //!< \~english A mapper from backfitting convergence criterion types to their names.  \~chinese 后向迭代算法收敛指标类型到其名称的映射表。
 
-    typedef double (GWRMultiscale::*BandwidthSizeCriterionFunction)(BandwidthWeight*);  //!< \~english Function to calculate the criterion for given bandwidth size. \~chinese 根据指定带宽大小计算对应指标值的函数。
+    typedef double (GWRMultiscale::*BandwidthSizeCriterionFunction)(const std::unique_ptr<BandwidthWeight>&);  //!< \~english Function to calculate the criterion for given bandwidth size. \~chinese 根据指定带宽大小计算对应指标值的函数。
         
     typedef arma::vec (GWRMultiscale::*FitVarFunction)(const size_t);  //!< \~english Function to fit a model for the given variable. \~chinese 根据给定变量拟合模型的函数。
         
@@ -574,7 +574,7 @@ public:     // SpatialMultiscaleAlgorithm interface
 
 
 public:     // IBandwidthSizeSelectable interface
-    Status getCriterion(BandwidthWeight* weight, double& criterion) override
+    Status getCriterion(const std::unique_ptr<BandwidthWeight>& weight, double& criterion) override
     {
         criterion = (this->*mBandwidthSizeCriterion)(weight);
         return mStatus;
@@ -640,7 +640,7 @@ protected:
      * @param i 带宽索引值。
      * @return BandwidthWeight* 第 \f$i\f$ 个带宽。
      */
-    BandwidthWeight* bandwidth(size_t i)
+    BandwidthWeight& bandwidth(size_t i)
     {
         return mSpatialWeights[i].weight<BandwidthWeight>();
     }
@@ -679,7 +679,7 @@ protected:
      * @param bandwidthWeight 带宽值。
      * @return double CV指标值。
      */
-    double bandwidthSizeCriterionVarCVBase(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionVarCVBase(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
     
     /**
      * \~english
@@ -694,7 +694,7 @@ protected:
      * @param bandwidthWeight 带宽值。
      * @return double AIC指标值。
      */
-    double bandwidthSizeCriterionVarAICBase(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionVarAICBase(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
 
     /**
      * \~english
@@ -760,8 +760,8 @@ protected:
 
 #ifdef ENABLE_MPI
     arma::vec fitVarMpi(const size_t var);
-    double bandwidthSizeCriterionVarCVMpi(BandwidthWeight* bandwidthWeight);
-    double bandwidthSizeCriterionVarAICMpi(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionVarCVMpi(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
+    double bandwidthSizeCriterionVarAICMpi(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
 #endif // ENABLE_MPI
 
 private:

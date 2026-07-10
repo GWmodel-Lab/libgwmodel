@@ -70,9 +70,9 @@ public:
      */
     MinkwoskiDistance(const MinkwoskiDistance& distance);
 
-    virtual Distance * clone() const override
+    virtual std::unique_ptr<Distance> clone() const override
     {
-        return new MinkwoskiDistance(*this);
+        return std::make_unique<MinkwoskiDistance>(*this);
     }
 
     DistanceType type() override { return DistanceType::MinkwoskiDistance; }

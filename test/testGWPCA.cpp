@@ -106,10 +106,10 @@ TEST_CASE("GWPCA: summary statistics")
     mat sdev = algorithm.sdev();
     mat localVariance = sdev % sdev;
     
-    BandwidthWeight* bw_weight = algorithm.spatialWeight().weight<BandwidthWeight>();
-    double bw_value = bw_weight->bandwidth();
-    bool bw_adaptive = bw_weight->adaptive();
-    BandwidthWeight::KernelFunctionType kernel_type = bw_weight->kernel();
+    auto bw_weight = algorithm.spatialWeight().weight<BandwidthWeight>();
+    double bw_value = bw_weight.bandwidth();
+    bool bw_adaptive = bw_weight.adaptive();
+    BandwidthWeight::KernelFunctionType kernel_type = bw_weight.kernel();
     const char* bw_kernel_name = "Unknown";
     switch (kernel_type)
     {

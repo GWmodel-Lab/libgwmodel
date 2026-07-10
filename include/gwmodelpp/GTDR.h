@@ -35,7 +35,7 @@ public:
         AIC     //!< AIC
     };
 
-    typedef double (GTDR::*BandwidthCriterionCalculator)(const std::vector<BandwidthWeight*>&); //!< \~english Calculator to get criterion for bandwidth optimization \~chinese 带宽优选指标值计算函数
+    typedef double (GTDR::*BandwidthCriterionCalculator)(const std::vector<std::reference_wrapper<BandwidthWeight>>&); //!< \~english Calculator to get criterion for bandwidth optimization \~chinese 带宽优选指标值计算函数
 
     typedef double (GTDR::*IndepVarCriterionCalculator)(const std::vector<std::size_t>&); //!< \~english Calculator to get criterion for variable optimization \~chinese 变量优选指标值计算函数
 
@@ -367,7 +367,7 @@ public:
      * @param bandwidths \~english Given bandwidths \~chinese 给定带宽值
      * @return double \~english Criterion value \~chinese 指标值
      */
-    double bandwidthCriterion(const std::vector<BandwidthWeight*>& bandwidths)
+    double bandwidthCriterion(const std::vector<std::reference_wrapper<BandwidthWeight>>& bandwidths)
     {
         return (this->*mBandwidthCriterionFunction)(bandwidths);
     }
@@ -403,7 +403,7 @@ protected:
      * @param bandwidths \~english Given bandwidths \~chinese 给定带宽值
      * @return double \~english Criterion value \~chinese 指标值
      */
-    double bandwidthCriterionAICSerial(const std::vector<BandwidthWeight*>& bandwidths);
+    double bandwidthCriterionAICSerial(const std::vector<std::reference_wrapper<BandwidthWeight>>& bandwidths);
 
     /**
      * @brief \~english Non-parallel implementation of calculator to get CV criterion for given bandwidths. \~chinese 获取给定带宽值对应的CV值的非并行实现。
@@ -411,7 +411,7 @@ protected:
      * @param bandwidths \~english Given bandwidths \~chinese 给定带宽值
      * @return double \~english Criterion value \~chinese 指标值
      */
-    double bandwidthCriterionCVSerial(const std::vector<BandwidthWeight*>& bandwidths);
+    double bandwidthCriterionCVSerial(const std::vector<std::reference_wrapper<BandwidthWeight>>& bandwidths);
 
     /**
      * @brief \~english Non-parallel implementation of calculator to get AIC criterion for given variable combination. \~chinese 获取给定变量组合对应的AIC值的非并行实现。
@@ -451,7 +451,7 @@ protected:
      * @param bandwidths \~english Given bandwidths \~chinese 给定带宽值
      * @return double \~english Criterion value \~chinese 指标值
      */
-    double bandwidthCriterionAICOmp(const std::vector<BandwidthWeight*>& bandwidths);
+    double bandwidthCriterionAICOmp(const std::vector<std::reference_wrapper<BandwidthWeight>>& bandwidths);
     
     /**
      * @brief \~english Multithreading implementation of calculator to get CV criterion for given bandwidths. \~chinese 获取给定带宽值对应的CV值的多线程实现。
@@ -459,7 +459,7 @@ protected:
      * @param bandwidths \~english Given bandwidths \~chinese 给定带宽值
      * @return double \~english Criterion value \~chinese 指标值
      */
-    double bandwidthCriterionCVOmp(const std::vector<BandwidthWeight*>& bandwidths);
+    double bandwidthCriterionCVOmp(const std::vector<std::reference_wrapper<BandwidthWeight>>& bandwidths);
     
     /**
      * @brief \~english Multithreading implementation of calculator to get AIC criterion for given variable combination. \~chinese 获取给定变量组合对应的AIC值的多线程实现。
@@ -533,7 +533,7 @@ public:
     struct Parameter
     {
         GTDR* instance;     //!< \~english A GTDR instance \~chinese 一个 GTDR 实例
-        std::vector<BandwidthWeight*>* bandwidths;  //!< \~english Bandwidths \~chinese 带宽
+        std::vector<std::reference_wrapper<BandwidthWeight>> bandwidths;  //!< \~english Bandwidths \~chinese 带宽
         arma::uword featureCount;   //!< \~english Total number of features \~chinese 要素总数
     };
 
@@ -553,13 +553,13 @@ public:
      * @param weights \~english Bandwidth weight \~chinese 带宽设置
      * @return std::string \~english Information string \~chinese 信息字符串
      */
-    static std::string infoBandwidthCriterion(const std::vector<BandwidthWeight*>& weights)
+    static std::string infoBandwidthCriterion(const std::vector<std::reference_wrapper<BandwidthWeight>>& weights)
     {
         std::size_t number = 1;
         std::vector<std::string> labels(weights.size());
-        std::transform(weights.cbegin(), weights.cend(), labels.begin(), [&number](const BandwidthWeight* bw)
+        std::transform(weights.cbegin(), weights.cend(), labels.begin(), [&number](const BandwidthWeight& bw)
         {
-            return std::to_string(number++) + ":" + (bw->adaptive() ? "adaptive" : "fixed");
+            return std::to_string(number++) + ":" + (bw.adaptive() ? "adaptive" : "fixed");
         });
         return std::string(GWM_LOG_TAG_BANDWIDTH_CIRTERION) + strjoin(",", labels) + ",criterion";
     }
@@ -572,12 +572,12 @@ public:
      * @param criterion \~english Criterion value \~chinese 指标值
      * @return std::string \~english Information string \~chinese 信息字符串
      */
-    static std::string infoBandwidthCriterion(const std::vector<BandwidthWeight*>& weights, const double criterion)
+    static std::string infoBandwidthCriterion(const std::vector<std::reference_wrapper<BandwidthWeight>>& weights, const double criterion)
     {
         std::vector<std::string> labels(weights.size());
-        std::transform(weights.cbegin(), weights.cend(), labels.begin(), [](const BandwidthWeight* bw)
+        std::transform(weights.cbegin(), weights.cend(), labels.begin(), [](const BandwidthWeight& bw)
         {
-            return std::to_string(bw->bandwidth());
+            return std::to_string(bw.bandwidth());
         });
         return std::string(GWM_LOG_TAG_BANDWIDTH_CIRTERION) + strjoin(",", labels) + "," + std::to_string(criterion);
     }
@@ -589,7 +589,7 @@ public:
      * 
      * @param weights \~english Initial values of bandwidths \~chinese 带宽初始值
      */
-    explicit GTDRBandwidthOptimizer(const std::vector<BandwidthWeight*>& weights) : mBandwidths(weights) {}
+    explicit GTDRBandwidthOptimizer(const std::vector<std::reference_wrapper<BandwidthWeight>>& weights) : mBandwidths(weights) {}
 
     /**
      * @brief \~english Optimize bandwidth for a GTDR model. \~chinese 为 GTDR 模型优选带宽。
@@ -604,7 +604,7 @@ public:
     const int optimize(GTDR* instance, arma::uword featureCount, std::size_t maxIter, double eps, double step);
 
 private:
-    std::vector<BandwidthWeight*> mBandwidths;  //!< \~english Bandwidths \~chinese 带宽
+    const std::vector<std::reference_wrapper<BandwidthWeight>>& mBandwidths;  //!< \~english Bandwidths \~chinese 带宽
 };
 
 }

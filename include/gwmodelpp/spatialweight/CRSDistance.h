@@ -149,9 +149,9 @@ public:
     {
     }
 
-    virtual Distance * clone() const override
+    virtual std::unique_ptr<Distance> clone() const override
     {
-        return new CRSDistance(*this);
+        return std::make_unique<CRSDistance>(*this);
     }
 
     DistanceType type() override { return DistanceType::CRSDistance; }

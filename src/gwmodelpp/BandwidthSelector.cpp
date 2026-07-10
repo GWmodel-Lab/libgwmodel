@@ -5,14 +5,14 @@
 using namespace std;
 using namespace gwm;
 
-BandwidthWeight* BandwidthSelector::optimize(IBandwidthSelectable* instance)
+Status BandwidthSelector::optimize(IBandwidthSelectable* instance)
 {
     cerr << "[BandwidthSelector] optimize() starting: lower=" << mLower << ", upper=" << mUpper
          << ", adaptive=" << std::boolalpha << mBandwidth->adaptive() << ", kernel=" << mBandwidth->kernel() << "\n";
     BandwidthWeight* w1 = static_cast<BandwidthWeight*>(mBandwidth->clone());
     BandwidthWeight* w2 = static_cast<BandwidthWeight*>(mBandwidth->clone());
     double xU = mUpper, xL = mLower;
-    bool adaptBw = mBandwidth->adaptive();
+    bool adaptBw = mBandwidth.adaptive();
     const double eps = 1e-4;
     const double R = (sqrt(5)-1)/2;
     int iter = 0;
@@ -24,9 +24,9 @@ BandwidthWeight* BandwidthSelector::optimize(IBandwidthSelectable* instance)
     double f1 = DBL_MAX, f2 = DBL_MAX;
     Status s1 = instance->getCriterion(w1, f1);
     Status s2 = instance->getCriterion(w2, f2);
-    if (!(s1 == Status::Success && s2 == Status::Success))
+    if (s1 == Status::Terminated || s2 == Status::Terminated)
     {
-        return mBandwidth;
+        return Status::Terminated;
     }
     if (f1 == DBL_MAX && f2 == DBL_MAX)
     {
@@ -77,15 +77,12 @@ BandwidthWeight* BandwidthSelector::optimize(IBandwidthSelectable* instance)
     cerr << "[BandwidthSelector] optimize completed: xopt=" << xopt << ", s1=" << static_cast<int>(s1) << ", s2=" << static_cast<int>(s2) << "\n";
     if (s1 == Status::Success && s2 == Status::Success)
     {
-        BandwidthWeight* wopt = new BandwidthWeight();
-        wopt->setKernel(mBandwidth->kernel());
-        wopt->setAdaptive(mBandwidth->adaptive());
-        wopt->setBandwidth(xopt);
-        return wopt;
+        mOptimisedBandwidth.setBandwidth(xopt);
+        return Status::Success;
     }
     else
     {
-        return mBandwidth;
+        return Status::Success;
     }
 }
 

@@ -32,7 +32,7 @@ BandwidthWeight::KernelFunction BandwidthWeight::Kernel[] =
     &BandwidthWeight::BoxcarKernelFunction
 };
 
-vec BandwidthWeight::weight(vec dist)
+vec BandwidthWeight::weight(vec dist) const
 {
     const KernelFunction *kerf = Kernel + mKernel;
     uword nr = dist.n_elem;

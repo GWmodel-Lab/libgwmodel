@@ -52,7 +52,7 @@ public:
     typedef arma::mat (GWRBasic::*FitCoreSHatCalculator)(const arma::mat&, const arma::vec&, const SpatialWeight&, arma::vec&);   //!< \~english Fit function declaration. \~chinese 拟合函数声明。
     typedef arma::mat (GWRBasic::*FitCoreCVCalculator)(const arma::mat&, const arma::vec&, const SpatialWeight&);   //!< \~english Fit function declaration. \~chinese 拟合函数声明。
 
-    typedef double (GWRBasic::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);        //!< \~english Declaration of criterion calculator for bandwidth selection. \~chinese 带宽优选指标计算函数声明。
+    typedef double (GWRBasic::*BandwidthSelectionCriterionCalculator)(const std::unique_ptr<BandwidthWeight>&);        //!< \~english Declaration of criterion calculator for bandwidth selection. \~chinese 带宽优选指标计算函数声明。
     typedef double (GWRBasic::*IndepVarsSelectCriterionCalculator)(const std::vector<std::size_t>&); //!< \~english Declaration of criterion calculator for variable selection. \~chinese 变量优选指标计算函数声明。
 
 private:
@@ -425,7 +425,7 @@ public:     // Implement IVariableSelectable
 
 
 public:     // Implement IBandwidthSelectable
-    Status getCriterion(BandwidthWeight* weight, double& criterion) override
+    Status getCriterion(const std::unique_ptr<BandwidthWeight>& weight, double& criterion) override
     {
         criterion = (this->*mBandwidthSelectionCriterionFunction)(weight);
         return mStatus;
@@ -444,7 +444,7 @@ public:     // Implement IBandwidthSelectable
      * @param bandwidthWeight 指定的带宽。
      * @return double 带宽优选的指标值。
      */
-    double bandwidthSizeCriterionCV(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionCV(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
     
     /**
      * \~english
@@ -459,7 +459,7 @@ public:     // Implement IBandwidthSelectable
      * @param bandwidthWeight 指定的带宽。
      * @return double 带宽优选的指标值。
      */
-    double bandwidthSizeCriterionAIC(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionAIC(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
 
 
 private:
@@ -675,8 +675,8 @@ private:
 
 #ifdef ENABLE_MPI
     double indepVarsSelectionCriterionMpi(const std::vector<std::size_t>& indepVars);
-    double bandwidthSizeCriterionCVMpi(BandwidthWeight* bandwidthWeight);
-    double bandwidthSizeCriterionAICMpi(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionCVMpi(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
+    double bandwidthSizeCriterionAICMpi(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
     arma::mat fitMpi();
 #endif // ENABLE_MPI
 

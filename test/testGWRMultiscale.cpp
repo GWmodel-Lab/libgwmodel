@@ -79,9 +79,9 @@ TEST_CASE("MGWR: basic flow")
         REQUIRE_NOTHROW(algorithm.fit());
 
         const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
-        REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(4623.78, 0.1));
-        REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(12665.70, 0.1));
-        REQUIRE_THAT(spatialWeights[2].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(12665.70, 0.1));
+        REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(4623.78, 0.1));
+        REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(12665.70, 0.1));
+        REQUIRE_THAT(spatialWeights[2].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(12665.70, 0.1));
 
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2437.09277417389, 1e-6));
@@ -126,9 +126,9 @@ TEST_CASE("MGWR: basic flow")
         REQUIRE_NOTHROW(algorithm.fit());
 
         const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
-        REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(45, 0.1));
-        REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
-        REQUIRE_THAT(spatialWeights[2].weight<BandwidthWeight>()->bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
+        REQUIRE_THAT(spatialWeights[0].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(45, 0.1));
+        REQUIRE_THAT(spatialWeights[1].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
+        REQUIRE_THAT(spatialWeights[2].weight<BandwidthWeight>().bandwidth(), Catch::Matchers::WithinAbs(98, 0.1));
 
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2437.935218705351, 1e-6));
@@ -168,9 +168,9 @@ TEST_CASE("MGWR: basic flow")
         algorithm.setParallelType(parallel);
         REQUIRE_NOTHROW(algorithm.fit());
         const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
-        REQUIRE(spatialWeights[0].weight<BandwidthWeight>()->bandwidth() == 35);
-        REQUIRE(spatialWeights[1].weight<BandwidthWeight>()->bandwidth() == 98);
-        REQUIRE(spatialWeights[2].weight<BandwidthWeight>()->bandwidth() == 98);
+        REQUIRE(spatialWeights[0].weight<BandwidthWeight>().bandwidth() == 35);
+        REQUIRE(spatialWeights[1].weight<BandwidthWeight>().bandwidth() == 98);
+        REQUIRE(spatialWeights[2].weight<BandwidthWeight>().bandwidth() == 98);
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE_THAT(diagnostic.RSquare, Catch::Matchers::WithinAbs(0.757377391669, 1e-6));
         REQUIRE(algorithm.hasIntercept() == true);
@@ -211,9 +211,9 @@ TEST_CASE("MGWR: basic flow")
         REQUIRE_NOTHROW(algorithm.fit());
 
         const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
-        REQUIRE(spatialWeights[0].weight<BandwidthWeight>()->bandwidth() == 35);
-        REQUIRE(spatialWeights[1].weight<BandwidthWeight>()->bandwidth() == 98);
-        REQUIRE(spatialWeights[2].weight<BandwidthWeight>()->bandwidth() == 98);
+        REQUIRE(spatialWeights[0].weight<BandwidthWeight>().bandwidth() == 35);
+        REQUIRE(spatialWeights[1].weight<BandwidthWeight>().bandwidth() == 98);
+        REQUIRE(spatialWeights[2].weight<BandwidthWeight>().bandwidth() == 98);
 
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE_THAT(diagnostic.AICc, Catch::Matchers::WithinAbs(2438.256543496552, 1e-6));
@@ -255,9 +255,9 @@ TEST_CASE("MGWR: basic flow")
         REQUIRE_NOTHROW(algorithm.fit());
 
         const vector<SpatialWeight>& spatialWeights = algorithm.spatialWeights();
-        REQUIRE(spatialWeights[0].weight<BandwidthWeight>()->bandwidth() == 52);
-        REQUIRE(spatialWeights[1].weight<BandwidthWeight>()->bandwidth() == 99);
-        REQUIRE(spatialWeights[2].weight<BandwidthWeight>()->bandwidth() == 99);
+        REQUIRE(spatialWeights[0].weight<BandwidthWeight>().bandwidth() == 52);
+        REQUIRE(spatialWeights[1].weight<BandwidthWeight>().bandwidth() == 99);
+        REQUIRE(spatialWeights[2].weight<BandwidthWeight>().bandwidth() == 99);
     }
 }
 

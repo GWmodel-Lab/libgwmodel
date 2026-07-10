@@ -62,14 +62,15 @@ mat GWRRobust::fit()
     if (mIsAutoselectBandwidth)
     {
         GWM_LOG_STAGE("Bandwidth selection");
-        BandwidthWeight* bw0 = mSpatialWeight.weight<BandwidthWeight>();
-        double lower = bw0->adaptive() ? 20 : 0.0;
-        double upper = bw0->adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
+        const BandwidthWeight& bw0 = mSpatialWeight.weight<BandwidthWeight>();
+        double lower = bw0.adaptive() ? 20 : 0.0;
+        double upper = bw0.adaptive() ? nDp : mSpatialWeight.distance()->maxDistance();
         
         GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(bw0));
         BandwidthSelector selector(bw0, lower, upper);
-        BandwidthWeight* bw = selector.optimize(this);
-        if (bw)
+        mStatus = selector.optimize(this);
+        const BandwidthWeight& bw = selector.result();
+        if (mStatus == Status::Success)  // Check if the optimization was successful
         {
             mSpatialWeight.setWeight(bw);
             mBandwidthSelectionCriterionList = selector.bandwidthCriterion();

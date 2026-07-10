@@ -143,7 +143,7 @@ TEST_CASE("BasicGWR: LondonHP")
         }
 #endif // ENABLE_CUDA
         REQUIRE_NOTHROW(algorithm.fit());
-        size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
+        size_t bw = (size_t)algorithm.spatialWeight().weight<BandwidthWeight>().bandwidth();
         size_t bw0 = 67;
         switch (criterion)
         {
@@ -250,7 +250,7 @@ TEST_CASE("BasicGWR: LondonHP")
         REQUIRE_THAT(criterions[5].second, Catch::Matchers::WithinAbs(2452.80388934625, 1e-8));
         vector<size_t> selectedVariables = algorithm.selectedVariables();
         REQUIRE_THAT(selectedVariables, Catch::Matchers::Equals(vector<size_t>({1, 3})));
-        double bw = algorithm.spatialWeight().weight<BandwidthWeight>()->bandwidth();
+        double bw = algorithm.spatialWeight().weight<BandwidthWeight>().bandwidth();
         REQUIRE(bw == 31.0);
         RegressionDiagnostic diagnostic = algorithm.diagnostic();
         REQUIRE_THAT(diagnostic.AIC, Catch::Matchers::WithinAbs(2435.8161441795, 1e-8));

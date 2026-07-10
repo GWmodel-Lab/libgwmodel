@@ -32,7 +32,7 @@ public:
         CV     //!< CV
     };
     
-    typedef double (GWRLocalCollinearity::*BandwidthSelectionCriterionCalculator)(BandwidthWeight*);    //!< \~english Calculator to get criterion for bandwidth optimization \~chinese 带宽优选指标值计算函数
+    typedef double (GWRLocalCollinearity::*BandwidthSelectionCriterionCalculator)(const std::unique_ptr<BandwidthWeight>&);    //!< \~english Calculator to get criterion for bandwidth optimization \~chinese 带宽优选指标值计算函数
     typedef arma::mat (GWRLocalCollinearity::*FitCalculator)(const arma::mat&, const arma::vec&, arma::vec&, arma::vec&);  //!< \~english Calculator to predict \~chinese 用于预测的函数
     typedef arma::mat (GWRLocalCollinearity::*PredictCalculator)(const arma::mat&, const arma::mat&, const arma::vec&);   //!< \~english Calculator to predict \~chinese 用于预测的函数
 
@@ -208,7 +208,7 @@ public:
      */
     void setBandwidthSelectionCriterion(const BandwidthSelectionCriterionType& criterion);
 
-    Status getCriterion(BandwidthWeight *bandwidthWeight, double& criterion) override
+    Status getCriterion(const std::unique_ptr<BandwidthWeight>& bandwidthWeight, double& criterion) override
     {
         criterion = (this->*mBandwidthSelectionCriterionFunction)(bandwidthWeight);
         return mStatus;
@@ -317,7 +317,7 @@ private:
      * @param bandwidths \~english Given bandwidths \~chinese 给定带宽值
      * @return double \~english Criterion value \~chinese 指标值
      */
-    double bandwidthSizeCriterionCVSerial(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionCVSerial(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
 
 #ifdef ENABLE_OPENMP
     /**
@@ -326,7 +326,7 @@ private:
      * @param bandwidths \~english Given bandwidths \~chinese 给定带宽值
      * @return double \~english Criterion value \~chinese 指标值
      */
-    double bandwidthSizeCriterionCVOmp(BandwidthWeight* bandwidthWeight);
+    double bandwidthSizeCriterionCVOmp(const std::unique_ptr<BandwidthWeight>& bandwidthWeight);
 #endif
 
 private:
