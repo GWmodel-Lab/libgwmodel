@@ -1,4 +1,5 @@
 #include "GWAverage.h"
+#include "BandwidthSelector.h"
 #include <assert.h>
 #include <map>
 
@@ -66,6 +67,22 @@ void GWAverage::run()
     uword nRp = mCoords.n_rows, nVar = mX.n_cols;
     createDistanceParameter();
     GWM_LOG_STOP_RETURN(mStatus, void());
+
+    if (mIsAutoselectBandwidth)
+    {
+        GWM_LOG_STAGE("Bandwidth selection");
+        BandwidthWeight* bw0 = &mSpatialWeight.weight<BandwidthWeight>();
+        double lower = bw0->adaptive() ? 2.0 : mSpatialWeight.distance()->minDistance();
+        double upper = bw0->adaptive() ? (double)nRp : mSpatialWeight.distance()->maxDistance();
+
+        GWM_LOG_INFO(IBandwidthSelectable::infoBandwidthCriterion(*bw0));
+        BandwidthSelector selector(*bw0, lower, upper);
+        if (selector.optimize(this) == Status::Success)
+        {
+            mSpatialWeight.setWeight(selector.result());
+            mBandwidthSelectionCriterionList = selector.bandwidthCriterion();
+        }
+    }
 
     mLocalMean = mat(nRp, nVar, fill::zeros);
     mStandardDev = mat(nRp, nVar, fill::zeros);
@@ -215,6 +232,77 @@ void GWAverage::setParallelType(const ParallelType &type)
         mParallelType = type;
         updateCalculator();
     }
+}
+
+Status GWAverage::getCriterion(const std::unique_ptr<BandwidthWeight>& weight, double& criterion)
+{
+    if (!weight)
+    {
+        criterion = DBL_MAX;
+        return Status::Success;
+    }
+
+    uword n = mCoords.n_rows;
+    uword p = mX.n_cols;
+    if (n < 2 || p == 0)
+    {
+        criterion = DBL_MAX;
+        return Status::Success;
+    }
+
+    BandwidthWeight backup = mSpatialWeight.weight<BandwidthWeight>();
+    mSpatialWeight.setWeight(*weight);
+
+    double totalF = 0.0;
+    bool valid = false;
+
+    for (uword j = 0; j < p; j++)
+    {
+        mat weightedVals(n, n, fill::zeros);
+        for (uword i = 0; i < n; i++)
+        {
+            vec w = mSpatialWeight.weightVector(i);
+            if (w.n_rows != n)
+                continue;
+            weightedVals.col(i) = w % mX.col(j);
+        }
+
+        double yMean = accu(weightedVals) / double(n * n);
+        mat centered = weightedVals - yMean;
+        double SST = accu(centered % centered);
+        if (!isfinite(SST) || SST < 0.0)
+            continue;
+
+        rowvec groupMeans = mean(weightedVals, 0);
+        double SSE = 0.0;
+        for (uword i = 0; i < n; i++)
+        {
+            vec diff = weightedVals.col(i) - groupMeans(i);
+            SSE += accu(diff % diff);
+        }
+
+        double SSB = 0.0;
+        for (uword i = 0; i < n; i++)
+        {
+            double meanDiff = groupMeans(i) - yMean;
+            SSB += double(n) * meanDiff * meanDiff;
+        }
+        double MSB = SSB / double(n - 1);
+        double MSW = SSE / double(n * n - n);
+        if (!isfinite(MSB) || !isfinite(MSW) || MSW == 0.0)
+            continue;
+
+        double F = MSB / MSW;
+        if (!isfinite(F))
+            continue;
+
+        totalF += F;
+        valid = true;
+    }
+
+    criterion = valid ? -totalF : DBL_MAX;
+    mSpatialWeight.setWeight(backup);
+    return Status::Success;
 }
 
 void GWAverage::updateCalculator()

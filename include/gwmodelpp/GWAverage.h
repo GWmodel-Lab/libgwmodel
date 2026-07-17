@@ -4,6 +4,7 @@
 #include "SpatialMonoscaleAlgorithm.h"
 #include "IMultivariableAnalysis.h"
 #include "IParallelizable.h"
+#include "IBandwidthSelectable.h"
 
 namespace gwm
 {
@@ -41,7 +42,7 @@ namespace gwm
  * - local interquartile ranges <- GWAverage::iqr()
  * - local quantile imbalances and coordinates <- GWAverage::qi()
  */
-class GWAverage : public SpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IParallelizable, public IParallelOpenmpEnabled
+class GWAverage : public SpatialMonoscaleAlgorithm, public IMultivariableAnalysis, public IParallelizable, public IParallelOpenmpEnabled, public IBandwidthSelectable
 {
 public:
 
@@ -171,6 +172,11 @@ public:     // IMultivariableAnalysis
     void setVariables(const arma::mat& x) override { mX = x; }
 
     void run() override;
+    // Implement IBandwidthSelectable
+    Status getCriterion(const std::unique_ptr<BandwidthWeight>& weight, double& criterion) override;
+    bool isAutoselectBandwidth() const { return mIsAutoselectBandwidth; }
+    void setIsAutoselectBandwidth(bool isAutoSelect) { mIsAutoselectBandwidth = isAutoSelect; }
+    const BandwidthCriterionList& bandwidthSelectionCriterionList() const { return mBandwidthSelectionCriterionList; }
     
     void calibration(const arma::mat& locations, const arma::mat& x);
 
@@ -238,6 +244,9 @@ private:
     arma::mat mLocalMedian;   //!< \~english Local medians \~chinese 局部中位数
     arma::mat mIQR;           //!< \~english Local interquartile ranges \~chinese 局部分位距
     arma::mat mQI;            //!< \~english Local quantile imbalances and coordinates \~chinese 局部分位数不平衡度
+
+    bool mIsAutoselectBandwidth = false; //!< \~english Whether bandwidth autoselection is enabled \~chinese 是否启用带宽自动选择
+    BandwidthCriterionList mBandwidthSelectionCriterionList; //!< \~english List of bandwidth selection criterion values \~chinese 带宽优选指标值列表
 
     SummaryCalculator mSummaryFunction = &GWAverage::GWAverageSerial;  //!< \~english Calculator for summary statistics \~chinese 计算函数
     ParallelType mParallelType = ParallelType::SerialOnly;  //!< \~english Parallel type \~chinese 并行方法
