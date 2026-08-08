@@ -549,7 +549,11 @@ public:
      * @return arma::mat 回归系数估计值 \f$\beta\f$。
      */
     const arma::mat& betas() const { return mBetas; }
-    
+
+    const arma::mat& betasSE() const { return mBetasSE; }
+
+    const arma::mat& betasTV() const { return mBetasTV; }
+
     /**
      * \~english
      * @brief Get criterion calculator function for optimize bandwidth size for one variable.
