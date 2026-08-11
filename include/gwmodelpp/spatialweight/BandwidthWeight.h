@@ -126,7 +126,7 @@ public:
     {
         const double p = param.at(0);
         arma::vec wgau = exp(-(dist % dist) / (2 * bw * bw));
-        arma::vec dsin = sin(arma::abs(dist) * M_PI / 12);
+        arma::vec dsin = sin(arma::abs(dist) * M_PI / p);
         arma::vec wsin = exp(-(2 * (dsin % dsin * p * p) / (bw * bw)));
         return wgau % wsin;
     }
