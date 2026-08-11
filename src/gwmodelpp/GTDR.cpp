@@ -90,7 +90,7 @@ mat GTDR::fit()
         int resultCode = optimizer.optimize(this, mCoords.n_rows, mBandwidthOptimizeMaxIter, mBandwidthOptimizeEps, mBandwidthOptimizeStep);
         GWM_LOG_STOP_RETURN(mStatus, mat(nDp, nVars, arma::fill::zeros));
         
-        if (resultCode)
+        if (resultCode != GSL_SUCCESS && resultCode != GSL_CONTINUE)
         {
             throw runtime_error("[GTDR::fit] Bandwidth optimization invoke failed.");
         }
