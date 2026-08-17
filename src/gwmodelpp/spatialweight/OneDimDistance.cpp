@@ -8,16 +8,6 @@ using namespace arma;
 using namespace gwm;
 
 
-OneDimDistance::OneDimDistance() : Distance()
-{
-
-}
-
-OneDimDistance::OneDimDistance(const OneDimDistance &distance) : Distance(distance)
-{
-    
-}
-
 void OneDimDistance::makeParameter(initializer_list<DistParamVariant> plist)
 {
     if (plist.size() == 2)
@@ -39,7 +29,7 @@ vec OneDimDistance::distance(uword focus)
 
     if (focus < mParameter->total)
     {
-        return AbstractDistance(mParameter->focusPoints(focus), mParameter->dataPoints);
+        return !mIsAngle ? AbstractDistance(mParameter->focusPoints(focus), mParameter->dataPoints) : AngleDistance(mParameter->focusPoints(focus), mParameter->dataPoints);
     }
     else throw std::runtime_error("Target is out of bounds of data points.");
 }

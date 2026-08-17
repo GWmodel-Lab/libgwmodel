@@ -52,23 +52,34 @@ public:
         return abs(in_locs - out_loc);
     }
 
+    static arma::vec AngleDistance(const double& out_loc, const arma::vec& in_locs)
+    {
+        return arma::atan2(arma::sin(in_locs - out_loc), arma::cos(in_locs - out_loc));
+    }
+
 public:
 
-    OneDimDistance();
+    OneDimDistance() {}
 
     /**
      * @brief Construct a new OneDimDistance object
      * 
-     * @param isGeographic Whether the coordinate reference system is geographical.
+     * @param isAngle Whether the coordinate reference system is geographical.
      */
-    explicit OneDimDistance(bool isGeographic);
+    explicit OneDimDistance(bool isAngle = false) {  
+        mIsAngle = isAngle;
+    };
 
     /**
      * @brief Construct a new OneDimDistance object.
      * 
      * @param distance Refernce to object for copying.
      */
-    OneDimDistance(const OneDimDistance& distance);
+    OneDimDistance(const OneDimDistance& distance) :
+        Distance(distance)
+    {
+        mIsAngle = distance.mIsAngle;
+    }
 
     virtual std::unique_ptr<Distance> clone() const override
     {
@@ -109,6 +120,7 @@ public:
 
 protected:
     std::unique_ptr<Parameter> mParameter = nullptr;  //!< \~english Parameters \~chinese 参数
+    bool mIsAngle = false;  //!< \~english Whether the coordinate reference system is geographical. \~chinese 坐标系是否是地理坐标系
 };
 
 }
