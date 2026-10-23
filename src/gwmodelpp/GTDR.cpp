@@ -373,6 +373,7 @@ double GTDR::bandwidthCriterionCVOmp(const vector<reference_wrapper<BandwidthWei
     vec cv_all(mOmpThreadNum, arma::fill::zeros);
     bool success = true;
     std::exception except;
+#pragma omp parallel for num_threads(mOmpThreadNum)
     for (size_t i = 0; i < nDp; i++)
     {
         GWM_LOG_STOP_CONTINUE(mStatus);
