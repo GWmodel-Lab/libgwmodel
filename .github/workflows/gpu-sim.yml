@@ -1,0 +1,84 @@
+name: GPU Simulator
+
+# Builds the library with ENABLE_CUDA and runs the CUDA tests on a simulated
+# NVIDIA H100 (https://github.com/pantheongpu/pantheonsim). The hosted runners
+# have no GPU, so this is the only place the CUDA backend is exercised.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - "src/**"
+      - "include/**"
+      - "test/**"
+      - "CMakeLists.txt"
+      - ".github/workflows/gpu-sim.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests (CUDA 13.0 and simulated H100)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      OMP_NUM_THREADS: 2
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq install libarmadillo-dev libopenblas-dev libgsl-dev libopenmpi-dev catch2
+
+      # library-path is disabled so that the toolkit's cuBLAS is the one the
+      # library links against and loads.
+      - name: Set up the simulated GPU and CUDA toolkit
+        uses: pantheongpu/setup-pantheonsim@a1b9d4237411f9b2b0e0bb895b4d83377f336a7b # v0.1.9
+        with:
+          gpu: nvidia/h100
+          cuda-toolkit: "13.0"
+          library-path: 'false'
+
+      # The simulator needs a shared CUDA runtime and cuBLAS; the project links
+      # the static ones on Linux.
+      - name: Use the shared cudart and cuBLAS
+        run: |
+          sed -i 's/CUDA::cudart_static/CUDA::cudart/; s/CUDA::cublas_static/CUDA::cublas/' src/CMakeLists.txt
+
+      # 90-virtual embeds PTX only, which the simulator runs.
+      - name: Configure
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_CUDA=ON \
+            -DENABLE_OpenMP=ON \
+            -DCUDAToolkit_ROOT=/usr/local/cuda-13.0 \
+            -DCMAKE_CUDA_ARCHITECTURES=90-virtual \
+            -DCMAKE_CUDA_RUNTIME_LIBRARY=Shared
+
+      - name: Build
+        run: cmake --build build -j3
+
+      - name: Test
+        working-directory: build/test
+        run: |
+          vgpu run ./testCuMat --skip-benchmarks
+          vgpu run ./testGWRBasic "Basic GWR: cancel"
+          vgpu run ./testGWRMultiscale -c "MGWR: basic flow" -c "optim bw cv | null init bw | adaptive | bisquare kernel | with hatmatrix | with bounds"
+          for s in \
+            "adaptive bandwidth | no bandwidth optimization | no variable optimization" \
+            "fixed bandwidth | no bandwidth optimization | no variable optimization" \
+            "adaptive bandwidth | no bandwidth optimization | AIC variable optimization" \
+            "adaptive bandwidth | CV bandwidth optimization | AIC variable optimization"; do
+            vgpu run ./testGWRBasic --skip-benchmarks -c "BasicGWR: LondonHP" -c "$s"
+          done
